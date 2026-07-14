@@ -1,0 +1,27 @@
+node_modules/
+dist/
+build/
+coverage/
+.git/
+
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+
+*.md
+*.txt
+*.pdf
+*.docx
+*.doc
+*.rtf
+*.html
+*.htm
+
+server/node_modules/
+server/temp/
+
+# Graphify
+graphify-out/

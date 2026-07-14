@@ -1,0 +1,661 @@
+
+Dm calculetor colum added on table 
+
+ALTER TABLE calculator_transactions 
+ADD COLUMN IF NOT EXISTS include_youtube_video_posting DECIMAL(10,2) DEFAULT 0;
+
+ALTER TABLE invoice_graphic 
+ADD COLUMN IF NOT EXISTS include_youtube_video_posting DECIMAL(10,2) DEFAULT 0;
+
+getcontroller.js
+WHERE et.editing_type_name IN ('Content Posting', 'Thumbnail Creation', 'YouTube Video Posting')
+
+-- ============================================================
+
+
+date 20/05/2026
+
+-- DM CALCULATOR — WORKFLOW MIGRATION
+-- Ek baar run karo MySQL Workbench ya terminal mein
+-- ============================================================
+
+-- 1. Quotation status column expand karo
+--    (pehle se 'pending' aur 'approved' tha — ab poora flow)
+ALTER TABLE quotation_status
+  MODIFY COLUMN status ENUM(
+    'pending',
+    'admin_approved',
+    'admin_rejected',
+    'client_sent',
+    'client_approved',
+    'client_rejected',
+    'invoice_sent',
+    'team_assigned',
+    'strategy_saved',
+    'strategy_admin_approved',
+    'strategy_admin_rejected',
+    'strategy_changes_requested',
+    'strategy_client_sent',
+    'strategy_client_approved',
+    'strategy_client_rejected',
+    'tasks_assigned',
+    'execution'
+  ) DEFAULT 'pending';
+
+-- 2. Strategy table — DM mein banegi, SF ko jayegi
+CREATE TABLE IF NOT EXISTS workflow_strategy (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  txn_id       VARCHAR(100) NOT NULL,
+  client_id    VARCHAR(100) NOT NULL,
+  service_name VARCHAR(200) NOT NULL,
+  description  TEXT,
+  deadline     DATE,
+  status       ENUM(
+                 'saved',
+                 'admin_approved',
+                 'admin_rejected',
+                 'changes_requested',
+                 'client_sent',
+                 'client_approved',
+                 'client_rejected'
+               ) DEFAULT 'saved',
+  admin_remark TEXT,
+  client_remark TEXT,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_txn (txn_id),
+  INDEX idx_client (client_id)
+);
+
+-- 3. Task assignments — project owner assign karega task owners ko
+CREATE TABLE IF NOT EXISTS workflow_task_assignments (
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  txn_id           VARCHAR(100) NOT NULL,
+  client_id        VARCHAR(100) NOT NULL,
+  strategy_id      INT,                          -- workflow_strategy.id se link
+  task_name        VARCHAR(200) NOT NULL,
+  task_description TEXT,
+  assigned_to_id   VARCHAR(100) NOT NULL,         -- SF employee ID
+  assigned_to_name VARCHAR(200),
+  assigned_to_email VARCHAR(200),
+  assigned_by_id   VARCHAR(100),
+  deadline         DATE NOT NULL,
+  status           ENUM('pending','working','complete') DEFAULT 'pending',
+  created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_txn (txn_id),
+  INDEX idx_assignee (assigned_to_id)
+);
+
+-- 4. Team lead / Project owner assignment record
+CREATE TABLE IF NOT EXISTS workflow_project_assignments (
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  txn_id           VARCHAR(100) NOT NULL,
+  client_id        VARCHAR(100) NOT NULL,
+  team_id          VARCHAR(100),
+  team_name        VARCHAR(200),
+  team_lead_id     VARCHAR(100),
+  team_lead_name   VARCHAR(200),
+  team_lead_email  VARCHAR(200),
+  assigned_by_id   VARCHAR(100),
+  remark           TEXT,
+  created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_txn (txn_id)
+);
+
+-- 5. Remarks log — har step pe jo remark diya
+CREATE TABLE IF NOT EXISTS workflow_remarks (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  txn_id      VARCHAR(100) NOT NULL,
+  action_type VARCHAR(100) NOT NULL,
+  -- action_type examples:
+  --   quotation_sent_to_sf, admin_approved, admin_rejected,
+  --   client_sent, client_approved, client_rejected,
+  --   invoice_sent, team_assigned, strategy_saved,
+  --   strategy_admin_approved, strategy_client_approved,
+  --   tasks_assigned, task_status_update
+  actor_name  VARCHAR(200),
+  remark      TEXT,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_txn (txn_id)
+);
+
+-- ============================================================
+-- DONE — ab server restart karo
+-- ============================================================
+
+UPDATE quotation_status 
+SET status = 'pending' 
+WHERE status NOT IN (
+  'pending','admin_approved','admin_rejected',
+  'client_sent','client_approved','client_rejected',
+  'invoice_sent','team_assigned','strategy_saved',
+  'strategy_admin_approved','strategy_admin_rejected',
+  'strategy_changes_requested','strategy_client_sent',
+  'strategy_client_approved','strategy_client_rejected',
+  'tasks_assigned','execution'
+);
+
+-- Strategy ke liye: Ek txn_id aur service_name ka combination hamesha unique hona chahiye
+ALTER TABLE workflow_strategy ADD UNIQUE KEY uq_txn_service (txn_id, service_name);
+
+-- Tasks ke liye: Ek txn_id ke andar ek task_name ek hi baar hona chahiye
+ALTER TABLE workflow_task_assignments ADD UNIQUE KEY uq_txn_task (txn_id, task_name);
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+1. Jab Admin quotation approve/reject kare:
+POST https://tumhara-dm-server.com/auth/api/calculator/workflow/sf/quotationDecision
+2. Jab Admin strategy approve/reject/changes kare:
+POST https://tumhara-dm-server.com/auth/api/calculator/workflow/sf/strategyDecision
+3. Jab Task Owner status update kare (working/complete):
+POST https://tumhara-dm-server.com/auth/api/calculator/workflow/sf/taskStatusUpdate
+
+Saath mein ye bhi batana SF team ko
+Header mein ye bhejein har request mein:
+x-dm-secret: [wahi value jo .env mein SF_API_SECRET mein daali hai]
+Body ka format:
+Quotation decision ke liye:
+json{
+  "txn_id": "1779265225690",
+  "client_id": "42",
+  "decision": "approved",
+  "remark": "Sab theek hai"
+}
+Strategy decision ke liye:
+json{
+  "txn_id": "1779265225690",
+  "decision": "approved",
+  "remark": "Strategy confirm"
+}
+Task status ke liye:
+json{
+  "txn_id": "1779265225690",
+  "task_name": "SEO Audit",
+  "employee_id": "101",
+  "status": "complete"
+}
+
+Simple mein
+
+SF team ke developer ko batao — "Jab tumhare system mein ye 3 events hon, to in URLs pe POST karo aur header mein secret key daalo."
+
+-- ============================================================
+
+
+date 21/05/2026
+-------------------------------
+UPDATE quotation_status 
+SET status = 'approved' 
+WHERE status = '';
+
+
+ALTER TABLE quotation_status MODIFY COLUMN status ENUM(
+  'pending',
+  'approved',
+  'admin_approved',
+  'admin_rejected',
+  'client_sent',
+  'client_approved',
+  'client_rejected',
+  'invoice_sent',
+  'team_assigned',
+  'strategy_saved',
+  'strategy_admin_approved',
+  'strategy_admin_rejected',
+  'strategy_changes_requested',
+  'strategy_client_sent',
+  'strategy_client_approved',
+  'strategy_client_rejected',
+  'tasks_assigned',
+  'execution'
+) DEFAULT 'pending';
+
+
+
+
+-- ============================================================
+
+
+date 22/05/2026
+-------------------------------
+
+-- DM Calculator workflow upgrade:
+-- client_approved -> proforma_invoice_generated -> proforma_invoice_sent
+-- -> payment_received_invoice_ready -> invoice_sent
+
+ALTER TABLE quotation_status
+  MODIFY COLUMN status ENUM(
+    'pending',
+    'approved',
+    'admin_approved',
+    'admin_rejected',
+    'client_sent',
+    'client_approved',
+    'client_rejected',
+    'proforma_invoice_generated',
+    'proforma_invoice_sent',
+    'payment_received_invoice_ready',
+    'invoice_sent',
+    'team_assigned',
+    'strategy_saved',
+    'strategy_admin_approved',
+    'strategy_admin_rejected',
+    'strategy_changes_requested',
+    'strategy_client_sent',
+    'strategy_client_approved',
+    'strategy_client_rejected',
+    'tasks_assigned',
+    'execution'
+  ) DEFAULT 'pending';
+
+CREATE TABLE IF NOT EXISTS workflow_payment_ledger (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  txn_id VARCHAR(100) NOT NULL,
+  client_id VARCHAR(100) NOT NULL,
+  amount_received DECIMAL(12,2) NOT NULL DEFAULT 0,
+  payment_date DATE NOT NULL,
+  payment_mode VARCHAR(50) NOT NULL,
+  transaction_reference VARCHAR(255) NOT NULL,
+  remark TEXT,
+  received_by VARCHAR(200),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_txn_client (txn_id, client_id),
+  KEY idx_payment_date (payment_date)
+);
+-- ============================================================
+
+
+26/5/26
+---------------------------------------------
+ALTER TABLE sf_quotations 
+ADD COLUMN dm_remark TEXT DEFAULT NULL 
+AFTER admin_remark;
+
+ALTER TABLE sf_quotations
+ADD COLUMN dm_remark TEXT,
+ADD COLUMN proforma_channel VARCHAR(50),
+ADD COLUMN payment_received DECIMAL(12,2) DEFAULT 0,
+ADD COLUMN total_received DECIMAL(12,2) DEFAULT 0,
+ADD COLUMN pending_amount DECIMAL(12,2) DEFAULT 0,
+ADD COLUMN payment_mode VARCHAR(100),
+ADD COLUMN payment_date DATE,
+ADD COLUMN transaction_reference VARCHAR(255),
+ADD COLUMN invoice_amount DECIMAL(12,2) DEFAULT 0;
+
+CREATE TABLE failed_webhooks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  endpoint VARCHAR(255),
+  payload JSON,
+  error TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+npm install axios-retry
+
+sendWhatsApp.js
+
+
+
+-- ============================================================
+
+
+28/5/26
+
+---------------------------------------------
+
+
+
+ALTER TABLE quotation_status
+MODIFY COLUMN status ENUM(
+  'pending',
+  'pending_admin_approval',
+  'approved',
+  'admin_approved',
+  'admin_rejected',
+  'client_sent',
+  'client_approved',
+  'client_rejected',
+  'proforma_invoice_generated',
+  'proforma_invoice_sent',
+  'payment_received_invoice_ready',
+  'invoice_sent',
+  'strategy_saved',
+  'strategy_sent',
+  'strategy_client_approved',
+  'strategy_client_rejected',
+  'team_assigned',
+  'tasks_assigned',
+  'execution'
+) DEFAULT 'pending';
+
+
+
+-- ============================================================
+-- Database Schema for Mock SF Portal
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS sf_quotations (
+  txn_id VARCHAR(50) PRIMARY KEY,
+  client_id VARCHAR(50),
+  client_name VARCHAR(255),
+  client_phone VARCHAR(50),
+  client_email VARCHAR(255),
+  services JSON,
+  total DECIMAL(10, 2) DEFAULT 0,
+  gst BOOLEAN DEFAULT FALSE,
+  dm_remark TEXT,
+  status VARCHAR(100) DEFAULT 'pending',
+  admin_remark TEXT,
+  invoice_amount DECIMAL(10, 2) DEFAULT 0,
+  proforma_channel VARCHAR(50),
+  payment_received DECIMAL(10, 2) DEFAULT 0,
+  total_received DECIMAL(10, 2) DEFAULT 0,
+  pending_amount DECIMAL(10, 2) DEFAULT 0,
+  payment_mode VARCHAR(50),
+  payment_date DATE,
+  transaction_reference VARCHAR(100),
+  received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sf_strategies (
+  txn_id VARCHAR(50) PRIMARY KEY,
+  client_name VARCHAR(255),
+  tasks JSON,
+  status VARCHAR(100) DEFAULT 'pending_review',
+  admin_remark TEXT,
+  received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sf_project_assignments (
+  txn_id VARCHAR(50) PRIMARY KEY,
+  client_name VARCHAR(255),
+  team_name VARCHAR(100),
+  team_lead_id VARCHAR(50),
+  team_lead_name VARCHAR(255),
+  tasks JSON,
+  received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sf_task_assignments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  txn_id VARCHAR(50),
+  client_name VARCHAR(255),
+  employee_id VARCHAR(50),
+  employee_name VARCHAR(255),
+  employee_email VARCHAR(255),
+  task_name VARCHAR(255),
+  task_description TEXT,
+  deadline DATE,
+  status VARCHAR(50) DEFAULT 'pending',
+  assigned_by VARCHAR(255),
+  assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_task (txn_id, task_name, employee_id)
+);
+
+-- ============================================================
+
+
+29/5/26
+
+---------------------------------------------
+
+
+
+CREATE TABLE IF NOT EXISTS sf_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  endpoint VARCHAR(255),
+  method VARCHAR(20),
+  body JSON,
+  received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sf_notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  txn_id VARCHAR(50),
+  title VARCHAR(255),
+  message TEXT,
+  source VARCHAR(100),
+  target VARCHAR(100),
+  type VARCHAR(50) DEFAULT 'info',
+  is_read BOOLEAN DEFAULT FALSE,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sf_teams (
+  team_id VARCHAR(50) PRIMARY KEY,
+  team_name VARCHAR(100)
+);
+
+CREATE TABLE IF NOT EXISTS sf_employees (
+  employee_id VARCHAR(50) PRIMARY KEY,
+  team_id VARCHAR(50),
+  name VARCHAR(255),
+  designation VARCHAR(100),
+  email VARCHAR(255)
+);
+
+-- Note: The DM Calculator frontend may already have inserted base values for sf_teams and sf_employees.
+
+
+-- ============================================================
+
+
+2/06/26
+
+---------------------------------------------
+
+
+ALTER TABLE quotation_status MODIFY COLUMN status ENUM('pending','approved','admin_approved','admin_rejected','client_sent','client_approved','client_rejected','proforma_invoice_generated','proforma_invoice_sent','payment_received_invoice_ready','invoice_sent','team_assigned','strategy_saved','strategy_sent_to_admin','strategy_admin_approved','strategy_admin_rejected','strategy_changes_requested','strategy_client_sent','strategy_client_approved','strategy_client_rejected','tasks_assigned','execution') DEFAULT 'pending';
+
+-- ============================================================
+
+
+15/06/26
+
+---------------------------------------------
+
+
+
+
+Database — 3 naye tables ban gaye: proposals (sara proposal data), proposal_proforma, aur proposal_payment_records (TDS ke saath).
+Backend — proposalController.js bana hai jisme proposal banane, PDF generate karne, proforma aur payment ka pura logic hai. PDF wala common code (header/footer) ek alag pdfHelpers.js mein nikal liya hai jo quotation aur proposal dono use karenge. Email/WhatsApp se proposal bhejne ka integration bhi ho gaya.
+Frontend — Proposal Builder — ProposalBuilder.jsx (Admin) aur uska BD wala version ban gaya hai. Iske andar 13 sections hain, har section mein DM Manager apna text/values daal sakta hai, optional sections toggle ho sakte hain, pricing table mein rows add kar sakte hain, T&C dropdown se select kar sakte hain. Saath mein "Send Proposal" modal hai jisse direct email ya WhatsApp pe PDF bhej sakte ho.
+Client Profile — Client details page pe ab "Client Proposals" modal hai — yahan se naya proposal banao, purana edit karo, ya Proforma/Payments dekho.
+Invoice/Proforma — CreateInvoice.jsx mein ek naya "Approved Proposal" option add hua. Proposalmode.jsx naya bana hai (Quotation ke flow jaisa) jisse approved proposal se directly Proforma ban sakta hai GST ke saath.
+Payments + TDS — ProposalPayments.jsx naya dashboard hai — yahan client ke saare proformas dikhte hain aur payment record kar sakte ho. TDS calculator bhi hai — toggle on karo, percentage daalo, automatically TDS amount aur final settlement amount calculate ho jayega.
+
+
+Naye Proposal workflow ke liye aapko database mein 3 nayi tables banani padengi. In teeno tables ki SQL queries maine project ke andar server/sql/2026-06-proposal-workflow.sql file mein save kar di hain.
+
+Aap seedha apne MySQL/phpMyAdmin mein jaake in queries ko run kar sakte hain:
+
+1. proposals Table
+Yeh table naye proposals ka sara data (13 sections, unka text, pricing table, toggles, status) save karegi.
+
+sql
+CREATE TABLE IF NOT EXISTS proposals (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  client_id INT NOT NULL,
+  proposal_type ENUM('development', 'digital_marketing') NOT NULL,
+  billing_type ENUM('monthly', 'yearly', 'custom') NOT NULL,
+  billing_start_date DATE DEFAULT NULL,
+  billing_end_date DATE DEFAULT NULL,
+  -- All 13 sections stored as structured JSON
+  sections_json JSON NOT NULL DEFAULT ('{}'),
+  -- Optional section toggles
+  optional_toggles JSON NOT NULL DEFAULT ('{"strategy_overview":false,"expected_results":false,"why_choose_us":false}'),
+  -- Pricing table (array of {service, quantity, unit_price, total_price})
+  pricing_table_json JSON NOT NULL DEFAULT ('[]'),
+  grand_total_excl_gst DECIMAL(12,2) DEFAULT 0,
+  -- Terms & Conditions
+  terms_notes_json JSON DEFAULT NULL,
+  -- Status workflow
+  status ENUM('draft','submitted','admin_reviewed','client_sent','client_approved','client_rejected') DEFAULT 'draft',
+  -- PDF path
+  pdf_path VARCHAR(500) DEFAULT NULL,
+  created_by VARCHAR(200),
+  updated_by VARCHAR(200),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_client (client_id),
+  INDEX idx_status (status),
+  INDEX idx_created (created_at)
+);
+
+
+
+2. proposal_proforma Table
+Jab koi proposal approve ho jata hai aur aap uska Proforma generate karte hain, tab wo data is table mein jayega.
+
+sql
+CREATE TABLE IF NOT EXISTS proposal_proforma (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  proposal_id INT NOT NULL,
+  client_id INT NOT NULL,
+  is_gst BOOLEAN DEFAULT FALSE,
+  gst_rate DECIMAL(5,2) DEFAULT 18.00,
+  base_amount DECIMAL(12,2) DEFAULT 0,
+  gst_amount DECIMAL(12,2) DEFAULT 0,
+  total_amount DECIMAL(12,2) DEFAULT 0,
+  status ENUM('generated','sent','partially_paid','paid') DEFAULT 'generated',
+  pdf_path VARCHAR(500) DEFAULT NULL,
+  created_by VARCHAR(200),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_proposal (proposal_id),
+  INDEX idx_client (client_id),
+  FOREIGN KEY (proposal_id) REFERENCES proposals(id) ON DELETE CASCADE
+);
+
+
+3. proposal_payment_records Table (TDS Support ke saath)
+Yeh table un payments ko track karegi jo proposal proforma ke against receive hue hain. Isme aapke TDS fields (applicable, percentage, amount) bhi set hain.
+
+sql
+CREATE TABLE IF NOT EXISTS proposal_payment_records (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  proforma_id INT NOT NULL,
+  proposal_id INT NOT NULL,
+  client_id INT NOT NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  is_gst BOOLEAN DEFAULT FALSE,
+  tds_applicable BOOLEAN DEFAULT FALSE,
+  tds_percentage DECIMAL(6,2) DEFAULT 0,
+  tds_amount DECIMAL(12,2) DEFAULT 0,
+  final_amount DECIMAL(12,2) NOT NULL,
+  payment_date DATE NOT NULL,
+  payment_mode VARCHAR(50),
+  transaction_reference VARCHAR(255),
+  status ENUM('pending_approval','approved','rejected') DEFAULT 'pending_approval',
+  approved_by VARCHAR(200),
+  remark TEXT,
+  created_by VARCHAR(200),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_proforma (proforma_id),
+  INDEX idx_proposal (proposal_id),
+  INDEX idx_client (client_id),
+  FOREIGN KEY (proforma_id) REFERENCES proposal_proforma(id) ON DELETE CASCADE,
+  FOREIGN KEY (proposal_id) REFERENCES proposals(id) ON DELETE CASCADE
+);
+
+
+
+
+-- ============================================================
+
+
+27/06/26
+
+---------------------------------------------
+
+
+
+
+
+-- Step 1: invoice table mein proposal flow ke liye columns add karo
+-- (EXISTING records par koi effect nahi — sab DEFAULT NULL hai)
+
+ALTER TABLE `invoice`
+  ADD COLUMN `invoice_source` 
+      ENUM('calculator','proposal') NOT NULL DEFAULT 'calculator'
+      COMMENT 'calculator = old txn flow, proposal = new proposal flow'
+      AFTER `id`,
+
+  ADD COLUMN `proposal_id` 
+      INT(11) DEFAULT NULL
+      COMMENT 'FK to proposals table (only for proposal flow)'
+      AFTER `invoice_source`,
+
+  ADD COLUMN `proforma_id` 
+      INT(11) DEFAULT NULL
+      COMMENT 'FK to proposal_proforma table (only for proposal flow)'
+      AFTER `proposal_id`,
+
+  ADD COLUMN `base_amount` 
+      DECIMAL(12,2) DEFAULT NULL
+      COMMENT 'Net amount before GST — proposal flow only'
+      AFTER `bill_type`,
+
+  ADD COLUMN `gst_rate` 
+      DECIMAL(5,2) DEFAULT NULL
+      COMMENT 'GST rate e.g. 18.00 — proposal flow only'
+      AFTER `base_amount`,
+
+  ADD COLUMN `gst_amount` 
+      DECIMAL(12,2) DEFAULT NULL
+      COMMENT 'GST amount — proposal flow only'
+      AFTER `gst_rate`,
+
+  ADD COLUMN `payment_date`
+      DATE DEFAULT NULL
+      COMMENT 'Date payment was received'
+      AFTER `payment_mode`,
+
+  ADD COLUMN `payment_reference`
+      VARCHAR(255) DEFAULT NULL
+      COMMENT 'UTR / Cheque number / Transaction ID'
+      AFTER `payment_date`,
+
+  ADD COLUMN `pricing_snapshot`
+      LONGTEXT DEFAULT NULL
+      COMMENT 'JSON of line items — copied from proposal_proforma.pricing_snapshot'
+      AFTER `previous_amt`,
+
+  ADD COLUMN `notes_snapshot`
+      LONGTEXT DEFAULT NULL
+      COMMENT 'JSON notes — copied from proposal_proforma.notes_snapshot'
+      AFTER `pricing_snapshot`,
+
+  ADD COLUMN `terms_snapshot`
+      LONGTEXT DEFAULT NULL
+      COMMENT 'JSON terms — copied from proposal_proforma.terms_snapshot'
+      AFTER `notes_snapshot`,
+
+  ADD CONSTRAINT `fk_invoice_proposal_id`
+      FOREIGN KEY (`proposal_id`)
+      REFERENCES `proposals` (`id`)
+      ON DELETE SET NULL ON UPDATE CASCADE,
+
+  ADD CONSTRAINT `fk_invoice_proforma_id`
+      FOREIGN KEY (`proforma_id`)
+      REFERENCES `proposal_proforma` (`id`)
+      ON DELETE SET NULL ON UPDATE CASCADE;
+
+
+      Haan bilkul! Hamare system me ab essentially **do tareeke ke workflows (types)** se Invoices ban rahe hain, jo ki ek hi common table (`invoice`) ko use karte hain. 
+
+Dono me main difference ye hai ki wo **bante kahan se hain** aur unka **data database me kahan store hota hai**:
+
+### 1. Legacy Calculator Invoices (Puraana System)
+- **Kahan se Bante Hain:** Jab aap directly "Calculator" module me jaate the, wahan manually Graphic/Ads services select karke direct ek Final Invoice generate karte the.
+- **Database Storage:** Inka data bohot saari alag-alag tables me tukdo me save hota hai. Jaise graphic services ke liye `invoice_graphic`, ads ke liye `ads_campaign_details_invoice`, add-ons ke liye `additional_service_invoice`, discounts ke liye `invoice_discount` aadi.
+- **Flow:** Direct Invoice Generation -> Record Payments.
+
+### 2. Proposal-Based Invoices (Naya System - Jispe abhi humne kaam kiya)
+- **Kahan se Bante Hain:** Ye naye "Proposals" flow se bante hain. Pehle ek Proposal banta hai, usse ek **Proforma Invoice** generate hota hai (jo ki final invoice nahi hota, sirf advance demand ke liye hota hai).
+- **Final Invoice Kab Banta Hai:** Jab aap uss Proforma par pehla **Payment Record** karte hain, tab system automatically usko ek **Final Invoice** me convert kar deta hai (aur use `invoice` table me daal deta hai `invoice_source = 'proposal'` column ke sath).
+- **Database Storage:** Inme alag-alag (graphic/ads) tables me data save nahi hota. Balki poori services, notes, aur T&C ek single JSON column `pricing_snapshot` me hi save ho jaati hai (jo ki zyada fast aur clean tarika hai).
+- **Flow:** Proposal -> Proforma Invoice -> Payment Received -> Automatically Final Invoice Generated.
+
+**Summary:** 
+Dono final invoices dikhte bilkul same hain PDF me (`AdminInvoice.jsx` dono ko handle karta hai), lekin ek directly Calculator se banta hai (Legacy), aur doosra ek structured step-by-step process (Proposal -> Proforma -> Payment) ke baad banta hai (New System).
