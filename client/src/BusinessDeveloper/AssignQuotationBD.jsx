@@ -38,7 +38,7 @@ const navigate = useNavigate();
   const fetchAllClientServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/assigned-quotations/by-employee/${currentUser.name}`,
+        `${baseURL}/auth/api/re_calculator/assigned-quotations/by-employee/${currentUser.name}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -80,7 +80,7 @@ const navigate = useNavigate();
 
   async function getDisplayDeadline({ baseURL, token, txnId }) {
     const res = await axios.get(
-      `${baseURL}/auth/api/calculator/getAssignmentsSummary/${txnId}`,
+      `${baseURL}/auth/api/re_calculator/getAssignmentsSummary/${txnId}`,
       {
         headers: {
           "Content-Type": "application/json",

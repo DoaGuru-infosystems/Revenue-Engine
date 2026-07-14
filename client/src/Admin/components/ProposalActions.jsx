@@ -66,7 +66,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
 
         if (channel) {
           Swal.fire({ title: 'Sending...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-          const res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal/${proposal.id}/send`, { channel }, {
+          const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposal.id}/send`, { channel }, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data.status === "Success") {
@@ -149,7 +149,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
 
         if (decision) {
           Swal.fire({ title: 'Updating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-          const res = await axios.put(`${API_BASE_URL}/auth/api/calculator/proposal/${proposal.id}/status`, { status: decision, updated_by: "System" }, {
+          const res = await axios.put(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposal.id}/status`, { status: decision, updated_by: "System" }, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data.status === "Success") {
@@ -167,7 +167,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
             base_amount: proposal.grand_total_excl_gst,
             total_amount: proposal.grand_total_excl_gst
           };
-          const res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proforma`, payload, {
+          const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proforma`, payload, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data.status === "Success") {
@@ -184,7 +184,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
       } else if (actionType === "generate_invoice") {
         navigate(`${basePath}/create-invoice/${proposal.client_id}?proposalId=${proposal.id}`);
       } else if (actionType === "download_pdf") {
-        const res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal/${proposal.id}/pdf`, {}, {
+        const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposal.id}/pdf`, {}, {
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'
         });
@@ -215,7 +215,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
         });
         
         if (confirm.isConfirmed) {
-          const res = await axios.delete(`${API_BASE_URL}/auth/api/calculator/proposal/${proposal.id}`, {
+          const res = await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposal.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data.status === "Success") {

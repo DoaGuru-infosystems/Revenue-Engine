@@ -25,7 +25,7 @@ const BalanceProformaHistory = () => {
 
   const fetchProformas = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proforma/all`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.status === "Success") {

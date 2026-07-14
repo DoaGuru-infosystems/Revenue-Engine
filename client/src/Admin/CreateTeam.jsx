@@ -29,16 +29,16 @@ const CreateTeam = () => {
 
   // ---- API endpoints mapped to YOUR routes ----
   const endpoints = {
-    listEmployees: `${baseURL}/auth/api/calculator/retrieveUser`,
-    listTeams: `${baseURL}/auth/api/calculator/retrieveTeam`,
-    createTeam: `${baseURL}/auth/api/calculator/createTeam`,
+    listEmployees: `${baseURL}/auth/api/re_calculator/retrieveUser`,
+    listTeams: `${baseURL}/auth/api/re_calculator/retrieveTeam`,
+    createTeam: `${baseURL}/auth/api/re_calculator/createTeam`,
     getTeamMembers: (id) =>
-      `${baseURL}/auth/api/calculator/retrieveTeamById/${id}`,
+      `${baseURL}/auth/api/re_calculator/retrieveTeamById/${id}`,
     addMembers: (id) =>
-      `${baseURL}/auth/api/calculator/addMembersToTeam/${id}/members`,
+      `${baseURL}/auth/api/re_calculator/addMembersToTeam/${id}/members`,
     removeMember: (teamId, memberId) =>
-      `${baseURL}/auth/api/calculator/removeMemberFromTeam/${teamId}/members/${memberId}`,
-    deleteTeam: (id) => `${baseURL}/auth/api/calculator/deleteTeam/${id}`,
+      `${baseURL}/auth/api/re_calculator/removeMemberFromTeam/${teamId}/members/${memberId}`,
+    deleteTeam: (id) => `${baseURL}/auth/api/re_calculator/deleteTeam/${id}`,
   };
 
   const headers = React.useMemo(

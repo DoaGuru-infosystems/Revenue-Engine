@@ -58,7 +58,7 @@ export default function ProposalBuilderBD() {
 
   const fetchClientData = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/getClientDetailsById/${clientId}`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/getClientDetailsById/${clientId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const client = data.status === "Success" ? getClientRecord(data.data) : null;
@@ -79,7 +79,7 @@ export default function ProposalBuilderBD() {
 
   const fetchPredefinedNotes = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/getNoteData`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/getNoteData`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPredefinedNotes(data.data || []);
@@ -90,7 +90,7 @@ export default function ProposalBuilderBD() {
 
   const fetchDiscountSettings = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/getDiscountSetting`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/getDiscountSetting`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDiscountSettings(data.data || []);
@@ -102,7 +102,7 @@ export default function ProposalBuilderBD() {
   const fetchProposalData = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/proposal/${proposalId}`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposalId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (data.status === "Success") {
@@ -227,11 +227,11 @@ export default function ProposalBuilderBD() {
 
       let res;
       if (proposalId) {
-        res = await axios.put(`${API_BASE_URL}/auth/api/calculator/proposal/${proposalId}`, payload, {
+        res = await axios.put(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposalId}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal`, payload, {
+        res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -260,7 +260,7 @@ export default function ProposalBuilderBD() {
     if (!idToDownload) return;
     try {
       setLoading(true);
-      const res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal/${idToDownload}/pdf`, {}, {
+      const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${idToDownload}/pdf`, {}, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });

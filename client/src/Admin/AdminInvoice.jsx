@@ -176,7 +176,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getinInvoiceServiceHistory/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getinInvoiceServiceHistory/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -206,7 +206,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchClient = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientDetailsById/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -235,7 +235,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchClientNotes = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientNotesbyId/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientNotesbyId/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -263,7 +263,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchComplimentaryData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getComplimentaryInvoiceData/${activeTxnId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getComplimentaryInvoiceData/${activeTxnId}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -296,7 +296,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchDiscount = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDDiscountData/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${activeTxnId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -326,7 +326,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchDiscountSetting = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getDiscountSetting`,
+        `${baseURL}/auth/api/re_calculator/getDiscountSetting`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (data.data && data.data.length > 0) {
@@ -340,7 +340,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceNoteData`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -356,7 +356,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchAdditionservice = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAdditionByIdData/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getAdditionByIdData/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -384,7 +384,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchRemainingAmount = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getRemainingAmountByIdData/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getRemainingAmountByIdData/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -413,7 +413,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchProformaPayments = async (proformaId = txn_id, clientId = id) => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/proposal-payments/client/${clientId}`,
+        `${baseURL}/auth/api/re_calculator/proposal-payments/client/${clientId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const rows =
@@ -440,7 +440,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
   const fetchProformaData = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proforma/client/${id}`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/client/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === "Success") {
@@ -450,14 +450,14 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
           let p = null;
           let propRes = null;
           if (proforma.proposal_id) {
-            propRes = await axios.get(`${baseURL}/auth/api/calculator/proposal/${proforma.proposal_id}`, {
+            propRes = await axios.get(`${baseURL}/auth/api/re_calculator/proposal/${proforma.proposal_id}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (propRes.data.status === "Success") {
               p = propRes.data.data;
             }
           } else {
-            const clientRes = await axios.get(`${baseURL}/auth/api/calculator/getClientDetailsById/${id}`, {
+            const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (clientRes.data.status === "Success") {
@@ -541,7 +541,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const fetchProposalInvoiceData = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientDetailsById/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${txn_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.status === "Success") {
@@ -781,7 +781,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
         // Filter out "Complimentary" service
         const filteredServices = res.data.data.filter(
@@ -794,7 +794,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
       .then((res) => {
         if (res.data.status === "success") {
           const services = res.data.data;
@@ -886,11 +886,11 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
     const request = isEditingAddition
       ? axios.put(
-        `${baseURL}/auth/api/calculator/updateAdditionalDataById/${isEditingAddition}`,
+        `${baseURL}/auth/api/re_calculator/updateAdditionalDataById/${isEditingAddition}`,
         payload
       )
       : axios.post(
-        `${baseURL}/auth/api/calculator/saveAdditionalData`,
+        `${baseURL}/auth/api/re_calculator/saveAdditionalData`,
         payload
       );
 
@@ -1054,12 +1054,12 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
       const response = selecteddiscount
         ? await axios.put(
-          `${baseURL}/auth/api/calculator/updateDiscountDataById/${selecteddiscount.id}`,
+          `${baseURL}/auth/api/re_calculator/updateDiscountDataById/${selecteddiscount.id}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         : await axios.post(
-          `${baseURL}/auth/api/calculator/saveDiscountData`,
+          `${baseURL}/auth/api/re_calculator/saveDiscountData`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -1115,7 +1115,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
     setLoading(true);
     try {
       await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteDiscountById/${selecteddiscount.id}`,
+        `${baseURL}/auth/api/re_calculator/deleteDiscountById/${selecteddiscount.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSelecteddiscount(null);
@@ -1184,11 +1184,11 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
     const request = isEditingRemaining
       ? axios.put(
-        `${baseURL}/auth/api/calculator/updateRemainingDataById/${isEditingRemaining}`,
+        `${baseURL}/auth/api/re_calculator/updateRemainingDataById/${isEditingRemaining}`,
         payload
       )
       : axios.post(
-        `${baseURL}/auth/api/calculator/saveRemainingAmountData`,
+        `${baseURL}/auth/api/re_calculator/saveRemainingAmountData`,
         payload
       );
 
@@ -1224,7 +1224,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
           formDataNote,
           {
             headers: {
@@ -1236,7 +1236,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
         // console.log(response.data);
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formDataNote,
           {
             headers: {
@@ -1351,7 +1351,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       };
 
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/saveInvoiceClientIdwiseNotes`,
+        `${baseURL}/auth/api/re_calculator/saveInvoiceClientIdwiseNotes`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -1417,7 +1417,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteInvoiceClientNotes/${noteId}`
+        `${baseURL}/auth/api/re_calculator/deleteInvoiceClientNotes/${noteId}`
       );
 
       const result = res.data;
@@ -1701,7 +1701,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteAdditionalById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteAdditionalById/${entryId}`
       );
 
       const result = res.data;
@@ -1756,7 +1756,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteRemainingAmountById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteRemainingAmountById/${entryId}`
       );
 
       const result = res.data;
@@ -1930,8 +1930,8 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
       // 5. Backend request hit karein isGST state flag ke saath
       const url = publicMode
-        ? `${baseURL}/auth/api/calculator/public/invoice/${publicToken}/pdf`
-        : `${baseURL}/auth/api/calculator/generate-invoice`;
+        ? `${baseURL}/auth/api/re_calculator/public/invoice/${publicToken}/pdf`
+        : `${baseURL}/auth/api/re_calculator/generate-invoice`;
       const response = await fetch(url, {
         method: "POST",
         headers: {

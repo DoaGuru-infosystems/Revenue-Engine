@@ -52,7 +52,7 @@ export default function RegisterAdmin() {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${baseURL}/auth/api/calculator/sendRegisterAdminOtp`, {
+      const response = await axios.post(`${baseURL}/auth/api/re_calculator/sendRegisterAdminOtp`, {
         employee_name: name,
         employee_email: email,
         employee_password: password,
@@ -88,7 +88,7 @@ export default function RegisterAdmin() {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${baseURL}/auth/api/calculator/registerAdminWithOtp`, {
+      const response = await axios.post(`${baseURL}/auth/api/re_calculator/registerAdminWithOtp`, {
         employee_email: email,
         otp: otp,
       });

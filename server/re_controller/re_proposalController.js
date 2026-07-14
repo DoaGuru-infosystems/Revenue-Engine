@@ -1,12 +1,12 @@
 const { db } = require("../connect");
-const { addBrandedPage, embedImageToPdf, loadBrandImages, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_TOP_PADDING } = require("./pdfHelpers");
+const { addBrandedPage, embedImageToPdf, loadBrandImages, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_TOP_PADDING } = require("./re_pdfHelpers");
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const fs = require("fs");
 const path = require("path");
-const { sendProposalEmail, sendProposalAdminNotifyEmail } = require("./sendEmails");
-const { sendProposalWhatsApp, sendProposalAdminNotifyWA } = require("./sendWhatsApp");
+const { sendProposalEmail, sendProposalAdminNotifyEmail } = require("./re_sendEmails");
+const { sendProposalWhatsApp, sendProposalAdminNotifyWA } = require("./re_sendWhatsApp");
 const puppeteer = require("puppeteer");
-const { generatePublicAccessToken } = require("./publicController");
+const { generatePublicAccessToken } = require("./re_publicController");
 const notificationService = require("../services/notificationService");
 
 // Helper to load assets as base64 for Puppeteer
@@ -190,7 +190,7 @@ exports.createProposal = async (req, res) => {
 
     // Verify client exists
     const clientCheck = await runQuery(
-      "SELECT id FROM revenue_engine_client_details WHERE id = ?",
+      "SELECT id FROM re_revenue_engine_client_details WHERE id = ?",
       [client_id]
     );
     if (clientCheck.length === 0) {
@@ -198,7 +198,7 @@ exports.createProposal = async (req, res) => {
     }
 
     const q = `
-      INSERT INTO proposals 
+      INSERT INTO re_proposals 
       (
         client_id, txn_id, proposal_type, billing_type, billing_start_date, billing_end_date,
         sections_json, optional_toggles, pricing_table_json, grand_total_excl_gst,
@@ -242,7 +242,7 @@ exports.updateProposal = async (req, res) => {
 
     let targetClientId = client_id;
     if (!targetClientId) {
-      const existingProp = await runQuery(`SELECT client_id FROM proposals WHERE id = ?`, [id]);
+      const existingProp = await runQuery(`SELECT client_id FROM re_proposals WHERE id = ?`, [id]);
       if (existingProp.length === 0) {
         return res.status(404).json({ status: "Failure", message: "Proposal not found" });
       }
@@ -251,7 +251,7 @@ exports.updateProposal = async (req, res) => {
 
     // Verify client exists
     const clientCheck = await runQuery(
-      "SELECT id FROM revenue_engine_client_details WHERE id = ?",
+      "SELECT id FROM re_revenue_engine_client_details WHERE id = ?",
       [targetClientId]
     );
     if (clientCheck.length === 0) {
@@ -284,7 +284,7 @@ exports.updateProposal = async (req, res) => {
     }
 
     const q = `
-      UPDATE proposals 
+      UPDATE re_proposals 
       SET proposal_type = ?, billing_type = ?, billing_start_date = ?, billing_end_date = ?,
           sections_json = ?, optional_toggles = ?, pricing_table_json = ?,
           grand_total_excl_gst = ?, terms_notes_json = ?, notes_json = ?, 
@@ -310,7 +310,7 @@ exports.updateProposal = async (req, res) => {
     ]);
 
     // Also update any generated proforma for this proposal so it stays synced with live data
-    const existingProformas = await runQuery(`SELECT id, is_gst, gst_rate FROM proposal_proforma WHERE proposal_id = ?`, [id]);
+    const existingProformas = await runQuery(`SELECT id, is_gst, gst_rate FROM re_proposal_proforma WHERE proposal_id = ?`, [id]);
     if (existingProformas.length > 0) {
       const base_amt = Number(grand_total_excl_gst || 0);
       for (const prof of existingProformas) {
@@ -318,7 +318,7 @@ exports.updateProposal = async (req, res) => {
         const total_amt = Number(base_amt) + Number(gst_amt);
         
         await runQuery(`
-          UPDATE proposal_proforma 
+          UPDATE re_proposal_proforma 
           SET base_amount = ?, gst_amount = ?, total_amount = ?, pricing_snapshot = ?
           WHERE id = ?
         `, [
@@ -342,12 +342,12 @@ exports.getProposalById = async (req, res) => {
   try {
     const { id } = req.params;
     const q = `SELECT p.*, 
-                      (SELECT id FROM proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
-                      (SELECT is_gst FROM proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
-                      (SELECT SUM(realized_ad_budget) FROM proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
+                      (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
+                      (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
+                      (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
                       c.client_name, c.client_organization AS company_name, c.email, c.phone AS phone_no 
-               FROM proposals p
-               LEFT JOIN revenue_engine_client_details c ON p.client_id = c.id
+               FROM re_proposals p
+               LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
                WHERE p.id = ?`;
     const results = await runQuery(q, [id]);
     
@@ -366,10 +366,10 @@ exports.getProposalsByClient = async (req, res) => {
   try {
     const { clientId } = req.params;
     const q = `SELECT *, 
-                      (SELECT id FROM proposal_proforma WHERE proposal_id = proposals.id ORDER BY id DESC LIMIT 1) AS proforma_id,
-                      (SELECT is_gst FROM proposal_proforma WHERE proposal_id = proposals.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst,
-                      (SELECT SUM(realized_ad_budget) FROM proposal_payment_records WHERE proposal_id = proposals.id AND status = 'approved') AS realized_ad_budget
-               FROM proposals WHERE client_id = ? ORDER BY created_at DESC`;
+                      (SELECT id FROM re_proposal_proforma WHERE proposal_id = re_proposals.id ORDER BY id DESC LIMIT 1) AS proforma_id,
+                      (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = re_proposals.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst,
+                      (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = re_proposals.id AND status = 'approved') AS realized_ad_budget
+               FROM re_proposals WHERE client_id = ? ORDER BY created_at DESC`;
     const results = await runQuery(q, [clientId]);
     
     res.status(200).json({ status: "Success", data: results });
@@ -383,12 +383,12 @@ exports.getAllProposals = async (req, res) => {
   try {
     const { status } = req.query;
     let q = `SELECT p.*, 
-                    (SELECT id FROM proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
-                    (SELECT is_gst FROM proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
-                    (SELECT SUM(realized_ad_budget) FROM proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
+                    (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
+                    (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
+                    (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
                     c.client_name, c.client_organization AS company_name, c.email, c.phone AS phone_no 
-             FROM proposals p
-             LEFT JOIN revenue_engine_client_details c ON p.client_id = c.id`;
+             FROM re_proposals p
+             LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id`;
     const params = [];
     if (status) {
       q += ` WHERE p.status = ?`;
@@ -408,12 +408,12 @@ exports.deleteProposal = async (req, res) => {
     const { id } = req.params;
     
     // Block delete if there is an associated proforma
-    const proformaCheck = await runQuery("SELECT id FROM proposal_proforma WHERE proposal_id = ?", [id]);
+    const proformaCheck = await runQuery("SELECT id FROM re_proposal_proforma WHERE proposal_id = ?", [id]);
     if (proformaCheck.length > 0) {
       return res.status(400).json({ status: "Failure", message: "Please delete the proforma first before deleting the proposal." });
     }
     
-    await runQuery(`DELETE FROM proposals WHERE id = ?`, [id]);
+    await runQuery(`DELETE FROM re_proposals WHERE id = ?`, [id]);
     res.status(200).json({ status: "Success", message: "Proposal deleted" });
   } catch (error) {
     console.error("deleteProposal error:", error);
@@ -426,7 +426,7 @@ exports.updateProposalStatus = async (req, res) => {
     const { id } = req.params;
     const { status, updated_by } = req.body;
     
-    await runQuery(`UPDATE proposals SET status = ?, updated_by = ? WHERE id = ?`, [status, updated_by || "System", id]);
+    await runQuery(`UPDATE re_proposals SET status = ?, updated_by = ? WHERE id = ?`, [status, updated_by || "System", id]);
     res.status(200).json({ status: "Success", message: "Status updated" });
   } catch (error) {
     console.error("updateProposalStatus error:", error);
@@ -441,8 +441,8 @@ exports.sendProposalToClient = async (req, res) => {
     
     // Fetch proposal and client details
     const q = `SELECT p.*, c.client_name, c.client_organization AS company_name, c.email, c.phone AS phone_no 
-               FROM proposals p
-               LEFT JOIN revenue_engine_client_details c ON p.client_id = c.id
+               FROM re_proposals p
+               LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
                WHERE p.id = ?`;
     const results = await runQuery(q, [id]);
     if (results.length === 0) return res.status(404).json({ status: "Failure", message: "Proposal not found" });
@@ -451,7 +451,7 @@ exports.sendProposalToClient = async (req, res) => {
     const clientName = proposal.company_name || proposal.client_name;
     const baseUrl = process.env.CLIENT_BASE_URL || 'http://localhost:5173';
     
-    const { generatePublicAccessToken } = require("./publicController");
+    const { generatePublicAccessToken } = require("./re_publicController");
     const snapshotJson = JSON.stringify(proposal);
     const token = await generatePublicAccessToken(proposal.client_id, proposal.id, "proposal", snapshotJson);
     const proposalLink = `${baseUrl}/#/public/proposal/${token}`;
@@ -514,7 +514,7 @@ exports.sendProposalToClient = async (req, res) => {
     
     // Update status to 'sent'
     if (['draft', 'changes', 'rejected'].includes(proposal.status)) {
-      await runQuery('UPDATE proposals SET status = ?, updated_by = ? WHERE id = ?', ['sent', 'System', id]);
+      await runQuery('UPDATE re_proposals SET status = ?, updated_by = ? WHERE id = ?', ['sent', 'System', id]);
     }
     
     res.status(200).json({ 
@@ -538,7 +538,7 @@ exports.createProforma = async (req, res) => {
     const { proposal_id, client_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, created_by, duration_start_date, duration_end_date } = req.body;
     
     // Fetch parent proposal to snapshot data
-    const propQuery = `SELECT * FROM proposals WHERE id = ?`;
+    const propQuery = `SELECT * FROM re_proposals WHERE id = ?`;
     const propResults = await runQuery(propQuery, [proposal_id]);
     if (propResults.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Proposal not found" });
@@ -546,7 +546,7 @@ exports.createProforma = async (req, res) => {
     const proposal = propResults[0];
 
     const q = `
-      INSERT INTO proposal_proforma 
+      INSERT INTO re_proposal_proforma 
       (proposal_id, client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
        pricing_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
        duration_start_date, duration_end_date)
@@ -584,7 +584,7 @@ exports.createProforma = async (req, res) => {
     }
     updateParams.push(proposal_id);
 
-    await runQuery(`UPDATE proposals SET ${updateFields.join(", ")} WHERE id = ?`, updateParams);
+    await runQuery(`UPDATE re_proposals SET ${updateFields.join(", ")} WHERE id = ?`, updateParams);
 
     res.status(200).json({ status: "Success", message: "Proforma created", proformaId: result.insertId });
   } catch (error) {
@@ -596,7 +596,7 @@ exports.createProforma = async (req, res) => {
 exports.getProformasByClient = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const q = `SELECT * FROM proposal_proforma WHERE client_id = ? ORDER BY created_at DESC`;
+    const q = `SELECT * FROM re_proposal_proforma WHERE client_id = ? ORDER BY created_at DESC`;
     const results = await runQuery(q, [clientId]);
     res.status(200).json({ status: "Success", data: results });
   } catch (error) {
@@ -609,8 +609,8 @@ exports.getAllProformas = async (req, res) => {
   try {
     const q = `
       SELECT p.*, c.client_name, c.client_organization
-      FROM proposal_proforma p
-      LEFT JOIN revenue_engine_client_details c ON p.client_id = c.id
+      FROM re_proposal_proforma p
+      LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
       ORDER BY p.created_at DESC
     `;
     const results = await runQuery(q, []);
@@ -626,8 +626,8 @@ exports.getFinalInvoices = async (req, res) => {
   try {
     const q = `
       SELECT p.*, c.client_name, c.client_organization, c.email, c.phone 
-      FROM proposal_proforma p
-      LEFT JOIN revenue_engine_client_details c ON p.client_id = c.id
+      FROM re_proposal_proforma p
+      LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
       WHERE p.status IN ('partially_paid', 'payment_received')
       ORDER BY p.created_at DESC
     `;
@@ -642,7 +642,7 @@ exports.getFinalInvoices = async (req, res) => {
 exports.getProformasByProposal = async (req, res) => {
   try {
     const { proposalId } = req.params;
-    const q = `SELECT * FROM proposal_proforma WHERE proposal_id = ? ORDER BY created_at DESC`;
+    const q = `SELECT * FROM re_proposal_proforma WHERE proposal_id = ? ORDER BY created_at DESC`;
     const results = await runQuery(q, [proposalId]);
     res.status(200).json({ status: "Success", data: results });
   } catch (error) {
@@ -656,15 +656,15 @@ exports.deleteProforma = async (req, res) => {
     const { id } = req.params;
     
     // Delete associated payment records first to avoid orphaned data
-    await runQuery(`DELETE FROM proposal_payment_records WHERE proforma_id = ?`, [id]);
+    await runQuery(`DELETE FROM re_proposal_payment_records WHERE proforma_id = ?`, [id]);
 
-    const proforma = await runQuery("SELECT proposal_id FROM proposal_proforma WHERE id = ?", [id]);
+    const proforma = await runQuery("SELECT proposal_id FROM re_proposal_proforma WHERE id = ?", [id]);
     if (proforma.length > 0) {
       const proposalId = proforma[0].proposal_id;
-      await runQuery(`DELETE FROM proposal_proforma WHERE id = ?`, [id]);
-      await runQuery(`UPDATE proposals SET status = 'client_approved' WHERE id = ?`, [proposalId]);
+      await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
+      await runQuery(`UPDATE re_proposals SET status = 'client_approved' WHERE id = ?`, [proposalId]);
     } else {
-      await runQuery(`DELETE FROM proposal_proforma WHERE id = ?`, [id]);
+      await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
     }
     
     res.status(200).json({ status: "Success", message: "Proforma deleted" });
@@ -682,14 +682,14 @@ exports.recordProposalPayment = async (req, res) => {
   try {
     const { proforma_id, proposal_id, client_id, amount, is_gst, tds_applicable, tds_percentage, tds_amount, final_amount, payment_date, payment_mode, transaction_reference, remark, created_by, realized_ad_budget, realized_google_budget, realized_meta_budget } = req.body;
 
-    const proformaRows = await runQuery(`SELECT * FROM proposal_proforma WHERE id = ?`, [proforma_id]);
+    const proformaRows = await runQuery(`SELECT * FROM re_proposal_proforma WHERE id = ?`, [proforma_id]);
     if (proformaRows.length === 0) return res.status(404).json({ status: "Failure", message: "Proforma not found" });
     const proforma = proformaRows[0];
 
-    const proposalRows = await runQuery(`SELECT * FROM proposals WHERE id = ?`, [proposal_id]);
+    const proposalRows = await runQuery(`SELECT * FROM re_proposals WHERE id = ?`, [proposal_id]);
     const proposal = proposalRows.length > 0 ? proposalRows[0] : {};
 
-    const clientRows = await runQuery(`SELECT * FROM revenue_engine_client_details WHERE id = ?`, [client_id]);
+    const clientRows = await runQuery(`SELECT * FROM re_revenue_engine_client_details WHERE id = ?`, [client_id]);
     const client = clientRows.length > 0 ? clientRows[0] : {};
 
     const createdAt = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
@@ -698,12 +698,12 @@ exports.recordProposalPayment = async (req, res) => {
     await beginTransaction();
 
     try {
-      // Generate a new unique txn_id for this milestone invoice snapshot
+      // Generate a new unique txn_id for this milestone re_invoice snapshot
       const invoice_txn_id = String(Date.now());
 
       // 3.2 Record payment with 'pending_approval' status
       const paymentQ = `
-        INSERT INTO proposal_payment_records 
+        INSERT INTO re_proposal_payment_records 
         (proforma_id, proposal_id, client_id, amount, is_gst, tds_applicable, tds_percentage, tds_amount, final_amount, payment_date, payment_mode, transaction_reference, remark, created_by, txn_id, status, realized_ad_budget, realized_google_budget, realized_meta_budget)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', ?, ?, ?)
       `;
@@ -712,7 +712,7 @@ exports.recordProposalPayment = async (req, res) => {
       ]);
 
       const timelineRemark = `Payment Recorded (Pending Approval)\nAmount : ₹${amount}\nTime : ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`;
-      const timelineQ = `INSERT INTO workflow_remarks (txn_id, action_type, actor_name, remark, created_at) VALUES (?, ?, ?, ?, ?)`;
+      const timelineQ = `INSERT INTO re_workflow_remarks (txn_id, action_type, actor_name, remark, created_at) VALUES (?, ?, ?, ?, ?)`;
       await runQuery(timelineQ, [invoice_txn_id, 'payment_recorded', created_by || "System", timelineRemark, createdAt]);
 
       // COMMIT TRANSACTION
@@ -722,7 +722,7 @@ exports.recordProposalPayment = async (req, res) => {
       let deliveryStatus = { adminWhatsapp: "N/A", adminEmail: "N/A" };
       try {
         const pastPayments = await runQuery(
-          `SELECT SUM(amount) as total_past FROM proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+          `SELECT SUM(amount) as total_past FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
           [proforma_id]
         );
         const totalPastPayments = Number(pastPayments[0].total_past || 0);
@@ -777,8 +777,8 @@ exports.markPaymentReceived = async (req, res) => {
     const { id } = req.params; // proposal_id
     const { updated_by } = req.body;
 
-    await runQuery(`UPDATE proposals SET status = 'payment_received', updated_by = ? WHERE id = ?`, [updated_by || "System", id]);
-    await runQuery(`UPDATE proposal_proforma SET status = 'payment_received' WHERE proposal_id = ? AND status IN ('generated', 'sent', 'payment_awaited')`, [id]);
+    await runQuery(`UPDATE re_proposals SET status = 'payment_received', updated_by = ? WHERE id = ?`, [updated_by || "System", id]);
+    await runQuery(`UPDATE re_proposal_proforma SET status = 'payment_received' WHERE proposal_id = ? AND status IN ('generated', 'sent', 'payment_awaited')`, [id]);
 
     res.status(200).json({ status: "Success", message: "Marked as payment received" });
   } catch (error) {
@@ -792,16 +792,16 @@ exports.getProposalPaymentSummary = async (req, res) => {
     const { id } = req.params; // proposal_id
 
     // Get proposal total
-    const propResults = await runQuery(`SELECT grand_total_excl_gst FROM proposals WHERE id = ?`, [id]);
+    const propResults = await runQuery(`SELECT grand_total_excl_gst FROM re_proposals WHERE id = ?`, [id]);
     if (propResults.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Proposal not found" });
     }
     
     // We would ideally fetch the proforma total, but let's stick to base amount for now or fetch proforma if exists
-    const profResults = await runQuery(`SELECT total_amount FROM proposal_proforma WHERE proposal_id = ? ORDER BY id DESC LIMIT 1`, [id]);
+    const profResults = await runQuery(`SELECT total_amount FROM re_proposal_proforma WHERE proposal_id = ? ORDER BY id DESC LIMIT 1`, [id]);
     const proposalTotal = profResults.length > 0 ? Number(profResults[0].total_amount) : Number(propResults[0].grand_total_excl_gst);
 
-    const payments = await runQuery(`SELECT * FROM proposal_payment_records WHERE proposal_id = ? ORDER BY payment_date DESC, id DESC`, [id]);
+    const payments = await runQuery(`SELECT * FROM re_proposal_payment_records WHERE proposal_id = ? ORDER BY payment_date DESC, id DESC`, [id]);
     const totalReceived = payments.reduce((sum, p) => sum + Number(p.final_amount), 0);
     const outstanding_balance = Math.max(proposalTotal - totalReceived, 0);
 
@@ -823,7 +823,7 @@ exports.getProposalPaymentSummary = async (req, res) => {
 exports.getPaymentRecordsByClient = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const q = `SELECT * FROM proposal_payment_records WHERE client_id = ? ORDER BY created_at DESC`;
+    const q = `SELECT * FROM re_proposal_payment_records WHERE client_id = ? ORDER BY created_at DESC`;
     const results = await runQuery(q, [clientId]);
     res.status(200).json({ status: "Success", data: results });
   } catch (error) {
@@ -836,8 +836,8 @@ exports.getAllPaymentRecords = async (req, res) => {
   try {
     const q = `
       SELECT p.*, c.client_name, c.client_organization
-      FROM proposal_payment_records p
-      LEFT JOIN revenue_engine_client_details c ON p.client_id = c.id
+      FROM re_proposal_payment_records p
+      LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
       ORDER BY p.created_at DESC
     `;
     const results = await runQuery(q, []);
@@ -854,12 +854,12 @@ exports.approvePayment = async (req, res) => {
     const { status, approved_by, remark } = req.body;
     
     if (status !== 'approved') {
-       await runQuery(`UPDATE proposal_payment_records SET status = ?, approved_by = ?, remark = ? WHERE id = ?`, [status, approved_by || "System", remark, id]);
+       await runQuery(`UPDATE re_proposal_payment_records SET status = ?, approved_by = ?, remark = ? WHERE id = ?`, [status, approved_by || "System", remark, id]);
        return res.status(200).json({ status: "Success", message: "Payment status updated" });
     }
 
     // Process Approval
-    const paymentRows = await runQuery(`SELECT * FROM proposal_payment_records WHERE id = ?`, [id]);
+    const paymentRows = await runQuery(`SELECT * FROM re_proposal_payment_records WHERE id = ?`, [id]);
     if (paymentRows.length === 0) return res.status(404).json({status: "Failure", message: "Payment not found"});
     const payment = paymentRows[0];
     
@@ -867,14 +867,14 @@ exports.approvePayment = async (req, res) => {
       return res.status(400).json({status: "Failure", message: "Payment already approved"});
     }
 
-    const proformaRows = await runQuery(`SELECT * FROM proposal_proforma WHERE id = ?`, [payment.proforma_id]);
+    const proformaRows = await runQuery(`SELECT * FROM re_proposal_proforma WHERE id = ?`, [payment.proforma_id]);
     if (proformaRows.length === 0) return res.status(404).json({status: "Failure", message: "Proforma not found"});
     const proforma = proformaRows[0];
 
-    const proposalRows = await runQuery(`SELECT * FROM proposals WHERE id = ?`, [payment.proposal_id]);
+    const proposalRows = await runQuery(`SELECT * FROM re_proposals WHERE id = ?`, [payment.proposal_id]);
     const proposal = proposalRows.length > 0 ? proposalRows[0] : {};
 
-    const clientRows = await runQuery(`SELECT * FROM revenue_engine_client_details WHERE id = ?`, [payment.client_id]);
+    const clientRows = await runQuery(`SELECT * FROM re_revenue_engine_client_details WHERE id = ?`, [payment.client_id]);
     const client = clientRows.length > 0 ? clientRows[0] : {};
 
     const createdAt = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
@@ -886,11 +886,11 @@ exports.approvePayment = async (req, res) => {
     await beginTransaction();
     try {
       // 1. Update Payment Record to Approved
-      await runQuery(`UPDATE proposal_payment_records SET status = 'approved', approved_by = ?, remark = ? WHERE id = ?`, [approved_by || "System", remark, id]);
+      await runQuery(`UPDATE re_proposal_payment_records SET status = 'approved', approved_by = ?, remark = ? WHERE id = ?`, [approved_by || "System", remark, id]);
 
       // 2. Calculate Math
       const pastPayments = await runQuery(
-        `SELECT SUM(amount) as total_past FROM proposal_payment_records WHERE proforma_id = ? AND status = 'approved' AND id != ?`,
+        `SELECT SUM(amount) as total_past FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved' AND id != ?`,
         [payment.proforma_id, id]
       );
       const totalPastPayments = Number(pastPayments[0].total_past || 0);
@@ -903,16 +903,16 @@ exports.approvePayment = async (req, res) => {
 
       // 3. Generate Bill Number
       const bill_type = proforma.is_gst && (Buffer.isBuffer(proforma.is_gst) ? proforma.is_gst[0] === 1 : Number(proforma.is_gst) === 1) ? "GST" : "NON_GST";
-      const lastBillRows = await runQuery(`SELECT bill_number FROM invoice WHERE bill_type = ? ORDER BY id DESC LIMIT 1`, [bill_type]);
+      const lastBillRows = await runQuery(`SELECT bill_number FROM re_invoice WHERE bill_type = ? ORDER BY id DESC LIMIT 1`, [bill_type]);
       let newBillNumber = "01";
       if (lastBillRows.length > 0 && lastBillRows[0].bill_number) {
         const lastNumber = parseInt(lastBillRows[0].bill_number.split("-").pop(), 10);
         newBillNumber = String(lastNumber + 1).padStart(2, "0");
       }
 
-      // 4. INSERT INTO invoice
+      // 4. INSERT INTO re_invoice
       const insertInvoiceQ = `
-        INSERT INTO invoice (
+        INSERT INTO re_invoice (
           bill_type, bill_number, txn_id, client_id, client_name, client_organization,
           email, phone, address, dg_employee, duration_start_date, duration_end_date,
           payment_mode, payment_date, payment_reference, client_gst_no, client_pan_no,
@@ -932,27 +932,27 @@ exports.approvePayment = async (req, res) => {
       const items = JSON.parse(proforma.pricing_snapshot || '[]');
       for (const item of items) {
         if (!item) continue;
-        const isComplimentary = item.source === 'custom_complimentary' || (item.service_name && item.service_name.toLowerCase() === 'complimentary') || item.include_in_total === false;
+        const isComplimentary = item.source === 'custom_complimentary' || (item.service_name && item.service_name.toLowerCase() === 're_complimentary') || item.include_in_total === false;
         
         if (isComplimentary) {
           const compQ = `
-            INSERT INTO complimentary_invoice (
+            INSERT INTO re_complimentary_invoice (
               client_id, txn_id, service_name, category_name, editing_type_id, editing_type_name, editing_type_amount,
               quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
-          await runQuery(compQ, [client_id, invoice_txn_id, item.service_name || 'Complimentary', item.category_name || '', null, item.editing_type_name || '', item.unit_price || 0, item.quantity || 1, '0', '0', item.total_price || 0, proposal.created_by || '', createdAt]);
+          await runQuery(compQ, [client_id, invoice_txn_id, item.service_name || 're_complimentary', item.category_name || '', null, item.editing_type_name || '', item.unit_price || 0, item.quantity || 1, '0', '0', item.total_price || 0, proposal.created_by || '', createdAt]);
         } else if (item.source === 'custom_ads' || item.service_type === 'Ads Campaign' || item.service_name === 'Ads Campaign') {
           const uniqueId = Date.now() + '-' + Math.random().toString(36).substr(2,6);
           const adQ = `
-            INSERT INTO ads_campaign_details_invoice (
+            INSERT INTO re_ads_campaign_details_invoice (
               txn_id, client_id, unique_id, category, amount, percent, charge, total, employee, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
           await runQuery(adQ, [invoice_txn_id, client_id, uniqueId, item.category_name || '', item.budget || item.unit_price || 0, item.percent || 0, item.charge || 0, item.total_price || 0, proposal.created_by || '', createdAt]);
         } else {
           const igQ = `
-            INSERT INTO invoice_graphic (
+            INSERT INTO re_invoice_graphic (
               txn_id, client_id, service_name, category_name, editing_type_id, editing_type_name, editing_type_amount,
               quantity, include_content_posting, include_thumbnail_creation, include_youtube_video_posting, total_amount, plan_name, employee, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -961,13 +961,13 @@ exports.approvePayment = async (req, res) => {
         }
       }
 
-      // 6. Notes & Discount
+      // 6. Notes & re_discount
       const notes = JSON.parse(proforma.notes_snapshot || '[]');
       for (const note of notes) {
         if (!note) continue;
         const noteName = note.note_name || note.note_text || note.text || String(note);
         if (!noteName) continue;
-        await runQuery(`INSERT INTO invoice_client_notes (client_id, txn_id, note_name, created_at) VALUES (?, ?, ?, ?)`, [client_id, invoice_txn_id, noteName, createdAt]);
+        await runQuery(`INSERT INTO re_invoice_client_notes (client_id, txn_id, note_name, created_at) VALUES (?, ?, ?, ?)`, [client_id, invoice_txn_id, noteName, createdAt]);
       }
       
       const sections = JSON.parse(proposal.sections_json || '{}');
@@ -975,18 +975,18 @@ exports.approvePayment = async (req, res) => {
       const discountVal = Number(pricingDiscount.value) || 0;
       if (discountVal > 0) {
         const isPercent = pricingDiscount.type === 'Percentage';
-        await runQuery(`INSERT INTO discount (txn_id, client_id, discount_type, discount_per, discount_amt, created_at) VALUES (?, ?, ?, ?, ?, ?)`, [invoice_txn_id, client_id, pricingDiscount.type || 'Amount', isPercent ? discountVal : 0, isPercent ? 0 : discountVal, createdAt]);
+        await runQuery(`INSERT INTO re_discount (txn_id, client_id, discount_type, discount_per, discount_amt, created_at) VALUES (?, ?, ?, ?, ?, ?)`, [invoice_txn_id, client_id, pricingDiscount.type || 'Amount', isPercent ? discountVal : 0, isPercent ? 0 : discountVal, createdAt]);
       }
 
       // 8. UPDATE statuses
-      await runQuery(`UPDATE proposal_proforma SET status = ? WHERE id = ?`, [newStatus, payment.proforma_id]);
+      await runQuery(`UPDATE re_proposal_proforma SET status = ? WHERE id = ?`, [newStatus, payment.proforma_id]);
       if (isFullyPaid) {
-        await runQuery(`UPDATE proposals SET status = 'invoiced' WHERE id = ?`, [payment.proposal_id]);
+        await runQuery(`UPDATE re_proposals SET status = 'invoiced' WHERE id = ?`, [payment.proposal_id]);
       }
 
       // Timeline Remark
       const timelineRemark = `Payment Approved\nAmount : ₹${received_amt}\nOutstanding : ₹${current_amt}\nInvoice Number : ${newBillNumber}`;
-      await runQuery(`INSERT INTO workflow_remarks (txn_id, action_type, actor_name, remark, created_at) VALUES (?, ?, ?, ?, ?)`, [invoice_txn_id, 'payment_approved', approved_by || "System", timelineRemark, createdAt]);
+      await runQuery(`INSERT INTO re_workflow_remarks (txn_id, action_type, actor_name, remark, created_at) VALUES (?, ?, ?, ?, ?)`, [invoice_txn_id, 'payment_approved', approved_by || "System", timelineRemark, createdAt]);
 
       await commitTransaction();
 
@@ -994,7 +994,7 @@ exports.approvePayment = async (req, res) => {
       let deliveryStatus = { clientEmail: "N/A", clientWhatsapp: "N/A", adminEmail: "N/A", adminWhatsapp: "N/A" };
       try {
         const token = await generatePublicAccessToken(client_id, invoice_txn_id, "final");
-        const invoiceLink = `${process.env.CLIENT_BASE_URL || ""}/#/public/invoice/${token}`;
+        const invoiceLink = `${process.env.CLIENT_BASE_URL || ""}/#/public/re_invoice/${token}`;
         const payload = {
           clientEmail: client.email || "",
           clientPhone: client.phone || "",
@@ -1010,7 +1010,7 @@ exports.approvePayment = async (req, res) => {
         console.error("Auto notification error:", err);
       }
 
-      res.status(200).json({ status: "Success", message: "Payment approved and invoice generated", invoiceSent: deliveryStatus });
+      res.status(200).json({ status: "Success", message: "Payment approved and re_invoice generated", invoiceSent: deliveryStatus });
     } catch (txErr) {
       await rollbackTransaction();
       console.error("Approve Payment Transaction Error:", txErr);
@@ -1023,14 +1023,14 @@ exports.approvePayment = async (req, res) => {
 };
 
 
-// ─── GENERATE FINAL INVOICE FROM PROFORMA ─────────────────────────────────────
+// ─── GENERATE FINAL re_invoice FROM PROFORMA ─────────────────────────────────────
 exports.generateInvoiceFromProforma = async (req, res) => {
   try {
     const { proforma_id } = req.params;
 
     // 1. Verify proforma exists and has a payment
     const proformaRows = await runQuery(
-      `SELECT * FROM proposal_proforma WHERE id = ?`,
+      `SELECT * FROM re_proposal_proforma WHERE id = ?`,
       [proforma_id]
     );
     if (proformaRows.length === 0) {
@@ -1048,7 +1048,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
 
     // 2. Verify at least one payment record exists for this proforma
     const paymentRows = await runQuery(
-      `SELECT * FROM proposal_payment_records WHERE proforma_id = ? ORDER BY created_at DESC`,
+      `SELECT * FROM re_proposal_payment_records WHERE proforma_id = ? ORDER BY created_at DESC`,
       [proforma_id]
     );
     if (paymentRows.length === 0) {
@@ -1056,15 +1056,15 @@ exports.generateInvoiceFromProforma = async (req, res) => {
     }
     const latestPayment = paymentRows[0];
 
-    // 3. Check if invoice already generated for this proforma
+    // 3. Check if re_invoice already generated for this proforma
     const existingInvoice = await runQuery(
-      `SELECT id, bill_number FROM invoice WHERE proforma_id = ?`,
+      `SELECT id, bill_number FROM re_invoice WHERE proforma_id = ?`,
       [proforma_id]
     );
     if (existingInvoice.length > 0) {
       return res.status(409).json({
         status: "Failure",
-        message: "Invoice already generated for this proforma",
+        message: "re_invoice already generated for this proforma",
         invoice_id: existingInvoice[0].id,
         bill_number: existingInvoice[0].bill_number,
       });
@@ -1073,7 +1073,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
     // 4. Fetch proposal + client details
     let proposal = {};
     if (proforma.source_type !== 'manual') {
-      const proposalRows = await runQuery(`SELECT * FROM proposals WHERE id = ?`, [proforma.proposal_id]);
+      const proposalRows = await runQuery(`SELECT * FROM re_proposals WHERE id = ?`, [proforma.proposal_id]);
       if (proposalRows.length === 0) {
         return res.status(404).json({ status: "Failure", message: "Parent proposal not found" });
       }
@@ -1081,7 +1081,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
     }
 
     const clientRows = await runQuery(
-      `SELECT * FROM revenue_engine_client_details WHERE id = ?`,
+      `SELECT * FROM re_revenue_engine_client_details WHERE id = ?`,
       [proforma.client_id]
     );
     const client = clientRows[0] || {};
@@ -1091,7 +1091,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
 
     // 6. Get next bill_number (same pattern as old system)
     const lastBillRows = await runQuery(
-      `SELECT bill_number FROM invoice WHERE bill_type = ? ORDER BY id DESC LIMIT 1`,
+      `SELECT bill_number FROM re_invoice WHERE bill_type = ? ORDER BY id DESC LIMIT 1`,
       [bill_type]
     );
     let newBillNumber = "01";
@@ -1106,9 +1106,9 @@ exports.generateInvoiceFromProforma = async (req, res) => {
     // 8. Calculate received amount from payment records
     const received_amt = paymentRows.reduce((sum, p) => sum + Number(p.final_amount || p.amount), 0);
 
-    // 9. INSERT into invoice table
+    // 9. INSERT into re_invoice table
     const insertQ = `
-      INSERT INTO invoice (
+      INSERT INTO re_invoice (
         invoice_source, proposal_id, proforma_id,
         bill_type, bill_number,
         base_amount, gst_rate, gst_amount,
@@ -1171,14 +1171,14 @@ exports.generateInvoiceFromProforma = async (req, res) => {
     const result = await runQuery(insertQ, insertValues);
     const new_invoice_id = result.insertId;
 
-    // 10. Update proposals.status = 'invoiced'
+    // 10. Update re_proposals.status = 'invoiced'
     if (proforma.proposal_id) {
-      await runQuery(`UPDATE proposals SET status = 'invoiced' WHERE id = ?`, [proforma.proposal_id]);
+      await runQuery(`UPDATE re_proposals SET status = 'invoiced' WHERE id = ?`, [proforma.proposal_id]);
     }
 
     return res.status(200).json({
       status: "Success",
-      message: "Invoice generated successfully",
+      message: "re_invoice generated successfully",
       invoice_id: new_invoice_id,
       bill_number: newBillNumber,
       txn_id,
@@ -1194,9 +1194,9 @@ exports.getProposalInvoices = async (req, res) => {
   try {
     const q = `
       SELECT i.*, p.id AS p_id, pf.id AS pf_id
-      FROM invoice i
-      LEFT JOIN proposals p ON i.proposal_id = p.id
-      LEFT JOIN proposal_proforma pf ON i.proforma_id = pf.id
+      FROM re_invoice i
+      LEFT JOIN re_proposals p ON i.proposal_id = p.id
+      LEFT JOIN re_proposal_proforma pf ON i.proforma_id = pf.id
       WHERE i.invoice_source = 'proposal'
       ORDER BY i.created_at DESC
     `;
@@ -1218,8 +1218,8 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
     } else {
       // Fetch proposal data
       const q = `SELECT p.*, c.client_name, c.client_organization AS company_name, c.email, c.phone AS phone_no, c.address 
-                 FROM proposals p
-                 LEFT JOIN revenue_engine_client_details c ON p.client_id = c.id
+                 FROM re_proposals p
+                 LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
                  WHERE p.id = ?`;
       const results = await runQuery(q, [id]);
       if (results.length === 0) throw new Error("Proposal not found");
@@ -1454,7 +1454,7 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
       const discountVal = Number(pricingDiscount.value) || 0;
       const discountType = pricingDiscount.type || "Amount";
 
-      const dmSubtotal = pricing.reduce((sum, item) => sum + ((item.service_name === "Ads Campaign" || item.service_name?.toLowerCase() === "complimentary") ? 0 : (Number(item.total_price) || 0)), 0);
+      const dmSubtotal = pricing.reduce((sum, item) => sum + ((item.service_name === "Ads Campaign" || item.service_name?.toLowerCase() === "re_complimentary") ? 0 : (Number(item.total_price) || 0)), 0);
       const adsSubtotal = pricing.reduce((sum, item) => sum + (item.service_name === "Ads Campaign" ? (Number(item.total_price) || 0) : 0), 0);
       const discountAmt = discountType === 'Percentage' ? ((dmSubtotal * discountVal) / 100) : discountVal;
 
@@ -1465,7 +1465,7 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
       
       if (discountVal > 0) {
         htmlContent += `<tr>
-          <td colspan="2" style="text-align: right; font-weight: bold; color: #cc0000;">Discount (${discountType === 'Percentage' ? `${discountVal}%` : '₹'})</td>
+          <td colspan="2" style="text-align: right; font-weight: bold; color: #cc0000;">re_discount (${discountType === 'Percentage' ? `${discountVal}%` : '₹'})</td>
           <td style="text-align: right; font-weight: bold; color: #cc0000;">- ₹ ${discountAmt.toLocaleString('en-IN')}</td>
         </tr>`;
       }
@@ -1647,7 +1647,7 @@ exports.generateProposalPdf = async (req, res) => {
 
 exports.getRevenueHistory = async (req, res) => {
   try {
-    const invoices = await runQuery("SELECT txn_id, proforma_id, bill_number, client_name, received_amt, current_amt, base_amount, gst_amount, tds_amount, created_at, bill_type FROM invoice ORDER BY created_at DESC", []);
+    const invoices = await runQuery("SELECT txn_id, proforma_id, bill_number, client_name, received_amt, current_amt, base_amount, gst_amount, tds_amount, created_at, bill_type FROM re_invoice ORDER BY created_at DESC", []);
     let totalReceived = 0;
     let totalPending = 0;
     let totalTds = 0;

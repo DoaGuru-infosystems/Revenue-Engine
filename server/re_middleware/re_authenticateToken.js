@@ -1,4 +1,4 @@
-const verifyAdminToken = require("./verifyAdminToken");
+const verifyAdminToken = require("./re_verifyAdminToken");
 
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;

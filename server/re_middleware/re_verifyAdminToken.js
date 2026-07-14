@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+﻿const jwt = require("jsonwebtoken");
 const { db } = require("../connect");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -6,7 +6,7 @@ dotenv.config();
 const verifyAdminToken = async (token) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const query = "SELECT * FROM revenue_engine_employees WHERE id = ?";
+    const query = "SELECT * FROM re_revenue_engine_employees WHERE id = ?";
     const params = [decoded.id];
 
     return new Promise((resolve, reject) => {

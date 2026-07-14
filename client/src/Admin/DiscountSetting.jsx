@@ -42,7 +42,7 @@ const dispatch = useDispatch();
   const fetchData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getDiscountSetting`,
+        `${baseURL}/auth/api/re_calculator/getDiscountSetting`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -106,11 +106,11 @@ const dispatch = useDispatch();
 
     const request = editId
       ? axios.put(
-          `${baseURL}/auth/api/calculator/updateDiscountSettingDataById/${editId}`,
+          `${baseURL}/auth/api/re_calculator/updateDiscountSettingDataById/${editId}`,
           payload
         )
       : axios.post(
-          `${baseURL}/auth/api/calculator/saveDiscountSetting`,
+          `${baseURL}/auth/api/re_calculator/saveDiscountSetting`,
           payload
         );
 
@@ -161,7 +161,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteDiscountSettingById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteDiscountSettingById/${entryId}`
       );
 
       const result = res.data;

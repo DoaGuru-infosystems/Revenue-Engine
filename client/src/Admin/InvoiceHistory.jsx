@@ -36,7 +36,7 @@ const InvoiceHistory = ({ setActiveTab }) => {
   const fetchAllClientServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllInvoice`,
+        `${baseURL}/auth/api/re_calculator/getAllInvoice`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -124,7 +124,7 @@ const InvoiceHistory = ({ setActiveTab }) => {
     if (!confirm.isConfirmed) return;
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteAllInvoiceServiceHistory/${clientId}/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/deleteAllInvoiceServiceHistory/${clientId}/${txnId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data.status === "Success") {

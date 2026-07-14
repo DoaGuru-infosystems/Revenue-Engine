@@ -70,7 +70,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
         setData(res.data.data);
       })
@@ -79,7 +79,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
       .then((res) => {
         if (res.data.status === "success") {
           const services = res.data.data;
@@ -164,7 +164,7 @@ const dispatch = useDispatch();
 
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updatePlanNotes/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updatePlanNotes/${selectedNotesId.id}`,
           formData,
           {
             headers: {
@@ -176,7 +176,7 @@ const dispatch = useDispatch();
         console.log(response.data);
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formData,
           {
             headers: {
@@ -270,7 +270,7 @@ const dispatch = useDispatch();
 
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deletePlanNotesbyid/${noteId}`,
+        `${baseURL}/auth/api/re_calculator/deletePlanNotesbyid/${noteId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -355,8 +355,8 @@ const dispatch = useDispatch();
       try {
         setLoading(true);
         const response = await axios.get(
-          `${API_BASE_URL}/auth/api/calculator/getAdsServices`,
-          // "https://revenueengine.siarasystems.com/auth/api/calculator/getAdsServices",
+          `${API_BASE_URL}/auth/api/re_calculator/getAdsServices`,
+          // "https://revenueengine.siarasystems.com/auth/api/re_calculator/getAdsServices",
           {
             headers: {
               "Content-Type": "application/json",
@@ -539,11 +539,11 @@ const dispatch = useDispatch();
     // 🚀 API Call
     const request = editId
       ? axios.put(
-          `${baseURL}/auth/api/calculator/updatePlanData/${editId}`,
+          `${baseURL}/auth/api/re_calculator/updatePlanData/${editId}`,
           totalPayload
         )
       : axios.post(
-          `${baseURL}/auth/api/calculator/saveCalculatorDataOfPlan`,
+          `${baseURL}/auth/api/re_calculator/saveCalculatorDataOfPlan`,
           totalPayload
         );
 
@@ -589,7 +589,7 @@ const dispatch = useDispatch();
   const fetchData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllPlanDataById/${id}`,
+        `${baseURL}/auth/api/re_calculator/getAllPlanDataById/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -621,7 +621,7 @@ const dispatch = useDispatch();
   const fetchPlanData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllPlanDetailsById/${id}`,
+        `${baseURL}/auth/api/re_calculator/getAllPlanDetailsById/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -654,7 +654,7 @@ const dispatch = useDispatch();
   const getAllPlanNotes = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getPlanNotes`,
+        `${baseURL}/auth/api/re_calculator/getPlanNotes`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -727,7 +727,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deletePlanDataByService/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deletePlanDataByService/${entryId}`
       );
 
       const result = res.data;
@@ -1401,7 +1401,7 @@ export default AdminPlanHistory;
 
 //   useEffect(() => {
 //     axios
-//       .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+//       .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
 //       .then((res) => {
 
 //   setData(res.data.data);
@@ -1410,7 +1410,7 @@ export default AdminPlanHistory;
 //   }, []);
 
 // useEffect(() => {
-//   axios.get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+//   axios.get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
 //     .then(res => {
 //       if (res.data.status === "success") {
 //         const services = res.data.data;
@@ -1491,7 +1491,7 @@ export default AdminPlanHistory;
 
 //       if (isEditing && selectedNotesId) {
 //         response = await axios.put(
-//           `${baseURL}/auth/api/calculator/updatePlanNotes/${selectedNotesId.id}`,
+//           `${baseURL}/auth/api/re_calculator/updatePlanNotes/${selectedNotesId.id}`,
 //           formData,
 //           {
 //             headers: {
@@ -1503,7 +1503,7 @@ export default AdminPlanHistory;
 //         console.log(response.data);
 //       } else {
 //         response = await axios.post(
-//           `${baseURL}/auth/api/calculator/addNotebyplan`,
+//           `${baseURL}/auth/api/re_calculator/addNotebyplan`,
 //           formData,
 //           {
 //             headers: {
@@ -1587,7 +1587,7 @@ export default AdminPlanHistory;
 
 // try {
 //   const response = await axios.delete(
-//     `${baseURL}/auth/api/calculator/deletePlanNotesbyid/${noteId}`,
+//     `${baseURL}/auth/api/re_calculator/deletePlanNotesbyid/${noteId}`,
 //     {
 //       headers: {
 //         Authorization: `Bearer ${token}`,
@@ -1706,8 +1706,8 @@ export default AdminPlanHistory;
 //   };
 
 //   const request = editId
-//     ? axios.put(`${baseURL}/auth/api/calculator/updatePlanData/${editId}`, payload)
-//     : axios.post(`${baseURL}/auth/api/calculator/saveCalculatorDataOfPlan`, payload);
+//     ? axios.put(`${baseURL}/auth/api/re_calculator/updatePlanData/${editId}`, payload)
+//     : axios.post(`${baseURL}/auth/api/re_calculator/saveCalculatorDataOfPlan`, payload);
 
 //   request
 //     .then((res) => {
@@ -1751,7 +1751,7 @@ export default AdminPlanHistory;
 
 //     try {
 //       const { data } = await axios.get(
-//         `${baseURL}/auth/api/calculator/getAllPlanDataById/${id}`,
+//         `${baseURL}/auth/api/re_calculator/getAllPlanDataById/${id}`,
 //         {
 //           headers: {
 //             "Content-Type": "application/json",
@@ -1784,7 +1784,7 @@ export default AdminPlanHistory;
 
 //     try {
 //       const { data } = await axios.get(
-//         `${baseURL}/auth/api/calculator/getAllPlanDetailsById/${id}`,
+//         `${baseURL}/auth/api/re_calculator/getAllPlanDetailsById/${id}`,
 //         {
 //           headers: {
 //             "Content-Type": "application/json",
@@ -1818,7 +1818,7 @@ export default AdminPlanHistory;
 
 //   try {
 //     const response = await axios.get(
-//       `${baseURL}/auth/api/calculator/getPlanNotes`,
+//       `${baseURL}/auth/api/re_calculator/getPlanNotes`,
 //       {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
@@ -1892,7 +1892,7 @@ export default AdminPlanHistory;
 
 //     try {
 //       const res = await axios.delete(
-//         `${baseURL}/auth/api/calculator/deletePlanDataByService/${entryId}`
+//         `${baseURL}/auth/api/re_calculator/deletePlanDataByService/${entryId}`
 //       );
 
 //       const result = res.data;

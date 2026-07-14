@@ -103,7 +103,7 @@ const ClientDetails = () => {
 
       if (isEditing && selectedClient) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateClientDetails/${selectedClient.id}`,
+          `${baseURL}/auth/api/re_calculator/updateClientDetails/${selectedClient.id}`,
           formData,
           {
             headers: {
@@ -114,7 +114,7 @@ const ClientDetails = () => {
         );
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/insertClientDetails`,
+          `${baseURL}/auth/api/re_calculator/insertClientDetails`,
           formData,
           {
             headers: {
@@ -186,7 +186,7 @@ const ClientDetails = () => {
 
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteClientById/${clientId}`,
+        `${baseURL}/auth/api/re_calculator/deleteClientById/${clientId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -242,7 +242,7 @@ const ClientDetails = () => {
   const getAllClients = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientDetails`,
+        `${baseURL}/auth/api/re_calculator/getClientDetails`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -311,7 +311,7 @@ const ClientDetails = () => {
     setLoadingProposals(true);
     setShowProposalModal(true);
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proposals/client/${selectedClient.id}`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proposals/client/${selectedClient.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === "Success") {
@@ -356,7 +356,7 @@ const ClientDetails = () => {
       };
 
       const resp = await axios.post(
-        `${baseURL}/auth/api/calculator/generateClientLink`,
+        `${baseURL}/auth/api/re_calculator/generateClientLink`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );

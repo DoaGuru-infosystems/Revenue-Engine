@@ -71,7 +71,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
         // Keep only "Complimentary" service
         const complimentaryService = res.data.data.filter(
@@ -84,7 +84,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
       .then((res) => {
         if (res.data.status === "success") {
           const services = res.data.data;
@@ -121,7 +121,7 @@ const dispatch = useDispatch();
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceNoteData`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -227,11 +227,11 @@ const dispatch = useDispatch();
     // ✅ Only Quotation Complimentary API (invoice removed)
     const quotationRequest = editId
       ? axios.put(
-          `${baseURL}/auth/api/calculator/updateComplimenatryDataById/${editId}`,
+          `${baseURL}/auth/api/re_calculator/updateComplimenatryDataById/${editId}`,
           payload
         )
       : axios.post(
-          `${baseURL}/auth/api/calculator/saveComplimentaryData`,
+          `${baseURL}/auth/api/re_calculator/saveComplimentaryData`,
           payload
         );
 
@@ -309,7 +309,7 @@ const dispatch = useDispatch();
     if (!id || !proposalId) return;
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getComplimentaryInvoiceData/${proposalId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getComplimentaryInvoiceData/${proposalId}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -355,7 +355,7 @@ const dispatch = useDispatch();
 
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
           formData,
           {
             headers: {
@@ -367,7 +367,7 @@ const dispatch = useDispatch();
         console.log(response.data);
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formData,
           {
             headers: {
@@ -482,7 +482,7 @@ const dispatch = useDispatch();
       };
 
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/saveInvoiceClientIdwiseNotes`,
+        `${baseURL}/auth/api/re_calculator/saveInvoiceClientIdwiseNotes`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -548,7 +548,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteInvoiceClientNotes/${noteId}`
+        `${baseURL}/auth/api/re_calculator/deleteInvoiceClientNotes/${noteId}`
       );
 
       const result = res.data;
@@ -594,7 +594,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteInvoiceComplimenatryById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteInvoiceComplimenatryById/${entryId}`
       );
 
       const result = res.data;
@@ -635,7 +635,7 @@ const dispatch = useDispatch();
   const getAllPlanNotes = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientNotesbyId/${id}/${proposalId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientNotesbyId/${id}/${proposalId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

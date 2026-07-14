@@ -126,10 +126,10 @@ function ProformaServices() {
     setLoading(true);
     try {
       const [graphicRes, adsRes, optionalRes, plansRes] = await Promise.all([
-        axios.get(`${baseURL}/auth/api/calculator/services/category/editing`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${baseURL}/auth/api/calculator/getAdsServices`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${baseURL}/auth/api/calculator/optional-service-amounts`),
-        axios.get(`${baseURL}/auth/api/calculator/getAllPlanData`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${baseURL}/auth/api/re_calculator/services/category/editing`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${baseURL}/auth/api/re_calculator/getAdsServices`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`),
+        axios.get(`${baseURL}/auth/api/re_calculator/getAllPlanData`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const graphicData = Array.isArray(graphicRes?.data?.data) ? graphicRes.data.data : [];
       const adsData = Array.isArray(adsRes?.data?.data) ? adsRes.data.data : [];
@@ -151,7 +151,7 @@ function ProformaServices() {
   const fetchDiscountSettings = useCallback(async () => {
     if (!token) return;
     try {
-      const { data } = await axios.get(`${baseURL}/auth/api/calculator/getDiscountSetting`, {
+      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/getDiscountSetting`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDiscountSettings(data.data?.[0] || null);
@@ -535,9 +535,9 @@ function ProformaServices() {
 
       // ── Parallel save: both or just proforma ──
       const [res] = await Promise.all([
-        axios.post(`${baseURL}/auth/api/calculator/saveDirectProforma`, proformaPayload, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.post(`${baseURL}/auth/api/re_calculator/saveDirectProforma`, proformaPayload, { headers: { Authorization: `Bearer ${token}` } }),
         isDiscountApplied
-          ? axios.post(`${baseURL}/auth/api/calculator/saveDiscountData`, discountPayload, { headers: { Authorization: `Bearer ${token}` } })
+          ? axios.post(`${baseURL}/auth/api/re_calculator/saveDiscountData`, discountPayload, { headers: { Authorization: `Bearer ${token}` } })
           : Promise.resolve(),
       ]);
 

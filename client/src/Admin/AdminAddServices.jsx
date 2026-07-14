@@ -43,7 +43,7 @@ const AdminAddServices = () => {
 
   const fetchServices = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/getAddServices`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/getAddServices`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -72,7 +72,7 @@ const AdminAddServices = () => {
     }
 
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/categories/${serviceId}`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/categories/${serviceId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -115,7 +115,7 @@ const AdminAddServices = () => {
 
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/addServices`,
+        `${baseURL}/auth/api/re_calculator/addServices`,
         { service_name: serviceName.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -162,7 +162,7 @@ const AdminAddServices = () => {
     try {
       // 1. Create Category
       const catRes = await axios.post(
-        `${baseURL}/auth/api/calculator/addCategories`,
+        `${baseURL}/auth/api/re_calculator/addCategories`,
         {
           service_id: selectedServiceId,
           category_name: categoryName.trim(),
@@ -181,7 +181,7 @@ const AdminAddServices = () => {
       const finalAmount = parseFloat(editingTypeAmount) || 0;
 
       await axios.post(
-        `${baseURL}/auth/api/calculator/addEditingTypes`,
+        `${baseURL}/auth/api/re_calculator/addEditingTypes`,
         {
           service_id: selectedServiceId,
           category_id: newCategoryId,

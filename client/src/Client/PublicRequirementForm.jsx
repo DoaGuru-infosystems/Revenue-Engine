@@ -581,7 +581,7 @@ export default function PublicRequirementForm() {
       };
 
       const resp = await axios.post(
-        `${baseURL}/auth/api/calculator/submitRequirement`,
+        `${baseURL}/auth/api/re_calculator/submitRequirement`,
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -1104,7 +1104,7 @@ export default function PublicRequirementForm() {
 //       };
 
 //       const resp = await axios.post(
-//         `${baseURL}/auth/api/calculator/submitRequirement`,
+//         `${baseURL}/auth/api/re_calculator/submitRequirement`,
 //         payload,
 //         { headers: { "Content-Type": "application/json" } }
 //       );

@@ -41,7 +41,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
   const fetchProposalsForModal = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/proposals/all`,
+        `${baseURL}/auth/api/re_calculator/proposals/all`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -73,7 +73,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
   const fetchAllProformas = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/proforma/all`,
+        `${baseURL}/auth/api/re_calculator/proforma/all`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -163,7 +163,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`${baseURL}/auth/api/calculator/proforma/${item.id}`, {
+          await axios.delete(`${baseURL}/auth/api/re_calculator/proforma/${item.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           Swal.fire("Deleted!", "Proforma has been deleted.", "success");

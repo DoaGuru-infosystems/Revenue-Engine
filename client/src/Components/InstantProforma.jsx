@@ -105,7 +105,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     if (!token) return [];
     setLoadingClients(true);
     try {
-      const response = await axios.get(`${baseURL}/auth/api/calculator/getClientDetails`, {
+      const response = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetails`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const list = Array.isArray(response?.data?.data) ? response.data.data : [];
@@ -123,7 +123,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   const fetchPredefinedNotes = useCallback(async () => {
     if (!token) return;
     try {
-      const response = await axios.get(`${baseURL}/auth/api/calculator/getNoteData`, {
+      const response = await axios.get(`${baseURL}/auth/api/re_calculator/getNoteData`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data && response.data.data) {
@@ -214,7 +214,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     setSavingClient(true);
     try {
       const payload = { ...clientForm, dg_employee: clientForm.dg_employee || currentUser?.name || "" };
-      const response = await axios.post(`${baseURL}/auth/api/calculator/insertClientDetails`, payload, {
+      const response = await axios.post(`${baseURL}/auth/api/re_calculator/insertClientDetails`, payload, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
       if (response?.data?.status !== "Success") {

@@ -116,7 +116,7 @@ export default function Quotation() {
   const fetchServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientServiceHistory/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getClientServiceHistory/${id}/${txn_id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -147,7 +147,7 @@ export default function Quotation() {
   const fetchClient = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientDetailsById/${id}`,
+        `${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -175,7 +175,7 @@ export default function Quotation() {
   const fetchClientNotes = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientNotesbyId/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${id}/${txn_id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -204,7 +204,7 @@ export default function Quotation() {
   const fetchComplimentaryData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDComplimentaryData/${txn_id}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${txn_id}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -236,7 +236,7 @@ export default function Quotation() {
   const fetchDiscount = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDDiscountData/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${txn_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -264,7 +264,7 @@ export default function Quotation() {
   const fetchDiscountSetting = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getDiscountSetting`,
+        `${baseURL}/auth/api/re_calculator/getDiscountSetting`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (data.data && data.data.length > 0) {
@@ -278,7 +278,7 @@ export default function Quotation() {
   const fetchClientReceived = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientDetailsById/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${txn_id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -311,7 +311,7 @@ export default function Quotation() {
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getNoteData`,
+        `${baseURL}/auth/api/re_calculator/getNoteData`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -326,7 +326,7 @@ export default function Quotation() {
 
   const fetchProformaData = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proforma/client/${id}`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/client/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === "Success") {
@@ -336,14 +336,14 @@ export default function Quotation() {
           let p = null;
           let propRes = null;
           if (proforma.proposal_id) {
-            propRes = await axios.get(`${baseURL}/auth/api/calculator/proposal/${proforma.proposal_id}`, {
+            propRes = await axios.get(`${baseURL}/auth/api/re_calculator/proposal/${proforma.proposal_id}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (propRes.data.status === "Success") {
               p = propRes.data.data;
             }
           } else {
-            const clientRes = await axios.get(`${baseURL}/auth/api/calculator/getClientDetailsById/${id}`, {
+            const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (clientRes.data.status === "Success") {
@@ -474,7 +474,7 @@ export default function Quotation() {
 
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateClientNoteDataById/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateClientNoteDataById/${selectedNotesId.id}`,
           formData,
           {
             headers: {
@@ -486,7 +486,7 @@ export default function Quotation() {
         console.log(response.data);
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formData,
           {
             headers: {
@@ -601,7 +601,7 @@ export default function Quotation() {
       };
 
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/saveClientIdwiseNotes`,
+        `${baseURL}/auth/api/re_calculator/saveClientIdwiseNotes`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -773,7 +773,7 @@ export default function Quotation() {
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deletePlanClientNotes/${noteId}`
+        `${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`
       );
 
       const result = res.data;
@@ -989,12 +989,12 @@ export default function Quotation() {
 
       const response = selecteddiscount
         ? await axios.put(
-          `${baseURL}/auth/api/calculator/updateDiscountDataById/${selecteddiscount.id}`,
+          `${baseURL}/auth/api/re_calculator/updateDiscountDataById/${selecteddiscount.id}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         : await axios.post(
-          `${baseURL}/auth/api/calculator/saveDiscountData`,
+          `${baseURL}/auth/api/re_calculator/saveDiscountData`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -1054,7 +1054,7 @@ export default function Quotation() {
     setLoading(true);
     try {
       await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteDiscountById/${selecteddiscount.id}`,
+        `${baseURL}/auth/api/re_calculator/deleteDiscountById/${selecteddiscount.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSelecteddiscount(null);

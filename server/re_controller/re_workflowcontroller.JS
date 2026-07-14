@@ -6,12 +6,12 @@ const {
   sendFinalInvoiceEmail,
   sendPaymentReceivedAlertEmail,
   TZ,
-} = require("./sendEmails");
+} = require("./re_sendEmails");
 const {
   sendInvoiceWhatsApp,
   sendPaymentReceivedAlertWA,
-} = require("./sendWhatsApp");
-const { generatePublicAccessToken } = require("./publicController");
+} = require("./re_sendWhatsApp");
+const { generatePublicAccessToken } = require("./re_publicController");
 
 const WORKFLOW_STATUS = {
   PENDING_ADMIN_APPROVAL: "pending_admin_approval",
@@ -42,7 +42,7 @@ const now = () => moment().tz(TZ).format("YYYY-MM-DD HH:mm:ss");
 async function saveRemark(txn_id, action_type, actor_name, remark) {
   return new Promise((resolve, reject) => {
     const q = `
-      INSERT INTO workflow_remarks
+      INSERT INTO re_workflow_remarks
       (
         txn_id,
         action_type,
@@ -87,7 +87,7 @@ function updateQuotationStatus(
   cb,
 ) {
   const q = `
-    INSERT INTO quotation_status
+    INSERT INTO re_quotation_status
     (
       txn_id,
       client_id,
@@ -123,7 +123,7 @@ function updateQuotationStatusAsync(
 
 async function ensurePaymentLedgerTable() {
   await runQuery(`
-    CREATE TABLE IF NOT EXISTS workflow_payment_ledger (
+    CREATE TABLE IF NOT EXISTS re_workflow_payment_ledger (
       id INT AUTO_INCREMENT PRIMARY KEY,
       txn_id VARCHAR(100) NOT NULL,
       client_id VARCHAR(100) NOT NULL,
@@ -149,7 +149,7 @@ function toAmount(value) {
 async function getClientNameById(client_id) {
   const rows = await runQuery(
     `SELECT client_name
-     FROM revenue_engine_client_details
+     FROM re_revenue_engine_client_details
      WHERE id = ?
      LIMIT 1`,
     [client_id],
@@ -165,7 +165,7 @@ async function getContractValue(txn_id, client_id) {
         (
           COALESCE((
             SELECT SUM(COALESCE(ct.total_amount, 0))
-            FROM calculator_transactions ct
+            FROM re_calculator_transactions ct
             WHERE ct.txn_id = ? AND ct.client_id = ?
           ), 0)
           +
@@ -173,7 +173,7 @@ async function getContractValue(txn_id, client_id) {
             SELECT SUM(
               COALESCE(ad.total, COALESCE(ad.amount, 0) + COALESCE(ad.charge, 0))
             )
-            FROM ads_campaign_details ad
+            FROM re_ads_campaign_details ad
             WHERE ad.txn_id = ? AND ad.client_id = ?
           ), 0)
         ) AS contract_total
@@ -186,7 +186,7 @@ async function getContractValue(txn_id, client_id) {
 async function getTotalReceived(txn_id, client_id) {
   const rows = await runQuery(
     `SELECT COALESCE(SUM(amount_received), 0) AS total_received
-     FROM workflow_payment_ledger
+     FROM re_workflow_payment_ledger
      WHERE txn_id = ? AND client_id = ?`,
     [txn_id, client_id],
   );
@@ -219,8 +219,8 @@ SELECT
   cd.client_name,
   cd.phone,
   cd.email
-FROM revenue_engine_client_details cd
-       LEFT JOIN calculator_transactions ch 
+FROM re_revenue_engine_client_details cd
+       LEFT JOIN re_calculator_transactions ch 
           ON ch.txn_id = ? 
           AND ch.client_id = ?
        WHERE cd.id = ?
@@ -248,20 +248,20 @@ FROM revenue_engine_client_details cd
         }
 
         // =========================
-        // SERVICES FETCH
+        // services FETCH
         // =========================
         db.query(
           `SELECT 
     service_name,
     total_amount
-FROM calculator_transactions
+FROM re_calculator_transactions
            WHERE txn_id = ?
            AND client_id = ?`,
           [txn_id, client_id],
 
           async (err2, services) => {
             if (err2) {
-              console.log("Services Fetch Error:", err2);
+              console.log("services Fetch Error:", err2);
 
               return res.status(500).json({
                 success: false,
@@ -343,7 +343,7 @@ exports.sendQuotationToClient = async (req, res) => {
         client_name,
         phone,
         email
-     FROM revenue_engine_client_details
+     FROM re_revenue_engine_client_details
      WHERE id = ?
      LIMIT 1`,
     [client_id],
@@ -369,7 +369,11 @@ exports.sendQuotationToClient = async (req, res) => {
 
       const baseUrl = process.env.CLIENT_BASE_URL || "";
 
-      const token = await generatePublicAccessToken(client_id, txn_id, "quotation");
+      const token = await generatePublicAccessToken(
+        client_id,
+        txn_id,
+        "quotation",
+      );
       const link = `${baseUrl}/#/public/invoice/${token}`;
 
       // STATUS UPDATE
@@ -427,8 +431,6 @@ exports.markClientQuotationApproved = async (req, res) => {
       remark,
     );
 
-
-
     return res.status(200).json({
       success: true,
       message: `Client quotation response marked: ${decision}`,
@@ -474,8 +476,6 @@ exports.generateProformaInvoice = async (req, res) => {
   }
 };
 
-
-
 exports.getPaymentSummary = async (req, res) => {
   const { txn_id } = req.params;
   const client_id = req.query.client_id || req.params.client_id;
@@ -495,7 +495,7 @@ exports.getPaymentSummary = async (req, res) => {
     );
     const payments = await runQuery(
       `SELECT id, amount_received, payment_date, payment_mode, transaction_reference, remark, received_by, created_at
-       FROM workflow_payment_ledger
+       FROM re_workflow_payment_ledger
        WHERE txn_id = ? AND client_id = ?
        ORDER BY payment_date DESC, id DESC`,
       [txn_id, client_id],
@@ -547,7 +547,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
   const duplicatePayment = await runQuery(
     `
     SELECT id
-    FROM workflow_payment_ledger
+    FROM re_workflow_payment_ledger
     WHERE transaction_reference = ?
     LIMIT 1
   `,
@@ -580,7 +580,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
     await ensurePaymentLedgerTable();
 
     await runQuery(
-      `INSERT INTO workflow_payment_ledger
+      `INSERT INTO re_workflow_payment_ledger
        (txn_id, client_id, amount_received, payment_date, payment_mode, transaction_reference, remark, received_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -605,7 +605,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
       pending_payment_amount <= 0 ? "received" : "pending";
 
     const invoiceExists = await runQuery(
-      `SELECT id FROM invoice WHERE txn_id = ? AND client_id = ? LIMIT 1`,
+      `SELECT id FROM re_invoice WHERE txn_id = ? AND client_id = ? LIMIT 1`,
       [txn_id, client_id],
     );
     if (!invoiceExists.length) {
@@ -616,7 +616,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
     }
 
     await runQuery(
-      `UPDATE invoice
+      `UPDATE re_invoice
        SET
          previous_amt = ?,
          received_amt = ?,
@@ -661,8 +661,8 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
 
     // Need to get invoice date and number for the notification
     const invoiceDetails = await runQuery(
-      `SELECT invoice_no, invoice_date, total_amt, tds_deducted FROM invoice WHERE txn_id = ? AND client_id = ? LIMIT 1`,
-      [txn_id, client_id]
+      `SELECT invoice_no, invoice_date, total_amt, tds_deducted FROM re_invoice WHERE txn_id = ? AND client_id = ? LIMIT 1`,
+      [txn_id, client_id],
     );
 
     let adminEmailStatus = { ok: true };
@@ -675,7 +675,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
         orgName: "", // Could fetch from client details if needed
         clientId: client_id,
         invoiceNo: inv.invoice_no,
-        invoiceDate: moment(inv.invoice_date).format('YYYY-MM-DD'),
+        invoiceDate: moment(inv.invoice_date).format("YYYY-MM-DD"),
         paymentDate: payment_date,
         amountReceived: paymentAmount,
         paymentMode: payment_mode,
@@ -685,7 +685,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
         tdsDeducted: inv.tds_deducted || 0,
         netCredited: paymentAmount,
         totalReceivedTillDate: total_received_till_date,
-        pendingOutstanding: pending_payment_amount
+        pendingOutstanding: pending_payment_amount,
       };
 
       adminEmailStatus = await sendPaymentReceivedAlertEmail(alertData);
@@ -702,82 +702,82 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
         pending_payment_amount,
       },
       adminEmailStatus,
-      adminWAStatus
+      adminWAStatus,
     });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-exports.sendFinalInvoiceToClient = async (req, res) => {
-  const { txn_id, client_id, channel, invoice_amount = 0, remark } = req.body;
-  if (!txn_id || !client_id || !channel) {
-    return res
-      .status(400)
-      .json({ success: false, message: "txn_id, client_id, channel required" });
-  }
+// exports.sendFinalInvoiceToClient = async (req, res) => {
+//   const { txn_id, client_id, channel, invoice_amount = 0, remark } = req.body;
+//   if (!txn_id || !client_id || !channel) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "txn_id, client_id, channel required" });
+//   }
 
-  try {
-    const rows = await runQuery(
-      `SELECT client_name, phone, email FROM revenue_engine_client_details WHERE id = ? LIMIT 1`,
-      [client_id],
-    );
-    if (!rows.length) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Client nahi mila" });
-    }
+//   try {
+//     const rows = await runQuery(
+//       `SELECT client_name, phone, email FROM re_revenue_engine_client_details WHERE id = ? LIMIT 1`,
+//       [client_id],
+//     );
+//     if (!rows.length) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Client nahi mila" });
+//     }
 
-    const c = rows[0];
-    const baseUrl = process.env.CLIENT_BASE_URL || "";
-    
-    const token = await generatePublicAccessToken(client_id, txn_id, "final");
-    const invoiceLink = `${baseUrl}/#/public/invoice/${token}`;
+//     const c = rows[0];
+//     const baseUrl = process.env.CLIENT_BASE_URL || "";
 
-    if (channel === "email" || channel === "both") {
-      await sendFinalInvoiceEmail({
-        to: c.email,
-        clientName: c.client_name,
-        txnId: txn_id,
-        invoiceLink,
-      }).catch((e) =>
-        console.error("[MAIL] final invoice to client:", e.message),
-      );
-    }
+//     const token = await generatePublicAccessToken(client_id, txn_id, "final");
+//     const invoiceLink = `${baseUrl}/#/public/invoice/${token}`;
 
-    if (channel === "whatsapp" || channel === "both") {
-      await sendInvoiceWhatsApp({
-        toPhone: c.phone,
-        assigneeName: c.client_name,
-        clientName: c.client_name,
-        clientId: client_id,
-        txnId: txn_id,
-        deadline: null,
-        link: invoiceLink,
-      }).catch((e) =>
-        console.error("[WA] final invoice to client:", e.message),
-      );
-    }
+//     if (channel === "email" || channel === "both") {
+//       await sendFinalInvoiceEmail({
+//         to: c.email,
+//         clientName: c.client_name,
+//         txnId: txn_id,
+//         invoiceLink,
+//       }).catch((e) =>
+//         console.error("[MAIL] final invoice to client:", e.message),
+//       );
+//     }
 
-    await updateQuotationStatusAsync(txn_id, client_id, "invoice_sent");
-    await saveRemark(txn_id, "invoice_sent", req.user?.employee_name, remark);
-    await sf
-      .pushInvoiceSentToSF({
-        txn_id,
-        client_name: c.client_name || "",
-        invoice_amount,
-      })
-      .catch((e) => console.error("[SF] invoice sent:", e.message));
+//     if (channel === "whatsapp" || channel === "both") {
+//       await sendInvoiceWhatsApp({
+//         toPhone: c.phone,
+//         assigneeName: c.client_name,
+//         clientName: c.client_name,
+//         clientId: client_id,
+//         txnId: txn_id,
+//         deadline: null,
+//         link: invoiceLink,
+//       }).catch((e) =>
+//         console.error("[WA] final invoice to client:", e.message),
+//       );
+//     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Final invoice sent to client",
-      nextStatus: "invoice_sent",
-    });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err.message });
-  }
-};
+//     await updateQuotationStatusAsync(txn_id, client_id, "invoice_sent");
+//     await saveRemark(txn_id, "invoice_sent", req.user?.employee_name, remark);
+//     await sf
+//       .pushInvoiceSentToSF({
+//         txn_id,
+//         client_name: c.client_name || "",
+//         invoice_amount,
+//       })
+//       .catch((e) => console.error("[SF] invoice sent:", e.message));
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Final invoice sent to client",
+//       nextStatus: "invoice_sent",
+//     });
+//   } catch (err) {
+//     return res.status(500).json({ success: false, message: err.message });
+//   }
+// };
 
 exports.invoiceSentNotify = async (req, res) => {
   const { txn_id, client_id, invoice_amount, remark } = req.body;
@@ -841,7 +841,7 @@ exports.saveStrategy = async (req, res) => {
     ]);
 
     const q = `
-      INSERT INTO workflow_strategy (txn_id, client_id, service_name, description, deadline, status)
+      INSERT INTO re_workflow_strategy (txn_id, client_id, service_name, description, deadline, status)
       VALUES ?
       ON DUPLICATE KEY UPDATE
         description = VALUES(description),
@@ -886,7 +886,7 @@ exports.sendStrategyToAdmin = async (req, res) => {
     // 1. Strategy tasks fetch karo DB se
     const tasks = await new Promise((resolve, reject) => {
       db.query(
-        `SELECT service_name, description, deadline FROM workflow_strategy WHERE txn_id = ? AND client_id = ?`,
+        `SELECT service_name, description, deadline FROM re_workflow_strategy WHERE txn_id = ? AND client_id = ?`,
         [txn_id, client_id],
         (err, results) => {
           if (err) return reject(err);
@@ -941,7 +941,7 @@ exports.sendStrategyToAdmin = async (req, res) => {
 exports.getStrategy = (req, res) => {
   const { txn_id } = req.params;
   db.query(
-    `SELECT * FROM workflow_strategy WHERE txn_id = ? ORDER BY id ASC`,
+    `SELECT * FROM re_workflow_strategy WHERE txn_id = ? ORDER BY id ASC`,
     [txn_id],
     (err, results) => {
       if (err)
@@ -969,7 +969,7 @@ exports.sendStrategyToClient = async (req, res) => {
   }
 
   db.query(
-    `SELECT client_name, phone, email FROM revenue_engine_client_details WHERE id = ? LIMIT 1`,
+    `SELECT client_name, phone, email FROM re_revenue_engine_client_details WHERE id = ? LIMIT 1`,
     [client_id],
     async (err, results) => {
       if (err || !results.length) {
@@ -983,7 +983,7 @@ exports.sendStrategyToClient = async (req, res) => {
 
       // Strategy ki list bhi bhejni hai message mein
       db.query(
-        `SELECT service_name, deadline FROM workflow_strategy WHERE txn_id = ?`,
+        `SELECT service_name, deadline FROM re_workflow_strategy WHERE txn_id = ?`,
         [txn_id],
         async (_, tasks) => {
           const taskText = (tasks || [])
@@ -1047,7 +1047,7 @@ exports.markClientStrategyDecision = async (req, res) => {
   );
 
   db.query(
-    `UPDATE workflow_strategy SET status = ?, client_remark = ? WHERE txn_id = ?`,
+    `UPDATE re_workflow_strategy SET status = ?, client_remark = ? WHERE txn_id = ?`,
     [
       decision === "approved"
         ? "client_approved"
@@ -1091,7 +1091,7 @@ exports.assignTeamLead = async (req, res) => {
   }
 
   const insertQ = `
-    INSERT INTO workflow_project_assignments
+    INSERT INTO re_workflow_project_assignments
       (txn_id, client_id, team_id, team_name, team_lead_id, team_lead_name, team_lead_email, assigned_by_id, remark, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON DUPLICATE KEY UPDATE
@@ -1148,7 +1148,7 @@ exports.getSFEmployees = async (req, res) => {
 };
 
 // ============================================================
-// M. Teams list — Stub (SF removed, connect to local DB in future)
+// M. teams list — Stub (SF removed, connect to local DB in future)
 //    GET /workflow/sfTeams
 // ============================================================
 exports.getSFTeams = async (req, res) => {
@@ -1177,7 +1177,7 @@ exports.assignTaskOwners = (req, res) => {
   if (!tasks || tasks.length === 0) return res.status(400).send("No tasks");
 
   db.query(
-    `SELECT client_name FROM revenue_engine_client_details WHERE id = ? LIMIT 1`,
+    `SELECT client_name FROM re_revenue_engine_client_details WHERE id = ? LIMIT 1`,
     [client_id],
     (err, result) => {
       const client_name = result?.[0]?.client_name || "";
@@ -1193,7 +1193,7 @@ exports.assignTaskOwners = (req, res) => {
         t.deadline,
       ]);
 
-      const q = `INSERT INTO workflow_task_assignments (txn_id, client_id, strategy_id, task_name, task_description, assigned_to_id, assigned_to_name, assigned_to_email, deadline)
+      const q = `INSERT INTO re_workflow_task_assignments (txn_id, client_id, strategy_id, task_name, task_description, assigned_to_id, assigned_to_name, assigned_to_email, deadline)
                VALUES ? ON DUPLICATE KEY UPDATE task_description = VALUES(task_description), assigned_to_id = VALUES(assigned_to_id), updated_at = NOW()`;
 
       db.query(q, [values], async (err) => {
@@ -1222,7 +1222,7 @@ exports.assignTaskOwners = (req, res) => {
 exports.getTasksByTxn = (req, res) => {
   const { txn_id } = req.params;
   db.query(
-    `SELECT * FROM workflow_task_assignments WHERE txn_id = ? ORDER BY deadline ASC`,
+    `SELECT * FROM re_workflow_task_assignments WHERE txn_id = ? ORDER BY deadline ASC`,
     [txn_id],
     (err, results) => {
 
@@ -1244,7 +1244,7 @@ console.log("TASKS:", tasks);
 exports.getRemarks = (req, res) => {
   const { txn_id } = req.params;
   db.query(
-    `SELECT * FROM workflow_remarks WHERE txn_id = ? ORDER BY created_at DESC`,
+    `SELECT * FROM re_workflow_remarks WHERE txn_id = ? ORDER BY created_at DESC`,
     [txn_id],
     (err, results) => {
       if (err)

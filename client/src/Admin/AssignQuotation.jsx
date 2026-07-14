@@ -32,7 +32,7 @@
 //   const fetchAllClientServices = async () => {
 //     try {
 //       const res = await axios.get(
-//         `${baseURL}/auth/api/calculator/getAssignedQuotations`,
+//         `${baseURL}/auth/api/re_calculator/getAssignedQuotations`,
 //         {
 //           headers: {
 //             "Content-Type": "application/json",
@@ -485,7 +485,7 @@ const AssignQuotation = () => {
   const fetchAllClientServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAssignedQuotations`,
+        `${baseURL}/auth/api/re_calculator/getAssignedQuotations`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -523,7 +523,7 @@ const AssignQuotation = () => {
 
   async function getDisplayDeadline({ baseURL, token, txnId }) {
     const res = await axios.get(
-      `${baseURL}/auth/api/calculator/getAssignmentsSummary/${txnId}`,
+      `${baseURL}/auth/api/re_calculator/getAssignmentsSummary/${txnId}`,
       {
         headers: {
           "Content-Type": "application/json",

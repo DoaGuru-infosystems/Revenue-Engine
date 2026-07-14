@@ -19,7 +19,7 @@ const [userId, setUserId] = useState("");
     setLoading(true);
     try {
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/forgot-password`,
+        `${baseURL}/auth/api/re_calculator/forgot-password`,
         { User: userId }
       );
       if (response.data.status === "Success") {
@@ -58,7 +58,7 @@ const [userId, setUserId] = useState("");
   const handleResetPassword = async () => {
     try {
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/verifyOTP-forgot`,
+        `${baseURL}/auth/api/re_calculator/verifyOTP-forgot`,
         {
           User: userId,
           otp: otp,

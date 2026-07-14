@@ -20,7 +20,7 @@ const navigate = useNavigate();
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/requirements`,
+          `${baseURL}/auth/api/re_calculator/requirements`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

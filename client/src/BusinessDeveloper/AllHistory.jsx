@@ -28,7 +28,7 @@ const AllHistory = () => {
   const fetchAllClientServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientsTxnByEmployee/${currentUser.name}`,
+        `${baseURL}/auth/api/re_calculator/getClientsTxnByEmployee/${currentUser.name}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -72,7 +72,7 @@ const AllHistory = () => {
   //   const fetchClient = async () => {
   //     try {
   //       const res = await axios.get(
-  //         `${baseURL}/auth/api/calculator/getClientDetailsById/${id}`,
+  //         `${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`,
   //         {
   //           headers: {
   //             "Content-Type": "application/json",

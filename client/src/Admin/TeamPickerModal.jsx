@@ -21,7 +21,7 @@ export default function TeamPickerModal({
         setLoading(true);
         // Team list
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/retrieveTeam`,
+          `${baseURL}/auth/api/re_calculator/retrieveTeam`,
           { headers }
         );
         setTeams(res?.data?.data || []);

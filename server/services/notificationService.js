@@ -1,21 +1,29 @@
-const { 
-  sendFinalInvoiceEmail, 
+const {
+  sendFinalInvoiceEmail,
   sendInvoiceAdminNotifyEmail,
-  sendPaymentReceivedAlertEmail 
-} = require("../controller/sendEmails");
+  sendPaymentReceivedAlertEmail,
+} = require("../re_controller/re_sendEmails");
 
-const { 
-  sendInvoiceWhatsApp, 
+const {
+  sendInvoiceWhatsApp,
   sendInvoiceAdminNotifyWA,
-  sendPaymentReceivedAlertWA 
-} = require("../controller/sendWhatsApp");
+  sendPaymentReceivedAlertWA,
+} = require("../re_controller/re_sendWhatsApp");
 
 /**
  * Handles dispatching notifications for the FINAL_INVOICE event.
  * Uses Promise.allSettled to ensure that individual failures do not block other channels.
  */
 async function handleFinalInvoice(payload) {
-  const { clientEmail, clientPhone, clientName, txnId, invoiceLink, adminAmount, adminTimeStr } = payload;
+  const {
+    clientEmail,
+    clientPhone,
+    clientName,
+    txnId,
+    invoiceLink,
+    adminAmount,
+    adminTimeStr,
+  } = payload;
 
   const results = await Promise.allSettled([
     sendFinalInvoiceEmail({
@@ -43,11 +51,12 @@ async function handleFinalInvoice(payload) {
       amount: adminAmount,
       timeStr: adminTimeStr,
       link: invoiceLink,
-    })
+    }),
   ]);
 
   // Map the settled results to a clean boolean status object
-  const getStatus = (res) => res.status === "fulfilled" && res.value?.ok === true;
+  const getStatus = (res) =>
+    res.status === "fulfilled" && res.value?.ok === true;
 
   return {
     clientEmail: getStatus(results[0]),
@@ -57,31 +66,65 @@ async function handleFinalInvoice(payload) {
   };
 }
 
-
 async function handlePaymentAlert(payload) {
   const {
-    clientEmail, clientName, orgName, clientId, invoiceNo, invoiceDate,
-    paymentDate, amountReceived, paymentMode, invoiceTotal,
-    previousBalance, tdsApplicable, tdsDeducted, netCredited,
-    totalReceivedTillDate, pendingOutstanding
+    clientEmail,
+    clientName,
+    orgName,
+    clientId,
+    invoiceNo,
+    invoiceDate,
+    paymentDate,
+    amountReceived,
+    paymentMode,
+    invoiceTotal,
+    previousBalance,
+    tdsApplicable,
+    tdsDeducted,
+    netCredited,
+    totalReceivedTillDate,
+    pendingOutstanding,
   } = payload;
 
   const results = await Promise.allSettled([
     sendPaymentReceivedAlertEmail({
-      clientName, orgName, clientId, invoiceNo, invoiceDate,
-      paymentDate, amountReceived, paymentMode, invoiceTotal,
-      previousBalance, tdsApplicable, tdsDeducted, netCredited,
-      totalReceivedTillDate, pendingOutstanding
+      clientName,
+      orgName,
+      clientId,
+      invoiceNo,
+      invoiceDate,
+      paymentDate,
+      amountReceived,
+      paymentMode,
+      invoiceTotal,
+      previousBalance,
+      tdsApplicable,
+      tdsDeducted,
+      netCredited,
+      totalReceivedTillDate,
+      pendingOutstanding,
     }),
     sendPaymentReceivedAlertWA({
-      clientName, orgName, clientId, invoiceNo, invoiceDate,
-      paymentDate, amountReceived, paymentMode, invoiceTotal,
-      previousBalance, tdsApplicable, tdsDeducted, netCredited,
-      totalReceivedTillDate, pendingOutstanding
-    })
+      clientName,
+      orgName,
+      clientId,
+      invoiceNo,
+      invoiceDate,
+      paymentDate,
+      amountReceived,
+      paymentMode,
+      invoiceTotal,
+      previousBalance,
+      tdsApplicable,
+      tdsDeducted,
+      netCredited,
+      totalReceivedTillDate,
+      pendingOutstanding,
+    }),
   ]);
 
-  const getStatus = (res) => res.status === "fulfilled" && res.value?.ok === true;
+  const getStatus = (res) =>
+    res.status === "fulfilled" && res.value?.ok === true;
 
   return {
     adminEmail: getStatus(results[0]),
@@ -98,7 +141,7 @@ const handlers = {
 
 /**
  * Generic event dispatcher for notifications.
- * @param {Object} params 
+ * @param {Object} params
  * @param {string} params.event - The notification event name (e.g., 'FINAL_INVOICE').
  * @param {Object} params.payload - The data required for the event's notifications.
  * @returns {Promise<Object>} - An object detailing the success status of each channel.
@@ -106,14 +149,19 @@ const handlers = {
 async function dispatch({ event, payload }) {
   const handler = handlers[event];
   if (!handler) {
-    console.error(`[NOTIFICATION_SERVICE] No handler found for event: ${event}`);
+    console.error(
+      `[NOTIFICATION_SERVICE] No handler found for event: ${event}`,
+    );
     return { error: "Unknown Event" };
   }
 
   try {
     return await handler(payload);
   } catch (error) {
-    console.error(`[NOTIFICATION_SERVICE] Critical error in handler ${event}:`, error);
+    console.error(
+      `[NOTIFICATION_SERVICE] Critical error in handler ${event}:`,
+      error,
+    );
     return { error: error.message };
   }
 }

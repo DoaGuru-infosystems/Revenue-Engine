@@ -36,7 +36,7 @@ const PaymentModal = ({ fetchProposals }) => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/auth/api/calculator/proposal/${proposal.id}/payment`,
+        `${API_BASE_URL}/auth/api/re_calculator/proposal/${proposal.id}/payment`,
         paymentDetails,
         { headers: { Authorization: `Bearer ${token}` } }
       );

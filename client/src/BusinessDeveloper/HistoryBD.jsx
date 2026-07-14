@@ -76,7 +76,7 @@ const navigate = useNavigate();
   const fetchAllClientServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientTxnHistory/${id}`,
+        `${baseURL}/auth/api/re_calculator/getClientTxnHistory/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -120,7 +120,7 @@ const navigate = useNavigate();
 
   const fetchProposals = React.useCallback(async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proposal/client/${id}`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proposal/client/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.status === "Success") {
@@ -134,7 +134,7 @@ const navigate = useNavigate();
   const fetchAllInvoiceServices = async (txnID) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllInvoiceServiceHistory/${id}/${txnID}`,
+        `${baseURL}/auth/api/re_calculator/getAllInvoiceServiceHistory/${id}/${txnID}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -176,7 +176,7 @@ const navigate = useNavigate();
   const fetchServicesById = async (txnID) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientServiceHistory/${id}/${txnID}`,
+        `${baseURL}/auth/api/re_calculator/getClientServiceHistory/${id}/${txnID}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -208,7 +208,7 @@ const navigate = useNavigate();
   const fetchComplimentaryData = async (txnID) => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDComplimentaryData/${txnID}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${txnID}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -243,7 +243,7 @@ const navigate = useNavigate();
   const fetchClient = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientDetailsById/${id}`,
+        `${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -278,7 +278,7 @@ const navigate = useNavigate();
   const fetchClientReceived = async (txnId) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientDetailsById/${id}/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${txnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -325,7 +325,7 @@ const navigate = useNavigate();
 
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteQuotationById/${quotationId}`,
+        `${baseURL}/auth/api/re_calculator/deleteQuotationById/${quotationId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -479,7 +479,7 @@ const navigate = useNavigate();
         invoices,
       };
       await axios.post(
-        `${baseURL}/auth/api/calculator/saveInvoiceGD`,
+        `${baseURL}/auth/api/re_calculator/saveInvoiceGD`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -489,7 +489,7 @@ const navigate = useNavigate();
       // ✅ Step 4: Save Ads
       if (adsItems.length > 0) {
         await axios.post(
-          `${baseURL}/auth/api/calculator/saveInvoiceAdsCampaign`,
+          `${baseURL}/auth/api/re_calculator/saveInvoiceAdsCampaign`,
           { adsItems },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -499,7 +499,7 @@ const navigate = useNavigate();
       if (complimentaryItems.length > 0) {
         for (const item of complimentaryItems) {
           await axios.post(
-            `${baseURL}/auth/api/calculator/saveInvoiceComplimentaryData`,
+            `${baseURL}/auth/api/re_calculator/saveInvoiceComplimentaryData`,
             item,
             { headers: { Authorization: `Bearer ${token}` } }
           );
@@ -612,7 +612,7 @@ const navigate = useNavigate();
 
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteAllInvoiceServiceHistory/${id}/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/deleteAllInvoiceServiceHistory/${id}/${txnId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

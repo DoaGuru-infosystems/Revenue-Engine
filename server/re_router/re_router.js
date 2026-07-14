@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const {
   register,
   login,
@@ -52,7 +52,7 @@ const {
   saveNotesbydefault,
   sendRegisterAdminOtp,
   registerAdminWithOtp,
-} = require("../controller/controller");
+} = require("../re_controller/re_controller");
 const {
   getAddServices,
   getAddCategories,
@@ -105,7 +105,7 @@ const {
   getRemainingAmountByIdData,
   getSeoClientsWithKeywords,
   getDiscountSetting,
-} = require("../controller/getController");
+} = require("../re_controller/re_getController");
 const {
   deleteService,
   deleteCategory,
@@ -139,7 +139,7 @@ const {
   deleteSeoClient,
   deleteSeoKeyword,
   deleteDiscountSettingById,
-} = require("../controller/deleteController");
+} = require("../re_controller/re_deleteController");
 const {
   updateService,
   updateCategory,
@@ -166,17 +166,17 @@ const {
   updateDiscountSettingDataById,
   updateQuotationApprovalStatus,
   // reassignQuotation,
-} = require("../controller/updateController");
+} = require("../re_controller/re_updateController");
 
 const {
   submitToAdmin,
   sendQuotationToClient,
-  markClientQuotationApproved,
+  markClientQuotationApproved,              
   generateProformaInvoice,
   getPaymentSummary,
   recordPaymentAndGenerateFinalInvoice,
   invoiceSentNotify,
-/* --- FOR FUTURE DEVELOPMENT OK ---
+  /* --- FOR FUTURE DEVELOPMENT OK ---
   saveStrategy,
   sendStrategyToAdmin,
   getStrategy,
@@ -190,20 +190,20 @@ const {
   getTasksByTxn,
   getRemarks,
 */
-} = require("../controller/workflowController");
+} = require("../re_controller/re_workflowcontroller.JS");
 
 const {
   getPublicInvoiceData,
   getPublicInvoicePdf,
   getPublicProposalData,
   getPublicProposalPdf,
-} = require("../controller/publicController");
+} = require("../re_controller/re_publicController");
 
-const authenticateToken = require("../middleware/authenticateToken");
+const authenticateToken = require("../re_middleware/re_authenticateToken");
 // const {
 //   pagespeedReportpdf,
 //   // fullSEOReport,
-// } = require("../controller/seoController");
+// } = require("../re_controller/re_seoController");
 
 const {
   createProposal,
@@ -230,11 +230,11 @@ const {
   generateInvoiceFromProforma,
   getProposalInvoices,
   getRevenueHistory,
-} = require("../controller/proposalController");
+} = require("../re_controller/re_proposalController");
 const {
   uploadAndConvert: genratecoatetion,
   generateInvoicePdf,
-} = require("../controller/genratecoatetion");
+} = require("../re_controller/re_genratecoatetion");
 const router = express.Router();
 
 // ---- Public Routes (no auth) ----
@@ -303,7 +303,7 @@ router.post("/workflow/assignTeamLead", authenticateToken, assignTeamLead);
 router.post("/workflow/assignTaskOwners", authenticateToken, assignTaskOwners);
 router.get("/workflow/getTasks/:txn_id", authenticateToken, getTasksByTxn);
 
-// ---- Employees/Teams (stub — SF removed, future: connect to local DB) ----
+// ---- Employees/RE_teams (stub — SF removed, future: connect to local DB) ----
 router.get("/workflow/sfEmployees", authenticateToken, getSFEmployees);
 router.get("/workflow/sfTeams", authenticateToken, getSFTeams);
 router.get("/workflow/sfTeamLeads/:teamId", authenticateToken, getSFTeamLeads);

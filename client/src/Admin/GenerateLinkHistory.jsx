@@ -21,7 +21,7 @@ const GenerateLinkHistory = () => {
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/requirements`,
+          `${baseURL}/auth/api/re_calculator/requirements`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -79,7 +79,7 @@ const GenerateLinkHistory = () => {
 
     try {
       await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteRequirementsBundle/${linkId}`
+        `${baseURL}/auth/api/re_calculator/deleteRequirementsBundle/${linkId}`
       );
       setData((prev) => prev.filter((row) => row.link_id !== linkId));
       Swal.fire({ title: "Deleted!", icon: "success", timer: 1000, showConfirmButton: false });

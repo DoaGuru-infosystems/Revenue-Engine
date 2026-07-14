@@ -88,16 +88,16 @@ async function sendFinalInvoiceEmail({ to, clientName, txnId, invoiceLink }) {
       <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
         <div style="background-color: #0f172a; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
           <img src="cid:logo" alt="Revenue Engine" style="height: 45px; margin-bottom: 15px;" />
-          <h2 style="color: #ffffff; margin: 0; font-weight: 400; letter-spacing: 1px;">FINAL INVOICE</h2>
+          <h2 style="color: #ffffff; margin: 0; font-weight: 400; letter-spacing: 1px;">Final Invoice</h2>
         </div>
         
         <div style="padding: 40px;">
           <p style="font-size: 16px; color: #334155; margin-top: 0;">Dear <b>${clientName}</b>,</p>
-          <p style="font-size: 16px; color: #475569; line-height: 1.6;">Your final invoice for transaction <strong>#${txnId}</strong> has been generated and is ready for your records.</p>
+          <p style="font-size: 16px; color: #475569; line-height: 1.6;">Your Final Invoice for transaction <strong>#${txnId}</strong> has been generated and is ready for your records.</p>
           
           ${invoiceLink ? `
           <div style="margin: 40px 0; text-align: center;">
-            <a href="${invoiceLink}" style="display: inline-block; padding: 15px 40px; background-color: #f97316; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 14px;">Download / View Invoice</a>
+            <a href="${invoiceLink}" style="display: inline-block; padding: 15px 40px; background-color: #f97316; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 14px;">Download / View re_invoice</a>
           </div>
           ` : ""}
           
@@ -115,10 +115,10 @@ async function sendFinalInvoiceEmail({ to, clientName, txnId, invoiceLink }) {
       html,
       attachments: [getLogoAttachment()]
     });
-    console.log("[MAIL] Final invoice sent to:", to);
+    console.log("[MAIL] Final Invoice sent to:", to);
     return { ok: true };
   } catch (err) {
-    console.error("[MAIL ERROR] Final invoice sent:", err.message);
+    console.error("[MAIL ERROR] Final Invoice sent:", err.message);
     return { ok: false, error: err.message };
   }
 }
@@ -256,7 +256,7 @@ async function sendPaymentReceivedAlertEmail({
                 <p style="margin:5px 0 0; color:#475569; font-size: 13px;">${orgName || "No Org"}</p>
               </td>
               <td style="padding: 15px; background: #f8fafc; border-bottom: 2px solid #fff;">
-                <p style="margin:0 0 5px; color:#64748b; font-size: 12px;">INVOICE</p>
+                <p style="margin:0 0 5px; color:#64748b; font-size: 12px;">Invoice</p>
                 <p style="margin:0; font-weight:bold; color:#0f172a;">${invoiceNo}</p>
                 <p style="margin:5px 0 0; color:#475569; font-size: 13px;">Dated: ${invoiceDate}</p>
               </td>
@@ -319,10 +319,10 @@ async function sendInvoiceAdminNotifyEmail({ clientName, invoiceNo, amount, time
         <div style="display: inline-block; padding: 6px 12px; background: #dcfce7; color: #166534; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 20px;">✓ AUTO-SENT</div>
         
         <h2 style="margin: 0 0 10px; color: #0f172a; font-size: 22px;">Final Invoice Sent</h2>
-        <p style="color: #64748b; font-size: 15px; line-height: 1.5; margin: 0 0 30px;">A final invoice has been dispatched to <strong>${clientName}</strong> following full payment confirmation at ${timeStr}.</p>
+        <p style="color: #64748b; font-size: 15px; line-height: 1.5; margin: 0 0 30px;">A Final Invoice has been dispatched to <strong>${clientName}</strong> following full payment confirmation at ${timeStr}.</p>
         
         <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
-          <p style="margin: 0 0 8px; color: #475569; font-size: 13px;">INVOICE NO</p>
+          <p style="margin: 0 0 8px; color: #475569; font-size: 13px;">Invoice NO</p>
           <p style="margin: 0 0 20px; color: #0f172a; font-weight: 600; font-size: 16px;">${invoiceNo}</p>
           <p style="margin: 0 0 8px; color: #475569; font-size: 13px;">AMOUNT</p>
           <p style="margin: 0; color: #0f172a; font-weight: 600; font-size: 16px;">₹${amount}</p>

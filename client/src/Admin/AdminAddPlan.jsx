@@ -43,7 +43,7 @@ const AdminAddPlan = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${baseURL}/auth/api/calculator/getAllPlanDetails`, {
+      const response = await axios.get(`${baseURL}/auth/api/re_calculator/getAllPlanDetails`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -87,11 +87,11 @@ const AdminAddPlan = () => {
       const payload = { plan_name: planName };
 
       const res = editId
-        ? await axios.put(`${baseURL}/auth/api/calculator/updatePlanName/${editId}`, payload, {
+        ? await axios.put(`${baseURL}/auth/api/re_calculator/updatePlanName/${editId}`, payload, {
             headers: { Authorization: `Bearer ${token}` },
           })
         : await axios.post(
-            `${baseURL}/auth/api/calculator/saveCalculatorDataofplanDetail`,
+            `${baseURL}/auth/api/re_calculator/saveCalculatorDataofplanDetail`,
             payload,
             {
               headers: { Authorization: `Bearer ${token}` },
@@ -161,7 +161,7 @@ const AdminAddPlan = () => {
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deletePlanNameDetail/${entryId}`,
+        `${baseURL}/auth/api/re_calculator/deletePlanNameDetail/${entryId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

@@ -49,7 +49,7 @@
 //       try {
 //         setLoadingUsers(true);
 //         const res = await axios.get(
-//           `${baseURL}/auth/api/calculator/retrieveUser`,
+//           `${baseURL}/auth/api/re_calculator/retrieveUser`,
 //           { headers }
 //         );
 //         if (res.data?.status === "Success") {
@@ -92,7 +92,7 @@
 //       try {
 //         setChecking(true);
 //         const res = await axios.get(
-//           `${baseURL}/auth/api/calculator/getAssignmentByTxn/${txnId}`,
+//           `${baseURL}/auth/api/re_calculator/getAssignmentByTxn/${txnId}`,
 //           { headers }
 //         );
 //         if (res.data?.status === "Success") {
@@ -204,7 +204,7 @@
 //       setSubmitting(true);
 //       if (!isReassign) {
 //         await axios.post(
-//           `${baseURL}/auth/api/calculator/assignQuotation`,
+//           `${baseURL}/auth/api/re_calculator/assignQuotation`,
 //           {
 //             client_id: clientId,
 //             txn_id: txnId,
@@ -215,7 +215,7 @@
 //         );
 //       } else {
 //         await axios.put(
-//           `${baseURL}/auth/api/calculator/reassignQuotation`,
+//           `${baseURL}/auth/api/re_calculator/reassignQuotation`,
 //           { txn_id: txnId, user_id: Number(selectedUser), deadline },
 //           { headers }
 //         );
@@ -246,7 +246,7 @@
 //   // ------------------ TEAM ASSIGN ------------------
 //   const assignToTeamBulkAPI = async (teamId) => {
 //     await axios.post(
-//       `${baseURL}/auth/api/calculator/assignQuotationToTeam`,
+//       `${baseURL}/auth/api/re_calculator/assignQuotationToTeam`,
 //       { client_id: clientId, txn_id: txnId, team_id: Number(teamId), deadline },
 //       { headers }
 //     );
@@ -481,7 +481,7 @@
 //       try {
 //         setLoadingUsers(true);
 //         const res = await axios.get(
-//           `${baseURL}/auth/api/calculator/retrieveUser`,
+//           `${baseURL}/auth/api/re_calculator/retrieveUser`,
 //           { headers }
 //         );
 //         setUsers(res.data?.status === "Success" ? res.data.data || [] : []);
@@ -512,7 +512,7 @@
 //       try {
 //         setLoadingTeams(true);
 //         const candidates = [
-//           `${baseURL}/auth/api/calculator/retrieveTeam`,
+//           `${baseURL}/auth/api/re_calculator/retrieveTeam`,
 //           `${baseURL}/retrieveTeam`,
 //           `${baseURL}/api/retrieveTeam`,
 //         ];
@@ -554,7 +554,7 @@
 //   //     try {
 //   //       setChecking(true);
 //   //       const res = await axios.get(
-//   //         `${baseURL}/auth/api/calculator/getAssignmentsSummary/${txnId}`,
+//   //         `${baseURL}/auth/api/re_calculator/getAssignmentsSummary/${txnId}`,
 //   //         { headers }
 //   //       );
 //   //       if (cancelled) return;
@@ -620,7 +620,7 @@
 //       try {
 //         setChecking(true);
 //         const res = await axios.get(
-//           `${baseURL}/auth/api/calculator/getAssignmentsSummary/${txnId}`,
+//           `${baseURL}/auth/api/re_calculator/getAssignmentsSummary/${txnId}`,
 //           { headers }
 //         );
 //         if (cancelled) return;
@@ -763,7 +763,7 @@
 //       if (isReassign) {
 //         // CHANGED: pass old_user_id to update the specific row
 //         await axios.put(
-//           `${baseURL}/auth/api/calculator/reassignQuotation`,
+//           `${baseURL}/auth/api/re_calculator/reassignQuotation`,
 //           {
 //             txn_id: txnId,
 //             user_id: Number(selectedUser),
@@ -775,7 +775,7 @@
 //       } else {
 //         // from team/mixed/none -> make a fresh single assignment
 //         await axios.post(
-//           `${baseURL}/auth/api/calculator/assignQuotation`,
+//           `${baseURL}/auth/api/re_calculator/assignQuotation`,
 //           {
 //             client_id: clientId,
 //             txn_id: txnId,
@@ -811,7 +811,7 @@
 //   // ---------------- TEAM BULK ASSIGN ----------------
 //   const assignToTeamBulkAPI = async (teamId) => {
 //     await axios.post(
-//       `${baseURL}/auth/api/calculator/assignQuotationToTeam`,
+//       `${baseURL}/auth/api/re_calculator/assignQuotationToTeam`,
 //       { client_id: clientId, txn_id: txnId, team_id: Number(teamId), deadline },
 //       { headers }
 //     );
@@ -1165,7 +1165,7 @@ export default function QuotationTypeModal({
       try {
         setLoadingUsers(true);
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/retrieveUser`,
+          `${baseURL}/auth/api/re_calculator/retrieveUser`,
           { headers }
         );
         setUsers(res.data?.status === "Success" ? res.data.data || [] : []);
@@ -1196,7 +1196,7 @@ export default function QuotationTypeModal({
       try {
         setLoadingTeams(true);
         const candidates = [
-          `${baseURL}/auth/api/calculator/retrieveTeam`,
+          `${baseURL}/auth/api/re_calculator/retrieveTeam`,
           `${baseURL}/retrieveTeam`,
           `${baseURL}/api/retrieveTeam`,
         ];
@@ -1234,7 +1234,7 @@ export default function QuotationTypeModal({
       try {
         setChecking(true);
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/getAssignmentsSummary/${txnId}`,
+          `${baseURL}/auth/api/re_calculator/getAssignmentsSummary/${txnId}`,
           { headers }
         );
         if (cancelled) return;
@@ -1387,7 +1387,7 @@ export default function QuotationTypeModal({
       if (isReassign) {
         // CHANGED: pass old_user_id to update the specific row
         await axios.put(
-          `${baseURL}/auth/api/calculator/reassignQuotation`,
+          `${baseURL}/auth/api/re_calculator/reassignQuotation`,
           {
             txn_id: txnId,
             user_id: Number(selectedUser),
@@ -1399,7 +1399,7 @@ export default function QuotationTypeModal({
       } else {
         // from team/mixed/none -> make a fresh single assignment
         await axios.post(
-          `${baseURL}/auth/api/calculator/assignQuotation`,
+          `${baseURL}/auth/api/re_calculator/assignQuotation`,
           {
             client_id: clientId,
             txn_id: txnId,
@@ -1435,7 +1435,7 @@ export default function QuotationTypeModal({
   // ---------------- TEAM BULK ASSIGN ----------------
   const assignToTeamBulkAPI = async (teamId) => {
     await axios.post(
-      `${baseURL}/auth/api/calculator/assignQuotationToTeam`,
+      `${baseURL}/auth/api/re_calculator/assignQuotationToTeam`,
       { client_id: clientId, txn_id: txnId, team_id: Number(teamId), deadline },
       { headers }
     );
@@ -1782,7 +1782,7 @@ export default function QuotationTypeModal({
 //       try {
 //         setLoadingUsers(true);
 //         const res = await axios.get(
-//           `${baseURL}/auth/api/calculator/retrieveUser`,
+//           `${baseURL}/auth/api/re_calculator/retrieveUser`,
 //           { headers }
 //         );
 //         setUsers(res.data?.status === "Success" ? res.data.data || [] : []);
@@ -1816,7 +1816,7 @@ export default function QuotationTypeModal({
 //         setLoadingTeams(true);
 //         // try with auth prefix first, then fallback to unprefixed
 //         const candidates = [
-//           `${baseURL}/auth/api/calculator/retrieveTeam`,
+//           `${baseURL}/auth/api/re_calculator/retrieveTeam`,
 //           `${baseURL}/retrieveTeam`,
 //           `${baseURL}/api/retrieveTeam`,
 //         ];
@@ -1854,7 +1854,7 @@ export default function QuotationTypeModal({
 //       try {
 //         setChecking(true);
 //         const res = await axios.get(
-//           `${baseURL}/auth/api/calculator/getAssignmentByTxn/${txnId}`,
+//           `${baseURL}/auth/api/re_calculator/getAssignmentByTxn/${txnId}`,
 //           { headers }
 //         );
 //         if (res.data?.status === "Success") {
@@ -1961,7 +1961,7 @@ export default function QuotationTypeModal({
 //       setSubmitting(true);
 //       if (!isReassign) {
 //         await axios.post(
-//           `${baseURL}/auth/api/calculator/assignQuotation`,
+//           `${baseURL}/auth/api/re_calculator/assignQuotation`,
 //           {
 //             client_id: clientId,
 //             txn_id: txnId,
@@ -1972,7 +1972,7 @@ export default function QuotationTypeModal({
 //         );
 //       } else {
 //         await axios.put(
-//           `${baseURL}/auth/api/calculator/reassignQuotation`,
+//           `${baseURL}/auth/api/re_calculator/reassignQuotation`,
 //           { txn_id: txnId, user_id: Number(selectedUser), deadline },
 //           { headers }
 //         );
@@ -2001,7 +2001,7 @@ export default function QuotationTypeModal({
 //   // ---------------- TEAM BULK ASSIGN ----------------
 //   const assignToTeamBulkAPI = async (teamId) => {
 //     await axios.post(
-//       `${baseURL}/auth/api/calculator/assignQuotationToTeam`,
+//       `${baseURL}/auth/api/re_calculator/assignQuotationToTeam`,
 //       { client_id: clientId, txn_id: txnId, team_id: Number(teamId), deadline },
 //       { headers }
 //     );

@@ -93,7 +93,7 @@ export default function AddService() {
   const fetchClient = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientDetailsById/${id}`,
+        `${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.status === "Success") setClientData(res.data.data);
@@ -105,7 +105,7 @@ export default function AddService() {
   const fetchPlanData = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllPlanData`,
+        `${baseURL}/auth/api/re_calculator/getAllPlanData`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.status === "Success") setGetPlanData(res.data.data);
@@ -117,7 +117,7 @@ export default function AddService() {
   const getAllPlanNotes = async (planTitle) => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getPlanNotes`,
+        `${baseURL}/auth/api/re_calculator/getPlanNotes`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const notes = response.data.data;
@@ -134,7 +134,7 @@ export default function AddService() {
     if (!id || !proposalId) return;
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDCalculatorTransactions/${proposalId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setGetData(data.data);
@@ -148,7 +148,7 @@ export default function AddService() {
     if (!id || !proposalId) return;
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.status === "Success") setGetAdsData(res.data.data);
@@ -160,7 +160,7 @@ export default function AddService() {
   const fetchClientNotes = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientNotesbyId/${id}/${proposalId}`,
+        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${id}/${proposalId}`,
         { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
       );
       if (res.data.status === "Success") setNotesData(res.data.data);
@@ -173,7 +173,7 @@ export default function AddService() {
     if (!id || !proposalId) return;
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDComplimentaryData/${proposalId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${id}`,
         { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
       );
       setGetComplimenatryData(data.data);
@@ -292,7 +292,7 @@ export default function AddService() {
       }
 
       if (existingPlanName && existingPlanName !== selectedPlanName) {
-        await axios.delete(`${baseURL}/auth/api/calculator/deleteClientAllPlanData/${proposalId}`);
+        await axios.delete(`${baseURL}/auth/api/re_calculator/deleteClientAllPlanData/${proposalId}`);
       }
 
       const planItems = filteredPlanData
@@ -334,14 +334,14 @@ export default function AddService() {
       const planNotes = filteredNotes.map((item) => ({ note_name: item.note_name, plan: item.plan }));
 
       await axios.post(
-        `${baseURL}/auth/api/calculator/savePlanClientNotes`,
+        `${baseURL}/auth/api/re_calculator/savePlanClientNotes`,
         { txn_id: proposalId, client_id: id, plans: planItems, planNotes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (adsItems.length > 0) {
         await axios.post(
-          `${baseURL}/auth/api/calculator/saveAdsCampaign`,
+          `${baseURL}/auth/api/re_calculator/saveAdsCampaign`,
           { adsItems },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -349,7 +349,7 @@ export default function AddService() {
 
       for (const item of complimentaryItems) {
         await axios.post(
-          `${baseURL}/auth/api/calculator/saveComplimentaryData`,
+          `${baseURL}/auth/api/re_calculator/saveComplimentaryData`,
           item,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -374,7 +374,7 @@ export default function AddService() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you want to delete this client plan data permanently?", icon: "warning", showCancelButton: true, confirmButtonText: "Yes, delete it!" });
     if (confirm.isConfirmed) {
       try {
-        const res = await axios.delete(`${baseURL}/auth/api/calculator/deleteClientAllPlanData/${txn_id}`);
+        const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteClientAllPlanData/${txn_id}`);
         if (res.data.status === "Success") {
           Swal.fire({ icon: "success", title: "Deleted!", text: "Plan has been deleted.", showConfirmButton: false, timer: 1000 });
           setGetData([]); setPlanName(""); setNotesData([]); fetchClientNotes(); fetchAdsData(); setGetAdsData([]); setGetComplimenatryData([]);
@@ -391,7 +391,7 @@ export default function AddService() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/calculator/deleteGraphicEntryById/${entryId}`);
+      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${entryId}`);
       if (res.data.status === "Success") {
         setGetData((prev) => prev.filter((item) => item.id !== entryId));
         Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
@@ -408,7 +408,7 @@ export default function AddService() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/calculator/deleteComplimenatryById/${entryId}`);
+      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${entryId}`);
       if (res.data.status === "Success") {
         setGetComplimenatryData((prev) => prev.filter((item) => item.id !== entryId));
         Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
@@ -425,7 +425,7 @@ export default function AddService() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this note?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/calculator/deletePlanClientNotes/${noteId}`);
+      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`);
       if (res.data.status === "Success") {
         Swal.fire({ icon: "success", title: "Deleted!", text: "Note has been deleted.", timer: 1000, showConfirmButton: false });
         fetchClientNotes();
@@ -441,7 +441,7 @@ export default function AddService() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/calculator/deleteAdsCampaignEntryById/${entryId}`);
+      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${entryId}`);
       if (res.data.status === "Success") {
         setGetData((prev) => prev.filter((item) => item.id !== entryId));
         Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", timer: 1000, showConfirmButton: false });

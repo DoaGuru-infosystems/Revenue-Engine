@@ -30,7 +30,7 @@ function BdExplorePlans() {
   // Data Fetching Logic (Keeping your original logic)
   const fetchPlanData = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/getAllPlanData`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/getAllPlanData`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.status === "Success") {
@@ -78,7 +78,7 @@ function BdExplorePlans() {
   const getAllPlanNotes = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getPlanNotes`,
+        `${baseURL}/auth/api/re_calculator/getPlanNotes`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const notes = response.data.data;
@@ -194,7 +194,7 @@ function BdExplorePlans() {
         planNotes,
       };
 
-      const res = await axios.post(`${baseURL}/auth/api/calculator/saveClientWithPlan`, payload, {
+      const res = await axios.post(`${baseURL}/auth/api/re_calculator/saveClientWithPlan`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -202,14 +202,14 @@ function BdExplorePlans() {
 
       if (status === "Success") {
         if (adsItems.length > 0) {
-          await axios.post(`${baseURL}/auth/api/calculator/saveAdsCampaign`, {
+          await axios.post(`${baseURL}/auth/api/re_calculator/saveAdsCampaign`, {
             adsItems: adsItems.map((item) => ({ ...item, client_id }))
           }, { headers: { Authorization: `Bearer ${token}` } });
         }
 
         if (complimentaryItems.length > 0) {
           for (const item of complimentaryItems) {
-            await axios.post(`${baseURL}/auth/api/calculator/saveComplimentaryData`, { ...item, client_id }, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.post(`${baseURL}/auth/api/re_calculator/saveComplimentaryData`, { ...item, client_id }, { headers: { Authorization: `Bearer ${token}` } });
           }
         }
 

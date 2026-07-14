@@ -136,7 +136,7 @@ export default function BDInvoice() {
   const fetchServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getinInvoiceServiceHistory/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getinInvoiceServiceHistory/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -166,7 +166,7 @@ export default function BDInvoice() {
   const fetchClient = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientDetailsById/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -195,7 +195,7 @@ export default function BDInvoice() {
   const fetchClientNotes = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientNotesbyId/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientNotesbyId/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -223,7 +223,7 @@ export default function BDInvoice() {
   const fetchComplimentaryData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getComplimentaryInvoiceData/${activeTxnId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getComplimentaryInvoiceData/${activeTxnId}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -256,7 +256,7 @@ export default function BDInvoice() {
   const fetchDiscount = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDDiscountData/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${activeTxnId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -280,7 +280,7 @@ export default function BDInvoice() {
   const fetchDiscountSetting = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getDiscountSetting`,
+        `${baseURL}/auth/api/re_calculator/getDiscountSetting`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (data.data && data.data.length > 0) {
@@ -294,7 +294,7 @@ export default function BDInvoice() {
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceNoteData`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -310,7 +310,7 @@ export default function BDInvoice() {
   const fetchAdditionservice = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAdditionByIdData/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getAdditionByIdData/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -338,7 +338,7 @@ export default function BDInvoice() {
   const fetchRemainingAmount = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getRemainingAmountByIdData/${id}/${activeTxnId}`,
+        `${baseURL}/auth/api/re_calculator/getRemainingAmountByIdData/${id}/${activeTxnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -486,7 +486,7 @@ export default function BDInvoice() {
   }, [location.state]);
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
         // Filter out "Complimentary" service
         const filteredServices = res.data.data.filter(
@@ -499,7 +499,7 @@ export default function BDInvoice() {
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
       .then((res) => {
         if (res.data.status === "success") {
           const services = res.data.data;
@@ -583,11 +583,11 @@ export default function BDInvoice() {
 
     const request = isEditingAddition
       ? axios.put(
-        `${baseURL}/auth/api/calculator/updateAdditionalDataById/${isEditingAddition}`,
+        `${baseURL}/auth/api/re_calculator/updateAdditionalDataById/${isEditingAddition}`,
         payload
       )
       : axios.post(
-        `${baseURL}/auth/api/calculator/saveAdditionalData`,
+        `${baseURL}/auth/api/re_calculator/saveAdditionalData`,
         payload
       );
 
@@ -687,7 +687,7 @@ export default function BDInvoice() {
       if (enteredValue === 0) {
         if (selecteddiscount?.id) {
           await axios.delete(
-            `${baseURL}/auth/api/calculator/deleteDiscountById/${selecteddiscount.id}`,
+            `${baseURL}/auth/api/re_calculator/deleteDiscountById/${selecteddiscount.id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setSelecteddiscount(null);
@@ -768,12 +768,12 @@ export default function BDInvoice() {
 
       const response = selecteddiscount
         ? await axios.put(
-          `${baseURL}/auth/api/calculator/updateDiscountDataById/${selecteddiscount.id}`,
+          `${baseURL}/auth/api/re_calculator/updateDiscountDataById/${selecteddiscount.id}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         : await axios.post(
-          `${baseURL}/auth/api/calculator/saveDiscountData`,
+          `${baseURL}/auth/api/re_calculator/saveDiscountData`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -848,11 +848,11 @@ export default function BDInvoice() {
 
     const request = isEditingRemaining
       ? axios.put(
-        `${baseURL}/auth/api/calculator/updateRemainingDataById/${isEditingRemaining}`,
+        `${baseURL}/auth/api/re_calculator/updateRemainingDataById/${isEditingRemaining}`,
         payload
       )
       : axios.post(
-        `${baseURL}/auth/api/calculator/saveRemainingAmountData`,
+        `${baseURL}/auth/api/re_calculator/saveRemainingAmountData`,
         payload
       );
 
@@ -888,7 +888,7 @@ export default function BDInvoice() {
 
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
           formDataNote,
           {
             headers: {
@@ -900,7 +900,7 @@ export default function BDInvoice() {
         // console.log(response.data);
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formDataNote,
           {
             headers: {
@@ -1015,7 +1015,7 @@ export default function BDInvoice() {
       };
 
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/saveInvoiceClientIdwiseNotes`,
+        `${baseURL}/auth/api/re_calculator/saveInvoiceClientIdwiseNotes`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -1081,7 +1081,7 @@ export default function BDInvoice() {
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteInvoiceClientNotes/${noteId}`
+        `${baseURL}/auth/api/re_calculator/deleteInvoiceClientNotes/${noteId}`
       );
 
       const result = res.data;
@@ -1249,7 +1249,7 @@ export default function BDInvoice() {
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteAdditionalById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteAdditionalById/${entryId}`
       );
 
       const result = res.data;
@@ -1304,7 +1304,7 @@ export default function BDInvoice() {
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteRemainingAmountById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteRemainingAmountById/${entryId}`
       );
 
       const result = res.data;

@@ -4,10 +4,10 @@ const moment = require("moment-timezone");
 const {
   sendDailyPaymentSummaryEmail,
   TZ,
-} = require("./sendEmails");
+} = require("./re_sendEmails");
 const {
   sendPeriodicPaymentSummaryWA,
-} = require("./sendWhatsApp");
+} = require("./re_sendWhatsApp");
 
 
 
@@ -29,12 +29,12 @@ async function runPeriodicPaymentSummary() {
 
   try {
     // We need to fetch clients who have outstanding amounts.
-    // The outstanding amount is tracked in the `invoice` table (`current_amt`).
-    // Since current_amt stores the balance AFTER the invoice is generated,
-    // we should only consider the current_amt of the LATEST invoice per project/proforma.
+    // The outstanding amount is tracked in the `re_invoice` table (`current_amt`).
+    // Since current_amt stores the balance AFTER the re_invoice is generated,
+    // we should only consider the current_amt of the LATEST re_invoice per project/proforma.
     
-    const invoices = await runQuery("SELECT bill_number, client_id, proforma_id, current_amt, created_at FROM invoice ORDER BY created_at DESC", []);
-    const clients = await runQuery("SELECT id, client_name, client_organization FROM revenue_engine_client_details", []);
+    const invoices = await runQuery("SELECT bill_number, client_id, proforma_id, current_amt, created_at FROM re_invoice ORDER BY created_at DESC", []);
+    const clients = await runQuery("SELECT id, client_name, client_organization FROM re_revenue_engine_client_details", []);
     
     const clientMap = {};
     clients.forEach(c => clientMap[c.id] = c);

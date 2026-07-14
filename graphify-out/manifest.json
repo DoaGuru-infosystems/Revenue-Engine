@@ -115,8 +115,8 @@
     "semantic_hash": "76d085242453853ac649c729ad5c3775"
   },
   "client/src/Admin/History.jsx": {
-    "mtime": 1783661599.233915,
-    "ast_hash": "04731eeeb6beab832492ce7c95916ab4",
+    "mtime": 1783948521.8276923,
+    "ast_hash": "9bd20aa1784a03f327a36fa959435d5e",
     "semantic_hash": ""
   },
   "client/src/Admin/InoviceComplmentary.jsx": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "client/src/App.jsx": {
-    "mtime": 1783508850.7305317,
-    "ast_hash": "53ecc2e7ffded2b5def73806d10f7feb",
+    "mtime": 1784007076.4494557,
+    "ast_hash": "8d96a21b7651e4abe2b4cf11b3be685a",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/AddService.jsx": {
@@ -374,11 +374,6 @@
     "ast_hash": "74e1c98a7d4e48a6274e23be282f3a57",
     "semantic_hash": "74e1c98a7d4e48a6274e23be282f3a57"
   },
-  "client/src/config/sfBaseUrl.js": {
-    "mtime": 1780384501.892969,
-    "ast_hash": "a54170b767d327637f01f88be5e5ceb2",
-    "semantic_hash": "a54170b767d327637f01f88be5e5ceb2"
-  },
   "client/src/context/ThemeContext.jsx": {
     "mtime": 1780384501.8939688,
     "ast_hash": "1bf68d3cd2b31a976a1c6279db52793a",
@@ -410,68 +405,13 @@
     "semantic_hash": "c25eefe09082c2cb105a990e9688fee3"
   },
   "server/app.js": {
-    "mtime": 1783603613.4498334,
-    "ast_hash": "032f9fb52c5ac402429a4e46748cfc81",
+    "mtime": 1784032864.4136062,
+    "ast_hash": "6ca069a6d7d093cd2ecdd644ad942fc9",
     "semantic_hash": ""
   },
   "server/connect.js": {
     "mtime": 1783601131.4925938,
     "ast_hash": "bd0171d09da0869acc7c66983efe79eb",
-    "semantic_hash": ""
-  },
-  "server/controller/Sfintegration.JS": {
-    "mtime": 1780384501.9089696,
-    "ast_hash": "06c8abf36efd7018babb5417521b65aa",
-    "semantic_hash": "06c8abf36efd7018babb5417521b65aa"
-  },
-  "server/controller/Workflowcontroller.JS": {
-    "mtime": 1783517589.267191,
-    "ast_hash": "adf4652ab716700c71a33c5c9c5aad87",
-    "semantic_hash": ""
-  },
-  "server/controller/controller.js": {
-    "mtime": 1783927354.7323375,
-    "ast_hash": "4f7a399f119b4b98266ef08577749795",
-    "semantic_hash": ""
-  },
-  "server/controller/deleteController.js": {
-    "mtime": 1783402076.4487164,
-    "ast_hash": "4e25e8893b271b632e8357c34d82acfc",
-    "semantic_hash": ""
-  },
-  "server/controller/genratecoatetion.js": {
-    "mtime": 1783608063.298751,
-    "ast_hash": "926487c66ed0a66c10aae35b0b5480e6",
-    "semantic_hash": ""
-  },
-  "server/controller/getController.js": {
-    "mtime": 1783761278.268842,
-    "ast_hash": "d5642d59079a818b401bfafa14c56a78",
-    "semantic_hash": ""
-  },
-  "server/controller/reminders.js": {
-    "mtime": 1783771137.973948,
-    "ast_hash": "885f1ba0167959b6729093dda51539a3",
-    "semantic_hash": ""
-  },
-  "server/controller/sendEmails.js": {
-    "mtime": 1783665910.3997989,
-    "ast_hash": "7fbf1dac3ccd3f5372a709b249244838",
-    "semantic_hash": ""
-  },
-  "server/controller/sendWhatsApp.js": {
-    "mtime": 1783606527.8952575,
-    "ast_hash": "209e41201e991b2dd828d33ce10f0597",
-    "semantic_hash": ""
-  },
-  "server/controller/seoController.js": {
-    "mtime": 1780384501.9169674,
-    "ast_hash": "82fa99e089214f7aa46f1de6865854cc",
-    "semantic_hash": "82fa99e089214f7aa46f1de6865854cc"
-  },
-  "server/controller/updateController.js": {
-    "mtime": 1783517692.2843118,
-    "ast_hash": "83d99de874f16be3f1ea33e746011ba4",
     "semantic_hash": ""
   },
   "server/middleware/authenticateToken.js": {
@@ -480,18 +420,13 @@
     "semantic_hash": "04f835fd35d540ef47eb4e04f0a6afe8"
   },
   "server/middleware/verifyAdminToken.js": {
-    "mtime": 1783402076.4597156,
-    "ast_hash": "8e27c806b99dbfc3cc05c432ae0790f8",
+    "mtime": 1784031369.6943598,
+    "ast_hash": "9e96b8b12d5ddd28fcadd1953a85c6d1",
     "semantic_hash": ""
   },
   "server/package.json": {
     "mtime": 1782554341.916866,
     "ast_hash": "3643540c1e0b995bd43d42b2e418dab2",
-    "semantic_hash": ""
-  },
-  "server/router/router.js": {
-    "mtime": 1783927728.1867223,
-    "ast_hash": "ee48ee5f3a88ff366b409d58a1601382",
     "semantic_hash": ""
   },
   "server/server.js": {
@@ -517,16 +452,6 @@
   "client/src/config/proposalDefaults.js": {
     "mtime": 1781939861.7948046,
     "ast_hash": "7cfc6cfc8d69311095a0b33efef9b01d",
-    "semantic_hash": ""
-  },
-  "server/controller/pdfHelpers.js": {
-    "mtime": 1783323363.3872185,
-    "ast_hash": "69db2321f5b992ba84abace269a742df",
-    "semantic_hash": ""
-  },
-  "server/controller/proposalController.js": {
-    "mtime": 1783929511.6973588,
-    "ast_hash": "599fc96986b82b82522c1e6f5f043303",
     "semantic_hash": ""
   },
   "server/sql/2026-06-proposal-workflow.sql": {
@@ -679,19 +604,14 @@
     "ast_hash": "a72d9af2e685d6648e934f431355e663",
     "semantic_hash": ""
   },
-  "server/controller/publicController.js": {
-    "mtime": 1783601676.5472536,
-    "ast_hash": "115f77d84768be34ff04283710fc2555",
-    "semantic_hash": ""
-  },
   "server/sql/2026-07-08-public-proposals-and-logs.sql": {
     "mtime": 1783508586.079732,
     "ast_hash": "489eb4ae49d54128133ddc26179d5827",
     "semantic_hash": ""
   },
   "server/services/notificationService.js": {
-    "mtime": 1783578819.01058,
-    "ast_hash": "bf72354deea51c209045e16db14d532a",
+    "mtime": 1784032555.9125206,
+    "ast_hash": "f05119d0c6e4d25922fc545077826df0",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminInvoice.orig.jsx": {
@@ -710,8 +630,88 @@
     "semantic_hash": ""
   },
   "server/revenue_engine.sql": {
-    "mtime": 1783944460.0152647,
-    "ast_hash": "d74832b7fdaa5c9c477ff8c6ba05883b",
+    "mtime": 1783950346.355265,
+    "ast_hash": "e7a627f0be875fd17458daaad24cabf1",
+    "semantic_hash": ""
+  },
+  "client/src/Screens/RegisterAdmin.jsx": {
+    "mtime": 1784007050.336069,
+    "ast_hash": "e6c1322a67d7f3094e8e756058c06632",
+    "semantic_hash": ""
+  },
+  "revenue_engine.sql": {
+    "mtime": 1784023050.8891592,
+    "ast_hash": "11b8bb1c9c6bbecc8255e43cd9ba529d",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_controller.js": {
+    "mtime": 1784032545.3694022,
+    "ast_hash": "57abdb2758fc04185248af669531586f",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_deleteController.js": {
+    "mtime": 1784031936.990141,
+    "ast_hash": "3877ca08a89438be9ec5acf6918fb14f",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_genratecoatetion.js": {
+    "mtime": 1784032515.4596796,
+    "ast_hash": "f627e705521ae5a33dcafab0326b6a6d",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_getController.js": {
+    "mtime": 1784031763.4093978,
+    "ast_hash": "e1df0ee37f2fabbffad44f17c177c451",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_pdfHelpers.js": {
+    "mtime": 1783323363.3872185,
+    "ast_hash": "69db2321f5b992ba84abace269a742df",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_proposalController.js": {
+    "mtime": 1784032553.156521,
+    "ast_hash": "eff67c5c43b1590f7746c9b18ff71c73",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_publicController.js": {
+    "mtime": 1784032584.2196252,
+    "ast_hash": "fad1da0e93ffca20bedcb84cb3477093",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_reminders.js": {
+    "mtime": 1784032553.1545231,
+    "ast_hash": "51ab10f946bc71fb783c70dbd81af075",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_sendEmails.js": {
+    "mtime": 1784031855.4428499,
+    "ast_hash": "1998e130e015954db1f42167c7e117b8",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_sendWhatsApp.js": {
+    "mtime": 1784031867.9395268,
+    "ast_hash": "209e41201e991b2dd828d33ce10f0597",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_seoController.js": {
+    "mtime": 1784031779.089857,
+    "ast_hash": "0cb1a36bead00405fbcac9dd39632774",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_updateController.js": {
+    "mtime": 1784031920.3449843,
+    "ast_hash": "025c7acc40c73126f0aeaff45ed62bb0",
+    "semantic_hash": ""
+  },
+  "server/re_controller/re_workflowcontroller.JS": {
+    "mtime": 1784032553.1535225,
+    "ast_hash": "ac0db1d803581254560220a458915278",
+    "semantic_hash": ""
+  },
+  "server/re_router/re_router.js": {
+    "mtime": 1784032756.1459854,
+    "ast_hash": "b92caea140f3d38158dcd07d784d95ee",
     "semantic_hash": ""
   }
 }

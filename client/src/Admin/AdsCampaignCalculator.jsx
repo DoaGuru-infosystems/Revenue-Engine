@@ -31,8 +31,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `${API_BASE_URL}/auth/api/calculator/getAdsServices`,
-          // "https://revenueengine.siarasystems.com/auth/api/calculator/getAdsServices",
+          `${API_BASE_URL}/auth/api/re_calculator/getAdsServices`,
+          // "https://revenueengine.siarasystems.com/auth/api/re_calculator/getAdsServices",
           {
             headers: {
               "Content-Type": "application/json",
@@ -77,7 +77,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
   //     try {
   //       setLoading(true);
   //       const response = await fetch(
-  //         `https://revenueengine.siarasystems.com/auth/api/calculator/getAdsServices`
+  //         `https://revenueengine.siarasystems.com/auth/api/re_calculator/getAdsServices`
   //       );
   //       const data = await response.json();
 
@@ -218,7 +218,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
   //   Get save Details
   //   const handleSaveToDatabase = async () => {
   //   try {
-  //     const response = await fetch("https://revenueengine.siarasystems.com/auth/api/calculator/saveAdsCampaign", {
+  //     const response = await fetch("https://revenueengine.siarasystems.com/auth/api/re_calculator/saveAdsCampaign", {
   //       method: "POST",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -307,8 +307,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
 
         // --- Save Ads Campaign only (Quotation) ---
         const response = await fetch(
-          `${API_BASE_URL}/auth/api/calculator/saveAdsCampaign`,
-          // "https://revenueengine.siarasystems.com/auth/api/calculator/saveAdsCampaign",
+          `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
+          // "https://revenueengine.siarasystems.com/auth/api/re_calculator/saveAdsCampaign",
           {
             method: "POST",
             headers: {
@@ -353,7 +353,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
     if (!id || !proposalId) return;
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -404,7 +404,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteAdsCampaignEntryById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${entryId}`
       );
 
       const result = res.data;

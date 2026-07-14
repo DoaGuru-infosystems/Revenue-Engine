@@ -21,7 +21,7 @@ const {
   drawHeader,
   drawFooter,
   drawWatermark,
-} = require("./pdfHelpers");
+} = require("./re_pdfHelpers");
 
 const ILOVEPDF_PUBLIC_KEY =
   process.env.project_public ||
@@ -216,7 +216,10 @@ async function applyHeaderFooterWithMargins(
 
     const newPage = newPdfDoc.addPage([width, height]);
 
-    let xOffset = 0, yOffset = 0, scaledW = width, scaledH = height;
+    let xOffset = 0,
+      yOffset = 0,
+      scaledW = width,
+      scaledH = height;
 
     if (!options.isInvoice) {
       const contentAreaHeight = height - HEADER_HEIGHT - FOOTER_HEIGHT;
@@ -246,7 +249,9 @@ async function applyHeaderFooterWithMargins(
     });
 
     // Layer 3: High-quality sharp Header & Footer overlay
-    drawHeader(newPage, headerImg, width, height, { fitWidth: options.isInvoice });
+    drawHeader(newPage, headerImg, width, height, {
+      fitWidth: options.isInvoice,
+    });
     drawFooter(newPage, footerImg, width, { fitWidth: options.isInvoice });
   }
 
@@ -359,7 +364,7 @@ exports.generateInvoicePdf = async (req, res) => {
       `\n[START PUPPETEER FLOW] ─────────────────────────────────────`,
     );
     console.log(
-      `[PUPPETEER] Invoice Name: ${invoiceName}, Is GST Flag: ${isGst}`,
+      `[PUPPETEER] re_invoice Name: ${invoiceName}, Is GST Flag: ${isGst}`,
     );
 
     const browser = await puppeteer.launch({
@@ -368,7 +373,10 @@ exports.generateInvoicePdf = async (req, res) => {
     });
 
     const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle2", timeout: 60000 });
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle2",
+      timeout: 60000,
+    });
 
     // Raw content layout (zero margins, background enable)
     const pdfBuffer = await page.pdf({
@@ -379,16 +387,16 @@ exports.generateInvoicePdf = async (req, res) => {
 
     await browser.close();
 
-    // Canvas process skip for invoice because frontend HTML already has repeating Header/Footer natively
+    // Canvas process skip for re_invoice because frontend HTML already has repeating Header/Footer natively
     // using <thead> and <tfoot>, and we allowed Puppeteer to print it natively.
-    
-    const fileName = invoiceName ? `${invoiceName}.pdf` : "Invoice.pdf";
+
+    const fileName = invoiceName ? `${invoiceName}.pdf` : "re_invoice.pdf";
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     res.send(pdfBuffer);
 
-    console.log(`[DONE] ✔ Perfect structural Invoice delivered.`);
+    console.log(`[DONE] ✔ Perfect structural re_invoice delivered.`);
   } catch (error) {
     console.error("[PUPPETEER ERROR]", error);
     if (!res.headersSent) {

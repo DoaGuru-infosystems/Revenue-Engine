@@ -34,10 +34,10 @@
 //         setLoading(true);
 //         const [histRes, progRes] = await Promise.all([
 //           axios.get(
-//             `${baseURL}/auth/api/calculator/getClientServiceHistory/${clientId}/${txnId}`,
+//             `${baseURL}/auth/api/re_calculator/getClientServiceHistory/${clientId}/${txnId}`,
 //             { headers }
 //           ),
-//           axios.get(`${baseURL}/auth/api/calculator/progress/by-txn/${txnId}`, {
+//           axios.get(`${baseURL}/auth/api/re_calculator/progress/by-txn/${txnId}`, {
 //             headers,
 //           }),
 //         ]);
@@ -92,7 +92,7 @@
 //     try {
 //       setSavingKey(row.key);
 //       await axios.patch(
-//         `${baseURL}/auth/api/calculator/progress/set-done`,
+//         `${baseURL}/auth/api/re_calculator/progress/set-done`,
 //         {
 //           client_id: clientId,
 //           txn_id: txnId,
@@ -125,7 +125,7 @@
 //     try {
 //       setSavingKey(row.key);
 //       await axios.patch(
-//         `${baseURL}/auth/api/calculator/progress/increment`,
+//         `${baseURL}/auth/api/re_calculator/progress/increment`,
 //         {
 //           client_id: clientId,
 //           txn_id: txnId,
@@ -288,10 +288,10 @@ export default function ServiceProgressTable({
         setLoading(true);
         const [histRes, progRes] = await Promise.all([
           axios.get(
-            `${baseURL}/auth/api/calculator/getClientServiceHistoryAssign/${clientId}/${txnId}`,
+            `${baseURL}/auth/api/re_calculator/getClientServiceHistoryAssign/${clientId}/${txnId}`,
             { headers }
           ),
-          axios.get(`${baseURL}/auth/api/calculator/progress/by-txn/${txnId}`, {
+          axios.get(`${baseURL}/auth/api/re_calculator/progress/by-txn/${txnId}`, {
             headers,
           }),
         ]);
@@ -338,7 +338,7 @@ export default function ServiceProgressTable({
       for (const row of mergedRows) {
         const { planned_qty, done_qty } = row;
         await axios.patch(
-          `${baseURL}/auth/api/calculator/progress/set-done`,
+          `${baseURL}/auth/api/re_calculator/progress/set-done`,
           {
             client_id: clientId,
             txn_id: txnId,
@@ -472,10 +472,10 @@ export default function ServiceProgressTable({
 //         setLoading(true);
 //         const [histRes, progRes] = await Promise.all([
 //           axios.get(
-//             `${baseURL}/auth/api/calculator/getClientServiceHistory/${clientId}/${txnId}`,
+//             `${baseURL}/auth/api/re_calculator/getClientServiceHistory/${clientId}/${txnId}`,
 //             { headers }
 //           ),
-//           axios.get(`${baseURL}/auth/api/calculator/progress/by-txn/${txnId}`, {
+//           axios.get(`${baseURL}/auth/api/re_calculator/progress/by-txn/${txnId}`, {
 //             headers,
 //           }),
 //         ]);
@@ -559,7 +559,7 @@ export default function ServiceProgressTable({
 //       try {
 //         setSavingKey(row.key);
 //         await axios.patch(
-//           `${baseURL}/auth/api/calculator/progress/set-done`,
+//           `${baseURL}/auth/api/re_calculator/progress/set-done`,
 //           {
 //             client_id: clientId,
 //             txn_id: txnId,
@@ -592,7 +592,7 @@ export default function ServiceProgressTable({
 //       try {
 //         setSavingKey(row.key);
 //         await axios.patch(
-//           `${baseURL}/auth/api/calculator/progress/increment`,
+//           `${baseURL}/auth/api/re_calculator/progress/increment`,
 //           {
 //             client_id: clientId,
 //             txn_id: txnId,

@@ -27,7 +27,7 @@ const PaymentHistory = () => {
 
   const fetchPayments = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proposal-payments/all`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proposal-payments/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.status === "Success") {

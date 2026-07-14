@@ -14,7 +14,7 @@ export default function PublicProposal() {
   useEffect(() => {
     const fetchPublicProposal = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/api/calculator/public/proposal/${token}`);
+        const response = await fetch(`${API_BASE_URL}/auth/api/re_calculator/public/proposal/${token}`);
         const result = await response.json();
 
         if (response.ok && result.status === "Success") {
@@ -40,7 +40,7 @@ export default function PublicProposal() {
   const handleDownloadPDF = async () => {
     try {
       setDownloading(true);
-      const res = await fetch(`${API_BASE_URL}/auth/api/calculator/public/proposal/${token}/pdf`);
+      const res = await fetch(`${API_BASE_URL}/auth/api/re_calculator/public/proposal/${token}/pdf`);
       
       if (!res.ok) {
         const errorData = await res.json();

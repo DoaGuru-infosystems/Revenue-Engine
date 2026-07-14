@@ -123,19 +123,19 @@
 //       setLoadingCatalog(true);
 //       try {
 //         const [servicesRes, optionalRes, adsRes, planRes, notesRes] = await Promise.allSettled([
-//           axios.get(`${baseURL}/auth/api/calculator/services/category/editing`, {
+//           axios.get(`${baseURL}/auth/api/re_calculator/services/category/editing`, {
 //             headers: authHeaders,
 //           }),
-//           axios.get(`${baseURL}/auth/api/calculator/optional-service-amounts`, {
+//           axios.get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`, {
 //             headers: authHeaders,
 //           }),
-//           axios.get(`${baseURL}/auth/api/calculator/getAdsServices`, {
+//           axios.get(`${baseURL}/auth/api/re_calculator/getAdsServices`, {
 //             headers: authHeaders,
 //           }),
-//           axios.get(`${baseURL}/auth/api/calculator/getAllPlanData`, {
+//           axios.get(`${baseURL}/auth/api/re_calculator/getAllPlanData`, {
 //             headers: authHeaders,
 //           }),
-//           axios.get(`${baseURL}/auth/api/calculator/getPlanNotes`, {
+//           axios.get(`${baseURL}/auth/api/re_calculator/getPlanNotes`, {
 //             headers: authHeaders,
 //           }),
 //         ]);
@@ -511,9 +511,9 @@
 //     if (rowToDelete) {
 //       try {
 //         if (rowToDelete.source === "custom_graphic") {
-//           await axios.delete(`${baseURL}/auth/api/calculator/deleteGraphicEntryById/${rowId}`, { headers: authHeaders });
+//           await axios.delete(`${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${rowId}`, { headers: authHeaders });
 //         } else if (rowToDelete.source === "custom_ads") {
-//           await axios.delete(`${baseURL}/auth/api/calculator/deleteAdsCampaignEntryById/${rowId}`, { headers: authHeaders });
+//           await axios.delete(`${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${rowId}`, { headers: authHeaders });
 //         }
 //       } catch (err) {
 //         console.error("Failed to delete custom item from DB", err);

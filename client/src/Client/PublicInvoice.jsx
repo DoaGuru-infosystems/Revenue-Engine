@@ -14,7 +14,7 @@ export default function PublicInvoice() {
   useEffect(() => {
     const fetchPublicInvoice = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/api/calculator/public/invoice/${token}`);
+        const response = await fetch(`${API_BASE_URL}/auth/api/re_calculator/public/invoice/${token}`);
         const result = await response.json();
 
         if (response.ok && result.status === "Success") {

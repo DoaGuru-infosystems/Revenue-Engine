@@ -6,7 +6,7 @@ exports.deleteService = async (req, res) => {
   const { service_id } = req.params;
 
   db.query(
-    "DELETE FROM services WHERE service_id = ?",
+    "DELETE FROM re_services WHERE service_id = ?",
     [service_id],
     (err, result) => {
       if (err) {
@@ -15,7 +15,7 @@ exports.deleteService = async (req, res) => {
           .json({ status: "Failure", message: "Database error" });
       }
       res.json({ status: "Success", message: "Service deleted successfully" });
-    }
+    },
   );
 };
 
@@ -23,7 +23,7 @@ exports.deleteCategory = async (req, res) => {
   const { category_id } = req.params;
 
   db.query(
-    "DELETE FROM categories WHERE category_id = ?",
+    "DELETE FROM re_categories WHERE category_id = ?",
     [category_id],
     (err, result) => {
       if (err) {
@@ -32,7 +32,7 @@ exports.deleteCategory = async (req, res) => {
           .json({ status: "Failure", message: "Database error" });
       }
       res.json({ status: "Success", message: "Category deleted successfully" });
-    }
+    },
   );
 };
 
@@ -40,7 +40,7 @@ exports.deleteEditingType = async (req, res) => {
   const { editing_type_id } = req.params;
 
   db.query(
-    "DELETE FROM editing_types WHERE editing_type_id = ?",
+    "DELETE FROM re_editing_types WHERE editing_type_id = ?",
     [editing_type_id],
     (err, result) => {
       if (err) {
@@ -52,7 +52,7 @@ exports.deleteEditingType = async (req, res) => {
         status: "Success",
         message: "Editing type deleted successfully",
       });
-    }
+    },
   );
 };
 
@@ -68,7 +68,7 @@ exports.deleteAdsServices = async (req, res) => {
 
   try {
     db.query(
-      "DELETE FROM revenue_engine_ads WHERE id = ?",
+      "DELETE FROM re_revenue_engine_ads WHERE id = ?",
       [id],
       (err, result) => {
         if (err) {
@@ -89,7 +89,7 @@ exports.deleteAdsServices = async (req, res) => {
           status: "Success",
           message: "Ads Service deleted successfully",
         });
-      }
+      },
     );
   } catch (error) {
     res.status(500).json({
@@ -105,7 +105,7 @@ exports.deleteAdsCampaignDetails = async (req, res) => {
 
   try {
     db.query(
-      "DELETE FROM ads_campaign_details WHERE txn_id = ? AND client_id = ?",
+      "DELETE FROM re_ads_campaign_details WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, result) => {
         if (err) {
@@ -127,7 +127,7 @@ exports.deleteAdsCampaignDetails = async (req, res) => {
           status: "Success",
           message: "Campaign details deleted successfully",
         });
-      }
+      },
     );
   } catch (error) {
     res.status(500).json({
@@ -144,7 +144,7 @@ exports.deleteAdsCampaignEntryById = async (req, res) => {
   try {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
-      "SELECT txn_id, client_id, category, amount FROM ads_campaign_details WHERE id = ?";
+      "SELECT txn_id, client_id, category, amount FROM re_ads_campaign_details WHERE id = ?";
     db.query(findTxn, [id], (err, rows) => {
       if (err) {
         return res.status(500).json({
@@ -164,19 +164,20 @@ exports.deleteAdsCampaignEntryById = async (req, res) => {
       const { txn_id, client_id, category, amount } = rows[0];
 
       // Step 2: Delete Ads row
-      const deleteQuotation = "DELETE FROM ads_campaign_details WHERE id = ?";
+      const deleteQuotation =
+        "DELETE FROM re_ads_campaign_details WHERE id = ?";
       db.query(deleteQuotation, [id], (err2, result2) => {
         if (err2) {
           return res.status(500).json({
             status: "Failure",
-            message: "Error deleting from ads_campaign_details",
+            message: "Error deleting from re_ads_campaign_details",
             error: err2,
           });
         }
 
-        // Step 3: Delete matching invoice row (if exists)
+        // Step 3: Delete matching re_invoice row (if exists)
         const deleteInvoice = `
-          DELETE FROM ads_campaign_details_invoice 
+          DELETE FROM re_ads_campaign_details_invoice 
           WHERE txn_id = ? 
           AND client_id = ? 
           AND category = ? 
@@ -191,7 +192,7 @@ exports.deleteAdsCampaignEntryById = async (req, res) => {
             if (err3) {
               return res.status(500).json({
                 status: "Failure",
-                message: "Error deleting from ads_campaign_details_invoice",
+                message: "Error deleting from re_ads_campaign_details_invoice",
                 error: err3,
               });
             }
@@ -200,7 +201,7 @@ exports.deleteAdsCampaignEntryById = async (req, res) => {
               return res.status(200).json({
                 status: "Success",
                 message:
-                  "Ads Quotation entry and matching Ads Invoice entry deleted successfully",
+                  "Ads Quotation entry and matching Ads invoice entry deleted successfully",
               });
             } else {
               return res.status(200).json({
@@ -209,7 +210,7 @@ exports.deleteAdsCampaignEntryById = async (req, res) => {
                   "Ads Quotation entry deleted successfully (No matching ads invoice found)",
               });
             }
-          }
+          },
         );
       });
     });
@@ -228,7 +229,7 @@ exports.deleteGraphicEntryById = async (req, res) => {
   try {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
-      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM calculator_transactions WHERE id = ?";
+      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM re_calculator_transactions WHERE id = ?";
     db.query(findTxn, [id], (err, rows) => {
       if (err) {
         return res.status(500).json({
@@ -255,19 +256,19 @@ exports.deleteGraphicEntryById = async (req, res) => {
 
       // Step 2: Delete quotation row
       const deleteQuotation =
-        "DELETE FROM calculator_transactions WHERE id = ?";
+        "DELETE FROM re_calculator_transactions WHERE id = ?";
       db.query(deleteQuotation, [id], (err2, result2) => {
         if (err2) {
           return res.status(500).json({
             status: "Failure",
-            message: "Error deleting from calculator_transactions",
+            message: "Error deleting from re_calculator_transactions",
             error: err2,
           });
         }
 
-        // Step 3: Delete matching invoice row (if exists)
+        // Step 3: Delete matching re_invoice row (if exists)
         const deleteInvoice = `
-          DELETE FROM invoice_graphic 
+          DELETE FROM re_invoice_graphic 
           WHERE txn_id = ? 
           AND client_id = ? 
           AND service_name = ? 
@@ -283,7 +284,7 @@ exports.deleteGraphicEntryById = async (req, res) => {
             if (err3) {
               return res.status(500).json({
                 status: "Failure",
-                message: "Error deleting from invoice_graphic",
+                message: "Error deleting from re_invoice_graphic",
                 error: err3,
               });
             }
@@ -292,7 +293,7 @@ exports.deleteGraphicEntryById = async (req, res) => {
               return res.status(200).json({
                 status: "Success",
                 message:
-                  "Quotation entry and matching Invoice entry deleted successfully",
+                  "Quotation entry and matching invoice entry deleted successfully",
               });
             } else {
               return res.status(200).json({
@@ -301,7 +302,7 @@ exports.deleteGraphicEntryById = async (req, res) => {
                   "Quotation entry deleted successfully (No matching invoice found)",
               });
             }
-          }
+          },
         );
       });
     });
@@ -320,7 +321,7 @@ exports.deleteClientById = async (req, res) => {
   try {
     // Step 1: delete plan client notes
     const deletePlanClientNotes =
-      "DELETE FROM plan_client_notes WHERE client_id = ?";
+      "DELETE FROM re_plan_client_notes WHERE client_id = ?";
     db.query(deletePlanClientNotes, [id], (err1) => {
       if (err1) {
         return res.status(500).json({
@@ -332,7 +333,7 @@ exports.deleteClientById = async (req, res) => {
 
       // Step 2: delete ads campaign
       const deleteAdsCampaign =
-        "DELETE FROM ads_campaign_details WHERE client_id = ?";
+        "DELETE FROM re_ads_campaign_details WHERE client_id = ?";
       db.query(deleteAdsCampaign, [id], (err2) => {
         if (err2) {
           return res.status(500).json({
@@ -342,9 +343,9 @@ exports.deleteClientById = async (req, res) => {
           });
         }
 
-        // Step 3: delete ads campaign invoice
+        // Step 3: delete ads campaign re_invoice
         const deleteAdsCampaignInvoice =
-          "DELETE FROM ads_campaign_details_invoice WHERE client_id = ?";
+          "DELETE FROM re_ads_campaign_details_invoice WHERE client_id = ?";
         db.query(deleteAdsCampaignInvoice, [id], (err3) => {
           if (err3) {
             return res.status(500).json({
@@ -356,7 +357,7 @@ exports.deleteClientById = async (req, res) => {
 
           // Step 4: delete calculator transactions
           const deleteTransactions =
-            "DELETE FROM calculator_transactions WHERE client_id = ?";
+            "DELETE FROM re_calculator_transactions WHERE client_id = ?";
           db.query(deleteTransactions, [id], (err4) => {
             if (err4) {
               return res.status(500).json({
@@ -366,9 +367,9 @@ exports.deleteClientById = async (req, res) => {
               });
             }
 
-            // Step 5: delete complimentary
+            // Step 5: delete re_complimentary
             const deleteComplimentary =
-              "DELETE FROM complimentary WHERE client_id = ?";
+              "DELETE FROM re_complimentary WHERE client_id = ?";
             db.query(deleteComplimentary, [id], (err5) => {
               if (err5) {
                 return res.status(500).json({
@@ -378,9 +379,9 @@ exports.deleteClientById = async (req, res) => {
                 });
               }
 
-              // Step 6: delete complimentary invoice
+              // Step 6: delete re_complimentary re_invoice
               const deleteComplimentaryInvoice =
-                "DELETE FROM complimentary_invoice WHERE client_id = ?";
+                "DELETE FROM re_complimentary_invoice WHERE client_id = ?";
               db.query(deleteComplimentaryInvoice, [id], (err6) => {
                 if (err6) {
                   return res.status(500).json({
@@ -390,9 +391,9 @@ exports.deleteClientById = async (req, res) => {
                   });
                 }
 
-                // Step 7: delete invoice client notes
+                // Step 7: delete re_invoice client notes
                 const deleteInvoiceNotes =
-                  "DELETE FROM invoice_client_notes WHERE client_id = ?";
+                  "DELETE FROM re_invoice_client_notes WHERE client_id = ?";
                 db.query(deleteInvoiceNotes, [id], (err7) => {
                   if (err7) {
                     return res.status(500).json({
@@ -404,7 +405,7 @@ exports.deleteClientById = async (req, res) => {
 
                   // Step 8: delete invoices
                   const deleteInvoice =
-                    "DELETE FROM invoice WHERE client_id = ?";
+                    "DELETE FROM re_invoice WHERE client_id = ?";
                   db.query(deleteInvoice, [id], (err8) => {
                     if (err8) {
                       return res.status(500).json({
@@ -416,7 +417,7 @@ exports.deleteClientById = async (req, res) => {
 
                     // Step 9: finally delete client
                     const deleteClient =
-                      "DELETE FROM revenue_engine_client_details WHERE id = ?";
+                      "DELETE FROM re_revenue_engine_client_details WHERE id = ?";
                     db.query(deleteClient, [id], (err9, result) => {
                       if (err9) {
                         return res.status(500).json({
@@ -468,16 +469,16 @@ exports.deleteQuoatationById = async (req, res) => {
 
   // All related tables for quotation deletion
   const queries = [
-    { table: "calculator_transactions", field: "txn_id" },
-    { table: "ads_campaign_details", field: "txn_id" },
-    { table: "plan_client_notes", field: "txn_id" },
-    { table: "assign_quotation", field: "txn_id" },
-     { table: "invoice", field: "txn_id" },
-    { table: "invoice_graphic", field: "txn_id" },
-    { table: "ads_campaign_details_invoice", field: "txn_id" },
-    { table: "complimentary_invoice", field: "txn_id" },
-    { table: "addtional_service", field: "txn_id" },
-    { table: "amount_remaining", field: "txn_id" },
+    { table: "re_calculator_transactions", field: "txn_id" },
+    { table: "re_ads_campaign_details", field: "txn_id" },
+    { table: "re_plan_client_notes", field: "txn_id" },
+    { table: "re_assign_quotation", field: "txn_id" },
+    { table: "re_invoice", field: "txn_id" },
+    { table: "re_invoice_graphic", field: "txn_id" },
+    { table: "re_ads_campaign_details_invoice", field: "txn_id" },
+    { table: "re_complimentary_invoice", field: "txn_id" },
+    { table: "re_addtional_service", field: "txn_id" },
+    { table: "re_amount_remaining", field: "txn_id" },
   ];
 
   try {
@@ -492,7 +493,7 @@ exports.deleteQuoatationById = async (req, res) => {
           (err, result) => {
             if (err) return reject(err);
             resolve(result);
-          }
+          },
         );
       });
 
@@ -522,7 +523,6 @@ exports.deleteQuoatationById = async (req, res) => {
   }
 };
 
-
 exports.deletePlanNameDetail = async (req, res) => {
   const { id } = req.params;
 
@@ -533,9 +533,9 @@ exports.deletePlanNameDetail = async (req, res) => {
     });
   }
 
-  const deletePlanDetail = "DELETE FROM plan_details WHERE id = ?";
-  const deletePlanData = "DELETE FROM plan_data WHERE plan_id = ?";
-  const deletePlanNotes = "DELETE FROM plans_notes WHERE plan_id = ?";
+  const deletePlanDetail = "DELETE FROM re_plan_details WHERE id = ?";
+  const deletePlanData = "DELETE FROM re_plan_data WHERE plan_id = ?";
+  const deletePlanNotes = "DELETE FROM re_plans_notes WHERE plan_id = ?";
 
   db.query(deletePlanDetail, [id], (err1, result1) => {
     if (err1) {
@@ -567,7 +567,7 @@ exports.deletePlanNameDetail = async (req, res) => {
         return res.status(200).json({
           status: "Success",
           message:
-            "Plan deleted successfully from plan_details, plan_data, and plans_notes",
+            "Plan deleted successfully from re_plan_details, re_plan_data, and re_plans_notes",
         });
       });
     });
@@ -584,7 +584,7 @@ exports.deletePlanData = async (req, res) => {
     });
   }
 
-  const deletePlanData = "DELETE FROM plan_data  WHERE plan_id = ?";
+  const deletePlanData = "DELETE FROM re_plan_data  WHERE plan_id = ?";
 
   db.query(deletePlanData, [id], (err2, result2) => {
     if (err2) {
@@ -597,7 +597,7 @@ exports.deletePlanData = async (req, res) => {
 
     res.status(200).json({
       status: "Success",
-      message: ` delete of plan_data in successfully`,
+      message: ` delete of re_plan_data in successfully`,
     });
   });
 };
@@ -605,7 +605,7 @@ exports.deletePlanData = async (req, res) => {
 exports.deletePlanNotesbyid = async (req, res) => {
   const { id } = req.params;
 
-  db.query("DELETE FROM plans_notes WHERE id = ?", [id], (err, result) => {
+  db.query("DELETE FROM re_plans_notes WHERE id = ?", [id], (err, result) => {
     if (err) {
       return res
         .status(500)
@@ -624,7 +624,7 @@ exports.deletePlanDataByService = async (req, res) => {
     });
   }
 
-  const deletePlanData = "DELETE FROM plan_data  WHERE id = ?";
+  const deletePlanData = "DELETE FROM re_plan_data  WHERE id = ?";
 
   db.query(deletePlanData, [id], (err2, result2) => {
     if (err2) {
@@ -652,20 +652,20 @@ exports.deletePlanbyChangeNotes = async (req, res) => {
     });
   }
 
-  const deletePlanData = "DELETE FROM plan_client_notes  WHERE txn_id = ?";
+  const deletePlanData = "DELETE FROM re_plan_client_notes  WHERE txn_id = ?";
 
   db.query(deletePlanData, [txn_id], (err2, result2) => {
     if (err2) {
       return res.status(500).json({
         status: "Failure",
-        message: "Error delete plan_client_notes ",
+        message: "Error delete re_plan_client_notes ",
         error: err2,
       });
     }
 
     res.status(200).json({
       status: "Success",
-      message: ` delete of plan_client_notes  in successfully`,
+      message: ` delete of re_plan_client_notes  in successfully`,
     });
   });
 };
@@ -681,17 +681,17 @@ exports.deleteClientAllPlanData = async (req, res) => {
   }
 
   const deleteCalculatorQuery =
-    "DELETE FROM calculator_transactions WHERE txn_id = ?";
+    "DELETE FROM re_calculator_transactions WHERE txn_id = ?";
   const deleteAdsCampaignQuery =
-    "DELETE FROM ads_campaign_details WHERE txn_id = ?";
-  const deleteNotesClient = "DELETE FROM plan_client_notes WHERE txn_id = ?";
-  const deleteComplimenatry = "DELETE FROM complimentary WHERE txn_id = ?";
+    "DELETE FROM re_ads_campaign_details WHERE txn_id = ?";
+  const deleteNotesClient = "DELETE FROM re_plan_client_notes WHERE txn_id = ?";
+  const deleteComplimenatry = "DELETE FROM re_complimentary WHERE txn_id = ?";
 
   db.query(deleteCalculatorQuery, [txn_id], (err1, result1) => {
     if (err1) {
       return res.status(500).json({
         status: "Failure",
-        message: "Error deleting from calculator_transactions",
+        message: "Error deleting from re_calculator_transactions",
         error: err1,
       });
     }
@@ -700,7 +700,7 @@ exports.deleteClientAllPlanData = async (req, res) => {
       if (err2) {
         return res.status(500).json({
           status: "Failure",
-          message: "Error deleting from ads_campaign_details",
+          message: "Error deleting from re_ads_campaign_details",
           error: err2,
         });
       }
@@ -709,7 +709,7 @@ exports.deleteClientAllPlanData = async (req, res) => {
         if (err3) {
           return res.status(500).json({
             status: "Failure",
-            message: "Error deleting from plan_client_notes",
+            message: "Error deleting from re_plan_client_notes",
             error: err3,
           });
         }
@@ -718,7 +718,7 @@ exports.deleteClientAllPlanData = async (req, res) => {
           if (err4) {
             return res.status(500).json({
               status: "Failure",
-              message: "Error deleting from Complimentary",
+              message: "Error deleting from re_complimentary",
               error: err4,
             });
           }
@@ -743,10 +743,10 @@ exports.deleteClientAllPlanData = async (req, res) => {
           res.status(200).json({
             status: "Success",
             message: `Transaction deleted from ${[
-              deletedFromCalculator ? "calculator_transactions" : null,
-              deletedFromAds ? "ads_campaign_details" : null,
-              deletedFromNotes ? "plan_client_notes" : null,
-              deletedFromComplimentary ? "complimentary" : null,
+              deletedFromCalculator ? "re_calculator_transactions" : null,
+              deletedFromAds ? "re_ads_campaign_details" : null,
+              deletedFromNotes ? "re_plan_client_notes" : null,
+              deletedFromComplimentary ? "re_complimentary" : null,
             ]
               .filter(Boolean)
               .join(", ")} successfully`,
@@ -761,7 +761,7 @@ exports.deletePlanClientNotes = async (req, res) => {
   const { id } = req.params;
 
   db.query(
-    "DELETE FROM plan_client_notes WHERE id = ?",
+    "DELETE FROM re_plan_client_notes WHERE id = ?",
     [id],
     (err, result) => {
       if (err) {
@@ -773,7 +773,7 @@ exports.deletePlanClientNotes = async (req, res) => {
         status: "Success",
         message: "Note Client deleted successfully",
       });
-    }
+    },
   );
 };
 
@@ -783,7 +783,7 @@ exports.removeMemberFromTeam = async (req, res) => {
   try {
     const { teamId, memberId } = req.params;
 
-    const q = `DELETE FROM team_members WHERE team_id = ? AND employee_id = ?`;
+    const q = `DELETE FROM re_team_members WHERE team_id = ? AND employee_id = ?`;
 
     db.query(q, [teamId, memberId], (err, result) => {
       if (err) {
@@ -820,7 +820,7 @@ exports.deleteTeam = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const q = `DELETE FROM teams WHERE id = ?`;
+    const q = `DELETE FROM re_teams WHERE id = ?`;
 
     db.query(q, [id], (err, result) => {
       if (err) {
@@ -859,7 +859,7 @@ exports.deleteComplimenatryById = async (req, res) => {
   try {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
-      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM complimentary WHERE id = ?";
+      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM re_complimentary WHERE id = ?";
     db.query(findTxn, [id], (err, rows) => {
       if (err) {
         return res.status(500).json({
@@ -885,19 +885,19 @@ exports.deleteComplimenatryById = async (req, res) => {
       } = rows[0];
 
       // Step 2: Delete quotation row
-      const deleteQuotation = "DELETE FROM complimentary WHERE id = ?";
+      const deleteQuotation = "DELETE FROM re_complimentary WHERE id = ?";
       db.query(deleteQuotation, [id], (err2, result2) => {
         if (err2) {
           return res.status(500).json({
             status: "Failure",
-            message: "Error deleting from complimentary",
+            message: "Error deleting from re_complimentary",
             error: err2,
           });
         }
 
-        // Step 3: Delete matching invoice row (if exists)
+        // Step 3: Delete matching re_invoice row (if exists)
         const deleteInvoice = `
-          DELETE FROM complimentary_invoice 
+          DELETE FROM re_complimentary_invoice 
           WHERE txn_id = ? 
           AND client_id = ? 
           AND service_name = ? 
@@ -913,7 +913,7 @@ exports.deleteComplimenatryById = async (req, res) => {
             if (err3) {
               return res.status(500).json({
                 status: "Failure",
-                message: "Error deleting from complimentary_invoice",
+                message: "Error deleting from re_complimentary_invoice",
                 error: err3,
               });
             }
@@ -922,16 +922,16 @@ exports.deleteComplimenatryById = async (req, res) => {
               return res.status(200).json({
                 status: "Success",
                 message:
-                  "ComplimentaryIinvoice entry and matching Invoice entry deleted successfully",
+                  "ComplimentaryIinvoice entry and matching invoice entry deleted successfully",
               });
             } else {
               return res.status(200).json({
                 status: "Success",
                 message:
-                  "Complimentary Invoice entry deleted successfully (No matching invoice found)",
+                  "Complimentary invoice entry deleted successfully (No matching invoice found)",
               });
             }
-          }
+          },
         );
       });
     });
@@ -947,7 +947,7 @@ exports.deleteNoteById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    db.query("DELETE FROM notes_data WHERE id = ?", [id], (err, result) => {
+    db.query("DELETE FROM re_notes_data WHERE id = ?", [id], (err, result) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -980,7 +980,7 @@ exports.deleteDiscountById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    db.query("DELETE FROM discount WHERE id = ?", [id], (err, result) => {
+    db.query("DELETE FROM re_discount WHERE id = ?", [id], (err, result) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -1015,7 +1015,7 @@ exports.deleteInvoiceById = async (req, res) => {
   try {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
-      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM invoice_graphic WHERE id = ?";
+      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM re_invoice_graphic WHERE id = ?";
     db.query(findTxn, [id], (err, rows) => {
       if (err) {
         return res.status(500).json({
@@ -1041,19 +1041,19 @@ exports.deleteInvoiceById = async (req, res) => {
       } = rows[0];
 
       // Step 2: Delete quotation row
-      const deleteQuotation = "DELETE FROM invoice_graphic WHERE id = ?";
+      const deleteQuotation = "DELETE FROM re_invoice_graphic WHERE id = ?";
       db.query(deleteQuotation, [id], (err2, result2) => {
         if (err2) {
           return res.status(500).json({
             status: "Failure",
-            message: "Error deleting from invoice_graphic",
+            message: "Error deleting from re_invoice_graphic",
             error: err2,
           });
         }
 
-        // Step 3: Delete matching invoice row (if exists)
+        // Step 3: Delete matching re_invoice row (if exists)
         const deleteInvoice = `
-          DELETE FROM calculator_transactions 
+          DELETE FROM re_calculator_transactions 
           WHERE txn_id = ? 
           AND client_id = ? 
           AND service_name = ? 
@@ -1069,7 +1069,7 @@ exports.deleteInvoiceById = async (req, res) => {
             if (err3) {
               return res.status(500).json({
                 status: "Failure",
-                message: "Error deleting from calculator_transactions",
+                message: "Error deleting from re_calculator_transactions",
                 error: err3,
               });
             }
@@ -1087,7 +1087,7 @@ exports.deleteInvoiceById = async (req, res) => {
                   "Invoice entry deleted successfully (No matching quotation found)",
               });
             }
-          }
+          },
         );
       });
     });
@@ -1108,9 +1108,9 @@ exports.deleteRequirementsBundle = async (req, res) => {
 
   const sql = `
     DELETE i, s, l
-    FROM client_requirement_links l
-    LEFT JOIN requirement_submissions s ON s.link_id = l.id
-    LEFT JOIN requirement_submission_items i ON i.submission_id = s.id
+    FROM re_client_requirement_links l
+    LEFT JOIN re_requirement_submissions s ON s.link_id = l.id
+    LEFT JOIN re_requirement_submission_items i ON i.submission_id = s.id
     WHERE l.id = ?;
   `;
 
@@ -1131,12 +1131,12 @@ exports.deleteAllInvoiceServiceHistory = async (req, res) => {
   const { client_id, txn_id } = req.params;
 
   const queries = [
-    { table: "invoice", field: "txn_id" },
-    { table: "invoice_graphic", field: "txn_id" },
-    { table: "ads_campaign_details_invoice", field: "txn_id" },
-    { table: "complimentary_invoice", field: "txn_id" },
-    { table: "addtional_service", field: "txn_id" },
-    { table: "amount_remaining", field: "txn_id" },
+    { table: "re_invoice", field: "txn_id" },
+    { table: "re_invoice_graphic", field: "txn_id" },
+    { table: "re_ads_campaign_details_invoice", field: "txn_id" },
+    { table: "re_complimentary_invoice", field: "txn_id" },
+    { table: "re_addtional_service", field: "txn_id" },
+    { table: "re_amount_remaining", field: "txn_id" },
   ];
 
   try {
@@ -1149,7 +1149,7 @@ exports.deleteAllInvoiceServiceHistory = async (req, res) => {
           (err, result) => {
             if (err) return reject(err);
             resolve(result);
-          }
+          },
         );
       });
     }
@@ -1174,7 +1174,7 @@ exports.deleteInvoiceAdsCampaignEntryById = async (req, res) => {
   try {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
-      "SELECT txn_id, client_id, category, amount FROM ads_campaign_details_invoice WHERE id = ?";
+      "SELECT txn_id, client_id, category, amount FROM re_ads_campaign_details_invoice WHERE id = ?";
     db.query(findTxn, [id], (err, rows) => {
       if (err) {
         return res.status(500).json({
@@ -1195,19 +1195,19 @@ exports.deleteInvoiceAdsCampaignEntryById = async (req, res) => {
 
       // Step 2: Delete Ads row
       const deleteQuotation =
-        "DELETE FROM ads_campaign_details_invoice WHERE id = ?";
+        "DELETE FROM re_ads_campaign_details_invoice WHERE id = ?";
       db.query(deleteQuotation, [id], (err2, result2) => {
         if (err2) {
           return res.status(500).json({
             status: "Failure",
-            message: "Error deleting from ads_campaign_details_invoice",
+            message: "Error deleting from re_ads_campaign_details_invoice",
             error: err2,
           });
         }
 
-        // Step 3: Delete matching invoice row (if exists)
+        // Step 3: Delete matching re_invoice row (if exists)
         const deleteInvoice = `
-          DELETE FROM ads_campaign_details 
+          DELETE FROM re_ads_campaign_details 
           WHERE txn_id = ? 
           AND client_id = ? 
           AND category = ? 
@@ -1222,7 +1222,7 @@ exports.deleteInvoiceAdsCampaignEntryById = async (req, res) => {
             if (err3) {
               return res.status(500).json({
                 status: "Failure",
-                message: "Error deleting from ads_campaign_details",
+                message: "Error deleting from re_ads_campaign_details",
                 error: err3,
               });
             }
@@ -1231,16 +1231,16 @@ exports.deleteInvoiceAdsCampaignEntryById = async (req, res) => {
               return res.status(200).json({
                 status: "Success",
                 message:
-                  "Ads Invoice entry and matching Ads Quotation entry deleted successfully",
+                  "Ads invoice entry and matching Ads Quotation entry deleted successfully",
               });
             } else {
               return res.status(200).json({
                 status: "Success",
                 message:
-                  "Ads Invoice entry deleted successfully (No matching ads Quotation found)",
+                  "Ads invoice entry deleted successfully (No matching ads Quotation found)",
               });
             }
-          }
+          },
         );
       });
     });
@@ -1258,7 +1258,7 @@ exports.deleteInvoiceNoteById = async (req, res) => {
 
   try {
     db.query(
-      "DELETE FROM invoice_notes_data WHERE id = ?",
+      "DELETE FROM re_invoice_notes_data WHERE id = ?",
       [id],
       (err, result) => {
         if (err) {
@@ -1280,7 +1280,7 @@ exports.deleteInvoiceNoteById = async (req, res) => {
           status: "Success",
           message: "Note entry deleted successfully",
         });
-      }
+      },
     );
   } catch (error) {
     res.status(500).json({
@@ -1295,7 +1295,7 @@ exports.deleteInvoiceClientNotes = async (req, res) => {
   const { id } = req.params;
 
   db.query(
-    "DELETE FROM invoice_client_notes WHERE id = ?",
+    "DELETE FROM re_invoice_client_notes WHERE id = ?",
     [id],
     (err, result) => {
       if (err) {
@@ -1307,7 +1307,7 @@ exports.deleteInvoiceClientNotes = async (req, res) => {
         status: "Success",
         message: "Invoice Note Client deleted successfully",
       });
-    }
+    },
   );
 };
 
@@ -1317,7 +1317,7 @@ exports.deleteInvoiceComplimenatryById = async (req, res) => {
   try {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
-      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM complimentary_invoice WHERE id = ?";
+      "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM re_complimentary_invoice WHERE id = ?";
     db.query(findTxn, [id], (err, rows) => {
       if (err) {
         return res.status(500).json({
@@ -1343,19 +1343,20 @@ exports.deleteInvoiceComplimenatryById = async (req, res) => {
       } = rows[0];
 
       // Step 2: Delete quotation row
-      const deleteQuotation = "DELETE FROM complimentary_invoice WHERE id = ?";
+      const deleteQuotation =
+        "DELETE FROM re_complimentary_invoice WHERE id = ?";
       db.query(deleteQuotation, [id], (err2, result2) => {
         if (err2) {
           return res.status(500).json({
             status: "Failure",
-            message: "Error deleting from complimentary_invoice",
+            message: "Error deleting from re_complimentary_invoice",
             error: err2,
           });
         }
 
-        // Step 3: Delete matching invoice row (if exists)
+        // Step 3: Delete matching re_invoice row (if exists)
         const deleteInvoice = `
-          DELETE FROM complimentary 
+          DELETE FROM re_complimentary 
           WHERE txn_id = ? 
           AND client_id = ? 
           AND service_name = ? 
@@ -1371,7 +1372,7 @@ exports.deleteInvoiceComplimenatryById = async (req, res) => {
             if (err3) {
               return res.status(500).json({
                 status: "Failure",
-                message: "Error deleting from complimentary",
+                message: "Error deleting from re_complimentary",
                 error: err3,
               });
             }
@@ -1386,10 +1387,10 @@ exports.deleteInvoiceComplimenatryById = async (req, res) => {
               return res.status(200).json({
                 status: "Success",
                 message:
-                  "Complimentary Invoice entry deleted successfully (No matching quotation found)",
+                  "re_complimentary re_invoice entry deleted successfully (No matching quotation found)",
               });
             }
-          }
+          },
         );
       });
     });
@@ -1407,7 +1408,7 @@ exports.deleteAdditionalById = async (req, res) => {
 
   try {
     db.query(
-      "DELETE FROM addtional_service WHERE id = ?",
+      "DELETE FROM re_addtional_service WHERE id = ?",
       [id],
       (err, result) => {
         if (err) {
@@ -1429,7 +1430,7 @@ exports.deleteAdditionalById = async (req, res) => {
           status: "Success",
           message: "Additional entry deleted successfully",
         });
-      }
+      },
     );
   } catch (error) {
     res.status(500).json({
@@ -1445,7 +1446,7 @@ exports.deleteRemainingAmountById = async (req, res) => {
 
   try {
     db.query(
-      "DELETE FROM amount_remaining WHERE id = ?",
+      "DELETE FROM re_amount_remaining WHERE id = ?",
       [id],
       (err, result) => {
         if (err) {
@@ -1467,7 +1468,7 @@ exports.deleteRemainingAmountById = async (req, res) => {
           status: "Success",
           message: "Remaining Amount entry deleted successfully",
         });
-      }
+      },
     );
   } catch (error) {
     res.status(500).json({
@@ -1551,27 +1552,31 @@ exports.deleteDiscountSettingById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    db.query("DELETE FROM discount_settings WHERE id = ?", [id], (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          status: "Failure",
-          message: "Database error while deleting entry",
-          error: err,
-        });
-      }
+    db.query(
+      "DELETE FROM re_discount_settings WHERE id = ?",
+      [id],
+      (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "Failure",
+            message: "Database error while deleting entry",
+            error: err,
+          });
+        }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          status: "Failure",
-          message: "No Note entry found to delete",
-        });
-      }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({
+            status: "Failure",
+            message: "No Note entry found to delete",
+          });
+        }
 
-      res.status(200).json({
-        status: "Success",
-        message: "Note entry deleted successfully",
-      });
-    });
+        res.status(200).json({
+          status: "Success",
+          message: "Note entry deleted successfully",
+        });
+      },
+    );
   } catch (error) {
     res.status(500).json({
       status: "Failure",

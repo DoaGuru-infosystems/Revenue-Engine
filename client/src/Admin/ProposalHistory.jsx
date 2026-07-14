@@ -54,7 +54,7 @@ const ProposalHistory = () => {
 
     if (confirm.isConfirmed) {
       try {
-        await axios.delete(`${baseURL}/auth/api/calculator/proposal/${item.id}`, {
+        await axios.delete(`${baseURL}/auth/api/re_calculator/proposal/${item.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         Swal.fire({
@@ -79,7 +79,7 @@ const ProposalHistory = () => {
   const fetchAllClientServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/proposals/all`,
+        `${baseURL}/auth/api/re_calculator/proposals/all`,
         {
           headers: {
             "Content-Type": "application/json",

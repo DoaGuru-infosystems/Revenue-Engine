@@ -73,7 +73,7 @@ const { id, txn_id } = useParams();
   const fetchServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientServiceHistory/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getClientServiceHistory/${id}/${txn_id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -104,7 +104,7 @@ const { id, txn_id } = useParams();
   const fetchClient = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientDetailsById/${id}`,
+        `${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -132,7 +132,7 @@ const { id, txn_id } = useParams();
   const fetchClientNotes = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientNotesbyId/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${id}/${txn_id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -161,7 +161,7 @@ const { id, txn_id } = useParams();
   const fetchComplimentaryData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDComplimentaryData/${txn_id}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${txn_id}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -193,7 +193,7 @@ const { id, txn_id } = useParams();
   const fetchDiscount = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDDiscountData/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${txn_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -210,7 +210,7 @@ const { id, txn_id } = useParams();
   const fetchClientReceived = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientDetailsById/${id}/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${txn_id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -243,7 +243,7 @@ const { id, txn_id } = useParams();
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getNoteData`,
+        `${baseURL}/auth/api/re_calculator/getNoteData`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -258,14 +258,14 @@ const { id, txn_id } = useParams();
 
   const fetchProformaData = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proforma/client/${id}`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/client/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if(res.data.status === "Success") {
         const proformas = res.data.data;
         const proforma = proformas.find(p => p.id === parseInt(txn_id));
         if (proforma) {
-          const propRes = await axios.get(`${baseURL}/auth/api/calculator/proposal/${proforma.proposal_id}`, {
+          const propRes = await axios.get(`${baseURL}/auth/api/re_calculator/proposal/${proforma.proposal_id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -381,7 +381,7 @@ const { id, txn_id } = useParams();
 
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateClientNoteDataById/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateClientNoteDataById/${selectedNotesId.id}`,
           formData,
           {
             headers: {
@@ -393,7 +393,7 @@ const { id, txn_id } = useParams();
         console.log(response.data);
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formData,
           {
             headers: {
@@ -508,7 +508,7 @@ const { id, txn_id } = useParams();
       };
 
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/saveClientIdwiseNotes`,
+        `${baseURL}/auth/api/re_calculator/saveClientIdwiseNotes`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -674,7 +674,7 @@ const { id, txn_id } = useParams();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deletePlanClientNotes/${noteId}`
+        `${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`
       );
 
       const result = res.data;

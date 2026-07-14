@@ -28,7 +28,7 @@ export default function ReviewRequirements() {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/getRequirementsDetail/${linkId}`,
+          `${baseURL}/auth/api/re_calculator/getRequirementsDetail/${linkId}`,
           {
             headers: { Accept: "application/json" },
             params: { ts: Date.now() },

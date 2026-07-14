@@ -32,7 +32,7 @@ export default function Login() {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/login`,
+        `${baseURL}/auth/api/re_calculator/login`,
         {
           employee_email: email,
           employee_password: password,

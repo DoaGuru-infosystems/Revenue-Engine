@@ -42,7 +42,7 @@ const navigate = useNavigate();
   const fetchAllClientServices = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllInvoice`,
+        `${baseURL}/auth/api/re_calculator/getAllInvoice`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -144,7 +144,7 @@ const navigate = useNavigate();
 
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteAllInvoiceServiceHistory/${id}/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/deleteAllInvoiceServiceHistory/${id}/${txnId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -202,7 +202,7 @@ const navigate = useNavigate();
       if (!confirm.isConfirmed) return;
 
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/copyInvoiceByTxnId/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/copyInvoiceByTxnId/${txnId}`,
         {}, // no body needed
         {
           headers: {

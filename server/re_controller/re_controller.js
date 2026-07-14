@@ -1,11 +1,11 @@
-const { db } = require("../connect");
+﻿const { db } = require("../connect");
 const moment = require("moment-timezone");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const { TZ, sendRegistrationOtpEmail } = require("./sendEmails");
+const { TZ, sendRegistrationOtpEmail } = require("./re_sendEmails");
 dotenv.config();
 
 const registerOtpStore = new Map();
@@ -57,7 +57,7 @@ exports.register = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM revenue_engine_employees WHERE employee_email = ? OR employee_name = ?",
+      "SELECT * FROM re_revenue_engine_employees WHERE employee_email = ? OR employee_name = ?",
       [employee_email, employee_name],
       async (err, results) => {
         if (err) {
@@ -76,7 +76,7 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(employee_password, 10);
 
         db.query(
-          "INSERT INTO revenue_engine_employees (employee_name, employee_role, employee_email, employee_password, created_at) VALUES (?, ?, ?, ?, ?)",
+          "INSERT INTO re_revenue_engine_employees (employee_name, employee_role, employee_email, employee_password, created_at) VALUES (?, ?, ?, ?, ?)",
           [
             employee_name,
             employee_role,
@@ -125,7 +125,7 @@ exports.registerBD = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM revenue_engine_employees WHERE employee_email = ? OR employee_name = ?",
+      "SELECT * FROM re_revenue_engine_employees WHERE employee_email = ? OR employee_name = ?",
       [employee_email, employee_name, employee_phone],
       async (err, results) => {
         if (err) {
@@ -144,7 +144,7 @@ exports.registerBD = async (req, res) => {
         const hashedPassword = await bcrypt.hash(employee_password, 10);
 
         db.query(
-          "INSERT INTO revenue_engine_employees (employee_name, employee_phone, employee_role, employee_email, employee_password, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+          "INSERT INTO re_revenue_engine_employees (employee_name, employee_phone, employee_role, employee_email, employee_password, created_at) VALUES (?, ?, ?, ?, ?, ?)",
           [
             employee_name,
             employee_phone,
@@ -191,14 +191,14 @@ exports.login = async (req, res) => {
   }
 
   try {
-    const getUserQuery = `SELECT * FROM revenue_engine_employees WHERE employee_email = ?`;
+    const getUserQuery = `SELECT * FROM re_revenue_engine_employees WHERE employee_email = ?`;
 
     db.query(getUserQuery, [employee_email], async (err, results) => {
       if (err) {
         console.error("Error fetching user:", err);
         return res
           .status(500)
-          .json({ status: "Failure", message: "Internal server error" });
+          .json({ status: "Failure", message: err.message });
       }
 
       if (results.length === 0) {
@@ -282,11 +282,13 @@ const passwordOtpEmail = async (email, otp) => {
           </div>
         </div>
       `,
-      attachments: [{
-        filename: 'logo.png',
-        path: require('path').join(__dirname, '../../client/public/logo.png'),
-        cid: 'logo'
-      }]
+      attachments: [
+        {
+          filename: "logo.png",
+          path: require("path").join(__dirname, "../../client/public/logo.png"),
+          cid: "logo",
+        },
+      ],
     };
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent: %s", info.messageId);
@@ -306,7 +308,7 @@ exports.forgotPassword = async (req, res) => {
   }
 
   try {
-    const getUserQuery = `SELECT * FROM revenue_engine_employees WHERE employee_email = ?`;
+    const getUserQuery = `SELECT * FROM re_revenue_engine_employees WHERE employee_email = ?`;
 
     db.query(getUserQuery, [User], async (err, result) => {
       if (err || result.length === 0) {
@@ -350,7 +352,7 @@ exports.forgotPassword = async (req, res) => {
 //   }
 
 //   try {
-//     const getUserQuery = `SELECT * FROM revenue_engine_employees WHERE employee_email = ?`;
+//     const getUserQuery = `SELECT * FROM re_revenue_engine_employees WHERE employee_email = ?`;
 //     db.query(getUserQuery, [User], async (err, results) => {
 //       if (err || results.length === 0) {
 //         return res
@@ -380,7 +382,7 @@ exports.forgotPassword = async (req, res) => {
 
 //       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-//       const updatePasswordQuery = `UPDATE revenue_engine_employees SET employee_password = ? WHERE employee_email = ?`;
+//       const updatePasswordQuery = `UPDATE re_revenue_engine_employees SET employee_password = ? WHERE employee_email = ?`;
 //       db.query(updatePasswordQuery, [hashedPassword, UserId], (updateErr) => {
 //         if (updateErr) {
 //           console.error("Error updating password:", updateErr);
@@ -415,7 +417,7 @@ exports.verifyOtpAndResetPassword = async (req, res) => {
   }
 
   try {
-    const getUserQuery = `SELECT * FROM revenue_engine_employees WHERE employee_email = ?`;
+    const getUserQuery = `SELECT * FROM re_revenue_engine_employees WHERE employee_email = ?`;
     db.query(getUserQuery, [User], async (err, results) => {
       if (err || results.length === 0) {
         return res
@@ -441,7 +443,7 @@ exports.verifyOtpAndResetPassword = async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      const updatePasswordQuery = `UPDATE revenue_engine_employees SET employee_password = ? WHERE employee_email = ?`;
+      const updatePasswordQuery = `UPDATE re_revenue_engine_employees SET employee_password = ? WHERE employee_email = ?`;
       db.query(updatePasswordQuery, [hashedPassword, User], (updateErr) => {
         if (updateErr) {
           console.error("Error updating password:", updateErr);
@@ -466,11 +468,11 @@ exports.verifyOtpAndResetPassword = async (req, res) => {
 };
 
 // exports.insertServices = async (req, res) => {
-//   const { services, category, editing_type, amount, selected } = req.body;
+//   const { re_services, category, editing_type, amount, selected } = req.body;
 
 //   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-//   if (!services || !category || !editing_type || !amount) {
+//   if (!re_services || !category || !editing_type || !amount) {
 //     // selected is optional, so we don't check it
 //     return res
 //       .status(400)
@@ -486,8 +488,8 @@ exports.verifyOtpAndResetPassword = async (req, res) => {
 
 //   try {
 //     db.query(
-//       "INSERT INTO revenue_engine_services (services, category, editing_type, amount, selected, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-//       [services, category, editing_type, amount, selected || "N/A", createdAt],
+//       "INSERT INTO revenue_engine_services (re_services, category, editing_type, amount, selected, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+//       [re_services, category, editing_type, amount, selected || "N/A", createdAt],
 //       (err, result) => {
 //         if (err) {
 //           return res
@@ -537,9 +539,9 @@ exports.verifyOtpAndResetPassword = async (req, res) => {
 
 // exports.updateServices = async (req, res) => {
 //   const { id } = req.params;
-//   const { services, category, editing_type, amount, selected } = req.body;
+//   const { re_services, category, editing_type, amount, selected } = req.body;
 
-//   if (!services || !category || !editing_type || !amount) {
+//   if (!re_services || !category || !editing_type || !amount) {
 //     return res.status(400).json({
 //       status: "Failure",
 //       message: "All fields except 'selected' are required.",
@@ -548,8 +550,8 @@ exports.verifyOtpAndResetPassword = async (req, res) => {
 
 //   try {
 //     db.query(
-//       "UPDATE revenue_engine_services SET services = ?, category = ?, editing_type = ?, amount = ?, selected = ? WHERE id = ?",
-//       [services, category, editing_type, amount, selected || "N/A", id],
+//       "UPDATE revenue_engine_services SET re_services = ?, category = ?, editing_type = ?, amount = ?, selected = ? WHERE id = ?",
+//       [re_services, category, editing_type, amount, selected || "N/A", id],
 //       (err, result) => {
 //         if (err) {
 //           return res
@@ -600,7 +602,7 @@ exports.insertAdsServices = async (req, res) => {
 
   try {
     db.query(
-      "INSERT INTO revenue_engine_ads (ads_category, amt_range_start, amt_range_end, percentage, created_at) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO re_revenue_engine_ads (ads_category, amt_range_start, amt_range_end, percentage, created_at) VALUES (?, ?, ?, ?, ?)",
       [ads_category, amt_range_start, amt_range_end, percentage, createdAt],
       (err, result) => {
         if (err) {
@@ -644,7 +646,7 @@ exports.updateAdsServices = async (req, res) => {
 
   try {
     db.query(
-      "UPDATE revenue_engine_ads SET ads_category = ?, amt_range_start = ?, amt_range_end = ?, percentage = ? WHERE id = ?",
+      "UPDATE re_revenue_engine_ads SET ads_category = ?, amt_range_start = ?, amt_range_end = ?, percentage = ? WHERE id = ?",
       [ads_category, amt_range_start, amt_range_end, percentage, id],
       (err, result) => {
         if (err) {
@@ -693,7 +695,7 @@ exports.insertClientDetails = async (req, res) => {
 
   try {
     db.query(
-      "INSERT INTO revenue_engine_client_details (client_name, client_organization, email, phone, address, dg_employee, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO re_revenue_engine_client_details (client_name, client_organization, email, phone, address, dg_employee, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         client_name,
         client_organization,
@@ -724,7 +726,7 @@ exports.insertClientDetails = async (req, res) => {
 exports.getClientDetails = async (req, res) => {
   try {
     db.query(
-      "SELECT * FROM revenue_engine_client_details ORDER BY id DESC",
+      "SELECT * FROM re_revenue_engine_client_details ORDER BY id DESC",
       (err, results) => {
         if (err) {
           return res.status(500).json({
@@ -761,7 +763,7 @@ exports.getClientsByEmployee = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM revenue_engine_client_details WHERE dg_employee = ? ORDER BY id DESC",
+      "SELECT * FROM re_revenue_engine_client_details WHERE dg_employee = ? ORDER BY id DESC",
       [employee],
       (err, results) => {
         if (err) {
@@ -807,7 +809,7 @@ exports.addServices = async (req, res) => {
 
   try {
     db.query(
-      "INSERT INTO services (service_name, created_at) VALUES (?, ?)",
+      "INSERT INTO re_services (service_name, created_at) VALUES (?, ?)",
       [service_name, createdAt],
       (err, result) => {
         if (err) {
@@ -842,36 +844,45 @@ exports.addCategories = async (req, res) => {
   try {
     // Check for duplicate category name under the same service
     db.query(
-      "SELECT category_id FROM categories WHERE service_id = ? AND category_name = ?",
+      "SELECT category_id FROM re_categories WHERE service_id = ? AND category_name = ?",
       [service_id, category_name],
       (checkErr, checkResult) => {
         if (checkErr) {
-          return res.status(500).json({ status: "Failure", message: "Database error during check" });
+          return res.status(500).json({
+            status: "Failure",
+            message: "Database error during check",
+          });
         }
-        
+
         if (checkResult.length > 0) {
-          return res.status(400).json({ status: "Failure", message: "Category with this name already exists for the selected service" });
+          return res.status(400).json({
+            status: "Failure",
+            message:
+              "Category with this name already exists for the selected service",
+          });
         }
 
         db.query(
-          "INSERT INTO categories (service_id, category_name, created_at) VALUES (?, ?, ?)",
+          "INSERT INTO re_categories (service_id, category_name, created_at) VALUES (?, ?, ?)",
           [service_id, category_name, createdAt],
           (err, result) => {
-        if (err) {
-          console.error("Database INSERT error in addCategories:", err);
-          return res
-            .status(500)
-            .json({ status: "Failure", message: "Database error", error: err.message });
-        }
+            if (err) {
+              console.error("Database INSERT error in addCategories:", err);
+              return res.status(500).json({
+                status: "Failure",
+                message: "Database error",
+                error: err.message,
+              });
+            }
 
-        res.status(201).json({
-          status: "Success",
-          message: "Category added successfully",
-          data: { category_id: result.insertId },
-        });
+            res.status(201).json({
+              status: "Success",
+              message: "Category added successfully",
+              data: { category_id: result.insertId },
+            });
+          },
+        );
       },
-    );
-      }
     );
   } catch (error) {
     res.status(500).json({ status: "Failure", message: "Server error", error });
@@ -883,7 +894,13 @@ exports.addEditingTypes = async (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  if (!service_id || !category_id || amount === undefined || amount === null || amount === "") {
+  if (
+    !service_id ||
+    !category_id ||
+    amount === undefined ||
+    amount === null ||
+    amount === ""
+  ) {
     return res.status(400).json({
       status: "Failure",
       message: "All fields are required",
@@ -892,7 +909,7 @@ exports.addEditingTypes = async (req, res) => {
 
   try {
     db.query(
-      "INSERT INTO editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO re_editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
       [service_id, category_id, editing_type_name, amount, createdAt],
       (err, result) => {
         if (err) {
@@ -934,7 +951,7 @@ exports.saveCalculatorData = (req, res) => {
 
   // 🔎 Step 0: Check if the same service already exists for this txn_id
   const checkDuplicate = `
-    SELECT id FROM calculator_transactions 
+    SELECT id FROM re_calculator_transactions 
     WHERE txn_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
   `;
 
@@ -955,9 +972,9 @@ exports.saveCalculatorData = (req, res) => {
         });
       }
 
-      // Step 1: Insert into calculator_transactions (Quotation)
+      // Step 1: Insert into re_calculator_transactions (Quotation)
       const query = `
-        INSERT INTO calculator_transactions (
+        INSERT INTO re_calculator_transactions (
           txn_id,
           client_id,
           service_name,
@@ -1002,8 +1019,8 @@ exports.saveCalculatorData = (req, res) => {
             .json({ status: "Failure", message: "DB error" });
         }
 
-        // Step 2: Check if invoice already exists
-        const checkInvoice = "SELECT id FROM invoice WHERE txn_id = ?";
+        // Step 2: Check if re_invoice already exists
+        const checkInvoice = "SELECT id FROM re_invoice WHERE txn_id = ?";
         db.query(checkInvoice, [txn_id], (err2, invoiceResult) => {
           if (err2) {
             console.error("Invoice Check Error:", err2);
@@ -1013,9 +1030,9 @@ exports.saveCalculatorData = (req, res) => {
           }
 
           if (invoiceResult.length > 0) {
-            // Step 3: Insert into invoice_graphic table
+            // Step 3: Insert into re_invoice_graphic table
             const invoiceQuery = `
-              INSERT INTO invoice_graphic (
+              INSERT INTO re_invoice_graphic (
                 txn_id,
                 client_id,
                 service_name,
@@ -1035,23 +1052,23 @@ exports.saveCalculatorData = (req, res) => {
 
             db.query(invoiceQuery, values, (err3) => {
               if (err3) {
-                console.error("Insert Error (Invoice):", err3);
+                console.error("Insert Error (re_invoice):", err3);
                 return res.status(500).json({
                   status: "Failure",
-                  message: "Quotation saved but Invoice insert failed",
+                  message: "Quotation saved but re_invoice insert failed",
                 });
               }
 
               return res.status(200).json({
                 status: "Success",
-                message: "Quotation & Invoice saved successfully",
+                message: "Quotation & re_invoice saved successfully",
               });
             });
           } else {
             // Only Quotation saved
             return res.status(200).json({
               status: "Success",
-              message: "Quotation saved successfully (Invoice not created yet)",
+              message: "Quotation saved successfully (re_invoice not created yet)",
             });
           }
         });
@@ -1084,9 +1101,9 @@ exports.saveAdsCampaign = async (req, res) => {
     createdAt,
   ]);
 
-  // Step 1: Insert into ads_campaign_details
+  // Step 1: Insert into re_ads_campaign_details
   const sql = `
-    INSERT INTO ads_campaign_details 
+    INSERT INTO re_ads_campaign_details 
     (txn_id, client_id, unique_id, category, amount, percent, charge, total, employee, created_at) 
     VALUES ?
   `;
@@ -1101,44 +1118,44 @@ exports.saveAdsCampaign = async (req, res) => {
     }
 
     // Step 2: Check if invoice exists
-    const checkInvoice = "SELECT id FROM invoice WHERE txn_id = ?";
+    const checkInvoice = "SELECT id FROM re_invoice WHERE txn_id = ?";
     db.query(checkInvoice, [adsItems[0].txn_id], (err2, invoiceResult) => {
       if (err2) {
         console.error("Invoice Check Error:", err2);
         return res.status(500).json({
           status: "Failure",
-          message: "DB error while checking invoice.",
+          message: "DB error while checking re_invoice.",
         });
       }
 
       if (invoiceResult.length > 0) {
-        // Step 3: Insert into ads_campaign_details_invoice if invoice exists
+        // Step 3: Insert into re_ads_campaign_details_invoice if re_invoice exists
         const invoiceSql = `
-          INSERT INTO ads_campaign_details_invoice 
+          INSERT INTO re_ads_campaign_details_invoice 
           (txn_id, client_id, unique_id, category, amount, percent, charge, total, employee, created_at) 
           VALUES ?
         `;
 
         db.query(invoiceSql, [insertValues], (err3) => {
           if (err3) {
-            console.error("Error saving invoice ads campaign:", err3);
+            console.error("Error saving re_invoice ads campaign:", err3);
             return res.status(500).json({
               status: "Failure",
-              message: "Ads campaign saved, but invoice insert failed.",
+              message: "Ads campaign saved, but re_invoice insert failed.",
               error: err3,
             });
           }
 
           return res.status(200).json({
             status: "Success",
-            message: "Ads campaign saved successfully with Invoice.",
+            message: "Ads campaign saved successfully with re_invoice.",
           });
         });
       } else {
         // Only ads campaign saved
         return res.status(200).json({
           status: "Success",
-          message: "Ads campaign saved successfully (Invoice not created yet).",
+          message: "Ads campaign saved successfully (re_invoice not created yet).",
         });
       }
     });
@@ -1157,7 +1174,7 @@ exports.saveCalculatorDataOfPlan = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO plan_data (
+    INSERT INTO re_plan_data (
       plan_id, plan_name, service_name, category_name,editing_type_id,
       editing_type_name, editing_type_amount, quantity,
       include_content_posting, include_thumbnail_creation,
@@ -1216,7 +1233,7 @@ exports.saveCalculatorDataOfPlanDetail = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO plan_details (
+    INSERT INTO re_plan_details (
       plan_name,
       created_at
     ) VALUES (?, ?)
@@ -1257,7 +1274,7 @@ exports.saveClientWithPlan = async (req, res) => {
   try {
     // Step 1: Insert client details
     const clientQuery = `
-      INSERT INTO revenue_engine_client_details 
+      INSERT INTO re_revenue_engine_client_details 
       (client_name, client_organization, email, phone, address, dg_employee, created_at) 
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
@@ -1285,7 +1302,7 @@ exports.saveClientWithPlan = async (req, res) => {
 
       // Step 2: Insert plans
       const planQuery = `
-        INSERT INTO calculator_transactions 
+        INSERT INTO re_calculator_transactions 
         (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 
         VALUES ?`;
 
@@ -1316,7 +1333,7 @@ exports.saveClientWithPlan = async (req, res) => {
 
         // Step 3: Insert notes
         const noteClientQuery = `
-          INSERT INTO plan_client_notes 
+          INSERT INTO re_plan_client_notes 
           (txn_id, client_id, note_name, created_at) 
           VALUES ?`;
 
@@ -1372,7 +1389,7 @@ exports.addNotebyplan = async (req, res) => {
     // Step 1: Check if the note already exists for this plan_id
     const checkQuery = `
       SELECT note_name 
-      FROM plans_notes 
+      FROM re_plans_notes 
       WHERE plan_id = ? AND LOWER(note_name) = LOWER(?)
     `;
 
@@ -1395,7 +1412,7 @@ exports.addNotebyplan = async (req, res) => {
 
       // Step 2: Insert new note
       const insertQuery = `
-        INSERT INTO plans_notes (note_name, plan, plan_id, created_at) 
+        INSERT INTO re_plans_notes (note_name, plan, plan_id, created_at) 
         VALUES (?, ?, ?, ?)
       `;
 
@@ -1432,9 +1449,9 @@ exports.savePlanClientNotes = (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  // Step 1: Insert Plans (calculator_transactions)
+  // Step 1: Insert Plans (re_calculator_transactions)
   const planQuery = `
-    INSERT INTO calculator_transactions 
+    INSERT INTO re_calculator_transactions 
     (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 
     VALUES ?
   `;
@@ -1465,11 +1482,11 @@ exports.savePlanClientNotes = (req, res) => {
       });
     }
 
-    // Step 2: Insert Notes (plan_client_notes)
+    // Step 2: Insert Notes (re_plan_client_notes)
     const insertNotes = (callback) => {
       if (planNotes && planNotes.length > 0) {
         const noteClientQuery = `
-          INSERT INTO plan_client_notes 
+          INSERT INTO re_plan_client_notes 
           (txn_id, client_id, note_name, created_at) 
           VALUES ?
         `;
@@ -1497,8 +1514,8 @@ exports.savePlanClientNotes = (req, res) => {
       }
     };
 
-    // Step 3: Check if Invoice exists
-    const checkInvoice = "SELECT id FROM invoice WHERE txn_id = ?";
+    // Step 3: Check if re_invoice exists
+    const checkInvoice = "SELECT id FROM re_invoice WHERE txn_id = ?";
     db.query(checkInvoice, [txn_id], (err2, invoiceResult) => {
       if (err2) {
         console.error("Invoice Check Error:", err2);
@@ -1507,9 +1524,9 @@ exports.savePlanClientNotes = (req, res) => {
 
       insertNotes(() => {
         if (invoiceResult.length > 0) {
-          // Step 4: Save invoice plans if invoice exists
+          // Step 4: Save re_invoice plans if re_invoice exists
           const planInvoiceQuery = `
-            INSERT INTO invoice_graphic 
+            INSERT INTO re_invoice_graphic 
             (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 
             VALUES ?
           `;
@@ -1526,7 +1543,7 @@ exports.savePlanClientNotes = (req, res) => {
 
             return res.status(200).json({
               status: "Success",
-              message: "Plans & Notes saved successfully with Invoice",
+              message: "Plans & Notes saved successfully with re_invoice",
             });
           });
         } else {
@@ -1534,7 +1551,7 @@ exports.savePlanClientNotes = (req, res) => {
           return res.status(200).json({
             status: "Success",
             message:
-              "Plans & Notes saved successfully (Invoice not created yet)",
+              "Plans & Notes saved successfully (re_invoice not created yet)",
           });
         }
       });
@@ -1556,7 +1573,7 @@ exports.saveClientIdwiseNotes = (req, res) => {
   // Step 1: Check duplicates before inserting
   const checkQuery = `
     SELECT note_name 
-    FROM plan_client_notes 
+    FROM re_plan_client_notes 
     WHERE txn_id = ? AND client_id = ?
   `;
 
@@ -1588,7 +1605,7 @@ exports.saveClientIdwiseNotes = (req, res) => {
 
     // Step 2: Insert only new notes
     const NotesQuery = `
-      INSERT INTO plan_client_notes 
+      INSERT INTO re_plan_client_notes 
           (txn_id, client_id, note_name, created_at) 
           VALUES ?
     `;
@@ -1624,7 +1641,7 @@ exports.saveClientIdwiseNotes = (req, res) => {
 function getTxnRows(txn_id) {
   return new Promise((resolve, reject) => {
     db.query(
-      "SELECT id, client_id, user_id, team_id, assignment_mode FROM assign_quotation WHERE txn_id = ?",
+      "SELECT id, client_id, user_id, team_id, assignment_mode FROM re_assign_quotation WHERE txn_id = ?",
       [txn_id],
       (e, rows) => (e ? reject(e) : resolve(rows || [])),
     );
@@ -1675,7 +1692,7 @@ exports.assignQuotation = (req, res) => {
 
         const doInsert = () => {
           const insertQuery = `
-            INSERT INTO assign_quotation
+            INSERT INTO re_assign_quotation
               (client_id, txn_id, user_id, deadline, created_at,
                reminder_start_sent, reminder_mid_sent, reminder_day_before_sent,
                assignment_mode, team_id, assign_group_id)
@@ -1717,14 +1734,14 @@ exports.assignQuotation = (req, res) => {
                 try {
                   const [assignee] = await new Promise((resolve, reject) => {
                     db.query(
-                      "SELECT employee_name, employee_email, employee_phone FROM revenue_engine_employees WHERE id = ? LIMIT 1",
+                      "SELECT employee_name, employee_email, employee_phone FROM re_revenue_engine_employees WHERE id = ? LIMIT 1",
                       [user_id],
                       (e, rows) => (e ? reject(e) : resolve(rows || [])),
                     );
                   });
                   const [client] = await new Promise((resolve, reject) => {
                     db.query(
-                      "SELECT client_name FROM revenue_engine_client_details WHERE id = ? LIMIT 1",
+                      "SELECT client_name FROM re_revenue_engine_client_details WHERE id = ? LIMIT 1",
                       [client_id],
                       (e, rows) => (e ? reject(e) : resolve(rows || [])),
                     );
@@ -1733,8 +1750,6 @@ exports.assignQuotation = (req, res) => {
                   const link = process.env.PUBLIC_APP_URL
                     ? `${process.env.PUBLIC_APP_URL}/quotation/${client_id}/${txn_id}`
                     : null;
-
-
                 } catch (mailErr) {
                   console.error("[MAIL] assign send error:", mailErr);
                 }
@@ -1761,7 +1776,7 @@ exports.assignQuotation = (req, res) => {
         if (!mustClear) return doInsert();
 
         db.query(
-          "DELETE FROM assign_quotation WHERE txn_id = ?",
+          "DELETE FROM re_assign_quotation WHERE txn_id = ?",
           [txn_id],
           (dErr) => {
             if (dErr) {
@@ -1822,7 +1837,7 @@ exports.reassignQuotation = (req, res) => {
               .json({ status: "Failure", message: "Transaction error" });
           }
           db.query(
-            "DELETE FROM assign_quotation WHERE txn_id = ?",
+            "DELETE FROM re_assign_quotation WHERE txn_id = ?",
             [txn_id],
             (dErr) => {
               if (dErr) {
@@ -1836,7 +1851,7 @@ exports.reassignQuotation = (req, res) => {
               }
 
               const insertSQL = `
-              INSERT INTO assign_quotation
+              INSERT INTO re_assign_quotation
                 (client_id, txn_id, user_id, deadline, created_at,
                  reminder_start_sent, reminder_mid_sent, reminder_day_before_sent,
                  assignment_mode, team_id, assign_group_id)
@@ -1879,7 +1894,7 @@ exports.reassignQuotation = (req, res) => {
                       const [assignee] = await new Promise(
                         (resolve, reject) => {
                           db.query(
-                            "SELECT employee_name, employee_email FROM revenue_engine_employees WHERE id = ? LIMIT 1",
+                            "SELECT employee_name, employee_email FROM re_revenue_engine_employees WHERE id = ? LIMIT 1",
                             [user_id],
                             (e, r) => (e ? reject(e) : resolve(r || [])),
                           );
@@ -1887,12 +1902,11 @@ exports.reassignQuotation = (req, res) => {
                       );
                       const [client] = await new Promise((resolve, reject) => {
                         db.query(
-                          "SELECT client_name FROM revenue_engine_client_details WHERE id = ? LIMIT 1",
+                          "SELECT client_name FROM re_revenue_engine_client_details WHERE id = ? LIMIT 1",
                           [clientId],
                           (e, r) => (e ? reject(e) : resolve(r || [])),
                         );
                       });
-
                     } catch (mailErr) {
                       console.error("[MAIL] reassign(send) error:", mailErr);
                     }
@@ -1915,7 +1929,7 @@ exports.reassignQuotation = (req, res) => {
       // ---- CASE B: exactly one single row => UPDATE IN PLACE
       const currentRow = rows[0];
       const updateSQL = `
-        UPDATE assign_quotation
+        UPDATE re_assign_quotation
         SET user_id = ?, ${deadline ? "deadline = ?," : ""}
             assignment_mode = 'single', team_id = NULL, assign_group_id = NULL,
             updated_at = ?,
@@ -1946,7 +1960,6 @@ exports.reassignQuotation = (req, res) => {
             status: "Failure",
             message: "Target assignment row not found",
           });
-
 
         return res.status(200).json({
           status: "Success",
@@ -1981,8 +1994,8 @@ exports.reassignQuotation = (req, res) => {
 //       const members = await new Promise((resolve, reject) => {
 //         const sql = `
 //           SELECT e.id, e.employee_name, e.employee_email, e.employee_phone
-//           FROM team_members tm
-//           JOIN revenue_engine_employees e ON e.id = tm.employee_id
+//           FROM re_team_members tm
+//           JOIN re_revenue_engine_employees e ON e.id = tm.employee_id
 //           WHERE tm.team_id = ?
 //         `;
 //         db.query(sql, [team_id], (e, rows) =>
@@ -2056,7 +2069,7 @@ exports.reassignQuotation = (req, res) => {
 //           ]);
 
 //           const insertSQL = `
-//             INSERT INTO assign_quotation
+//             INSERT INTO re_assign_quotation
 //               (client_id, txn_id, user_id, deadline, created_at,
 //                reminder_start_sent, reminder_mid_sent, reminder_day_before_sent,
 //                assignment_mode, team_id, assign_group_id)
@@ -2107,7 +2120,7 @@ exports.reassignQuotation = (req, res) => {
 //                   });
 //                   mailed++;
 //                   db.query(
-//                     "UPDATE assign_quotation SET reminder_start_sent = 1 WHERE txn_id = ? AND user_id = ?",
+//                     "UPDATE re_assign_quotation SET reminder_start_sent = 1 WHERE txn_id = ? AND user_id = ?",
 //                     [txn_id, uid]
 //                   );
 //                 } catch (mailErr) {
@@ -2133,7 +2146,7 @@ exports.reassignQuotation = (req, res) => {
 //         if (!mustClear) return proceed();
 
 //         db.query(
-//           "DELETE FROM assign_quotation WHERE txn_id = ?",
+//           "DELETE FROM re_assign_quotation WHERE txn_id = ?",
 //           [txn_id],
 //           (dErr) => {
 //             if (dErr) {
@@ -2177,8 +2190,8 @@ exports.assignQuotationToTeam = (req, res) => {
       const members = await new Promise((resolve, reject) => {
         const sql = `
           SELECT e.id, e.employee_name, e.employee_email, e.employee_phone
-          FROM team_members tm
-          JOIN revenue_engine_employees e ON e.id = tm.employee_id
+          FROM re_team_members tm
+          JOIN re_revenue_engine_employees e ON e.id = tm.employee_id
           WHERE tm.team_id = ?
         `;
         db.query(sql, [team_id], (e, rows) =>
@@ -2252,7 +2265,7 @@ exports.assignQuotationToTeam = (req, res) => {
           ]);
 
           const insertSQL = `
-            INSERT INTO assign_quotation
+            INSERT INTO re_assign_quotation
               (client_id, txn_id, user_id, deadline, created_at,
                reminder_start_sent, reminder_mid_sent, reminder_day_before_sent,
                assignment_mode, team_id, assign_group_id)
@@ -2287,7 +2300,7 @@ exports.assignQuotationToTeam = (req, res) => {
               try {
                 const [clientRow] = await new Promise((resolve, reject) => {
                   db.query(
-                    "SELECT client_name FROM revenue_engine_client_details WHERE id = ? LIMIT 1",
+                    "SELECT client_name FROM re_revenue_engine_client_details WHERE id = ? LIMIT 1",
                     [client_id],
                     (e, r) => (e ? reject(e) : resolve(r || [])),
                   );
@@ -2308,8 +2321,6 @@ exports.assignQuotationToTeam = (req, res) => {
               for (const uid of targetIds) {
                 const m = idToMember.get(uid);
                 if (!m) continue;
-
-
               }
 
               return res.status(201).json({
@@ -2331,7 +2342,7 @@ exports.assignQuotationToTeam = (req, res) => {
         if (!mustClear) return proceed();
 
         db.query(
-          "DELETE FROM assign_quotation WHERE txn_id = ?",
+          "DELETE FROM re_assign_quotation WHERE txn_id = ?",
           [txn_id],
           (dErr) => {
             if (dErr) {
@@ -2396,7 +2407,7 @@ exports.setDoneQty = (req, res) => {
   const now = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const upsert = `
-    INSERT INTO service_progress
+    INSERT INTO re_service_progress
       (client_id, txn_id, service_name, category_name, editing_type_name,
        planned_qty, done_qty, last_updated_by, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -2478,7 +2489,7 @@ exports.setDoneQty = (req, res) => {
 //   const now = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
 //   const upsert = `
-//     INSERT INTO service_progress
+//     INSERT INTO re_service_progress
 //       (client_id, txn_id, service_name, category_name, editing_type_name, planned_qty, done_qty, last_updated_by, created_at, updated_at)
 //     VALUES
 //       (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -2559,7 +2570,7 @@ exports.incrementDoneQty = (req, res) => {
 
   // Use one statement: create-if-missing with 0, then increment and clamp
   const q = `
-    INSERT INTO service_progress
+    INSERT INTO re_service_progress
       (client_id, txn_id, service_name, category_name, editing_type_name, planned_qty, done_qty, last_updated_by, created_at, updated_at)
     VALUES
       (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
@@ -2625,7 +2636,7 @@ exports.createTeam = async (req, res) => {
       }
 
       // Insert new team
-      const insertTeam = `INSERT INTO teams (name, created_at) VALUES (?, ?)`;
+      const insertTeam = `INSERT INTO re_teams (name, created_at) VALUES (?, ?)`;
       db.query(insertTeam, [String(name).trim(), now], (err, result) => {
         if (err) {
           console.error("Insert Team Error:", err);
@@ -2662,7 +2673,7 @@ exports.createTeam = async (req, res) => {
         // Insert team members
         const values = members.map((empId) => [teamId, empId, now]);
         const insertMembers = `
-          INSERT IGNORE INTO team_members (team_id, employee_id, created_at)
+          INSERT IGNORE INTO re_team_members (team_id, employee_id, created_at)
           VALUES ?
         `;
 
@@ -2725,7 +2736,7 @@ exports.addMembersToTeam = async (req, res) => {
     // Prepare values
     const values = members.map((empId) => [id, empId, now]);
     const q = `
-      INSERT IGNORE INTO team_members (team_id, employee_id, created_at)
+      INSERT IGNORE INTO re_team_members (team_id, employee_id, created_at)
       VALUES ?
     `;
 
@@ -2773,7 +2784,7 @@ exports.saveComplimentaryData = (req, res) => {
 
   // ✅ Step 0: Check if service already exists for this txn_id + editing_type_id
   const checkDuplicate = `
-    SELECT id FROM complimentary 
+    SELECT id FROM re_complimentary 
     WHERE txn_id = ? AND client_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
   `;
 
@@ -2794,9 +2805,9 @@ exports.saveComplimentaryData = (req, res) => {
         });
       }
 
-      // Step 1: Insert into complimentary (Quotation)
+      // Step 1: Insert into re_complimentary (Quotation)
       const query = `
-        INSERT INTO complimentary (
+        INSERT INTO re_complimentary (
           txn_id,
           client_id,
           service_name,
@@ -2831,14 +2842,14 @@ exports.saveComplimentaryData = (req, res) => {
 
       db.query(query, values, (err, result) => {
         if (err) {
-          console.error("Insert Error (Complimentary):", err);
+          console.error("Insert Error (complimentary):", err);
           return res
             .status(500)
             .json({ status: "Failure", message: "DB error" });
         }
 
         // Step 2: Check if invoice exists
-        const checkInvoice = "SELECT id FROM invoice WHERE txn_id = ?";
+        const checkInvoice = "SELECT id FROM re_invoice WHERE txn_id = ?";
         db.query(checkInvoice, [txn_id], (err2, invoiceResult) => {
           if (err2) {
             console.error("Invoice Check Error:", err2);
@@ -2850,7 +2861,7 @@ exports.saveComplimentaryData = (req, res) => {
           if (invoiceResult.length > 0) {
             // Step 3: Insert into complimentary_invoice
             const invoiceQuery = `
-              INSERT INTO complimentary_invoice (
+              INSERT INTO re_complimentary_invoice (
                 txn_id,
                 client_id,
                 service_name,
@@ -2869,24 +2880,24 @@ exports.saveComplimentaryData = (req, res) => {
 
             db.query(invoiceQuery, values, (err3) => {
               if (err3) {
-                console.error("Insert Error (Complimentary Invoice):", err3);
+                console.error("Insert Error (complimentary invoice):", err3);
                 return res.status(500).json({
                   status: "Failure",
-                  message: "Complimentary saved but Invoice insert failed",
+                  message: "Complimentary saved but invoice insert failed",
                 });
               }
 
               return res.status(200).json({
                 status: "Success",
-                message: "Complimentary & Invoice saved successfully",
+                message: "Complimentary & invoice saved successfully",
               });
             });
           } else {
-            // Only Complimentary saved
+            // Only complimentary saved
             return res.status(200).json({
               status: "Success",
               message:
-                "Complimentary saved successfully (Invoice not created yet)",
+                "Complimentary saved successfully (invoice not created yet)",
             });
           }
         });
@@ -2913,7 +2924,7 @@ exports.generateClientLink = async (req, res) => {
 
     // 1) ensure client exists
     db.query(
-      "SELECT id FROM revenue_engine_client_details WHERE id = ?",
+      "SELECT id FROM re_revenue_engine_client_details WHERE id = ?",
       [client_id],
       (e, rows) => {
         if (e) {
@@ -2933,7 +2944,7 @@ exports.generateClientLink = async (req, res) => {
           .tz("Asia/Kolkata")
           .format("YYYY-MM-DD HH:mm:ss");
         const qExisting = `
-          SELECT slug FROM client_requirement_links
+          SELECT slug FROM re_client_requirement_links
           WHERE client_id = ?
             AND is_active = 1
             AND (expires_at = '' OR expires_at > ?)
@@ -2974,7 +2985,7 @@ exports.generateClientLink = async (req, res) => {
             .format("YYYY-MM-DD HH:mm:ss");
 
           const qInsert = `
-            INSERT INTO client_requirement_links
+            INSERT INTO re_client_requirement_links
               (client_id, slug, is_active, expires_at, created_by, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
           `;
@@ -3094,7 +3105,7 @@ exports.submitRequirement = (req, res) => {
   // 1) link verify + expiry check
   const qLink = `
     SELECT id, client_id, is_active, expires_at
-    FROM client_requirement_links
+    FROM re_client_requirement_links
     WHERE slug = ?
     LIMIT 1
   `;
@@ -3136,7 +3147,7 @@ exports.submitRequirement = (req, res) => {
       }
 
       const qMaster = `
-  INSERT INTO requirement_submissions
+  INSERT INTO re_requirement_submissions
     (client_id, link_id, slug, name, email, phone, requirement, total_amount, created_at)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
@@ -3180,7 +3191,7 @@ exports.submitRequirement = (req, res) => {
         }
 
         const qItems = `
-          INSERT INTO requirement_submission_items
+          INSERT INTO re_requirement_submission_items
             (submission_id, category, sub_category, unit_price, qty, line_total)
           VALUES ?
         `;
@@ -3227,7 +3238,7 @@ exports.saveNotesData = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO notes_data (
+    INSERT INTO re_notes_data (
     note_text,
       created_at
     ) VALUES (?, ?)
@@ -3252,7 +3263,7 @@ exports.saveNotesbydefault = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO notes_bydefault (
+    INSERT INTO re_notes_bydefault (
     note_text,
       created_at
     ) VALUES (?, ?)
@@ -3279,7 +3290,7 @@ exports.saveDiscountData = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO discount (
+    INSERT INTO re_discount (
     client_id,txn_id,discount_type,discount_per,discount_amt,
       created_at
     ) VALUES (?, ?,?,?,?,?)
@@ -3302,7 +3313,7 @@ exports.saveDiscountData = (req, res) => {
 
     res
       .status(200)
-      .json({ status: "Success", message: "Saved Discount successfully" });
+      .json({ status: "Success", message: "Saved discount successfully" });
   });
 };
 
@@ -3324,7 +3335,7 @@ exports.saveInvoiceData = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO invoice_graphic (
+    INSERT INTO re_invoice_graphic (
     	txn_id,
       client_id,
       service_name,
@@ -3395,7 +3406,7 @@ exports.saveInvoiceGD = (req, res) => {
 
   // ✅ Step 1: Get latest bill number for the selected type
   const getLastBillQuery = `
-    SELECT bill_number FROM invoice WHERE bill_type = ? ORDER BY id DESC LIMIT 1
+    SELECT bill_number FROM re_invoice WHERE bill_type = ? ORDER BY id DESC LIMIT 1
   `;
 
   db.query(getLastBillQuery, [bill_type], (err, results) => {
@@ -3422,9 +3433,9 @@ exports.saveInvoiceGD = (req, res) => {
       newBillNumber = bill_type === "GST" ? "01" : "01";
     }
 
-    // ✅ Step 2: Insert into invoice table
+    // ✅ Step 2: Insert into re_invoice table
     const clientQuery = `
-      INSERT INTO invoice 
+      INSERT INTO re_invoice 
       (bill_type, bill_number, txn_id, client_id, client_name, client_organization, email, phone, address, dg_employee, duration_start_date, duration_end_date, payment_mode, client_gst_no, client_pan_no, created_at) 
       VALUES (?)
     `;
@@ -3458,7 +3469,7 @@ exports.saveInvoiceGD = (req, res) => {
         });
       }
 
-      // ✅ Step 3: Insert invoice line items into invoice_graphic
+      // ✅ Step 3: Insert re_invoice line items into re_invoice_graphic
       const invoiceValues = invoices.map((p) => [
         txn_id,
         client_id,
@@ -3492,7 +3503,7 @@ exports.saveInvoiceGD = (req, res) => {
 
       // Only execute query if we have valid items
       const invoiceQuery = `
-  INSERT INTO invoice_graphic 
+  INSERT INTO re_invoice_graphic 
   (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 
   VALUES ?
 `;
@@ -3544,7 +3555,7 @@ exports.saveInvoiceAdsCampaign = async (req, res) => {
   ]);
 
   const sql = `
-    INSERT INTO ads_campaign_details_invoice 
+    INSERT INTO re_ads_campaign_details_invoice 
     (	txn_id, client_id, unique_id, category, amount, percent, charge, total, employee, created_at) 
     VALUES ?
   `;
@@ -3580,7 +3591,7 @@ exports.saveInvoiceComplimentaryData = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO complimentary_invoice (
+    INSERT INTO re_complimentary_invoice (
     	txn_id,
       client_id,
       service_name,
@@ -3620,7 +3631,7 @@ exports.saveInvoiceComplimentaryData = (req, res) => {
 
     res
       .status(200)
-      .json({ status: "Success", message: "Invoice Saved successfully" });
+      .json({ status: "Success", message: "Invoice saved successfully" });
   });
 };
 
@@ -3643,7 +3654,7 @@ exports.saveInvoiceCalculatorData = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO invoice_graphic (
+    INSERT INTO re_invoice_graphic (
     	txn_id,
       client_id,
       service_name,
@@ -3694,7 +3705,7 @@ exports.saveInvoiceNotesData = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO invoice_notes_data (
+    INSERT INTO re_invoice_notes_data (
     note_text,
       created_at
     ) VALUES (?, ?)
@@ -3715,7 +3726,11 @@ exports.saveInvoiceNotesData = (req, res) => {
 };
 
 exports.saveInvoiceClientIdwiseNotes = (req, res) => {
-  return res.status(403).json({ status: "Failure", message: "Editing notes is disabled for Invoice/Proforma as per business requirement." });
+  return res.status(403).json({
+    status: "Failure",
+    message:
+      "Editing notes is disabled for invoice/Proforma as per business requirement.",
+  });
   const { txn_id, client_id, planNotes } = req.body;
   if (!txn_id || !client_id) {
     return res
@@ -3728,7 +3743,7 @@ exports.saveInvoiceClientIdwiseNotes = (req, res) => {
   // Step 1: Check duplicates before inserting
   const checkQuery = `
     SELECT note_name 
-    FROM invoice_client_notes 
+    FROM re_invoice_client_notes 
     WHERE txn_id = ? AND client_id = ?
   `;
 
@@ -3760,7 +3775,7 @@ exports.saveInvoiceClientIdwiseNotes = (req, res) => {
 
     // Step 2: Insert only new notes
     const NotesQuery = `
-      INSERT INTO invoice_client_notes 
+      INSERT INTO re_invoice_client_notes 
           (txn_id, client_id, note_name, created_at) 
           VALUES ?
     `;
@@ -3789,8 +3804,6 @@ exports.saveInvoiceClientIdwiseNotes = (req, res) => {
     });
   });
 };
-
-
 
 exports.saveAdditionalData = (req, res) => {
   const {
@@ -3828,7 +3841,7 @@ exports.saveAdditionalData = (req, res) => {
 
   // ✅ Step 1: Check if this service already exists
   const checkDuplicate = `
-    SELECT id FROM addtional_service
+    SELECT id FROM re_addtional_service
      WHERE txn_id = ? AND client_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
  
   `;
@@ -3849,9 +3862,9 @@ exports.saveAdditionalData = (req, res) => {
         });
       }
 
-      // ✅ Step 2: Insert into addtional_service (Only Quotation)
+      // ✅ Step 2: Insert into re_addtional_service (Only Quotation)
       const insertQuery = `
-      INSERT INTO addtional_service (
+      INSERT INTO re_addtional_service (
         txn_id,
         client_id,
         service_name,
@@ -3891,7 +3904,7 @@ exports.saveRemainingAmountData = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO amount_remaining (
+    INSERT INTO re_amount_remaining (
     	txn_id,
       client_id,
       service_name,
@@ -4015,7 +4028,7 @@ exports.saveDiscountSetting = (req, res) => {
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO discount_settings (
+    INSERT INTO re_discount_settings (
    discount_per,discount_amt,
       created_at
     ) VALUES (?, ?,?)
@@ -4031,7 +4044,7 @@ exports.saveDiscountSetting = (req, res) => {
 
     res.status(200).json({
       status: "Success",
-      message: "Saved Discount Setting successfully",
+      message: "Saved discount setting successfully",
     });
   });
 };
@@ -4048,13 +4061,13 @@ exports.saveDirectProforma = (req, res) => {
     pricing_snapshot,
     notes_snapshot,
     duration_start_date,
-    duration_end_date
+    duration_end_date,
   } = req.body;
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
   const query = `
-    INSERT INTO proposal_proforma (
+    INSERT INTO re_proposal_proforma (
       client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
       created_at, pricing_snapshot, notes_snapshot, source_type, duration_start_date, duration_end_date
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
@@ -4072,7 +4085,7 @@ exports.saveDirectProforma = (req, res) => {
     pricing_snapshot || "[]",
     notes_snapshot || "[]",
     duration_start_date || null,
-    duration_end_date || null
+    duration_end_date || null,
   ];
 
   db.query(query, values, (err, result) => {
@@ -4093,26 +4106,41 @@ exports.sendRegisterAdminOtp = async (req, res) => {
   try {
     const { employee_name, employee_email, employee_password } = req.body;
     if (!employee_name || !employee_email || !employee_password) {
-      return res.status(400).json({ status: "Failure", message: "All fields are required." });
+      return res
+        .status(400)
+        .json({ status: "Failure", message: "All fields are required." });
     }
 
     const email = employee_email.trim().toLowerCase();
 
-    const dbQuery = (query, params) => new Promise((resolve, reject) => {
-      db.query(query, params, (err, results) => {
-        if (err) return reject(err);
-        resolve(results);
+    const dbQuery = (query, params) =>
+      new Promise((resolve, reject) => {
+        db.query(query, params, (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+        });
       });
-    });
 
-    const existingUser = await dbQuery("SELECT * FROM revenue_engine_employees WHERE employee_email = ?", [email]);
+    const existingUser = await dbQuery(
+      "SELECT * FROM re_revenue_engine_employees WHERE employee_email = ?",
+      [email],
+    );
     if (existingUser.length > 0) {
-      return res.status(409).json({ status: "Failure", message: "User with this email already exists." });
+      return res.status(409).json({
+        status: "Failure",
+        message: "User with this email already exists.",
+      });
     }
 
-    const existingOwner = await dbQuery("SELECT * FROM revenue_engine_employees WHERE employee_role = 'Owner'", []);
+    const existingOwner = await dbQuery(
+      "SELECT * FROM re_revenue_engine_employees WHERE employee_role = 'Owner'",
+      [],
+    );
     if (existingOwner.length > 0) {
-      return res.status(403).json({ status: "Failure", message: "An Owner account already exists." });
+      return res.status(403).json({
+        status: "Failure",
+        message: "An Owner account already exists.",
+      });
     }
 
     const existingOtpData = registerOtpStore.get(email);
@@ -4120,13 +4148,19 @@ exports.sendRegisterAdminOtp = async (req, res) => {
 
     if (existingOtpData) {
       if (now < existingOtpData.resendCooldown) {
-        return res.status(429).json({ status: "Failure", message: "Please wait before requesting a new OTP." });
+        return res.status(429).json({
+          status: "Failure",
+          message: "Please wait before requesting a new OTP.",
+        });
       }
       if (existingOtpData.requests >= 3) {
         if (now > existingOtpData.expiresAt) {
           registerOtpStore.delete(email);
         } else {
-          return res.status(429).json({ status: "Failure", message: "Too many OTP requests. Try again later." });
+          return res.status(429).json({
+            status: "Failure",
+            message: "Too many OTP requests. Try again later.",
+          });
         }
       }
     }
@@ -4144,19 +4178,24 @@ exports.sendRegisterAdminOtp = async (req, res) => {
       expiresAt: now + 5 * 60 * 1000, // 5 minutes
       attempts: 0,
       resendCooldown: now + 30 * 1000, // 30 seconds cooldown
-      requests
+      requests,
     });
 
     const emailResult = await sendRegistrationOtpEmail({ to: email, otp });
     if (!emailResult.ok) {
-      return res.status(500).json({ status: "Failure", message: "Failed to send OTP email." });
+      return res
+        .status(500)
+        .json({ status: "Failure", message: "Failed to send OTP email." });
     }
 
-    return res.status(200).json({ status: "Success", message: "OTP sent to email." });
-
+    return res
+      .status(200)
+      .json({ status: "Success", message: "OTP sent to email." });
   } catch (error) {
     console.error("Error in sendRegisterAdminOtp:", error);
-    return res.status(500).json({ status: "Failure", message: "Internal server error." });
+    return res
+      .status(500)
+      .json({ status: "Failure", message: "Internal server error." });
   }
 };
 
@@ -4164,7 +4203,9 @@ exports.registerAdminWithOtp = async (req, res) => {
   try {
     const { employee_email, otp } = req.body;
     if (!employee_email || !otp) {
-      return res.status(400).json({ status: "Failure", message: "Email and OTP are required." });
+      return res
+        .status(400)
+        .json({ status: "Failure", message: "Email and OTP are required." });
     }
 
     const email = employee_email.trim().toLowerCase();
@@ -4172,56 +4213,87 @@ exports.registerAdminWithOtp = async (req, res) => {
     const now = Date.now();
 
     if (!otpData) {
-      return res.status(400).json({ status: "Failure", message: "Invalid or expired OTP." });
+      return res
+        .status(400)
+        .json({ status: "Failure", message: "Invalid or expired OTP." });
     }
 
     if (now > otpData.expiresAt) {
       registerOtpStore.delete(email);
-      return res.status(400).json({ status: "Failure", message: "Invalid or expired OTP." });
+      return res
+        .status(400)
+        .json({ status: "Failure", message: "Invalid or expired OTP." });
     }
 
     if (otpData.attempts >= 5) {
       registerOtpStore.delete(email);
-      return res.status(400).json({ status: "Failure", message: "Invalid or expired OTP." });
+      return res
+        .status(400)
+        .json({ status: "Failure", message: "Invalid or expired OTP." });
     }
 
     const isOtpValid = await bcrypt.compare(otp.toString(), otpData.otpHash);
     if (!isOtpValid) {
       otpData.attempts += 1;
-      return res.status(400).json({ status: "Failure", message: "Invalid or expired OTP." });
+      return res
+        .status(400)
+        .json({ status: "Failure", message: "Invalid or expired OTP." });
     }
 
-    const dbQuery = (query, params) => new Promise((resolve, reject) => {
-      db.query(query, params, (err, results) => {
-        if (err) return reject(err);
-        resolve(results);
+    const dbQuery = (query, params) =>
+      new Promise((resolve, reject) => {
+        db.query(query, params, (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+        });
       });
-    });
 
-    const existingUser = await dbQuery("SELECT * FROM revenue_engine_employees WHERE employee_email = ?", [email]);
+    const existingUser = await dbQuery(
+      "SELECT * FROM re_revenue_engine_employees WHERE employee_email = ?",
+      [email],
+    );
     if (existingUser.length > 0) {
       registerOtpStore.delete(email);
-      return res.status(409).json({ status: "Failure", message: "User with this email already exists." });
+      return res.status(409).json({
+        status: "Failure",
+        message: "User with this email already exists.",
+      });
     }
 
-    const existingOwner = await dbQuery("SELECT * FROM revenue_engine_employees WHERE employee_role = 'Owner'", []);
+    const existingOwner = await dbQuery(
+      "SELECT * FROM re_revenue_engine_employees WHERE employee_role = 'Owner'",
+      [],
+    );
     if (existingOwner.length > 0) {
       registerOtpStore.delete(email);
-      return res.status(403).json({ status: "Failure", message: "An Owner account already exists." });
+      return res.status(403).json({
+        status: "Failure",
+        message: "An Owner account already exists.",
+      });
     }
 
     const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
     await dbQuery(
-      "INSERT INTO revenue_engine_employees (employee_name, employee_role, employee_email, employee_password, created_at) VALUES (?, ?, ?, ?, ?)",
-      [otpData.employee_name, "Owner", email, otpData.hashedPassword, createdAt]
+      "INSERT INTO re_revenue_engine_employees (employee_name, employee_role, employee_email, employee_password, created_at) VALUES (?, ?, ?, ?, ?)",
+      [
+        otpData.employee_name,
+        "Owner",
+        email,
+        otpData.hashedPassword,
+        createdAt,
+      ],
     );
 
     registerOtpStore.delete(email);
 
-    return res.status(201).json({ status: "Success", message: "Admin registered successfully." });
+    return res
+      .status(201)
+      .json({ status: "Success", message: "Admin registered successfully." });
   } catch (error) {
     console.error("Error in registerAdminWithOtp:", error);
-    return res.status(500).json({ status: "Failure", message: "Internal server error." });
+    return res
+      .status(500)
+      .json({ status: "Failure", message: "Internal server error." });
   }
 };

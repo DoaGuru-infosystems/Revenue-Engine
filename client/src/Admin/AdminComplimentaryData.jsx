@@ -72,7 +72,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
         // Keep only "Complimentary" service
         const complimentaryService = res.data.data.filter(
@@ -85,7 +85,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
       .then((res) => {
         if (res.data.status === "success") {
           const services = res.data.data;
@@ -122,7 +122,7 @@ const dispatch = useDispatch();
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getNoteData`,
+        `${baseURL}/auth/api/re_calculator/getNoteData`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -227,11 +227,11 @@ const dispatch = useDispatch();
     // ✅ Only Quotation API (no invoice)
     const quotationRequest = editId
       ? axios.put(
-          `${baseURL}/auth/api/calculator/updateComplimenatryDataById/${editId}`,
+          `${baseURL}/auth/api/re_calculator/updateComplimenatryDataById/${editId}`,
           payload
         )
       : axios.post(
-          `${baseURL}/auth/api/calculator/saveComplimentaryData`,
+          `${baseURL}/auth/api/re_calculator/saveComplimentaryData`,
           payload
         );
 
@@ -309,7 +309,7 @@ const dispatch = useDispatch();
 
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateClientNoteDataById/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateClientNoteDataById/${selectedNotesId.id}`,
           formData,
           {
             headers: {
@@ -321,7 +321,7 @@ const dispatch = useDispatch();
         console.log(response.data);
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formData,
           {
             headers: {
@@ -435,7 +435,7 @@ const dispatch = useDispatch();
       };
 
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/saveClientIdwiseNotes`,
+        `${baseURL}/auth/api/re_calculator/saveClientIdwiseNotes`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -500,7 +500,7 @@ const dispatch = useDispatch();
     if (!effectiveClientId || !proposalId) return;
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDComplimentaryData/${proposalId}/${effectiveClientId}`,
+        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${effectiveClientId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -532,7 +532,7 @@ const dispatch = useDispatch();
   const getAllPlanNotes = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientNotesbyId/${effectiveClientId}/${proposalId}`,
+        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${effectiveClientId}/${proposalId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -582,7 +582,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteComplimenatryById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${entryId}`
       );
 
       const result = res.data;
@@ -635,7 +635,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deletePlanClientNotes/${noteId}`
+        `${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`
       );
 
       const result = res.data;

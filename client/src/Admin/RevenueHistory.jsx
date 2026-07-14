@@ -17,7 +17,7 @@ const RevenueHistory = () => {
   useEffect(() => {
     const fetchRevenue = async () => {
       try {
-        const res = await axios.get(`${baseURL}/auth/api/calculator/revenue/history`, {
+        const res = await axios.get(`${baseURL}/auth/api/re_calculator/revenue/history`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`

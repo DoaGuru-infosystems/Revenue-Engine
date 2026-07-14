@@ -57,7 +57,7 @@ const AdminAdsCampign = () => {
 
   const fetchAds = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/getAdsServices`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/getAdsServices`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -129,8 +129,8 @@ const AdminAdsCampign = () => {
     }
 
     const url = editingId
-      ? `${baseURL}/auth/api/calculator/updateAdsServices/${editingId}`
-      : `${baseURL}/auth/api/calculator/insertAdsServices`;
+      ? `${baseURL}/auth/api/re_calculator/updateAdsServices/${editingId}`
+      : `${baseURL}/auth/api/re_calculator/insertAdsServices`;
 
     try {
       const res = await axios({
@@ -199,7 +199,7 @@ const AdminAdsCampign = () => {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/calculator/ads/delete/${id}`, {
+      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/ads/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

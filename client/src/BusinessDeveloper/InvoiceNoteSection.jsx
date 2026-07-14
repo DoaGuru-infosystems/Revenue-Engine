@@ -63,11 +63,11 @@ const dispatch = useDispatch();
 
     const request = editId
       ? axios.put(
-          `${baseURL}/auth/api/calculator/updateInvoiceNoteDataById/${editId}`,
+          `${baseURL}/auth/api/re_calculator/updateInvoiceNoteDataById/${editId}`,
           payload
         )
       : axios.post(
-          `${baseURL}/auth/api/calculator/saveInvoiceNotesData`,
+          `${baseURL}/auth/api/re_calculator/saveInvoiceNotesData`,
           payload
         );
 
@@ -102,7 +102,7 @@ const dispatch = useDispatch();
   const fetchData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceNoteData`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -153,7 +153,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteInvoiceNoteById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteInvoiceNoteById/${entryId}`
       );
 
       const result = res.data;

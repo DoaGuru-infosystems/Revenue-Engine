@@ -381,7 +381,7 @@ const InvoiceCalculation = () => {
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
         const filteredServices = res.data.data.filter(
           (s) => s.service_name.toLowerCase() !== "complimentary"
@@ -393,7 +393,7 @@ const InvoiceCalculation = () => {
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
       .then((res) => {
         if (res.data.status === "success") {
           const services = res.data.data;
@@ -423,7 +423,7 @@ const InvoiceCalculation = () => {
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceNoteData`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPredefinedNotes(data.data || []);
@@ -435,7 +435,7 @@ const InvoiceCalculation = () => {
   const fetchDiscount = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDDiscountData/${id}/${proposalId}`,
+        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${proposalId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDiscountData(data.data[0]);
@@ -448,7 +448,7 @@ const InvoiceCalculation = () => {
   const fetchDiscountSetting = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getDiscountSetting`,
+        `${baseURL}/auth/api/re_calculator/getDiscountSetting`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setDiscountDataSet(data.data[0]);
@@ -524,8 +524,8 @@ const InvoiceCalculation = () => {
     };
 
     const quotationRequest = editId
-      ? axios.put(`${baseURL}/auth/api/calculator/updateGraphicEntryById/${editId}`, payload)
-      : axios.post(`${baseURL}/auth/api/calculator/saveCalculatorData`, payload);
+      ? axios.put(`${baseURL}/auth/api/re_calculator/updateGraphicEntryById/${editId}`, payload)
+      : axios.post(`${baseURL}/auth/api/re_calculator/saveCalculatorData`, payload);
 
     quotationRequest
       .then((res) => {
@@ -603,13 +603,13 @@ const InvoiceCalculation = () => {
       let response;
       if (isEditingDis && selectedDiscountId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateDiscountDataById/${selectedDiscountId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateDiscountDataById/${selectedDiscountId.id}`,
           formDataDis,
           { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
         );
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/saveDiscountData`,
+          `${baseURL}/auth/api/re_calculator/saveDiscountData`,
           formDataDis,
           { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
         );
@@ -642,13 +642,13 @@ const InvoiceCalculation = () => {
       let response;
       if (isEditing && selectedNotesId) {
         response = await axios.put(
-          `${baseURL}/auth/api/calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
+          `${baseURL}/auth/api/re_calculator/updateInvoiceClientNoteDataById/${selectedNotesId.id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
         );
       } else {
         response = await axios.post(
-          `${baseURL}/auth/api/calculator/addNotebyplan`,
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
           formData,
           { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
         );
@@ -686,7 +686,7 @@ const InvoiceCalculation = () => {
     }
     try {
       const payload = { txn_id: proposalId, client_id: id, planNotes: selectedNotes.map((i) => ({ note_name: i.note_name })) };
-      const response = await axios.post(`${baseURL}/auth/api/calculator/saveInvoiceClientIdwiseNotes`, payload, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.post(`${baseURL}/auth/api/re_calculator/saveInvoiceClientIdwiseNotes`, payload, { headers: { Authorization: `Bearer ${token}` } });
       if (response.data.status === "Alert") {
         Swal.fire({ icon: "warning", title: "Duplicate Note", text: response.data.message, showConfirmButton: false, timer: 1000 });
       } else {
@@ -705,7 +705,7 @@ const InvoiceCalculation = () => {
     const confirm = await Swal.fire({ title: "Delete Note?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/calculator/deleteInvoiceClientNotes/${noteId}`);
+      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteInvoiceClientNotes/${noteId}`);
       if (res.data.status === "Success") {
         setAllClientNote((prev) => prev.filter((i) => i.id !== noteId));
         Swal.fire({ icon: "success", title: "Deleted!", timer: 1000, showConfirmButton: false });
@@ -720,7 +720,7 @@ const InvoiceCalculation = () => {
     const confirm = await Swal.fire({ title: "Delete Discount?", text: "This will remove the discount from this invoice.", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/calculator/deleteDiscountById/${disId}`);
+      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteDiscountById/${disId}`);
       if (res.data.status === "Success") {
         Swal.fire({ icon: "success", title: "Deleted!", text: "Discount removed.", timer: 1000, showConfirmButton: false });
         fetchDiscount();
@@ -736,7 +736,7 @@ const InvoiceCalculation = () => {
     if (!id || !proposalId) return;
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceGraphic/${proposalId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceGraphic/${proposalId}/${id}`,
         { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
       );
       setGetData(data.data);
@@ -751,7 +751,7 @@ const InvoiceCalculation = () => {
   const getAllPlanNotes = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientNotesbyId/${id}/${proposalId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientNotesbyId/${id}/${proposalId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setAllClientNote(response.data.data);

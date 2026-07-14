@@ -186,7 +186,7 @@ const GenerateProformaModal = ({
           duration_start_date: formData.duration_start_date,
           duration_end_date: formData.duration_end_date,
         };
-        const res = await axios.post(`${baseURL}/auth/api/calculator/proforma`, payload, {
+        const res = await axios.post(`${baseURL}/auth/api/re_calculator/proforma`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
 

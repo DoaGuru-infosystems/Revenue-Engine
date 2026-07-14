@@ -46,7 +46,7 @@ export default function QuotationTypeModalBD({
       try {
         setLoadingUsers(true);
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/retrieveUser`,
+          `${baseURL}/auth/api/re_calculator/retrieveUser`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -93,7 +93,7 @@ export default function QuotationTypeModalBD({
       try {
         setChecking(true);
         const res = await axios.get(
-          `${baseURL}/auth/api/calculator/getAssignmentByTxn/${txnId}`,
+          `${baseURL}/auth/api/re_calculator/getAssignmentByTxn/${txnId}`,
           { headers }
         );
         if (res.data?.status === "Success") {
@@ -178,14 +178,14 @@ export default function QuotationTypeModalBD({
       if (!isReassign) {
         // First time assign
         await axios.post(
-          `${baseURL}/auth/api/calculator/assignQuotation`,
+          `${baseURL}/auth/api/re_calculator/assignQuotation`,
           { client_id: clientId, txn_id: txnId, user_id: Number(selectedUser) },
           { headers }
         );
       } else {
         // Update existing assignment
         await axios.put(
-          `${baseURL}/auth/api/calculator/reassignQuotation`,
+          `${baseURL}/auth/api/re_calculator/reassignQuotation`,
           { txn_id: txnId, user_id: Number(selectedUser) },
           { headers }
         );

@@ -159,7 +159,7 @@ const History = () => {
   const fetchAllClientServices = React.useCallback(async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientTxnHistory/${id}`,
+        `${baseURL}/auth/api/re_calculator/getClientTxnHistory/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -212,7 +212,7 @@ const History = () => {
   const fetchAllInvoiceServices = React.useCallback(async (txnID) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllInvoiceServiceHistory/${id}/${txnID}`,
+        `${baseURL}/auth/api/re_calculator/getAllInvoiceServiceHistory/${id}/${txnID}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -252,7 +252,7 @@ const History = () => {
 
   const fetchProposals = React.useCallback(async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/proposals/client/${id}`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proposals/client/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.data.status === "Success") {
@@ -269,7 +269,7 @@ const History = () => {
   const fetchServicesById = async (txnID) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientServiceHistory/${id}/${txnID}`,
+        `${baseURL}/auth/api/re_calculator/getClientServiceHistory/${id}/${txnID}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -301,7 +301,7 @@ const History = () => {
   const fetchComplimentaryData = async (txnID) => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getByIDComplimentaryData/${txnID}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${txnID}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -336,7 +336,7 @@ const History = () => {
   const fetchClient = React.useCallback(async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getClientDetailsById/${id}`,
+        `${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -371,7 +371,7 @@ const History = () => {
   const fetchClientReceived = React.useCallback(async (txnId) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceClientDetailsById/${id}/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${txnId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -417,7 +417,7 @@ const History = () => {
 
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteQuotationById/${quotationId}`,
+        `${baseURL}/auth/api/re_calculator/deleteQuotationById/${quotationId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -564,13 +564,13 @@ const History = () => {
         client_id: id,
         invoices,
       };
-      await axios.post(`${baseURL}/auth/api/calculator/saveInvoiceGD`, payload, {
+      await axios.post(`${baseURL}/auth/api/re_calculator/saveInvoiceGD`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (adsItems.length > 0) {
         await axios.post(
-          `${baseURL}/auth/api/calculator/saveInvoiceAdsCampaign`,
+          `${baseURL}/auth/api/re_calculator/saveInvoiceAdsCampaign`,
           { adsItems },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -579,7 +579,7 @@ const History = () => {
       if (complimentaryItems.length > 0) {
         for (const item of complimentaryItems) {
           await axios.post(
-            `${baseURL}/auth/api/calculator/saveInvoiceComplimentaryData`,
+            `${baseURL}/auth/api/re_calculator/saveInvoiceComplimentaryData`,
             item,
             { headers: { Authorization: `Bearer ${token}` } }
           );
@@ -597,7 +597,7 @@ const History = () => {
       const proformaAmount = normalTotal + adsTotal;
 
       await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/generateProformaInvoice`,
+        `${baseURL}/auth/api/re_calculator/workflow/generateProformaInvoice`,
         {
           txn_id: selectedTxn,
           client_id: selectedClient || id,
@@ -731,7 +731,7 @@ const History = () => {
 
     try {
       const res = await axios.put(
-        `${baseURL}/auth/api/calculator/updateQuotationApprovalStatus`,
+        `${baseURL}/auth/api/re_calculator/updateQuotationApprovalStatus`,
         {
           client_id: clientId,
           txn_id: txnId,
@@ -784,7 +784,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/submitToAdmin`,
+        `${baseURL}/auth/api/re_calculator/workflow/submitToAdmin`,
         { txn_id: selectedTxn, client_id: selectedClient, remark: workflowRemark },
         { headers: authHeaders }
       );
@@ -802,7 +802,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/sendQuotationToClient`,
+        `${baseURL}/auth/api/re_calculator/workflow/sendQuotationToClient`,
         { txn_id: selectedTxn, client_id: selectedClient, channel: selectedChannel, remark: workflowRemark },
         { headers: authHeaders }
       );
@@ -820,7 +820,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.put(
-        `${baseURL}/auth/api/calculator/workflow/markClientQuotationApproved`,
+        `${baseURL}/auth/api/re_calculator/workflow/markClientQuotationApproved`,
         { txn_id: selectedTxn, client_id: selectedClient, decision: clientDecision, remark: workflowRemark },
         { headers: authHeaders }
       );
@@ -838,7 +838,7 @@ const History = () => {
     setPaymentSummaryLoading(true);
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/workflow/paymentSummary/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/workflow/paymentSummary/${txnId}`,
         { params: { client_id: clientId }, headers: authHeaders }
       );
       if (res.data.success || res.data.status === "Success") {
@@ -880,7 +880,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/recordPaymentAndGenerateFinalInvoice`,
+        `${baseURL}/auth/api/re_calculator/workflow/recordPaymentAndGenerateFinalInvoice`,
         {
           txn_id: selectedTxn,
           client_id: selectedClient,
@@ -949,7 +949,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/saveStrategy`,
+        `${baseURL}/auth/api/re_calculator/workflow/saveStrategy`,
         { txn_id: selectedTxn, client_id: selectedClient, tasks: strategyTasks },
         { headers: authHeaders }
       );
@@ -967,7 +967,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/sendStrategyToAdmin`,
+        `${baseURL}/auth/api/re_calculator/workflow/sendStrategyToAdmin`,
         { txn_id, client_id },
         { headers: authHeaders }
       );
@@ -983,7 +983,7 @@ const History = () => {
   const fetchStrategy = async (txn_id) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/workflow/getStrategy/${txn_id}`,
+        `${baseURL}/auth/api/re_calculator/workflow/getStrategy/${txn_id}`,
         { headers: authHeaders }
       );
       if (res.data.success || res.data.status === "Success") setSavedStrategy(res.data.data);
@@ -995,7 +995,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/sendStrategyToClient`,
+        `${baseURL}/auth/api/re_calculator/workflow/sendStrategyToClient`,
         { txn_id: selectedTxn, client_id: selectedClient, channel: selectedChannel, remark: workflowRemark },
         { headers: authHeaders }
       );
@@ -1013,7 +1013,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.put(
-        `${baseURL}/auth/api/calculator/workflow/markClientStrategyDecision`,
+        `${baseURL}/auth/api/re_calculator/workflow/markClientStrategyDecision`,
         { txn_id: selectedTxn, client_id: selectedClient, decision: clientDecision, remark: workflowRemark },
         { headers: authHeaders }
       );
@@ -1031,7 +1031,7 @@ const History = () => {
   const fetchSFTeams = async () => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/workflow/sfTeams`,
+        `${baseURL}/auth/api/re_calculator/workflow/sfTeams`,
         { headers: authHeaders }
       );
       if (res.data.success || res.data.status === "Success") setSfTeams(res.data.data);
@@ -1042,7 +1042,7 @@ const History = () => {
   const fetchSFTeamLeads = async (teamId) => {
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/workflow/sfTeamLeads/${teamId}`,
+        `${baseURL}/auth/api/re_calculator/workflow/sfTeamLeads/${teamId}`,
         { headers: authHeaders }
       );
       if (res.data.success || res.data.status === "Success") setSfTeamLeads(res.data.data);
@@ -1055,7 +1055,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/assignTeamLead`,
+        `${baseURL}/auth/api/re_calculator/workflow/assignTeamLead`,
         {
           txn_id: selectedTxn,
           client_id: selectedClient,
@@ -1086,8 +1086,8 @@ const History = () => {
     setOpenDropdown(null);
     try {
       const [stratRes, empRes] = await Promise.all([
-        axios.get(`${baseURL}/auth/api/calculator/workflow/getStrategy/${item.txn_id}`, { headers: authHeaders }),
-        axios.get(`${baseURL}/auth/api/calculator/workflow/sfEmployees`, { headers: authHeaders }),
+        axios.get(`${baseURL}/auth/api/re_calculator/workflow/getStrategy/${item.txn_id}`, { headers: authHeaders }),
+        axios.get(`${baseURL}/auth/api/re_calculator/workflow/sfEmployees`, { headers: authHeaders }),
       ]);
       const tasks = stratRes.data.success ? stratRes.data.data : [];
       const emps = empRes.data.success ? empRes.data.data : [];
@@ -1122,7 +1122,7 @@ const History = () => {
     setWorkflowLoading(true);
     try {
       const res = await axios.post(
-        `${baseURL}/auth/api/calculator/workflow/assignTaskOwners`,
+        `${baseURL}/auth/api/re_calculator/workflow/assignTaskOwners`,
         { txn_id: selectedTxn, client_id: selectedClient, tasks: taskAssignments },
         { headers: authHeaders }
       );
@@ -1162,7 +1162,7 @@ const History = () => {
 
     try {
       const response = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteAllInvoiceServiceHistory/${id}/${txnId}`,
+        `${baseURL}/auth/api/re_calculator/deleteAllInvoiceServiceHistory/${id}/${txnId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

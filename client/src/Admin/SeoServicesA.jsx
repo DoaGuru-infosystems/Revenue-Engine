@@ -96,7 +96,7 @@ const SeoServicesA = () => {
       setLoading(true);
       setError(null);
       const res = await fetch(
-        `${baseURL}/auth/api/calculator/getSeoClientsWithKeywords`,
+        `${baseURL}/auth/api/re_calculator/getSeoClientsWithKeywords`,
         {
           signal,
           headers: {
@@ -171,7 +171,7 @@ const SeoServicesA = () => {
     try {
       setAddingClient(true);
       const res = await fetch(
-        `${baseURL}/auth/api/calculator/seoClientsDetails`,
+        `${baseURL}/auth/api/re_calculator/seoClientsDetails`,
         {
           method: "POST",
           headers: { 
@@ -205,7 +205,7 @@ const SeoServicesA = () => {
     try {
       setAddingKeywordForClient(clientId);
       const res = await fetch(
-        `${baseURL}/auth/api/calculator/seoWebsiteKeyword/${clientId}`,
+        `${baseURL}/auth/api/re_calculator/seoWebsiteKeyword/${clientId}`,
         {
           method: "POST",
           headers: { 
@@ -265,7 +265,7 @@ const SeoServicesA = () => {
     try {
       setSavingEditForClient(clientId);
       const res = await fetch(
-        `${baseURL}/auth/api/calculator/updateSeoClient/${clientId}`,
+        `${baseURL}/auth/api/re_calculator/updateSeoClient/${clientId}`,
         {
           method: "PUT",
           headers: { 
@@ -315,7 +315,7 @@ const SeoServicesA = () => {
     try {
       setDeletingKeywordId(keywordId);
       const res = await fetch(
-        `${baseURL}/auth/api/calculator/deleteSeoKeyword/${keywordId}`,
+        `${baseURL}/auth/api/re_calculator/deleteSeoKeyword/${keywordId}`,
         { 
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` }
@@ -405,7 +405,7 @@ const SeoServicesA = () => {
       );
       if (!ok) return;
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteSeoClient/${clientID}`,
+        `${baseURL}/auth/api/re_calculator/deleteSeoClient/${clientID}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       console.log(res.data);
@@ -422,7 +422,7 @@ const SeoServicesA = () => {
     if (!client || !client.website) {
       return alert("Client website not available");
     }
-    const pdfUrl = `${baseURL}/auth/api/calculator/pagespeedReportpdf?url=${encodeURIComponent(
+    const pdfUrl = `${baseURL}/auth/api/re_calculator/pagespeedReportpdf?url=${encodeURIComponent(
       client.website
     )}&strategy=desktop`;
     window.open(pdfUrl, "_blank", "noopener,noreferrer");

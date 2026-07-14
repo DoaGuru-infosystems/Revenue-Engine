@@ -27,7 +27,7 @@ const ProposalTable = ({ proposals, keyword, setKeyword, fetchProposals, handleC
 
     if (confirm.isConfirmed) {
       try {
-        const res = await axios.delete(`${API_BASE_URL}/auth/api/calculator/proforma/${proposal.proforma_id}`, {
+        const res = await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/proforma/${proposal.proforma_id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data.status === "Success") {

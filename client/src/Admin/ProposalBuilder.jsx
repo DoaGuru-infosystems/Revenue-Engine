@@ -144,7 +144,7 @@ export default function ProposalBuilder() {
       const handleDraft = async () => {
         try {
           // Check for existing empty drafts
-          const existingRes = await axios.get(`${API_BASE_URL}/auth/api/calculator/proposals/client/${clientId}`, {
+          const existingRes = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/proposals/client/${clientId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
 
@@ -171,7 +171,7 @@ export default function ProposalBuilder() {
             created_by: currentUser?.name || "Admin",
             updated_by: currentUser?.name || "Admin"
           };
-          const res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal`, payload, {
+          const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal`, payload, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data.status === "Success" || res.data.proposalId) {
@@ -211,7 +211,7 @@ export default function ProposalBuilder() {
 
   const fetchClientData = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/getClientDetailsById/${clientId}`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/getClientDetailsById/${clientId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const client = data.status === "Success" ? getClientRecord(data.data) : null;
@@ -232,7 +232,7 @@ export default function ProposalBuilder() {
 
   const fetchPredefinedNotes = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/getNoteData`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/getNoteData`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPredefinedNotes(data.data || []);
@@ -243,7 +243,7 @@ export default function ProposalBuilder() {
 
   const fetchDiscountSettings = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/getDiscountSetting`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/getDiscountSetting`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDiscountSettings(data.data || []);
@@ -254,7 +254,7 @@ export default function ProposalBuilder() {
 
   const fetchPlanData = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/auth/api/calculator/getAllPlanData`, {
+      const res = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/getAllPlanData`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.status === "Success") setGetPlanData(res.data.data);
@@ -265,13 +265,13 @@ export default function ProposalBuilder() {
 
   const fetchCustomServicesFromDB = async () => {
     try {
-      const fetchGraphic = axios.get(`${API_BASE_URL}/auth/api/calculator/getByIDCalculatorTransactions/${proposalId}/${clientId}`, { headers: { Authorization: `Bearer ${token}` } })
+      const fetchGraphic = axios.get(`${API_BASE_URL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${clientId}`, { headers: { Authorization: `Bearer ${token}` } })
         .catch(() => ({ data: { status: "Failure", data: [] } }));
 
-      const fetchAds = axios.get(`${API_BASE_URL}/auth/api/calculator/getByIDAdsCampaignDetails/${proposalId}/${clientId}`, { headers: { Authorization: `Bearer ${token}` } })
+      const fetchAds = axios.get(`${API_BASE_URL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${clientId}`, { headers: { Authorization: `Bearer ${token}` } })
         .catch(() => ({ data: { status: "Failure", data: [] } }));
 
-      const fetchComplimentary = axios.get(`${API_BASE_URL}/auth/api/calculator/getByIDComplimentaryData/${proposalId}/${clientId}`, { headers: { Authorization: `Bearer ${token}` } })
+      const fetchComplimentary = axios.get(`${API_BASE_URL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${clientId}`, { headers: { Authorization: `Bearer ${token}` } })
         .catch(() => ({ data: { status: "Failure", data: [] } }));
 
       const [graphicRes, adsRes, compRes] = await Promise.all([fetchGraphic, fetchAds, fetchComplimentary]);
@@ -329,7 +329,7 @@ export default function ProposalBuilder() {
   const fetchProposalData = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${API_BASE_URL}/auth/api/calculator/proposal/${proposalId}`, {
+      const { data } = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposalId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (data.status === "Success") {
@@ -541,11 +541,11 @@ export default function ProposalBuilder() {
   const removePricingRow = async (index) => {
     const row = pricingTable[index];
     if (row.source === 'custom_graphic') {
-      try { await axios.delete(`${API_BASE_URL}/auth/api/calculator/deleteGraphicEntryById/${row.id}`); } catch (e) { }
+      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteGraphicEntryById/${row.id}`); } catch (e) { }
     } else if (row.source === 'custom_ads') {
-      try { await axios.delete(`${API_BASE_URL}/auth/api/calculator/deleteAdsCampaignEntryById/${row.id}`); } catch (e) { }
+      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${row.id}`); } catch (e) { }
     } else if (row.source === 'custom_complimentary') {
-      try { await axios.delete(`${API_BASE_URL}/auth/api/calculator/deleteComplimenatryById/${row.id}`); } catch (e) { }
+      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteComplimenatryById/${row.id}`); } catch (e) { }
     }
     const newTable = pricingTable.filter((_, i) => i !== index);
     handlePricingTableChange(newTable);
@@ -636,7 +636,7 @@ export default function ProposalBuilder() {
       if (proposalId) {
         // On edit: send existing txn_id unchanged — do NOT regenerate
         payload.txn_id = proposalTxnId;
-        res = await axios.put(`${API_BASE_URL}/auth/api/calculator/proposal/${proposalId}`, payload, {
+        res = await axios.put(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposalId}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
@@ -644,7 +644,7 @@ export default function ProposalBuilder() {
         const newTxnId = Date.now().toString();
         payload.txn_id = newTxnId;
         setProposalTxnId(newTxnId);
-        res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal`, payload, {
+        res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -677,7 +677,7 @@ export default function ProposalBuilder() {
     if (!idToDownload) return;
     try {
       setLoading(true);
-      const res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal/${idToDownload}/pdf`, {}, {
+      const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${idToDownload}/pdf`, {}, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
@@ -708,7 +708,7 @@ export default function ProposalBuilder() {
   const executeSend = async () => {
     try {
       setSending(true);
-      const res = await axios.post(`${API_BASE_URL}/auth/api/calculator/proposal/${proposalId}/send`,
+      const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposalId}/send`,
         { channel: sendChannel },
         { headers: { Authorization: `Bearer ${token}` } }
       );

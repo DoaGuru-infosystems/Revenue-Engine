@@ -43,7 +43,7 @@ const AdminServicesHistory = () => {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(`${baseURL}/auth/api/calculator/api/services/details/all`, {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/api/services/details/all`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -91,7 +91,7 @@ const AdminServicesHistory = () => {
 
     try {
       const response = await axios.put(
-        `${baseURL}/auth/api/calculator/updateServiceData/${formData.editing_type_id}`,
+        `${baseURL}/auth/api/re_calculator/updateServiceData/${formData.editing_type_id}`,
         formData,
         {
           headers: {
@@ -155,21 +155,21 @@ const AdminServicesHistory = () => {
       let res = null;
       if (row.editing_type_id) {
         res = await axios.delete(
-          `${baseURL}/auth/api/calculator/deleteEditingType/${row.editing_type_id}`,
+          `${baseURL}/auth/api/re_calculator/deleteEditingType/${row.editing_type_id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } else if (row.category_id) {
         res = await axios.delete(
-          `${baseURL}/auth/api/calculator/deleteCategory/${row.category_id}`,
+          `${baseURL}/auth/api/re_calculator/deleteCategory/${row.category_id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
       } else if (row.service_id) {
         res = await axios.delete(
-          `${baseURL}/auth/api/calculator/deleteService/${row.service_id}`,
+          `${baseURL}/auth/api/re_calculator/deleteService/${row.service_id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

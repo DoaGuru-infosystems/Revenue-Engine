@@ -29,8 +29,8 @@ const { id, proposalId } = useParams();
       try {
         setLoading(true);
         const response = await axios.get(
-          `${API_BASE_URL}/auth/api/calculator/getAdsServices`,
-          // "https://revenueengine.siarasystems.com/auth/api/calculator/getAdsServices",
+          `${API_BASE_URL}/auth/api/re_calculator/getAdsServices`,
+          // "https://revenueengine.siarasystems.com/auth/api/re_calculator/getAdsServices",
           {
             headers: {
               "Content-Type": "application/json",
@@ -75,7 +75,7 @@ const { id, proposalId } = useParams();
   //     try {
   //       setLoading(true);
   //       const response = await fetch(
-  //         `https://revenueengine.siarasystems.com/auth/api/calculator/getAdsServices`
+  //         `https://revenueengine.siarasystems.com/auth/api/re_calculator/getAdsServices`
   //       );
   //       const data = await response.json();
 
@@ -216,7 +216,7 @@ const { id, proposalId } = useParams();
   //   Get save Details
   //   const handleSaveToDatabase = async () => {
   //   try {
-  //     const response = await fetch("https://revenueengine.siarasystems.com/auth/api/calculator/saveAdsCampaign", {
+  //     const response = await fetch("https://revenueengine.siarasystems.com/auth/api/re_calculator/saveAdsCampaign", {
   //       method: "POST",
   //       headers: {
   //         "Content-Type": "application/json",
@@ -306,8 +306,8 @@ const { id, proposalId } = useParams();
 
         // --- Save Ads Campaign only (Quotation) ---
         const response = await fetch(
-          `${API_BASE_URL}/auth/api/calculator/saveAdsCampaign`,
-          // "https://revenueengine.siarasystems.com/auth/api/calculator/saveAdsCampaign",
+          `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
+          // "https://revenueengine.siarasystems.com/auth/api/re_calculator/saveAdsCampaign",
           {
             method: "POST",
             headers: {
@@ -351,7 +351,7 @@ const { id, proposalId } = useParams();
     if (!id || !proposalId) return;
     try {
       const res = await axios.get(
-        `${baseURL}/auth/api/calculator/getInvoiceAdsCampaign/${proposalId}/${id}`,
+        `${baseURL}/auth/api/re_calculator/getInvoiceAdsCampaign/${proposalId}/${id}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -402,7 +402,7 @@ const { id, proposalId } = useParams();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteInvoiceAdsCampaignEntryById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteInvoiceAdsCampaignEntryById/${entryId}`
       );
 
       const result = res.data;

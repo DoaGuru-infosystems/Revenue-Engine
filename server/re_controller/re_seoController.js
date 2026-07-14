@@ -97,7 +97,7 @@
 //     </div>
 
 //     <div class="section">
-//       <h2>Lighthouse Categories</h2>
+//       <h2>Lighthouse categories</h2>
 //       ${
 //         lh.categories
 //           ? Object.values(lh.categories)

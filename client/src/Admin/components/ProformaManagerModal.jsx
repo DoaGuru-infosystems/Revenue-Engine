@@ -50,7 +50,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
   const fetchClientData = async () => {
     try {
-      const { data } = await axios.get(`${baseURL}/auth/api/calculator/getClientDetailsById/${proposal.client_id}`, {
+      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${proposal.client_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const client = data.status === "Success" ? (Array.isArray(data.data) ? data.data[0] : data.data) : null;
@@ -71,7 +71,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
       }
 
       // Fetch specifically for this proposal instead of all proformas for the client
-      const { data } = await axios.get(`${baseURL}/auth/api/calculator/proforma/proposal/${proposal.id}`, {
+      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/proposal/${proposal.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (data.status === "Success") setProformas(data.data || []);
@@ -84,7 +84,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
   const fetchPayments = async () => {
     try {
-      const { data } = await axios.get(`${baseURL}/auth/api/calculator/proposal-payments/client/${proposal.client_id}`, {
+      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/proposal-payments/client/${proposal.client_id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (data.status === "Success") setPayments(data.data || []);
@@ -181,7 +181,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   const handleApprovePayment = async (paymentId) => {
     try {
       setApprovingPaymentId(paymentId);
-      const { data } = await axios.put(`${baseURL}/auth/api/calculator/proposal-payment/approve/${paymentId}`,
+      const { data } = await axios.put(`${baseURL}/auth/api/re_calculator/proposal-payment/approve/${paymentId}`,
         { status: 'approved', approved_by: currentUser?.name || "System" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -265,7 +265,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
       console.log("realized_ad_budget:", payload.realized_ad_budget);
 
-      const { data } = await axios.post(`${baseURL}/auth/api/calculator/proposal-payment`, payload, {
+      const { data } = await axios.post(`${baseURL}/auth/api/re_calculator/proposal-payment`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -337,7 +337,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
     if (confirm.isConfirmed) {
       try {
-        const { data } = await axios.delete(`${baseURL}/auth/api/calculator/proforma/${proformaId}`, {
+        const { data } = await axios.delete(`${baseURL}/auth/api/re_calculator/proforma/${proformaId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (data.status === "Success") {

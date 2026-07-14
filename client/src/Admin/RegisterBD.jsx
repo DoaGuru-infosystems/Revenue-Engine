@@ -36,7 +36,7 @@ const { token } = useSelector((state) => state.user);
 
     try {
       const response = await axios.post(
-        `${baseURL}/auth/api/calculator/registerBD`,
+        `${baseURL}/auth/api/re_calculator/registerBD`,
         formData,
         {
           headers: {
@@ -66,7 +66,7 @@ const { token } = useSelector((state) => state.user);
   const fetchRegisteredBDs = async () => {
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/calculator/getAllBD`,
+        `${baseURL}/auth/api/re_calculator/getAllBD`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

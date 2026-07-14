@@ -53,7 +53,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/services/category/editing`)
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
         setData(res.data.data);
       })
@@ -62,7 +62,7 @@ const dispatch = useDispatch();
 
   useEffect(() => {
     axios
-      .get(`${baseURL}/auth/api/calculator/optional-service-amounts`)
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
       .then((res) => {
         if (res.data.status === "success") {
           const services = res.data.data;
@@ -158,10 +158,10 @@ const dispatch = useDispatch();
 
     const request = editId
       ? axios.put(
-          `${baseURL}/auth/api/calculator/updateNoteDataById/${editId}`,
+          `${baseURL}/auth/api/re_calculator/updateNoteDataById/${editId}`,
           payload
         )
-      : axios.post(`${baseURL}/auth/api/calculator/saveNotesData`, payload);
+      : axios.post(`${baseURL}/auth/api/re_calculator/saveNotesData`, payload);
 
     request
       .then((res) => {
@@ -194,7 +194,7 @@ const dispatch = useDispatch();
   const fetchData = async () => {
     try {
       const { data } = await axios.get(
-        `${baseURL}/auth/api/calculator/getNoteData`,
+        `${baseURL}/auth/api/re_calculator/getNoteData`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -245,7 +245,7 @@ const dispatch = useDispatch();
 
     try {
       const res = await axios.delete(
-        `${baseURL}/auth/api/calculator/deleteNoteById/${entryId}`
+        `${baseURL}/auth/api/re_calculator/deleteNoteById/${entryId}`
       );
 
       const result = res.data;

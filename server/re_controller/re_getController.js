@@ -4,7 +4,7 @@ dotenv.config();
 
 exports.getAddServices = async (req, res) => {
   try {
-    db.query("SELECT * FROM services", (err, results) => {
+    db.query("SELECT * FROM re_services", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -16,7 +16,7 @@ exports.getAddServices = async (req, res) => {
       if (results.length === 0) {
         return res.status(404).json({
           status: "Failure",
-          message: "No services found",
+          message: "No re_services found",
         });
       }
 
@@ -39,7 +39,7 @@ exports.getAddCategories = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM categories WHERE service_id = ?",
+      "SELECT * FROM re_categories WHERE service_id = ?",
       [service_id],
       (err, results) => {
         if (err) {
@@ -53,7 +53,7 @@ exports.getAddCategories = async (req, res) => {
         if (results.length === 0) {
           return res.status(404).json({
             status: "Failure",
-            message: "No categories found for this service",
+            message: "No re_categories found for this service",
           });
         }
 
@@ -78,7 +78,7 @@ exports.getAddEditingTypes = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM editing_types WHERE service_id = ? AND category_id = ?",
+      "SELECT * FROM re_editing_types WHERE service_id = ? AND category_id = ?",
       [service, category],
       (err, results) => {
         if (err) {
@@ -92,7 +92,7 @@ exports.getAddEditingTypes = async (req, res) => {
         if (results.length === 0) {
           return res.status(404).json({
             status: "Failure",
-            message: "No Editing Type Found for this categories & service",
+            message: "No Editing Type Found for this re_categories & service",
           });
         }
 
@@ -124,9 +124,9 @@ exports.getAllServiceData = (req, res) => {
       s.created_at AS service_created_at,
       c.created_at AS category_created_at,
       e.created_at AS editing_type_created_at
-    FROM services s
-    LEFT JOIN categories c ON s.service_id = c.service_id
-    LEFT JOIN editing_types e ON c.category_id = e.category_id
+    FROM re_services s
+    LEFT JOIN re_categories c ON s.service_id = c.service_id
+    LEFT JOIN re_editing_types e ON c.category_id = e.category_id
   `;
 
   db.query(query, (err, results) => {
@@ -148,7 +148,7 @@ exports.getAllServiceData = (req, res) => {
 exports.getAdsServices = async (req, res) => {
   try {
     db.query(
-      "SELECT * FROM revenue_engine_ads ORDER BY id DESC",
+      "SELECT * FROM re_revenue_engine_ads ORDER BY id DESC",
       (err, results) => {
         if (err) {
           return res.status(500).json({
@@ -160,7 +160,7 @@ exports.getAdsServices = async (req, res) => {
         if (results.length === 0) {
           return res.status(404).json({
             status: "Failure",
-            message: "No ads services found",
+            message: "No ads re_services found",
           });
         }
 
@@ -188,9 +188,9 @@ exports.getAllServiceDatas = (req, res) => {
       s.created_at AS service_created_at,
       c.created_at AS category_created_at,
       e.created_at AS editing_type_created_at
-    FROM services s
-    LEFT JOIN categories c ON s.service_id = c.service_id
-    LEFT JOIN editing_types e ON c.category_id = e.category_id
+    FROM re_services s
+    LEFT JOIN re_categories c ON s.service_id = c.service_id
+    LEFT JOIN re_editing_types e ON c.category_id = e.category_id
   `;
 
   db.query(query, (err, results) => {
@@ -257,7 +257,7 @@ exports.getAllServiceDatas = (req, res) => {
 
 exports.getCalculatorTransactions = async (req, res) => {
   try {
-    db.query("SELECT * FROM calculator_transactions", (err, results) => {
+    db.query("SELECT * FROM re_calculator_transactions", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -269,7 +269,7 @@ exports.getCalculatorTransactions = async (req, res) => {
       if (results.length === 0) {
         return res.status(404).json({
           status: "Failure",
-          message: "No services found",
+          message: "No re_services found",
         });
       }
 
@@ -292,7 +292,7 @@ exports.getByIDCalculatorTransactions = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM calculator_transactions WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_calculator_transactions WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -330,7 +330,7 @@ exports.getByIDAdsCampaignDetails = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM ads_campaign_details WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_ads_campaign_details WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -368,7 +368,7 @@ exports.getClientDetailsById = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM revenue_engine_client_details WHERE id = ?",
+      "SELECT * FROM re_revenue_engine_client_details WHERE id = ?",
       [clientId],
       (err, results) => {
         if (err) {
@@ -406,19 +406,19 @@ exports.getClientTxnHistory = async (req, res) => {
 
   const query = `
     WITH txn_services AS (
-      SELECT txn_id, client_id, created_at FROM calculator_transactions
+      SELECT txn_id, client_id, created_at FROM re_calculator_transactions
       UNION ALL
-      SELECT txn_id, client_id, created_at FROM ads_campaign_details
+      SELECT txn_id, client_id, created_at FROM re_ads_campaign_details
     )
     SELECT
       t.txn_id,
       t.client_id,
       MAX(t.created_at) AS txn_date,
-      COALESCE(qs.status, 'pending') AS quotation_status,
+      COALESCE(qs.status, 'pending') AS re_quotation_status,
       qs.approved_by,
       qs.approved_at
     FROM txn_services t
-    LEFT JOIN quotation_status qs
+    LEFT JOIN re_quotation_status qs
       ON qs.txn_id = t.txn_id
       AND qs.client_id = t.client_id
     WHERE t.client_id = ?
@@ -455,7 +455,7 @@ exports.getClientTxnHistory = async (req, res) => {
 //       ct.editing_type_amount,
 //       ct.quantity,
 //       ct.total_amount
-//     FROM calculator_transactions ct
+//     FROM re_calculator_transactions ct
 //     WHERE ct.txn_id = ? AND ct.client_id = ?
 
 //     UNION
@@ -470,7 +470,7 @@ exports.getClientTxnHistory = async (req, res) => {
 //       NULL AS editing_type_amount,
 //       NULL AS quantity,
 //       ad.total
-//     FROM ads_campaign_details ad
+//     FROM re_ads_campaign_details ad
 //     WHERE ad.txn_id = ? AND ad.client_id = ?
 //   `;
 
@@ -511,7 +511,7 @@ exports.getClientServiceHistory = async (req, res) => {
   NULL AS amount,
   NULL AS percent,
   NULL AS charge
-FROM calculator_transactions ct
+FROM re_calculator_transactions ct
 WHERE ct.txn_id = ? AND ct.client_id = ?
 
 UNION
@@ -533,7 +533,7 @@ SELECT
   ad.amount,
   ad.percent,
   ad.charge
-FROM ads_campaign_details ad
+FROM re_ads_campaign_details ad
 WHERE ad.txn_id = ? AND ad.client_id = ?;
   `;
 
@@ -573,7 +573,7 @@ exports.getClientServiceHistoryAssign = async (req, res) => {
   NULL AS amount,
   NULL AS percent,
   NULL AS charge
-FROM calculator_transactions ct
+FROM re_calculator_transactions ct
 WHERE ct.txn_id = ? AND ct.client_id = ?
   AND NOT (ct.service_name = 'GMB' AND ct.category_name = 'LOCAL SEO')
   AND NOT (ct.service_name = 'SEO' AND ct.category_name = 'Intended for Lead Generation')
@@ -600,7 +600,7 @@ SELECT
   ad.amount,
   ad.percent,
   ad.charge
-FROM ads_campaign_details ad
+FROM re_ads_campaign_details ad
 WHERE ad.txn_id = ? AND ad.client_id = ?
  
   `;
@@ -639,7 +639,7 @@ WHERE ad.txn_id = ? AND ad.client_id = ?
 //   NULL AS amount,
 //   NULL AS percent,
 //   NULL AS charge
-// FROM calculator_transactions ct
+// FROM re_calculator_transactions ct
 // WHERE ct.txn_id = ? AND ct.client_id = ?
 //   AND NOT (ct.service_name = 'GMB' AND ct.category_name = 'LOCAL SEO')
 //   AND NOT (ct.service_name = 'SEO' AND ct.category_name = 'Intended for Lead Generation')
@@ -662,7 +662,7 @@ WHERE ad.txn_id = ? AND ad.client_id = ?
 //   ad.amount,
 //   ad.percent,
 //   ad.charge
-// FROM ads_campaign_details ad
+// FROM re_ads_campaign_details ad
 // WHERE ad.txn_id = ? AND ad.client_id = ?
 //   AND NOT (ad.category = 'Google Ad')
 //   AND NOT (ad.category = 'Meta Ad');
@@ -730,9 +730,9 @@ exports.getAllClientsTxnHistory = async (req, res) => {
 
   const query = `
 WITH txn_services AS (
-  SELECT txn_id, client_id, created_at, 'calculator' AS source FROM calculator_transactions
+  SELECT txn_id, client_id, created_at, 'calculator' AS source FROM re_calculator_transactions
   UNION
-  SELECT txn_id, client_id, created_at, 'ads_campaign' AS source FROM ads_campaign_details
+  SELECT txn_id, client_id, created_at, 'ads_campaign' AS source FROM re_ads_campaign_details
 ),
 txn_grouped AS (
   SELECT txn_id, client_id, MAX(created_at) AS txn_date
@@ -750,13 +750,13 @@ SELECT
   d.created_at AS client_created_at,
   tg.txn_id,
   tg.txn_date,
-  COALESCE(qs.status, 'pending') AS quotation_status,
+  COALESCE(qs.status, 'pending') AS re_quotation_status,
   qs.approved_by,
   qs.approved_at
-FROM revenue_engine_client_details d
+FROM re_revenue_engine_client_details d
 LEFT JOIN txn_grouped tg
   ON d.id = tg.client_id
-LEFT JOIN quotation_status qs
+LEFT JOIN re_quotation_status qs
   ON qs.client_id = d.id
   AND qs.txn_id = tg.txn_id
 ${filters.length ? `WHERE ${filters.join(" AND ")}` : ""}
@@ -765,9 +765,9 @@ ORDER BY tg.txn_date DESC
 
   // const query = `
   //   WITH txn_services AS (
-  //     SELECT txn_id, client_id, created_at FROM calculator_transactions
+  //     SELECT txn_id, client_id, created_at FROM re_calculator_transactions
   //     UNION ALL
-  //     SELECT txn_id, client_id, created_at FROM ads_campaign_details
+  //     SELECT txn_id, client_id, created_at FROM re_ads_campaign_details
   //   )
   //   SELECT
   //     d.id AS client_id,
@@ -780,7 +780,7 @@ ORDER BY tg.txn_date DESC
   //     d.created_at AS client_created_at,
   //     t.txn_id,
   //     t.created_at AS txn_date
-  //   FROM revenue_engine_client_details d
+  //   FROM re_revenue_engine_client_details d
   //   LEFT JOIN txn_services t ON d.id = t.client_id
   //   ORDER BY txn_date DESC
   // `;
@@ -804,7 +804,7 @@ ORDER BY tg.txn_date DESC
 
 exports.getAllBD = async (req, res) => {
   try {
-    db.query("SELECT * FROM revenue_engine_employees", (err, results) => {
+    db.query("SELECT * FROM re_revenue_engine_employees", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -816,7 +816,7 @@ exports.getAllBD = async (req, res) => {
       if (results.length === 0) {
         return res.status(404).json({
           status: "Failure",
-          message: "No services found",
+          message: "No re_services found",
         });
       }
 
@@ -848,7 +848,7 @@ exports.getClientDetailsEmp = async (req, res) => {
     }
 
     db.query(
-      "SELECT * FROM revenue_engine_client_details WHERE dg_employee = ? ORDER BY id DESC",
+      "SELECT * FROM re_revenue_engine_client_details WHERE dg_employee = ? ORDER BY id DESC",
       [dg_employee],
       (err, results) => {
         if (err) {
@@ -886,9 +886,9 @@ exports.getClientsTxnHistoryByEmployee = async (req, res) => {
 
   // const query = `
   //   WITH txn_services AS (
-  //     SELECT txn_id, client_id, created_at FROM calculator_transactions
+  //     SELECT txn_id, client_id, created_at FROM re_calculator_transactions
   //     UNION ALL
-  //     SELECT txn_id, client_id, created_at FROM ads_campaign_details
+  //     SELECT txn_id, client_id, created_at FROM re_ads_campaign_details
   //   )
   //   SELECT
   //     d.id AS client_id,
@@ -901,7 +901,7 @@ exports.getClientsTxnHistoryByEmployee = async (req, res) => {
   //     d.created_at AS client_created_at,
   //     t.txn_id,
   //     DATE(t.created_at) AS txn_date
-  //   FROM revenue_engine_client_details d
+  //   FROM re_revenue_engine_client_details d
   //   LEFT JOIN txn_services t ON d.id = t.client_id
   //   WHERE d.dg_employee = ?
   //   ORDER BY txn_date DESC
@@ -909,9 +909,9 @@ exports.getClientsTxnHistoryByEmployee = async (req, res) => {
 
   const query = `
 WITH txn_services AS (
-  SELECT txn_id, client_id, created_at, 'calculator' AS source FROM calculator_transactions
+  SELECT txn_id, client_id, created_at, 'calculator' AS source FROM re_calculator_transactions
   UNION
-  SELECT txn_id, client_id, created_at, 'ads_campaign' AS source FROM ads_campaign_details
+  SELECT txn_id, client_id, created_at, 'ads_campaign' AS source FROM re_ads_campaign_details
 )
 SELECT
   d.id AS client_id,
@@ -925,7 +925,7 @@ SELECT
   t.txn_id,
   t.created_at AS txn_date,
   t.source
-FROM revenue_engine_client_details d
+FROM re_revenue_engine_client_details d
 LEFT JOIN (
   SELECT txn_id, client_id, created_at, source
   FROM txn_services
@@ -936,9 +936,9 @@ ORDER BY txn_date DESC;
     `;
   //   const query = `
   //  WITH txn_services AS (
-  //   SELECT txn_id, client_id, created_at FROM calculator_transactions
+  //   SELECT txn_id, client_id, created_at FROM re_calculator_transactions
   //   UNION ALL
-  //   SELECT txn_id, client_id, created_at FROM ads_campaign_details
+  //   SELECT txn_id, client_id, created_at FROM re_ads_campaign_details
   // ),
   // latest_txn AS (
   //   SELECT client_id, MAX(created_at) AS last_txn_date
@@ -955,7 +955,7 @@ ORDER BY txn_date DESC;
   //   d.dg_employee,
   //   d.created_at AS client_created_at,
   //   lt.last_txn_date
-  // FROM revenue_engine_client_details d
+  // FROM re_revenue_engine_client_details d
   // LEFT JOIN latest_txn lt ON d.id = lt.client_id
   // WHERE d.dg_employee = ?
   // ORDER BY
@@ -988,9 +988,9 @@ exports.optionalServiceAmounts = (req, res) => {
       c.category_name, 
       et.editing_type_name, 
       et.amount 
-    FROM editing_types et
-    JOIN services s ON et.service_id = s.service_id
-    JOIN categories c ON et.category_id = c.category_id
+    FROM re_editing_types et
+    JOIN re_services s ON et.service_id = s.service_id
+    JOIN re_categories c ON et.category_id = c.category_id
     WHERE et.editing_type_name IN ('Content Posting', 'Thumbnail Creation', 'YouTube Video Posting')
   `;
 
@@ -1012,7 +1012,7 @@ exports.optionalServiceAmounts = (req, res) => {
 
 exports.getPlanData = async (req, res) => {
   try {
-    db.query("SELECT * FROM plan_data", (err, results) => {
+    db.query("SELECT * FROM re_plan_data", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -1046,7 +1046,7 @@ exports.getPlanDataById = async (req, res) => {
   const { id } = req.params;
   try {
     db.query(
-      "SELECT * FROM plan_data WHERE plan_id = ?",
+      "SELECT * FROM re_plan_data WHERE plan_id = ?",
       [id],
       (err, results) => {
         if (err) {
@@ -1081,7 +1081,7 @@ exports.getPlanDataById = async (req, res) => {
 
 exports.getPlanDetails = async (req, res) => {
   try {
-    db.query("SELECT * FROM plan_details", (err, results) => {
+    db.query("SELECT * FROM re_plan_details", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -1116,7 +1116,7 @@ exports.getPlanDetailsById = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM plan_details WHERE id = ?",
+      "SELECT * FROM re_plan_details WHERE id = ?",
       [id],
       (err, results) => {
         if (err) {
@@ -1151,7 +1151,7 @@ exports.getPlanDetailsById = async (req, res) => {
 
 exports.getPlanNotes = async (req, res) => {
   try {
-    db.query("SELECT * FROM plans_notes", (err, results) => {
+    db.query("SELECT * FROM re_plans_notes", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -1185,7 +1185,7 @@ exports.getClientNotesbyId = async (req, res) => {
   const { client_id, txn_id } = req.params;
   try {
     db.query(
-      "SELECT * FROM plan_client_notes WHERE client_id = ? AND txn_id = ?",
+      "SELECT * FROM re_plan_client_notes WHERE client_id = ? AND txn_id = ?",
       [client_id, txn_id],
       (err, results) => {
         if (err) {
@@ -1223,7 +1223,7 @@ exports.retrieveUser = async (req, res) => {
   try {
     const getQuery = `
       SELECT id, employee_name, employee_role, employee_email
-      FROM revenue_engine_employees 
+      FROM re_revenue_engine_employees 
       WHERE employee_role = 'BD'
     `;
 
@@ -1267,8 +1267,8 @@ exports.getAssignmentByTxn = (req, res) => {
     const q = `
       SELECT aq.id, aq.client_id, aq.txn_id, aq.user_id, aq.deadline, aq.created_at, aq.updated_at, aq.version,
              e.employee_name
-      FROM assign_quotation aq
-      LEFT JOIN revenue_engine_employees e ON e.id = aq.user_id
+      FROM re_assign_quotation aq
+      LEFT JOIN re_revenue_engine_employees e ON e.id = aq.user_id
       WHERE aq.txn_id = ?
       LIMIT 1
     `;
@@ -1312,10 +1312,10 @@ exports.getAssignmentByTxn = (req, res) => {
 //         aq.updated_at,
 //         c.client_name,
 //         e.employee_name
-//       FROM assign_quotation aq
-//       JOIN revenue_engine_client_details c
+//       FROM re_assign_quotation aq
+//       JOIN re_revenue_engine_client_details c
 //           ON aq.client_id = c.id
-//       JOIN revenue_engine_employees e
+//       JOIN re_revenue_engine_employees e
 //           ON aq.user_id = e.id
 //           ORDER BY aq.id DESC
 //     `;
@@ -1379,12 +1379,12 @@ exports.getAssignedQuotations = async (req, res) => {
         c.client_name,
         e.employee_name,
         t.name AS team_name
-      FROM assign_quotation aq
-      JOIN revenue_engine_client_details c
+      FROM re_assign_quotation aq
+      JOIN re_revenue_engine_client_details c
         ON c.id = aq.client_id
-      JOIN revenue_engine_employees e
+      JOIN re_revenue_engine_employees e
         ON e.id = aq.user_id
-      LEFT JOIN teams t
+      LEFT JOIN re_teams t
         ON t.id = aq.team_id
       ${whereSQL}
       ORDER BY aq.id DESC
@@ -1443,10 +1443,10 @@ exports.getAssignedQuotationsByEmployeeName = async (req, res) => {
         aq.updated_at,
         c.client_name,
         e.employee_name
-      FROM assign_quotation aq
-      JOIN revenue_engine_client_details c 
+      FROM re_assign_quotation aq
+      JOIN re_revenue_engine_client_details c 
         ON aq.client_id = c.id
-      JOIN revenue_engine_employees e 
+      JOIN re_revenue_engine_employees e 
         ON aq.user_id = e.id
       WHERE e.employee_name = ?
       ORDER BY aq.created_at DESC
@@ -1487,7 +1487,7 @@ exports.getProgressByTxn = (req, res) => {
   const q = `
     SELECT id, client_id, txn_id, service_name, category_name, editing_type_name,
            planned_qty, done_qty, last_updated_by, updated_at
-    FROM service_progress
+    FROM re_service_progress
     WHERE txn_id = ?
     ORDER BY service_name, category_name, editing_type_name
   `;
@@ -1506,12 +1506,12 @@ exports.getProgressByTxn = (req, res) => {
   });
 };
 
-// NEW WORK FOR Teams Members
+// NEW WORK FOR re_teams Members
 
 // USE API retrieveUser
 exports.retrieveTeam = async (req, res) => {
   try {
-    const getQuery = `SELECT id, name, created_at FROM teams ORDER BY id DESC`;
+    const getQuery = `SELECT id, name, created_at FROM re_teams ORDER BY id DESC`;
 
     db.query(getQuery, (err, results) => {
       if (err) {
@@ -1545,7 +1545,7 @@ exports.retrieveTeamById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const qTeam = `SELECT id, name, created_at FROM teams WHERE id = ? LIMIT 1`;
+    const qTeam = `SELECT id, name, created_at FROM re_teams WHERE id = ? LIMIT 1`;
 
     db.query(qTeam, [id], (err, rows) => {
       if (err) {
@@ -1565,8 +1565,8 @@ exports.retrieveTeamById = async (req, res) => {
 
       const qMembers = `
         SELECT e.id, e.employee_name, e.employee_email
-        FROM team_members tm
-        JOIN revenue_engine_employees e ON e.id = tm.employee_id
+        FROM re_team_members tm
+        JOIN re_revenue_engine_employees e ON e.id = tm.employee_id
         WHERE tm.team_id = ?
         ORDER BY e.employee_name ASC
       `;
@@ -1602,9 +1602,9 @@ exports.getAssignmentsSummary = (req, res) => {
   const sql = `
     SELECT aq.id, aq.txn_id, aq.user_id, aq.team_id, aq.assignment_mode, DATE_FORMAT(aq.deadline, '%Y-%m-%d') AS deadline_local,
            e.employee_name, e.employee_email, t.name as team_name
-    FROM assign_quotation aq
-    JOIN revenue_engine_employees e ON e.id = aq.user_id
-    LEFT JOIN teams t ON t.id = aq.team_id
+    FROM re_assign_quotation aq
+    JOIN re_revenue_engine_employees e ON e.id = aq.user_id
+    LEFT JOIN re_teams t ON t.id = aq.team_id
     WHERE aq.txn_id = ?
     ORDER BY e.employee_name ASC
   `;
@@ -1660,7 +1660,7 @@ exports.getByIDComplimentaryData = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM complimentary WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_complimentary WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -1704,9 +1704,9 @@ exports.getRequirementsLink = async (req, res) => {
     //     l.created_at AS link_created_at,
     //     r.id,
     //     COALESCE(SUM(r.total_amount), 0) AS total_amount
-    //   FROM revenue_engine_client_details c
-    //   LEFT JOIN client_requirement_links l ON l.client_id = c.id
-    //   LEFT JOIN requirement_submissions r ON r.link_id = l.id
+    //   FROM re_revenue_engine_client_details c
+    //   LEFT JOIN re_client_requirement_links l ON l.client_id = c.id
+    //   LEFT JOIN re_requirement_submissions r ON r.link_id = l.id
     //   GROUP BY c.id, c.client_name, l.id, l.created_by, l.created_at
     //   ORDER BY l.created_at DESC
     // `;
@@ -1719,9 +1719,9 @@ SELECT
   l.created_at,
   GROUP_CONCAT(r.id ORDER BY r.id) AS submission_ids,   -- <-- list of IDs
   COALESCE(SUM(r.total_amount), 0) AS total_amount
-FROM client_requirement_links l
-LEFT JOIN revenue_engine_client_details c ON c.id = l.client_id
-LEFT JOIN requirement_submissions r ON r.link_id = l.id
+FROM re_client_requirement_links l
+LEFT JOIN re_revenue_engine_client_details c ON c.id = l.client_id
+LEFT JOIN re_requirement_submissions r ON r.link_id = l.id
 GROUP BY l.id, l.client_id, c.client_name, l.created_by, l.created_at
 ORDER BY l.created_at DESC;
     `;
@@ -1765,10 +1765,10 @@ exports.getRequirementsDetail = async (req, res) => {
       i.qty             AS item_qty,
       i.line_total      AS item_line_total
 
-    FROM client_requirement_links l
-    LEFT JOIN revenue_engine_client_details c ON c.id = l.client_id
-    LEFT JOIN requirement_submissions s      ON s.link_id = l.id
-    LEFT JOIN requirement_submission_items i ON i.submission_id = s.id
+    FROM re_client_requirement_links l
+    LEFT JOIN re_revenue_engine_client_details c ON c.id = l.client_id
+    LEFT JOIN re_requirement_submissions s      ON s.link_id = l.id
+    LEFT JOIN re_requirement_submission_items i ON i.submission_id = s.id
     WHERE l.id = ?
     ORDER BY s.id DESC, i.id ASC;
   `;
@@ -1851,7 +1851,7 @@ exports.getRequirementsDetail = async (req, res) => {
 
 exports.getNoteData = async (req, res) => {
   try {
-    db.query("SELECT * FROM notes_data", (err, results) => {
+    db.query("SELECT * FROM re_notes_data", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -1882,7 +1882,7 @@ exports.getNoteData = async (req, res) => {
 };
 exports.getNoteData = async (req, res) => {
   try {
-    db.query("SELECT * FROM notes_data", (err, results) => {
+    db.query("SELECT * FROM re_notes_data", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -1917,7 +1917,7 @@ exports.getByIDDiscountData = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM discount WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_discount WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -1954,7 +1954,7 @@ exports.getInvoiceByIdData = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM invoice_graphic WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_invoice_graphic WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -2008,7 +2008,7 @@ exports.getinInvoiceServiceHistory = async (req, res) => {
   NULL AS amount,
   NULL AS percent,
   NULL AS charge
-FROM invoice_graphic ct
+FROM re_invoice_graphic ct
 WHERE ct.txn_id = ? AND ct.client_id = ?
   
 UNION
@@ -2030,7 +2030,7 @@ SELECT
   ad.amount,
   ad.percent,
   ad.charge
-FROM ads_campaign_details_invoice ad
+FROM re_ads_campaign_details_invoice ad
 WHERE ad.txn_id = ? AND ad.client_id = ?
  
   `;
@@ -2071,7 +2071,7 @@ exports.getAllInvoiceServiceHistory = async (req, res) => {
       NULL AS amount,
       NULL AS percent,
       NULL AS charge
-    FROM invoice_graphic ct
+    FROM re_invoice_graphic ct
     WHERE ct.txn_id = ? AND ct.client_id = ?
     
     UNION ALL
@@ -2093,13 +2093,13 @@ exports.getAllInvoiceServiceHistory = async (req, res) => {
       ad.amount,
       ad.percent,
       ad.charge
-    FROM ads_campaign_details_invoice ad
+    FROM re_ads_campaign_details_invoice ad
     WHERE ad.txn_id = ? AND ad.client_id = ?
 
     UNION ALL
 
     SELECT 
-      'Complimentary' AS service_type,
+      're_complimentary' AS service_type,
       c.txn_id,
       c.created_at,
       c.service_name,
@@ -2115,7 +2115,7 @@ exports.getAllInvoiceServiceHistory = async (req, res) => {
       NULL AS amount,
       NULL AS percent,
       NULL AS charge
-    FROM complimentary_invoice c
+    FROM re_complimentary_invoice c
     WHERE c.txn_id = ? AND c.client_id = ?
   `;
 
@@ -2160,7 +2160,7 @@ exports.getComplimentaryInvoiceData = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM complimentary_invoice WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_complimentary_invoice WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -2199,7 +2199,7 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
   const query = util.promisify(db.query).bind(db);
 
   try {
-    const results = await query("SELECT * FROM invoice WHERE client_id = ? AND txn_id = ?", [client_id, txn_id]);
+    const results = await query("SELECT * FROM re_invoice WHERE client_id = ? AND txn_id = ?", [client_id, txn_id]);
     
     if (results.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Client not found" });
@@ -2209,7 +2209,7 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
 
     if (invoice.invoice_source === 'proposal' && invoice.proforma_id) {
        const prevInvoices = await query(
-         "SELECT bill_number, created_at FROM invoice WHERE proforma_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
+         "SELECT bill_number, created_at FROM re_invoice WHERE proforma_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
          [invoice.proforma_id, invoice.id]
        );
        if (prevInvoices.length > 0) {
@@ -2218,7 +2218,7 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
        }
        
        const pastPayments = await query(
-         "SELECT SUM(amount) as total_past, SUM(realized_ad_budget) as total_past_ad FROM proposal_payment_records WHERE proforma_id = ? AND status = 'approved' AND id < (SELECT id FROM (SELECT id FROM proposal_payment_records WHERE txn_id = ? LIMIT 1) as t)",
+         "SELECT SUM(amount) as total_past, SUM(realized_ad_budget) as total_past_ad FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved' AND id < (SELECT id FROM (SELECT id FROM re_proposal_payment_records WHERE txn_id = ? LIMIT 1) as t)",
          [invoice.proforma_id, invoice.txn_id]
        );
        invoice.total_past_received = Number(pastPayments[0].total_past || 0);
@@ -2235,7 +2235,7 @@ exports.getInvoiceGraphic = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM  invoice_graphic WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM  re_invoice_graphic WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -2249,7 +2249,7 @@ exports.getInvoiceGraphic = async (req, res) => {
         if (results.length === 0) {
           return res.status(404).json({
             status: "Failure",
-            message: "No invoice calculator transactions found",
+            message: "No re_invoice calculator transactions found",
           });
         }
 
@@ -2273,7 +2273,7 @@ exports.getInvoiceAdsCampaign = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM ads_campaign_details_invoice WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_ads_campaign_details_invoice WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -2287,7 +2287,7 @@ exports.getInvoiceAdsCampaign = async (req, res) => {
         if (results.length === 0) {
           return res.status(404).json({
             status: "Failure",
-            message: "No Invoice calculator transactions found",
+            message: "No re_invoice calculator transactions found",
           });
         }
 
@@ -2307,7 +2307,7 @@ exports.getInvoiceAdsCampaign = async (req, res) => {
 };
 exports.getInvoiceNoteData = async (req, res) => {
   try {
-    db.query("SELECT * FROM invoice_notes_data", (err, results) => {
+    db.query("SELECT * FROM re_invoice_notes_data", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -2340,7 +2340,7 @@ exports.getInvoiceClientNotesbyId = async (req, res) => {
   const { client_id, txn_id } = req.params;
   try {
     db.query(
-      "SELECT * FROM invoice_client_notes WHERE client_id = ? AND txn_id = ?",
+      "SELECT * FROM re_invoice_client_notes WHERE client_id = ? AND txn_id = ?",
       [client_id, txn_id],
       (err, results) => {
         if (err) {
@@ -2354,7 +2354,7 @@ exports.getInvoiceClientNotesbyId = async (req, res) => {
         if (results.length === 0) {
           return res.status(404).json({
             status: "Failure",
-            message: "No invoice notes of client found",
+            message: "No re_invoice notes of client found",
           });
         }
 
@@ -2375,7 +2375,7 @@ exports.getInvoiceClientNotesbyId = async (req, res) => {
 
 exports.getAllInvoice = async (req, res) => {
   try {
-    db.query("SELECT * FROM invoice", (err, results) => {
+    db.query("SELECT * FROM re_invoice", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -2387,7 +2387,7 @@ exports.getAllInvoice = async (req, res) => {
       if (results.length === 0) {
         return res.status(404).json({
           status: "Failure",
-          message: "No services found",
+          message: "No re_services found",
         });
       }
 
@@ -2410,7 +2410,7 @@ exports.getAdditionByIdData = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM addtional_service WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_addtional_service WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -2447,7 +2447,7 @@ exports.getRemainingAmountByIdData = async (req, res) => {
 
   try {
     db.query(
-      "SELECT * FROM amount_remaining WHERE txn_id = ? AND client_id = ?",
+      "SELECT * FROM re_amount_remaining WHERE txn_id = ? AND client_id = ?",
       [txn_id, client_id],
       (err, results) => {
         if (err) {
@@ -2516,7 +2516,7 @@ exports.getSeoClientsWithKeywords = (req, res) => {
 
 exports.getDiscountSetting = async (req, res) => {
   try {
-    db.query("SELECT * FROM discount_settings", (err, results) => {
+    db.query("SELECT * FROM re_discount_settings", (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
