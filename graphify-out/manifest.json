@@ -20,33 +20,33 @@
     "semantic_hash": "5b84f4567208c7c747079c0477373231"
   },
   "client/src/Admin/AdminAddPlan.jsx": {
-    "mtime": 1783661599.1541429,
-    "ast_hash": "9f37fd1171bbce255d3fbf19a94374a7",
+    "mtime": 1784033462.7981367,
+    "ast_hash": "65e126e71ce53d325a23672d2fd1da41",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminAddServices.jsx": {
-    "mtime": 1783777541.8690603,
-    "ast_hash": "cb0a17db410ac96d09c1edc2ff8b7d92",
+    "mtime": 1784033462.8041325,
+    "ast_hash": "8beb9d866b646fce98194628c46062ed",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminAdsCampign.jsx": {
-    "mtime": 1783661599.1772199,
-    "ast_hash": "bac36112005addfdc204c8daf42c917b",
+    "mtime": 1784033462.8211334,
+    "ast_hash": "9ec36889ebf00691910361bd62a9606d",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminCalculator.jsx": {
-    "mtime": 1783776178.7330012,
-    "ast_hash": "442fdbf1251e47335f208931ee837750",
+    "mtime": 1784033462.827135,
+    "ast_hash": "8d51cf4a0175bbf735fc7452cef7fb8c",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminClientDetails.jsx": {
-    "mtime": 1783661599.1938295,
-    "ast_hash": "d165af3ee0896b2bdd151e943ea10b71",
+    "mtime": 1784033462.8321335,
+    "ast_hash": "15a15e532d264a76734b4939bcb7e47c",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminComplimentaryData.jsx": {
-    "mtime": 1783661599.1938295,
-    "ast_hash": "e8ba7429324c175f8d4cfd4cd679544e",
+    "mtime": 1784033462.8421347,
+    "ast_hash": "7541e6c31ab83a1f2b92152311d1c592",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminDashboard.jsx": {
@@ -55,23 +55,23 @@
     "semantic_hash": ""
   },
   "client/src/Admin/AdminExplorePlans.jsx": {
-    "mtime": 1783661599.2013955,
-    "ast_hash": "a1b2fa57080c703e95a67c3bc09d1976",
+    "mtime": 1784033462.8609414,
+    "ast_hash": "9494a1242c6021f18b727de79555569a",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminInvoice.jsx": {
-    "mtime": 1783935438.9165633,
-    "ast_hash": "e595b3f852349081c4dcbf943e74038f",
+    "mtime": 1784033462.9164221,
+    "ast_hash": "37fb00cb2db289040225859d465bf8c5",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminPlanHistory.jsx": {
-    "mtime": 1783661599.2099285,
-    "ast_hash": "c67c5fff61be3114f5e3c95b8b92294b",
+    "mtime": 1784033462.958394,
+    "ast_hash": "3820a61b6254cbc5aaaf234598381185",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminServicesHistory.jsx": {
-    "mtime": 1783661599.210439,
-    "ast_hash": "7249c2619074e2e4bf15bc39c2009513",
+    "mtime": 1784033462.976309,
+    "ast_hash": "c131aa7b5165b218856b6e475b41a561",
     "semantic_hash": ""
   },
   "client/src/Admin/AdmindashBoardSettings.jsx": {
@@ -80,33 +80,33 @@
     "semantic_hash": ""
   },
   "client/src/Admin/AdsCampaignCalculator.jsx": {
-    "mtime": 1783661599.212259,
-    "ast_hash": "d8b5a08b027d94cb705593145fa02f7e",
+    "mtime": 1784033462.9984214,
+    "ast_hash": "767fa6285118eb2aef95447af9f78808",
     "semantic_hash": ""
   },
   "client/src/Admin/AllHistory.jsx": {
-    "mtime": 1783661599.21277,
-    "ast_hash": "151483bcf94b59b2574ad0bfa000559a",
+    "mtime": 1784033463.0060081,
+    "ast_hash": "7ff1f9764b63167cfbf3aedce6b1243b",
     "semantic_hash": ""
   },
   "client/src/Admin/AssignQuotation.jsx": {
-    "mtime": 1783661599.21277,
-    "ast_hash": "e97f2855afca5f5a7647608db6f2e3e2",
+    "mtime": 1784033463.025056,
+    "ast_hash": "738cbe979605179f4fa9644476df71ae",
     "semantic_hash": ""
   },
   "client/src/Admin/CreateTeam.jsx": {
-    "mtime": 1783661599.2271593,
-    "ast_hash": "fc46b931c9ba7a2c47e93b919b55d50c",
+    "mtime": 1784033463.0598438,
+    "ast_hash": "f1fb6b0fb9c27250b0e3624807edeac1",
     "semantic_hash": ""
   },
   "client/src/Admin/DiscountSetting.jsx": {
-    "mtime": 1783661599.2271593,
-    "ast_hash": "97f68ccec5b9e0bbcda204f190186c6e",
+    "mtime": 1784033463.0838926,
+    "ast_hash": "59f86cef33616b7f0bdb32ca2ad1be03",
     "semantic_hash": ""
   },
   "client/src/Admin/GenerateLinkHistory.jsx": {
-    "mtime": 1783661599.231475,
-    "ast_hash": "d89219c6669530caba6f25e18a2bf8e7",
+    "mtime": 1784033463.0901322,
+    "ast_hash": "64e44ce2c3689afb8697f1a21b38efde",
     "semantic_hash": ""
   },
   "client/src/Admin/GlobalStyle .jsx": {
@@ -115,73 +115,73 @@
     "semantic_hash": "76d085242453853ac649c729ad5c3775"
   },
   "client/src/Admin/History.jsx": {
-    "mtime": 1783948521.8276923,
-    "ast_hash": "9bd20aa1784a03f327a36fa959435d5e",
+    "mtime": 1784033463.096478,
+    "ast_hash": "ec2cc70c614ece85d5aa456af0c880cd",
     "semantic_hash": ""
   },
   "client/src/Admin/InoviceComplmentary.jsx": {
-    "mtime": 1783661599.2368689,
-    "ast_hash": "f1008cd5dd98f5b9b46f3335802588c1",
+    "mtime": 1784033463.1106837,
+    "ast_hash": "f03d69f0f842830e7c682cc122039f31",
     "semantic_hash": ""
   },
   "client/src/Admin/InvoiceAds.jsx": {
-    "mtime": 1783661599.239539,
-    "ast_hash": "43d91cf059a9ba9d721c5ca0a0a5475f",
+    "mtime": 1784033463.1287875,
+    "ast_hash": "ca6021700f391df86d440313c61429a4",
     "semantic_hash": ""
   },
   "client/src/Admin/InvoiceCalculation.jsx": {
-    "mtime": 1783661599.2418504,
-    "ast_hash": "b6cb6f387d92d62eca45e92e26925047",
+    "mtime": 1784033463.1398804,
+    "ast_hash": "f00baaea2cb8bc988d135739d0b19073",
     "semantic_hash": ""
   },
   "client/src/Admin/InvoiceHistory.jsx": {
-    "mtime": 1783756138.8466733,
-    "ast_hash": "a17524ddda35f9cb17bcdab95b22dbbf",
+    "mtime": 1784033463.1549478,
+    "ast_hash": "209a77c230fc2378a1ad641fc8f5199b",
     "semantic_hash": ""
   },
   "client/src/Admin/InvoiceNoteSection.jsx": {
-    "mtime": 1783661599.2428603,
-    "ast_hash": "b14a467e522891f880464a186d912ae5",
+    "mtime": 1784033463.1580656,
+    "ast_hash": "1b5e8cb46f24ebd90a86655ac7e3f6ac",
     "semantic_hash": ""
   },
   "client/src/Admin/NoteSection.jsx": {
-    "mtime": 1783661599.2438605,
-    "ast_hash": "9ef35e1917df9fe52661cf6770d1194b",
+    "mtime": 1784033463.171353,
+    "ast_hash": "7242ca95e972291a852bc88444b5f3fb",
     "semantic_hash": ""
   },
   "client/src/Admin/Quotation.jsx": {
-    "mtime": 1783936791.3002214,
-    "ast_hash": "bf1e56fd48a7f1276d9f329547408379",
+    "mtime": 1784033463.259384,
+    "ast_hash": "ea1dc5800bfffa469f89474db1ed0476",
     "semantic_hash": ""
   },
   "client/src/Admin/QuotationTypeModal.jsx": {
-    "mtime": 1783661599.2537708,
-    "ast_hash": "64fa3ac393a5e4f759775c132a69c761",
+    "mtime": 1784033463.2986224,
+    "ast_hash": "58a8d3c4ec636b15b6148cb33f9c4bd6",
     "semantic_hash": ""
   },
   "client/src/Admin/RegisterBD.jsx": {
-    "mtime": 1783661599.2567742,
-    "ast_hash": "bb7d2e5b6d373cb5320cb181ccab78dc",
+    "mtime": 1784033463.3651683,
+    "ast_hash": "2be26e8a41bb2dad8ae84346a38ab625",
     "semantic_hash": ""
   },
   "client/src/Admin/ReviewRequirements.jsx": {
-    "mtime": 1783661599.2591457,
-    "ast_hash": "0048bc2dc1c4bd4a0888b9f8b0dbcc4d",
+    "mtime": 1784033463.3983536,
+    "ast_hash": "942616f67765a4e2178716a9dd0e94ba",
     "semantic_hash": ""
   },
   "client/src/Admin/SeoServicesA.jsx": {
-    "mtime": 1783661599.2601469,
-    "ast_hash": "59b76d2df38264faf241d1958c7273c1",
+    "mtime": 1784033463.4101584,
+    "ast_hash": "d11451059481c891aa679d60c57542a7",
     "semantic_hash": ""
   },
   "client/src/Admin/ServiceProgressTable.jsx": {
-    "mtime": 1780384501.8159683,
-    "ast_hash": "1502f5c93697c932cf4bcff15388d025",
-    "semantic_hash": "1502f5c93697c932cf4bcff15388d025"
+    "mtime": 1784033463.4135005,
+    "ast_hash": "713ec0500d6120987b139d35b20569f6",
+    "semantic_hash": ""
   },
   "client/src/Admin/ServicesLanding.jsx": {
-    "mtime": 1783661599.2627573,
-    "ast_hash": "05d59bea2fa3ffa30f5d38b7553b68b2",
+    "mtime": 1784033463.4334147,
+    "ast_hash": "ffe2b13f3fa329d15531e7bb5d5fbabc",
     "semantic_hash": ""
   },
   "client/src/Admin/SkeletonTable.jsx": {
@@ -190,8 +190,8 @@
     "semantic_hash": "ee4abd05f8a1f599a8f71e4b1a191a1a"
   },
   "client/src/Admin/TeamPickerModal.jsx": {
-    "mtime": 1783661599.2637703,
-    "ast_hash": "1707975ccc283788fe2b2348127bb6fe",
+    "mtime": 1784033463.4758635,
+    "ast_hash": "a0768ac5ff2cbb0adb54fc8bf96120ff",
     "semantic_hash": ""
   },
   "client/src/Admin/test.jsx": {
@@ -205,38 +205,38 @@
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/AddService.jsx": {
-    "mtime": 1783661599.2682886,
-    "ast_hash": "dc1525ef67548980e5895de65a980a10",
+    "mtime": 1784033463.487457,
+    "ast_hash": "1fffc6a89c1ba2ec0ea417e90ffc54bf",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/AdsCampaignCalciBD.jsx": {
-    "mtime": 1783661599.2699735,
-    "ast_hash": "89cadfe733e61e30a43d184b42318140",
+    "mtime": 1784033463.5106938,
+    "ast_hash": "206d7a5485d4238988fb3cd871ae3eba",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/AllHistory.jsx": {
-    "mtime": 1783661599.270492,
-    "ast_hash": "0cf9714cdefb88d7ae2ec39a441f3ff6",
+    "mtime": 1784033463.5251932,
+    "ast_hash": "f344fcab75842539ab6ae134181ba7aa",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/AssignQuotationBD.jsx": {
-    "mtime": 1783661599.2720778,
-    "ast_hash": "80d1f169e25d60503292d9a4f6974a6f",
+    "mtime": 1784033463.545705,
+    "ast_hash": "27f1e1e5ffce79dbbf7a15dc47737bcc",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/BDInvoice.jsx": {
-    "mtime": 1783687799.6826224,
-    "ast_hash": "d38bb8befd23948d4f9e08a847d48156",
+    "mtime": 1784033463.5846508,
+    "ast_hash": "63376baa4e646a19b5b4d5b4c976fc1f",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/BDNoteSection.jsx": {
-    "mtime": 1783661599.276931,
-    "ast_hash": "615e9aae7f5128f1ae8a11cdbc2a402b",
+    "mtime": 1784033463.5933158,
+    "ast_hash": "5d2128cfa024395ae16a204c124ad5f0",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/BdExplorePlans.jsx": {
-    "mtime": 1783661599.2725859,
-    "ast_hash": "75c919b50b0393aff2adb585bfd39ea6",
+    "mtime": 1784033463.5516982,
+    "ast_hash": "5d2a4fd737c3708d854e9bd89500e277",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/BusinessDeveloperDashboard.jsx": {
@@ -245,88 +245,88 @@
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/CalculatorBD.jsx": {
-    "mtime": 1783661599.2818196,
-    "ast_hash": "f4f75d62087d21bc29538a6f0e418900",
+    "mtime": 1784033463.6201963,
+    "ast_hash": "8e2afe5d282959a68781710dfc6ef9a4",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/ClientDetails.jsx": {
-    "mtime": 1783661599.2836351,
-    "ast_hash": "7aa05bfe4cccd26c54568952fc35fdff",
+    "mtime": 1784033463.6382513,
+    "ast_hash": "41e1aa04bf0ed65560b3ce921370e26f",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/DiscountSetting.jsx": {
-    "mtime": 1783661599.2851555,
-    "ast_hash": "97f68ccec5b9e0bbcda204f190186c6e",
+    "mtime": 1784033463.6412523,
+    "ast_hash": "59f86cef33616b7f0bdb32ca2ad1be03",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/GenerateLinkHistoryBD.jsx": {
-    "mtime": 1783661599.2851555,
-    "ast_hash": "56b6457a66514ea432c868d2b2667da0",
+    "mtime": 1784033463.6442516,
+    "ast_hash": "8f80a04d4b8d38128a0168e23feca307",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/HistoryBD.jsx": {
-    "mtime": 1783661599.2871585,
-    "ast_hash": "2e883383206e95677df71918acbe1065",
+    "mtime": 1784033463.6697464,
+    "ast_hash": "aad018147d639318adab4d28d2f306c0",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/InoviceComplmentary.jsx": {
-    "mtime": 1783661599.2882395,
-    "ast_hash": "b8462ff4eae4b568ea870b38f26b90dc",
+    "mtime": 1784033463.672268,
+    "ast_hash": "ebaaa4d72ee288ee9bcc0abc6c58d9b6",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/InvoiceAds.jsx": {
-    "mtime": 1783661599.2887464,
-    "ast_hash": "63737288ab65bb4f4dada20287c13449",
+    "mtime": 1784033463.685741,
+    "ast_hash": "4ee3ce33d429f57b1a5ae108f127623d",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/InvoiceCalculation.jsx": {
-    "mtime": 1783661599.289757,
-    "ast_hash": "72df73f9bd245983febc4d791a26e1c8",
+    "mtime": 1784033463.7027,
+    "ast_hash": "abc69e76a0e5b3c3990bbdd69738936b",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/InvoiceHistory.jsx": {
-    "mtime": 1783661599.2907598,
-    "ast_hash": "657f3b53fe4a5d13ab626aab0519fe60",
+    "mtime": 1784033463.7214923,
+    "ast_hash": "dbd4ee68eaaa272e867b3c497d56ef96",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/InvoiceNoteSection.jsx": {
-    "mtime": 1783661599.2917573,
-    "ast_hash": "b14a467e522891f880464a186d912ae5",
+    "mtime": 1784033463.7293563,
+    "ast_hash": "1b5e8cb46f24ebd90a86655ac7e3f6ac",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/NoteSection.jsx": {
-    "mtime": 1783661599.2927582,
-    "ast_hash": "2755fc1c9fa2380ad04be33647a861bc",
+    "mtime": 1784033463.7336304,
+    "ast_hash": "4fac972ee2363ed58aa04907bed0bfd1",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/QuotationBD.jsx": {
-    "mtime": 1783661599.2947576,
-    "ast_hash": "6378fc15de0c18d1642f784c7fa0a4fc",
+    "mtime": 1784033463.775642,
+    "ast_hash": "948baa672aca9681b0be85e4050d0b37",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/QuotationTypeModalBD.jsx": {
-    "mtime": 1780384501.8439677,
-    "ast_hash": "e19a33d67e3a0dcd5b3083651e628ba1",
-    "semantic_hash": "e19a33d67e3a0dcd5b3083651e628ba1"
+    "mtime": 1784033463.8142,
+    "ast_hash": "45d837225f5f2127bc10a611b5b9c1ee",
+    "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/SeoServices.jsx": {
-    "mtime": 1783661599.2972927,
-    "ast_hash": "d912a675477c8db421727ca3de1444b4",
+    "mtime": 1784033463.827968,
+    "ast_hash": "531fe369a726c41a4757d239b6ae858c",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/ServiceProgressTableBD.jsx": {
-    "mtime": 1780384501.8459692,
-    "ast_hash": "8786b891194047dd107e56b259f6f21b",
-    "semantic_hash": "8786b891194047dd107e56b259f6f21b"
+    "mtime": 1784033463.8663652,
+    "ast_hash": "93c76edab93daa62e8ef88e6144087a9",
+    "semantic_hash": ""
   },
   "client/src/Client/PublicRequirementForm.jsx": {
-    "mtime": 1783402076.431197,
-    "ast_hash": "4cfcbcbdd150b51cfb1a5b4979f7d7d3",
+    "mtime": 1784033463.934851,
+    "ast_hash": "f7d13b855f2e51795d1952bf80ff6fb2",
     "semantic_hash": ""
   },
   "client/src/Components/ConvertLetterhead.jsx": {
-    "mtime": 1783661599.2992525,
-    "ast_hash": "8bb54868c8a4b1c0667b698a99e156ee",
+    "mtime": 1784033463.9433575,
+    "ast_hash": "8a9c5018e8e9ea18d95c7a2e17324346",
     "semantic_hash": ""
   },
   "client/src/Components/Header.jsx": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "client/src/Components/InvoiceServices.jsx": {
-    "mtime": 1783942168.5904202,
-    "ast_hash": "2f7e5d02018830afa2229f16ed3334a7",
+    "mtime": 1784033464.0021741,
+    "ast_hash": "2acc975f2acbb35c5b86612b27d73830",
     "semantic_hash": ""
   },
   "client/src/Components/NavTabs.jsx": {
@@ -360,13 +360,13 @@
     "semantic_hash": ""
   },
   "client/src/Screens/ForgotPassword.jsx": {
-    "mtime": 1783661209.866107,
-    "ast_hash": "8e302f43468bcca38c031e15c854ec2d",
+    "mtime": 1784033464.0956345,
+    "ast_hash": "608c4a31a25b3531ebffd6561ba6c353",
     "semantic_hash": ""
   },
   "client/src/Screens/Login.jsx": {
-    "mtime": 1783661215.4838252,
-    "ast_hash": "f17477c57c9353162856c8a0f0abc065",
+    "mtime": 1784033464.306308,
+    "ast_hash": "8d4e6d23f868b18ff5a598aa57ca2c18",
     "semantic_hash": ""
   },
   "client/src/config/apiBaseUrl.js": {
@@ -405,23 +405,13 @@
     "semantic_hash": "c25eefe09082c2cb105a990e9688fee3"
   },
   "server/app.js": {
-    "mtime": 1784032864.4136062,
-    "ast_hash": "6ca069a6d7d093cd2ecdd644ad942fc9",
+    "mtime": 1784033126.7949438,
+    "ast_hash": "9eb154afb04250ed680e81c115a97b31",
     "semantic_hash": ""
   },
   "server/connect.js": {
     "mtime": 1783601131.4925938,
     "ast_hash": "bd0171d09da0869acc7c66983efe79eb",
-    "semantic_hash": ""
-  },
-  "server/middleware/authenticateToken.js": {
-    "mtime": 1780384501.918968,
-    "ast_hash": "04f835fd35d540ef47eb4e04f0a6afe8",
-    "semantic_hash": "04f835fd35d540ef47eb4e04f0a6afe8"
-  },
-  "server/middleware/verifyAdminToken.js": {
-    "mtime": 1784031369.6943598,
-    "ast_hash": "9e96b8b12d5ddd28fcadd1953a85c6d1",
     "semantic_hash": ""
   },
   "server/package.json": {
@@ -440,13 +430,13 @@
     "semantic_hash": "f1da5432fc0ed0651cde824b65002a5b"
   },
   "client/src/Admin/ProposalBuilder.jsx": {
-    "mtime": 1783776338.3840764,
-    "ast_hash": "f0c891774cd9e38b845787fd6bdb955c",
+    "mtime": 1784033463.2108946,
+    "ast_hash": "237616d263851d1fc09e0dc6b92bb8ff",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/ProposalBuilderBD.jsx": {
-    "mtime": 1783661599.293759,
-    "ast_hash": "e737a98b88187263e98e33f2fe3a2388",
+    "mtime": 1784033463.7614505,
+    "ast_hash": "1c5a623450d830c5bc4cdfbdb16f27b4",
     "semantic_hash": ""
   },
   "client/src/config/proposalDefaults.js": {
@@ -460,18 +450,18 @@
     "semantic_hash": "25bbabe3c07620fd7d29dd5667a62400"
   },
   "client/src/Admin/components/PaymentModal.jsx": {
-    "mtime": 1783661599.21277,
-    "ast_hash": "271ebfe2329d5f4f3377fad518abacc3",
+    "mtime": 1784033462.7398112,
+    "ast_hash": "7d51069605bdf7ea188e8fd11262eb85",
     "semantic_hash": ""
   },
   "client/src/Admin/components/ProposalActions.jsx": {
-    "mtime": 1783663185.093569,
-    "ast_hash": "20067acb9a08b562907459da449121da",
+    "mtime": 1784033462.7649515,
+    "ast_hash": "a91d0cfe4157acb2927cd598bfe266a0",
     "semantic_hash": ""
   },
   "client/src/Admin/components/ProposalTable.jsx": {
-    "mtime": 1783661599.2271593,
-    "ast_hash": "fb99585c4d9e0d2b5a15bb384adccb65",
+    "mtime": 1784033462.794135,
+    "ast_hash": "ab4be98d4a4ba43cf5bbd9a1e7b27659",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/components/LegacyQuotationTableBD.jsx": {
@@ -490,13 +480,13 @@
     "semantic_hash": "efe8f2785ca68b69be74681966f6d2f2"
   },
   "client/src/Admin/components/ProformaManagerModal.jsx": {
-    "mtime": 1783942777.8709147,
-    "ast_hash": "8d638f19b20b60d9becce1f2682fc0ca",
+    "mtime": 1784033462.7434645,
+    "ast_hash": "1908b62b47a96916c7030c020ad36696",
     "semantic_hash": ""
   },
   "client/src/Admin/components/ProposalPricingBuilder.jsx": {
-    "mtime": 1783661599.2266488,
-    "ast_hash": "50e455ccdab0113a4f3e5fe3ce5add81",
+    "mtime": 1784033462.7736356,
+    "ast_hash": "a87b4ba0fd99dd69f2ee41f91bbc1d4f",
     "semantic_hash": ""
   },
   "client/src/Admin/components/ProposalDiscountModal.jsx": {
@@ -515,8 +505,8 @@
     "semantic_hash": ""
   },
   "client/src/Admin/ProposalHistory.jsx": {
-    "mtime": 1783767517.952685,
-    "ast_hash": "4caf83a72aaf74a3d275d990c5dc956e",
+    "mtime": 1784033463.2227156,
+    "ast_hash": "b1e9d594753d2502f82d4c04544e294e",
     "semantic_hash": ""
   },
   "scratch_quotation.jsx": {
@@ -530,13 +520,13 @@
     "semantic_hash": ""
   },
   "client/src/Admin/ProformaHistory.jsx": {
-    "mtime": 1783942767.0524552,
-    "ast_hash": "b2892f73ae3e82b68d3f711bc4640a02",
+    "mtime": 1784033463.1949825,
+    "ast_hash": "08ae01d39c2f6e0b73624eda7bc4c7d3",
     "semantic_hash": ""
   },
   "client/src/Admin/RevenueHistory.jsx": {
-    "mtime": 1783778291.4381683,
-    "ast_hash": "955375bc6b4bc88e3bb5cf066ca58aad",
+    "mtime": 1784033463.3742995,
+    "ast_hash": "2404e54ddc4834f0939a0ab8739df4cd",
     "semantic_hash": ""
   },
   "server/sql/2026-06-proposal-invoice-migration.sql": {
@@ -545,13 +535,13 @@
     "semantic_hash": ""
   },
   "client/src/Admin/BalanceProformaHistory.jsx": {
-    "mtime": 1783661599.21277,
-    "ast_hash": "a8fdbaaa8fd337e0fbca81fadee6a7f6",
+    "mtime": 1784033463.054778,
+    "ast_hash": "2cc23a175323b5e4634d3107d3a3eb5a",
     "semantic_hash": ""
   },
   "client/src/Admin/PaymentHistory.jsx": {
-    "mtime": 1783767795.7967882,
-    "ast_hash": "494e416032a0b120dec14d907e8a65bd",
+    "mtime": 1784033463.173352,
+    "ast_hash": "c89575b9fdda9314786b6966cc1f3add",
     "semantic_hash": ""
   },
   "client/src/Admin/components/GenerateProformaInvoiceModal.jsx": {
@@ -560,8 +550,8 @@
     "semantic_hash": ""
   },
   "client/src/Admin/components/GenerateProformaModal.jsx": {
-    "mtime": 1783927562.119377,
-    "ast_hash": "5198801e503a16fa68d4ea4f7116a4e8",
+    "mtime": 1784033462.7371347,
+    "ast_hash": "9fa8972ba2b666b1b588f1ee005abc4b",
     "semantic_hash": ""
   },
   "client/src/Admin/temp_modal.jsx": {
@@ -590,18 +580,18 @@
     "semantic_hash": ""
   },
   "client/src/Admin/Quotation_orig.jsx": {
-    "mtime": 1783415334.388443,
-    "ast_hash": "80348e7d40cb81afb9f6098dd2662e19",
+    "mtime": 1784033463.3280776,
+    "ast_hash": "9db0dd0f7e2cf59392cc22248c98c2c8",
     "semantic_hash": ""
   },
   "client/src/Client/PublicInvoice.jsx": {
-    "mtime": 1783507165.4044378,
-    "ast_hash": "c65ef8a7dc938507a1b742303ad9c5f8",
+    "mtime": 1784033463.8801575,
+    "ast_hash": "ff035550813efbef6f70d4a57f33f912",
     "semantic_hash": ""
   },
   "client/src/Client/PublicProposal.jsx": {
-    "mtime": 1783514895.5575426,
-    "ast_hash": "a72d9af2e685d6648e934f431355e663",
+    "mtime": 1784033463.8947089,
+    "ast_hash": "557353e2c6a9eb28c93888f456115b85",
     "semantic_hash": ""
   },
   "server/sql/2026-07-08-public-proposals-and-logs.sql": {
@@ -615,18 +605,18 @@
     "semantic_hash": ""
   },
   "client/src/Admin/AdminInvoice.orig.jsx": {
-    "mtime": 1783753765.9178686,
-    "ast_hash": "f9160ea73068460f8d8246c44c37cb4e",
+    "mtime": 1784033462.9234214,
+    "ast_hash": "8bee282361ad990d44f2d43d48b3a779",
     "semantic_hash": ""
   },
   "client/src/Admin/components/CreateProposalModal.jsx": {
-    "mtime": 1783766981.0288813,
-    "ast_hash": "c99d1143586d837de8894090fb9e914c",
+    "mtime": 1784033462.7116916,
+    "ast_hash": "f30268e8d6c4534ea2ef6de747de3ac5",
     "semantic_hash": ""
   },
   "client/src/Components/InstantProforma.jsx": {
-    "mtime": 1783927513.511095,
-    "ast_hash": "2114b913f9353237d217d0846e77ec1b",
+    "mtime": 1784033463.9683032,
+    "ast_hash": "3f0a011276cb17ac75911514f1de4fc7",
     "semantic_hash": ""
   },
   "server/revenue_engine.sql": {
@@ -635,8 +625,8 @@
     "semantic_hash": ""
   },
   "client/src/Screens/RegisterAdmin.jsx": {
-    "mtime": 1784007050.336069,
-    "ast_hash": "e6c1322a67d7f3094e8e756058c06632",
+    "mtime": 1784033464.3119204,
+    "ast_hash": "2188625dc1fd49e8d938ea993c4be0dd",
     "semantic_hash": ""
   },
   "revenue_engine.sql": {
@@ -645,23 +635,23 @@
     "semantic_hash": ""
   },
   "server/re_controller/re_controller.js": {
-    "mtime": 1784032545.3694022,
-    "ast_hash": "57abdb2758fc04185248af669531586f",
+    "mtime": 1784034347.092937,
+    "ast_hash": "e2ea810eb693c53cd0af7d344327d359",
     "semantic_hash": ""
   },
   "server/re_controller/re_deleteController.js": {
-    "mtime": 1784031936.990141,
-    "ast_hash": "3877ca08a89438be9ec5acf6918fb14f",
+    "mtime": 1784034359.5617137,
+    "ast_hash": "8f0e16d42d7e5930934c6b1aaedb10a9",
     "semantic_hash": ""
   },
   "server/re_controller/re_genratecoatetion.js": {
-    "mtime": 1784032515.4596796,
-    "ast_hash": "f627e705521ae5a33dcafab0326b6a6d",
+    "mtime": 1784034429.6630435,
+    "ast_hash": "bbb6e2e844df3e802b2e08c10a826d42",
     "semantic_hash": ""
   },
   "server/re_controller/re_getController.js": {
-    "mtime": 1784031763.4093978,
-    "ast_hash": "e1df0ee37f2fabbffad44f17c177c451",
+    "mtime": 1784034486.9338562,
+    "ast_hash": "a56f6dadfc422e94c70bae56194d1cf4",
     "semantic_hash": ""
   },
   "server/re_controller/re_pdfHelpers.js": {
@@ -670,23 +660,23 @@
     "semantic_hash": ""
   },
   "server/re_controller/re_proposalController.js": {
-    "mtime": 1784032553.156521,
-    "ast_hash": "eff67c5c43b1590f7746c9b18ff71c73",
+    "mtime": 1784034518.040069,
+    "ast_hash": "8c9f02934e2749c2772acb8003ee447b",
     "semantic_hash": ""
   },
   "server/re_controller/re_publicController.js": {
-    "mtime": 1784032584.2196252,
-    "ast_hash": "fad1da0e93ffca20bedcb84cb3477093",
+    "mtime": 1784034534.7370088,
+    "ast_hash": "91114d68dc18e3c4f84f25b5301a3e6d",
     "semantic_hash": ""
   },
   "server/re_controller/re_reminders.js": {
-    "mtime": 1784032553.1545231,
-    "ast_hash": "51ab10f946bc71fb783c70dbd81af075",
+    "mtime": 1784034545.749737,
+    "ast_hash": "00345abbac0d425641920ed11964788b",
     "semantic_hash": ""
   },
   "server/re_controller/re_sendEmails.js": {
-    "mtime": 1784031855.4428499,
-    "ast_hash": "1998e130e015954db1f42167c7e117b8",
+    "mtime": 1784034565.2798598,
+    "ast_hash": "9638d3bfc8e9dcad1d57b71e49ad1801",
     "semantic_hash": ""
   },
   "server/re_controller/re_sendWhatsApp.js": {
@@ -700,18 +690,28 @@
     "semantic_hash": ""
   },
   "server/re_controller/re_updateController.js": {
-    "mtime": 1784031920.3449843,
-    "ast_hash": "025c7acc40c73126f0aeaff45ed62bb0",
+    "mtime": 1784034576.4140139,
+    "ast_hash": "8e7e76efc4f32f33d76652622a36bca6",
     "semantic_hash": ""
   },
   "server/re_controller/re_workflowcontroller.JS": {
-    "mtime": 1784032553.1535225,
-    "ast_hash": "ac0db1d803581254560220a458915278",
+    "mtime": 1784034582.0535016,
+    "ast_hash": "7e5b89ef2d11d7b5b13a71dd3522ecf1",
     "semantic_hash": ""
   },
   "server/re_router/re_router.js": {
-    "mtime": 1784032756.1459854,
-    "ast_hash": "b92caea140f3d38158dcd07d784d95ee",
+    "mtime": 1784033592.8481016,
+    "ast_hash": "aafa674e465b428102c31e4917aa974c",
+    "semantic_hash": ""
+  },
+  "server/re_middleware/re_authenticateToken.js": {
+    "mtime": 1784034593.0875795,
+    "ast_hash": "be016b1c1a77fcb2019026859deb85af",
+    "semantic_hash": ""
+  },
+  "server/re_middleware/re_verifyAdminToken.js": {
+    "mtime": 1784034703.5452676,
+    "ast_hash": "b92e9c53a0189c1349b59a68b25b5b7e",
     "semantic_hash": ""
   }
 }

@@ -7,7 +7,7 @@ const ILovePDF = require("@ilovepdf/ilovepdf-nodejs");
 const ILovePDFFile = require("@ilovepdf/ilovepdf-nodejs/ILovePDFFile");
 
 // --- Constants & Configuration ---
-const TEMP_DIR = path.join(__dirname, "../temp");
+const TEMP_DIR = path.join(__dirname, "../re_temp");
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 const MIN_VALID_PDF_SIZE = 1024; // 1 KB se chota PDF invalid maana jayega
 const CONVERSION_RETRY_LIMIT = 2; // Failure par max 2 baar retry

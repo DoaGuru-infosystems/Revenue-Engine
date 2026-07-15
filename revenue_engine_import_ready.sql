@@ -1044,7 +1044,7 @@ ALTER TABLE `re_assign_quotation`
   ADD KEY `idx_user` (`user_id`),
   ADD KEY `idx_team` (`team_id`),
   ADD KEY `idx_mode` (`assignment_mode`),
-  ADD KEY `fk_aq_client` (`client_id`);
+  ADD KEY `re_fk_aq_client` (`client_id`);
 
 --
 -- Indexes for table `re_calculator_transactions`
@@ -1107,8 +1107,8 @@ ALTER TABLE `re_editing_types`
 ALTER TABLE `re_invoice`
   ADD PRIMARY KEY (`id`),
   ADD KEY `client_id` (`client_id`),
-  ADD KEY `fk_invoice_proposal_id` (`proposal_id`),
-  ADD KEY `fk_invoice_proforma_id` (`proforma_id`);
+  ADD KEY `re_fk_invoice_proposal_id` (`proposal_id`),
+  ADD KEY `re_fk_invoice_proforma_id` (`proforma_id`);
 
 --
 -- Indexes for table `re_invoice_client_notes`
@@ -1580,9 +1580,9 @@ ALTER TABLE `re_amount_remaining`
 -- Constraints for table `re_assign_quotation`
 --
 ALTER TABLE `re_assign_quotation`
-  ADD CONSTRAINT `fk_aq_client` FOREIGN KEY (`client_id`) REFERENCES `re_revenue_engine_client_details` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_aq_user` FOREIGN KEY (`user_id`) REFERENCES `re_revenue_engine_employees` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_assign_team` FOREIGN KEY (`team_id`) REFERENCES `re_teams` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `re_fk_aq_client` FOREIGN KEY (`client_id`) REFERENCES `re_revenue_engine_client_details` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `re_fk_aq_user` FOREIGN KEY (`user_id`) REFERENCES `re_revenue_engine_employees` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `re_fk_assign_team` FOREIGN KEY (`team_id`) REFERENCES `re_teams` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `re_categories`
@@ -1607,8 +1607,8 @@ ALTER TABLE `re_editing_types`
 -- Constraints for table `re_invoice`
 --
 ALTER TABLE `re_invoice`
-  ADD CONSTRAINT `fk_invoice_proforma_id` FOREIGN KEY (`proforma_id`) REFERENCES `re_proposal_proforma` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_invoice_proposal_id` FOREIGN KEY (`proposal_id`) REFERENCES `re_proposals` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `re_fk_invoice_proforma_id` FOREIGN KEY (`proforma_id`) REFERENCES `re_proposal_proforma` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `re_fk_invoice_proposal_id` FOREIGN KEY (`proposal_id`) REFERENCES `re_proposals` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `re_plan_client_notes`
@@ -1620,7 +1620,7 @@ ALTER TABLE `re_plan_client_notes`
 -- Constraints for table `re_proposals`
 --
 ALTER TABLE `re_proposals`
-  ADD CONSTRAINT `fk_proposal_client` FOREIGN KEY (`client_id`) REFERENCES `re_revenue_engine_client_details` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `re_fk_proposal_client` FOREIGN KEY (`client_id`) REFERENCES `re_revenue_engine_client_details` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `re_proposal_payment_records`
@@ -1639,7 +1639,7 @@ ALTER TABLE `re_proposal_proforma`
 -- Constraints for table `re_requirement_submissions`
 --
 ALTER TABLE `re_requirement_submissions`
-  ADD CONSTRAINT `fk_submissions_link` FOREIGN KEY (`link_id`) REFERENCES `re_client_requirement_links` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `re_fk_submissions_link` FOREIGN KEY (`link_id`) REFERENCES `re_client_requirement_links` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `re_requirement_submissions_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `re_revenue_engine_client_details` (`id`);
 
 --

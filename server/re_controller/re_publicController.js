@@ -1,4 +1,4 @@
-﻿const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { db } = require("../connect");
 const dotenv = require("dotenv");
@@ -8,7 +8,7 @@ const fs = require("fs");
 
 dotenv.config();
 
-const TEMP_DIR = path.join(__dirname, "../temp");
+const TEMP_DIR = path.join(__dirname, "../re_temp");
 if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 }

@@ -10,7 +10,7 @@ const path = require("path");
 const { PDFDocument } = require("pdf-lib");
 
 // --- Constants ---
-const ASSETS_DIR = path.join(__dirname, "../assets");
+const ASSETS_DIR = path.join(__dirname, "../re_assets");
 const HEADER_HEIGHT = 80;
 const FOOTER_HEIGHT = 50;
 const CONTENT_TOP_PADDING = 20;

@@ -7,14 +7,14 @@ const { sendProposalEmail, sendProposalAdminNotifyEmail } = require("./re_sendEm
 const { sendProposalWhatsApp, sendProposalAdminNotifyWA } = require("./re_sendWhatsApp");
 const puppeteer = require("puppeteer");
 const { generatePublicAccessToken } = require("./re_publicController");
-const notificationService = require("../services/notificationService");
+const notificationService = require("../re_services/notificationService");
 
 // Helper to load assets as base64 for Puppeteer
 function getImageDataURI(filename) {
   try {
     const ext = path.extname(filename).substring(1);
     const mime = ext === "png" ? "image/png" : "image/jpeg";
-    const buffer = fs.readFileSync(path.join(__dirname, "../assets", filename));
+    const buffer = fs.readFileSync(path.join(__dirname, "../re_assets", filename));
     return `data:${mime};base64,${buffer.toString("base64")}`;
   } catch (err) {
     console.warn("[PUPPETEER] Image load error:", filename);
@@ -117,7 +117,7 @@ function notesToText(notes) {
     .join("\n");
 }
 
-const TEMP_DIR = path.join(__dirname, "../temp");
+const TEMP_DIR = path.join(__dirname, "../re_temp");
 if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 }
