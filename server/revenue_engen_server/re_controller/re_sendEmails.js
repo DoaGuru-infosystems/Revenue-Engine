@@ -21,7 +21,7 @@ function isEmail(v) {
 // Logo attachment common to all emails
 const getLogoAttachment = () => ({
   filename: 'logo.png',
-  path: path.join(__dirname, '../../client/public/logo.png'),
+  path: path.join(__dirname, '../../../client/public/logo.png'),
   cid: 'logo'
 });
 
@@ -343,7 +343,45 @@ async function sendInvoiceAdminNotifyEmail({ clientName, invoiceNo, amount, time
 }
 
 // ----------------------------------------------------
-// 7. sendRegistrationOtpEmail (Registration OTP)
+// 7. sendPasswordResetOtpEmail (Forgot Password OTP)
+// ----------------------------------------------------
+async function sendPasswordResetOtpEmail(email, otp) {
+  if (!isEmail(email)) return;
+
+  const subject = "Your Password Reset OTP";
+  const html = `
+    <div style="font-family: Arial, sans-serif; background-color: #fffaf5; padding: 50px 20px;">
+      <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #fbd38d; box-shadow: 0 10px 25px rgba(234, 88, 12, 0.1); text-align: center; padding: 40px 30px;">
+        <img src="cid:logo" alt="Revenue Engine" style="height: 45px; margin-bottom: 30px;" />
+        <h2 style="color: #1f2937; margin: 0 0 15px; font-size: 22px;">Reset Your Password</h2>
+        <p style="color: #4b5563; font-size: 15px; line-height: 1.5; margin-bottom: 30px;">We received a request to reset your password. Use the verification code below to securely change your password.</p>
+        <div style="background-color: #fff7ed; border: 2px dashed #ea580c; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #ea580c;">${otp}</span>
+        </div>
+        <p style="color: #9ca3af; font-size: 13px; margin: 0;">If you didn't request this, you can safely ignore this email.</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Revenue Engine" <${process.env.EMAILSENDER}>`,
+      to: email,
+      subject,
+      text: `Your password reset OTP code is: ${otp}`,
+      html,
+      attachments: [getLogoAttachment()],
+    });
+    console.log("[MAIL] Password Reset OTP sent: %s", info.messageId);
+    return { ok: true };
+  } catch (error) {
+    console.error("[MAIL ERROR] Password Reset OTP:", error);
+    throw error;
+  }
+}
+
+// ----------------------------------------------------
+// 8. sendRegistrationOtpEmail (Registration OTP)
 // ----------------------------------------------------
 async function sendRegistrationOtpEmail({ to, otp }) {
   if (!isEmail(to)) return;
@@ -387,5 +425,6 @@ module.exports = {
   sendPaymentReceivedAlertEmail,
   sendInvoiceAdminNotifyEmail,
   sendRegistrationOtpEmail,
+  sendPasswordResetOtpEmail,
   TZ,
 };

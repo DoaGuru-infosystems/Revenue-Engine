@@ -1,4 +1,4 @@
-const { db } = require("../connect");
+const { db } = require("../../connect");
 const { addBrandedPage, embedImageToPdf, loadBrandImages, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_TOP_PADDING } = require("./re_pdfHelpers");
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const fs = require("fs");

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { db } = require("../connect");
+const { db } = require("../../connect");
 const dotenv = require("dotenv");
 const puppeteer = require("puppeteer");
 const path = require("path");

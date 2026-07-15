@@ -3,7 +3,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const morgan = require("morgan");
-const re_apiRouter = require("./re_router/re_router");
+const re_apiRouter = require("./revenue_engen_server/re_router/re_router");
 dotenv.config();
 
 const app = express();
@@ -15,7 +15,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 app.use("/auth/api/re_calculator", re_apiRouter);
 
-require("./re_controller/re_reminders");
+require("./revenue_engen_server/re_controller/re_reminders");
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Calculator API");

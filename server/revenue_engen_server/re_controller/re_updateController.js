@@ -1,28 +1,8 @@
-const { db } = require("../connect");
+const { db } = require("../../connect");
 const dotenv = require("dotenv");
 const moment = require("moment-timezone");
-const nodemailer = require("nodemailer");
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAILSENDER,
-    pass: process.env.EMAILPASSWORD,
-  },
-  logger: true, // nodemailer internal logger
-  debug: true, // include SMTP traffic in logs
-});
-
-// verify the connection at server start
-(async () => {
-  try {
-    const ok = await transporter.verify();
-    console.log("[MAIL] Transporter verify:", ok ? "OK" : "UNKNOWN");
-  } catch (e) {
-    console.error("[MAIL] Transporter verify FAILED:", e);
-  }
-})();
 
 exports.updateService = async (req, res) => {
   const { service_id } = req.params;

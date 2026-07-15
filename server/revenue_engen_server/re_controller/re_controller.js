@@ -1,11 +1,10 @@
-﻿const { db } = require("../connect");
+const { db } = require("../../connect");
 const moment = require("moment-timezone");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
-const { TZ, sendRegistrationOtpEmail } = require("./re_sendEmails");
+const { TZ, sendRegistrationOtpEmail, sendPasswordResetOtpEmail } = require("./re_sendEmails");
 dotenv.config();
 
 const registerOtpStore = new Map();
@@ -18,25 +17,7 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAILSENDER,
-    pass: process.env.EMAILPASSWORD,
-  },
-  logger: true, // nodemailer internal logger
-  debug: true, // include SMTP traffic in logs
-});
 
-// verify the connection at server start
-(async () => {
-  try {
-    const ok = await transporter.verify();
-    console.log("[MAIL] Transporter verify:", ok ? "OK" : "UNKNOWN");
-  } catch (e) {
-    console.error("[MAIL] Transporter verify FAILED:", e);
-  }
-})();
 
 exports.register = async (req, res) => {
   const { employee_name, employee_role, employee_email, employee_password } =
@@ -260,43 +241,6 @@ exports.login = async (req, res) => {
 
 const forgototpStore = new Map();
 
-const passwordOtpEmail = async (email, otp) => {
-  try {
-    const mailOptions = {
-      from: `"Revenue Engine" <${process.env.EMAILSENDER}>`,
-      to: email,
-      subject: "Your Password Reset OTP",
-      text: `Your password reset OTP code is: ${otp}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; background-color: #fffaf5; padding: 50px 20px;">
-          <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #fbd38d; box-shadow: 0 10px 25px rgba(234, 88, 12, 0.1); text-align: center; padding: 40px 30px;">
-            <img src="cid:logo" alt="Revenue Engine" style="height: 45px; margin-bottom: 30px;" />
-            <h2 style="color: #1f2937; margin: 0 0 15px; font-size: 22px;">Reset Your Password</h2>
-            <p style="color: #4b5563; font-size: 15px; line-height: 1.5; margin-bottom: 30px;">We received a request to reset your password. Use the verification code below to securely change your password.</p>
-            
-            <div style="background-color: #fff7ed; border: 2px dashed #ea580c; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #ea580c;">${otp}</span>
-            </div>
-            
-            <p style="color: #9ca3af; font-size: 13px; margin: 0;">If you didn't request this, you can safely ignore this email.</p>
-          </div>
-        </div>
-      `,
-      attachments: [
-        {
-          filename: "logo.png",
-          path: require("path").join(__dirname, "../../client/public/logo.png"),
-          cid: "logo",
-        },
-      ],
-    };
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent: %s", info.messageId);
-  } catch (error) {
-    console.error("Error sending email:", error);
-    throw error;
-  }
-};
 
 exports.forgotPassword = async (req, res) => {
   const { User } = req.body;
@@ -326,7 +270,7 @@ exports.forgotPassword = async (req, res) => {
         expiresAt: Date.now() + 5 * 60 * 1000,
       });
 
-      await passwordOtpEmail(user.employee_email, otp);
+      await sendPasswordResetOtpEmail(user.employee_email, otp);
 
       return res.status(200).json({
         status: "Success",
@@ -949,7 +893,7 @@ exports.saveCalculatorData = (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  // 🔎 Step 0: Check if the same service already exists for this txn_id
+  // ?? Step 0: Check if the same service already exists for this txn_id
   const checkDuplicate = `
     SELECT id FROM re_calculator_transactions 
     WHERE txn_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
@@ -965,7 +909,7 @@ exports.saveCalculatorData = (req, res) => {
       }
 
       if (dupResult.length > 0) {
-        // ⚠️ Service already exists, stop insert
+        // ?? Service already exists, stop insert
         return res.status(200).json({
           status: "Alert",
           message: "This service already exists for the selected quotation",
@@ -1247,7 +1191,7 @@ exports.saveCalculatorDataOfPlanDetail = (req, res) => {
       return res.status(500).json({ status: "Failure", message: "Plan error" });
     }
 
-    // ✅ return insertId for navigation
+    // ? return insertId for navigation
     res.status(200).json({
       status: "Success",
       message: "Saved successfully of Plan Detail",
@@ -1354,7 +1298,7 @@ exports.saveClientWithPlan = async (req, res) => {
             });
           }
 
-          // ✅ Final response (only once)
+          // ? Final response (only once)
           res.status(201).json({
             status: "Success",
             message: "Client, Plans, and Notes saved successfully",
@@ -2395,7 +2339,7 @@ exports.setDoneQty = (req, res) => {
       .json({ status: "Failure", message: "Missing fields" });
   }
 
-  // ✅ normalize
+  // ? normalize
   const svc = (service_name || "").trim();
   const cat = (category_name || "").trim();
   const edit = (editing_type_name || "").trim(); // default '' OK
@@ -2423,7 +2367,7 @@ exports.setDoneQty = (req, res) => {
     [
       client_id,
       txn_id,
-      svc, // 👈 normalized values
+      svc, // ?? normalized values
       cat,
       edit,
       planned,
@@ -2782,7 +2726,7 @@ exports.saveComplimentaryData = (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  // ✅ Step 0: Check if service already exists for this txn_id + editing_type_id
+  // ? Step 0: Check if service already exists for this txn_id + editing_type_id
   const checkDuplicate = `
     SELECT id FROM re_complimentary 
     WHERE txn_id = ? AND client_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
@@ -2798,7 +2742,7 @@ exports.saveComplimentaryData = (req, res) => {
       }
 
       if (dupResult.length > 0) {
-        // Already exists → stop here
+        // Already exists ? stop here
         return res.status(200).json({
           status: "Alert",
           message: "This complimentary service already exists",
@@ -2990,7 +2934,7 @@ exports.generateClientLink = async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?)
           `;
 
-          // ⚠️ NOTE: 6 placeholders → 6 values
+          // ?? NOTE: 6 placeholders ? 6 values
           db.query(
             qInsert,
             [client_id, slug, isActive, expiresAt, created_by, createdAt],
@@ -3404,7 +3348,7 @@ exports.saveInvoiceGD = (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  // ✅ Step 1: Get latest bill number for the selected type
+  // ? Step 1: Get latest bill number for the selected type
   const getLastBillQuery = `
     SELECT bill_number FROM re_invoice WHERE bill_type = ? ORDER BY id DESC LIMIT 1
   `;
@@ -3433,7 +3377,7 @@ exports.saveInvoiceGD = (req, res) => {
       newBillNumber = bill_type === "GST" ? "01" : "01";
     }
 
-    // ✅ Step 2: Insert into re_invoice table
+    // ? Step 2: Insert into re_invoice table
     const clientQuery = `
       INSERT INTO re_invoice 
       (bill_type, bill_number, txn_id, client_id, client_name, client_organization, email, phone, address, dg_employee, duration_start_date, duration_end_date, payment_mode, client_gst_no, client_pan_no, created_at) 
@@ -3469,7 +3413,7 @@ exports.saveInvoiceGD = (req, res) => {
         });
       }
 
-      // ✅ Step 3: Insert re_invoice line items into re_invoice_graphic
+      // ? Step 3: Insert re_invoice line items into re_invoice_graphic
       const invoiceValues = invoices.map((p) => [
         txn_id,
         client_id,
@@ -3486,7 +3430,7 @@ exports.saveInvoiceGD = (req, res) => {
         createdAt,
       ]);
 
-      // ✅ CRITICAL FIX: Validate before executing query
+      // ? CRITICAL FIX: Validate before executing query
       if (
         !Array.isArray(invoices) ||
         invoices.length === 0 ||
@@ -3518,7 +3462,7 @@ exports.saveInvoiceGD = (req, res) => {
           });
         }
 
-        // ✅ Final Success Response
+        // ? Final Success Response
         return res.status(200).json({
           status: "Success",
           message: "Invoice saved successfully",
@@ -3839,7 +3783,7 @@ exports.saveAdditionalData = (req, res) => {
     createdAt,
   ];
 
-  // ✅ Step 1: Check if this service already exists
+  // ? Step 1: Check if this service already exists
   const checkDuplicate = `
     SELECT id FROM re_addtional_service
      WHERE txn_id = ? AND client_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
@@ -3862,7 +3806,7 @@ exports.saveAdditionalData = (req, res) => {
         });
       }
 
-      // ✅ Step 2: Insert into re_addtional_service (Only Quotation)
+      // ? Step 2: Insert into re_addtional_service (Only Quotation)
       const insertQuery = `
       INSERT INTO re_addtional_service (
         txn_id,

@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const { db } = require("../connect");
+const { db } = require("../../connect");
 const moment = require("moment-timezone");
 const {
   sendDailyPaymentSummaryEmail,
