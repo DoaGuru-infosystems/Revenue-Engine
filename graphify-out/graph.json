@@ -530,7 +530,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_admincalculator",
-      "community": 10,
+      "community": 12,
       "norm_label": "admincalculator.jsx"
     },
     {
@@ -540,7 +540,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "admin_admincalculator_discountcard",
-      "community": 10,
+      "community": 12,
       "norm_label": "discountcard()"
     },
     {
@@ -550,7 +550,7 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "admin_admincalculator_discountmodal",
-      "community": 10,
+      "community": 12,
       "norm_label": "discountmodal()"
     },
     {
@@ -560,7 +560,7 @@
       "source_location": "L338",
       "_origin": "ast",
       "id": "admin_admincalculator_admincalculator",
-      "community": 5,
+      "community": 12,
       "norm_label": "admincalculator()"
     },
     {
@@ -570,7 +570,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_adminclientdetails",
-      "community": 5,
+      "community": 12,
       "norm_label": "adminclientdetails.jsx"
     },
     {
@@ -580,7 +580,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "admin_adminclientdetails_adminclientdetails",
-      "community": 5,
+      "community": 12,
       "norm_label": "adminclientdetails()"
     },
     {
@@ -590,7 +590,7 @@
       "source_location": "L919",
       "_origin": "ast",
       "id": "admin_adminclientdetails_paginationcontainer",
-      "community": 5,
+      "community": 12,
       "norm_label": "paginationcontainer"
     },
     {
@@ -600,7 +600,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_admincomplimentarydata",
-      "community": 10,
+      "community": 12,
       "norm_label": "admincomplimentarydata.jsx"
     },
     {
@@ -610,7 +610,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "admin_admincomplimentarydata_admincomplimentarydata",
-      "community": 10,
+      "community": 12,
       "norm_label": "admincomplimentarydata()"
     },
     {
@@ -790,7 +790,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_adminplanhistory",
-      "community": 12,
+      "community": 11,
       "norm_label": "adminplanhistory.jsx"
     },
     {
@@ -810,7 +810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_adminserviceshistory",
-      "community": 7,
+      "community": 10,
       "norm_label": "adminserviceshistory.jsx"
     },
     {
@@ -820,7 +820,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "admin_adminserviceshistory_adminserviceshistory",
-      "community": 7,
+      "community": 10,
       "norm_label": "adminserviceshistory()"
     },
     {
@@ -950,7 +950,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_allhistory",
-      "community": 7,
+      "community": 11,
       "norm_label": "allhistory.jsx"
     },
     {
@@ -960,7 +960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_assignquotation",
-      "community": 7,
+      "community": 21,
       "norm_label": "assignquotation.jsx"
     },
     {
@@ -970,7 +970,7 @@
       "source_location": "L439",
       "_origin": "ast",
       "id": "admin_assignquotation_comingsoonplaceholder",
-      "community": 7,
+      "community": 21,
       "norm_label": "comingsoonplaceholder()"
     },
     {
@@ -980,7 +980,7 @@
       "source_location": "L461",
       "_origin": "ast",
       "id": "admin_assignquotation_assignquotation",
-      "community": 7,
+      "community": 21,
       "norm_label": "assignquotation()"
     },
     {
@@ -1030,7 +1030,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_discountsetting",
-      "community": 12,
+      "community": 11,
       "norm_label": "discountsetting.jsx"
     },
     {
@@ -1100,7 +1100,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "admin_history_history",
-      "community": 22,
+      "community": 40,
       "norm_label": "history()"
     },
     {
@@ -1110,7 +1110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_historyhub",
-      "community": 34,
+      "community": 12,
       "norm_label": "historyhub.jsx"
     },
     {
@@ -1120,7 +1120,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "admin_historyhub_proposalhistory",
-      "community": 34,
+      "community": 12,
       "norm_label": "proposalhistory"
     },
     {
@@ -1130,7 +1130,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "admin_historyhub_invoicehistory",
-      "community": 34,
+      "community": 12,
       "norm_label": "invoicehistory"
     },
     {
@@ -1140,7 +1140,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "admin_historyhub_proformahistory",
-      "community": 34,
+      "community": 12,
       "norm_label": "proformahistory"
     },
     {
@@ -1150,7 +1150,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "admin_historyhub_revenuehistory",
-      "community": 34,
+      "community": 12,
       "norm_label": "revenuehistory"
     },
     {
@@ -1160,7 +1160,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "admin_historyhub_balanceproformahistory",
-      "community": 34,
+      "community": 12,
       "norm_label": "balanceproformahistory"
     },
     {
@@ -1170,7 +1170,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "admin_historyhub_paymenthistory",
-      "community": 34,
+      "community": 12,
       "norm_label": "paymenthistory"
     },
     {
@@ -1180,7 +1180,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "admin_historyhub_comingsoonplaceholder",
-      "community": 34,
+      "community": 12,
       "norm_label": "comingsoonplaceholder()"
     },
     {
@@ -1190,7 +1190,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "admin_historyhub_sub_tabs",
-      "community": 34,
+      "community": 12,
       "norm_label": "sub_tabs"
     },
     {
@@ -1200,7 +1200,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "admin_historyhub_historyhub",
-      "community": 34,
+      "community": 12,
       "norm_label": "historyhub()"
     },
     {
@@ -1230,7 +1230,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_invoiceads",
-      "community": 12,
+      "community": 11,
       "norm_label": "invoiceads.jsx"
     },
     {
@@ -1290,7 +1290,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_invoicehistory",
-      "community": 12,
+      "community": 10,
       "norm_label": "invoicehistory.jsx"
     },
     {
@@ -1300,7 +1300,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "admin_invoicehistory_invoicehistory",
-      "community": 12,
+      "community": 5,
       "norm_label": "invoicehistory()"
     },
     {
@@ -1310,7 +1310,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_invoicenotesection",
-      "community": 12,
+      "community": 10,
       "norm_label": "invoicenotesection.jsx"
     },
     {
@@ -1340,7 +1340,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "admin_notesection_notesection",
-      "community": 5,
+      "community": 12,
       "norm_label": "notesection()"
     },
     {
@@ -1430,7 +1430,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "admin_proposalbuilder_getbillabletotals",
-      "community": 40,
+      "community": 22,
       "norm_label": "getbillabletotals()"
     },
     {
@@ -1480,7 +1480,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_quotation",
-      "community": 12,
+      "community": 40,
       "norm_label": "quotation.jsx"
     },
     {
@@ -1500,7 +1500,7 @@
       "source_location": "L2192",
       "_origin": "ast",
       "id": "admin_quotation_wrapper",
-      "community": 12,
+      "community": 40,
       "norm_label": "wrapper"
     },
     {
@@ -1600,7 +1600,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_reviewrequirements",
-      "community": 34,
+      "community": 12,
       "norm_label": "reviewrequirements.jsx"
     },
     {
@@ -1610,7 +1610,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "admin_reviewrequirements_inr",
-      "community": 34,
+      "community": 12,
       "norm_label": "inr()"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "admin_reviewrequirements_reviewrequirements",
-      "community": 34,
+      "community": 12,
       "norm_label": "reviewrequirements()"
     },
     {
@@ -1630,7 +1630,7 @@
       "source_location": "L306",
       "_origin": "ast",
       "id": "admin_reviewrequirements_infochip",
-      "community": 34,
+      "community": 12,
       "norm_label": "infochip()"
     },
     {
@@ -1640,7 +1640,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "admin_reviewrequirements_badge",
-      "community": 34,
+      "community": 12,
       "norm_label": "badge()"
     },
     {
@@ -1650,7 +1650,7 @@
       "source_location": "L337",
       "_origin": "ast",
       "id": "admin_reviewrequirements_pill",
-      "community": 34,
+      "community": 12,
       "norm_label": "pill()"
     },
     {
@@ -1710,7 +1710,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "admin_serviceslanding",
-      "community": 12,
+      "community": 10,
       "norm_label": "serviceslanding.jsx"
     },
     {
@@ -1720,7 +1720,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "admin_serviceslanding_serviceslanding",
-      "community": 12,
+      "community": 10,
       "norm_label": "serviceslanding()"
     },
     {
@@ -2100,7 +2100,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "businessdeveloper_adscampaigncalcibd",
-      "community": 7,
+      "community": 10,
       "norm_label": "adscampaigncalcibd.jsx"
     },
     {
@@ -2110,7 +2110,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "businessdeveloper_adscampaigncalcibd_adscampaigncalcibd",
-      "community": 7,
+      "community": 10,
       "norm_label": "adscampaigncalcibd()"
     },
     {
@@ -2120,7 +2120,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "businessdeveloper_allhistory",
-      "community": 7,
+      "community": 15,
       "norm_label": "allhistory.jsx"
     },
     {
@@ -2130,7 +2130,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "businessdeveloper_allhistory_allhistory",
-      "community": 7,
+      "community": 15,
       "norm_label": "allhistory()"
     },
     {
@@ -2140,7 +2140,7 @@
       "source_location": "L347",
       "_origin": "ast",
       "id": "businessdeveloper_allhistory_paginationcontainer",
-      "community": 7,
+      "community": 15,
       "norm_label": "paginationcontainer"
     },
     {
@@ -2230,7 +2230,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "businessdeveloper_bdexploreplans",
-      "community": 10,
+      "community": 7,
       "norm_label": "bdexploreplans.jsx"
     },
     {
@@ -2240,7 +2240,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "businessdeveloper_bdexploreplans_bdexploreplans",
-      "community": 10,
+      "community": 7,
       "norm_label": "bdexploreplans()"
     },
     {
@@ -2320,7 +2320,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "businessdeveloper_calculatorbd",
-      "community": 10,
+      "community": 12,
       "norm_label": "calculatorbd.jsx"
     },
     {
@@ -2330,7 +2330,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "businessdeveloper_calculatorbd_calculatorbd",
-      "community": 10,
+      "community": 12,
       "norm_label": "calculatorbd()"
     },
     {
@@ -2390,7 +2390,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "businessdeveloper_generatelinkhistorybd",
-      "community": 10,
+      "community": 7,
       "norm_label": "generatelinkhistorybd.jsx"
     },
     {
@@ -2400,7 +2400,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "businessdeveloper_generatelinkhistorybd_generatelinkhistorybd",
-      "community": 10,
+      "community": 7,
       "norm_label": "generatelinkhistorybd()"
     },
     {
@@ -2530,7 +2530,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "businessdeveloper_invoicehistory",
-      "community": 7,
+      "community": 10,
       "norm_label": "invoicehistory.jsx"
     },
     {
@@ -2550,7 +2550,7 @@
       "source_location": "L531",
       "_origin": "ast",
       "id": "businessdeveloper_invoicehistory_paginationcontainer",
-      "community": 7,
+      "community": 10,
       "norm_label": "paginationcontainer"
     },
     {
@@ -3210,7 +3210,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "routers_bdrouter_calculatorbd",
-      "community": 10,
+      "community": 11,
       "norm_label": "calculatorbd"
     },
     {
@@ -3560,7 +3560,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "user_userslice",
-      "community": 7,
+      "community": 11,
       "norm_label": "userslice.js"
     },
     {
@@ -3570,7 +3570,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "user_userslice_initialstate",
-      "community": 7,
+      "community": 11,
       "norm_label": "initialstate"
     },
     {
@@ -3580,7 +3580,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "user_userslice_userslice",
-      "community": 7,
+      "community": 11,
       "norm_label": "userslice"
     },
     {
@@ -3632,26 +3632,6 @@
       "id": "client_vite_config",
       "community": 31,
       "norm_label": "vite.config.js"
-    },
-    {
-      "label": "scratch_quotation.jsx",
-      "file_type": "code",
-      "source_file": "scratch_quotation.jsx",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "scratch_quotation",
-      "community": 36,
-      "norm_label": "scratch_quotation.jsx"
-    },
-    {
-      "label": "f()",
-      "file_type": "code",
-      "source_file": "scratch_quotation.jsx",
-      "source_location": "L390",
-      "_origin": "ast",
-      "id": "scratch_quotation_f",
-      "community": 36,
-      "norm_label": "f()"
     },
     {
       "label": "app.js",
@@ -4086,27 +4066,27 @@
     {
       "label": "re_controller.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_controller",
-      "community": 15,
+      "community": 1,
       "norm_label": "re_controller.js"
     },
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_controller_db",
-      "community": 15,
+      "community": 1,
       "norm_label": "{ db }"
     },
     {
       "label": "moment",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_controller_moment",
@@ -4116,88 +4096,68 @@
     {
       "label": "dotenv",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_controller_re_controller_dotenv",
-      "community": 15,
+      "community": 1,
       "norm_label": "dotenv"
     },
     {
       "label": "bcrypt",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L4",
       "_origin": "ast",
       "id": "re_controller_re_controller_bcrypt",
-      "community": 15,
+      "community": 1,
       "norm_label": "bcrypt"
     },
     {
       "label": "jwt",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L5",
       "_origin": "ast",
       "id": "re_controller_re_controller_jwt",
-      "community": 15,
+      "community": 1,
       "norm_label": "jwt"
     },
     {
       "label": "crypto",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L6",
       "_origin": "ast",
       "id": "re_controller_re_controller_crypto",
-      "community": 15,
+      "community": 1,
       "norm_label": "crypto"
     },
     {
-      "label": "nodemailer",
+      "label": "{\r\n  TZ,\r\n  sendRegistrationOtpEmail,\r\n  sendPasswordResetOtpEmail,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
       "source_location": "L7",
       "_origin": "ast",
-      "id": "re_controller_re_controller_nodemailer",
-      "community": 15,
-      "norm_label": "nodemailer"
-    },
-    {
-      "label": "{ TZ, sendRegistrationOtpEmail }",
-      "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L8",
-      "_origin": "ast",
-      "id": "re_controller_re_controller_tz_sendregistrationotpemail",
-      "community": 15,
-      "norm_label": "{ tz, sendregistrationotpemail }"
+      "id": "re_controller_re_controller_tz_sendregistrationotpemail_sendpasswordresetotpemail",
+      "community": 1,
+      "norm_label": "{\r\n  tz,\r\n  sendregistrationotpemail,\r\n  sendpasswordresetotpemail,\r\n}"
     },
     {
       "label": "registerOtpStore",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L11",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "re_controller_re_controller_registerotpstore",
-      "community": 15,
+      "community": 1,
       "norm_label": "registerotpstore"
-    },
-    {
-      "label": "transporter",
-      "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L21",
-      "_origin": "ast",
-      "id": "re_controller_re_controller_transporter",
-      "community": 15,
-      "norm_label": "transporter"
     },
     {
       "label": "register()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L41",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "re_controller_re_controller_register",
       "community": 1,
@@ -4206,8 +4166,8 @@
     {
       "label": "registerBD()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L107",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L90",
       "_origin": "ast",
       "id": "re_controller_re_controller_registerbd",
       "community": 1,
@@ -4216,58 +4176,48 @@
     {
       "label": "login()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L182",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L165",
       "_origin": "ast",
       "id": "re_controller_re_controller_login",
-      "community": 15,
+      "community": 1,
       "norm_label": "login()"
     },
     {
       "label": "forgototpStore",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L261",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L244",
       "_origin": "ast",
       "id": "re_controller_re_controller_forgototpstore",
-      "community": 15,
+      "community": 1,
       "norm_label": "forgototpstore"
-    },
-    {
-      "label": "passwordOtpEmail()",
-      "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L263",
-      "_origin": "ast",
-      "id": "re_controller_re_controller_passwordotpemail",
-      "community": 15,
-      "norm_label": "passwordotpemail()"
     },
     {
       "label": "forgotPassword()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L301",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L246",
       "_origin": "ast",
       "id": "re_controller_re_controller_forgotpassword",
-      "community": 15,
+      "community": 1,
       "norm_label": "forgotpassword()"
     },
     {
       "label": "verifyOtpAndResetPassword()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L409",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L362",
       "_origin": "ast",
       "id": "re_controller_re_controller_verifyotpandresetpassword",
-      "community": 15,
+      "community": 1,
       "norm_label": "verifyotpandresetpassword()"
     },
     {
       "label": "insertAdsServices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L580",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L533",
       "_origin": "ast",
       "id": "re_controller_re_controller_insertadsservices",
       "community": 1,
@@ -4276,18 +4226,18 @@
     {
       "label": "updateAdsServices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L625",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L578",
       "_origin": "ast",
       "id": "re_controller_re_controller_updateadsservices",
-      "community": 15,
+      "community": 1,
       "norm_label": "updateadsservices()"
     },
     {
       "label": "insertClientDetails()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L677",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L630",
       "_origin": "ast",
       "id": "re_controller_re_controller_insertclientdetails",
       "community": 1,
@@ -4296,28 +4246,28 @@
     {
       "label": "getClientDetails()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L726",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L679",
       "_origin": "ast",
       "id": "re_controller_re_controller_getclientdetails",
-      "community": 15,
+      "community": 1,
       "norm_label": "getclientdetails()"
     },
     {
       "label": "getClientsByEmployee()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L761",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L714",
       "_origin": "ast",
       "id": "re_controller_re_controller_getclientsbyemployee",
-      "community": 15,
+      "community": 1,
       "norm_label": "getclientsbyemployee()"
     },
     {
       "label": "addServices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L799",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L752",
       "_origin": "ast",
       "id": "re_controller_re_controller_addservices",
       "community": 1,
@@ -4326,8 +4276,8 @@
     {
       "label": "addCategories()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L832",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L785",
       "_origin": "ast",
       "id": "re_controller_re_controller_addcategories",
       "community": 1,
@@ -4336,18 +4286,18 @@
     {
       "label": "addEditingTypes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L892",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L845",
       "_origin": "ast",
       "id": "re_controller_re_controller_addeditingtypes",
-      "community": 15,
+      "community": 1,
       "norm_label": "addeditingtypes()"
     },
     {
       "label": "saveCalculatorData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L932",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L885",
       "_origin": "ast",
       "id": "re_controller_re_controller_savecalculatordata",
       "community": 1,
@@ -4356,8 +4306,8 @@
     {
       "label": "saveAdsCampaign()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1080",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1034",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveadscampaign",
       "community": 1,
@@ -4366,8 +4316,8 @@
     {
       "label": "saveCalculatorDataOfPlan()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1165",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1120",
       "_origin": "ast",
       "id": "re_controller_re_controller_savecalculatordataofplan",
       "community": 1,
@@ -4376,8 +4326,8 @@
     {
       "label": "saveCalculatorDataOfPlanDetail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1230",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1185",
       "_origin": "ast",
       "id": "re_controller_re_controller_savecalculatordataofplandetail",
       "community": 1,
@@ -4386,8 +4336,8 @@
     {
       "label": "saveClientWithPlan()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1259",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1214",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveclientwithplan",
       "community": 1,
@@ -4396,8 +4346,8 @@
     {
       "label": "addNotebyplan()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1376",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1331",
       "_origin": "ast",
       "id": "re_controller_re_controller_addnotebyplan",
       "community": 1,
@@ -4406,8 +4356,8 @@
     {
       "label": "savePlanClientNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1441",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1396",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveplanclientnotes",
       "community": 1,
@@ -4416,8 +4366,8 @@
     {
       "label": "saveClientIdwiseNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1562",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1517",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveclientidwisenotes",
       "community": 1,
@@ -4426,58 +4376,58 @@
     {
       "label": "getTxnRows()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1641",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1596",
       "_origin": "ast",
       "id": "re_controller_re_controller_gettxnrows",
-      "community": 15,
+      "community": 1,
       "norm_label": "gettxnrows()"
     },
     {
       "label": "detectMode()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1652",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1607",
       "_origin": "ast",
       "id": "re_controller_re_controller_detectmode",
-      "community": 15,
+      "community": 1,
       "norm_label": "detectmode()"
     },
     {
       "label": "assignQuotation()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1666",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1621",
       "_origin": "ast",
       "id": "re_controller_re_controller_assignquotation",
-      "community": 15,
+      "community": 1,
       "norm_label": "assignquotation()"
     },
     {
       "label": "reassignQuotation()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L1804",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L1759",
       "_origin": "ast",
       "id": "re_controller_re_controller_reassignquotation",
-      "community": 15,
+      "community": 1,
       "norm_label": "reassignquotation()"
     },
     {
       "label": "assignQuotationToTeam()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2174",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2129",
       "_origin": "ast",
       "id": "re_controller_re_controller_assignquotationtoteam",
-      "community": 15,
+      "community": 1,
       "norm_label": "assignquotationtoteam()"
     },
     {
       "label": "setDoneQty()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2372",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2327",
       "_origin": "ast",
       "id": "re_controller_re_controller_setdoneqty",
       "community": 1,
@@ -4486,8 +4436,8 @@
     {
       "label": "incrementDoneQty()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2541",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2496",
       "_origin": "ast",
       "id": "re_controller_re_controller_incrementdoneqty",
       "community": 1,
@@ -4496,8 +4446,8 @@
     {
       "label": "createTeam()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2614",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2569",
       "_origin": "ast",
       "id": "re_controller_re_controller_createteam",
       "community": 1,
@@ -4506,8 +4456,8 @@
     {
       "label": "addMembersToTeam()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2720",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2675",
       "_origin": "ast",
       "id": "re_controller_re_controller_addmemberstoteam",
       "community": 1,
@@ -4516,8 +4466,8 @@
     {
       "label": "saveComplimentaryData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2767",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2722",
       "_origin": "ast",
       "id": "re_controller_re_controller_savecomplimentarydata",
       "community": 1,
@@ -4526,48 +4476,48 @@
     {
       "label": "makeSlug()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2909",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2864",
       "_origin": "ast",
       "id": "re_controller_re_controller_makeslug",
-      "community": 15,
+      "community": 1,
       "norm_label": "makeslug()"
     },
     {
       "label": "generateClientLink()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L2915",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L2870",
       "_origin": "ast",
       "id": "re_controller_re_controller_generateclientlink",
-      "community": 15,
+      "community": 1,
       "norm_label": "generateclientlink()"
     },
     {
       "label": "nowISTString()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3057",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3012",
       "_origin": "ast",
       "id": "re_controller_re_controller_nowiststring",
-      "community": 20,
+      "community": 1,
       "norm_label": "nowiststring()"
     },
     {
       "label": "submitRequirement()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3061",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3016",
       "_origin": "ast",
       "id": "re_controller_re_controller_submitrequirement",
-      "community": 20,
+      "community": 1,
       "norm_label": "submitrequirement()"
     },
     {
       "label": "saveNotesData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3235",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3190",
       "_origin": "ast",
       "id": "re_controller_re_controller_savenotesdata",
       "community": 1,
@@ -4576,8 +4526,8 @@
     {
       "label": "saveNotesbydefault()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3260",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3215",
       "_origin": "ast",
       "id": "re_controller_re_controller_savenotesbydefault",
       "community": 1,
@@ -4586,8 +4536,8 @@
     {
       "label": "saveDiscountData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3286",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3241",
       "_origin": "ast",
       "id": "re_controller_re_controller_savediscountdata",
       "community": 1,
@@ -4596,18 +4546,18 @@
     {
       "label": "saveInvoiceData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3320",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3275",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveinvoicedata",
-      "community": 15,
+      "community": 1,
       "norm_label": "saveinvoicedata()"
     },
     {
       "label": "saveInvoiceGD()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3380",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3335",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveinvoicegd",
       "community": 1,
@@ -4616,8 +4566,8 @@
     {
       "label": "saveInvoiceAdsCampaign()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3533",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3488",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveinvoiceadscampaign",
       "community": 1,
@@ -4626,8 +4576,8 @@
     {
       "label": "saveInvoiceComplimentaryData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3576",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3531",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveinvoicecomplimentarydata",
       "community": 1,
@@ -4636,8 +4586,8 @@
     {
       "label": "saveInvoiceCalculatorData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3638",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3593",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveinvoicecalculatordata",
       "community": 1,
@@ -4646,28 +4596,28 @@
     {
       "label": "saveInvoiceNotesData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3702",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3657",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveinvoicenotesdata",
-      "community": 15,
+      "community": 1,
       "norm_label": "saveinvoicenotesdata()"
     },
     {
       "label": "saveInvoiceClientIdwiseNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3728",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3683",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveinvoiceclientidwisenotes",
-      "community": 15,
+      "community": 1,
       "norm_label": "saveinvoiceclientidwisenotes()"
     },
     {
       "label": "saveAdditionalData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3808",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3763",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveadditionaldata",
       "community": 1,
@@ -4676,8 +4626,8 @@
     {
       "label": "saveRemainingAmountData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3901",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3856",
       "_origin": "ast",
       "id": "re_controller_re_controller_saveremainingamountdata",
       "community": 1,
@@ -4686,18 +4636,18 @@
     {
       "label": "seoClientsDetails()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3929",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3884",
       "_origin": "ast",
       "id": "re_controller_re_controller_seoclientsdetails",
-      "community": 15,
+      "community": 1,
       "norm_label": "seoclientsdetails()"
     },
     {
       "label": "seoWebsiteKeyword()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L3972",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3927",
       "_origin": "ast",
       "id": "re_controller_re_controller_seowebsitekeyword",
       "community": 1,
@@ -4706,8 +4656,8 @@
     {
       "label": "saveDiscountSetting()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L4025",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L3980",
       "_origin": "ast",
       "id": "re_controller_re_controller_savediscountsetting",
       "community": 1,
@@ -4716,8 +4666,8 @@
     {
       "label": "saveDirectProforma()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L4052",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L4007",
       "_origin": "ast",
       "id": "re_controller_re_controller_savedirectproforma",
       "community": 1,
@@ -4726,8 +4676,8 @@
     {
       "label": "sendRegisterAdminOtp()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L4105",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L4060",
       "_origin": "ast",
       "id": "re_controller_re_controller_sendregisteradminotp",
       "community": 0,
@@ -4736,17 +4686,17 @@
     {
       "label": "registerAdminWithOtp()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L4202",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L4157",
       "_origin": "ast",
       "id": "re_controller_re_controller_registeradminwithotp",
-      "community": 15,
+      "community": 1,
       "norm_label": "registeradminwithotp()"
     },
     {
       "label": "re_deleteController.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller",
@@ -4756,7 +4706,7 @@
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_db",
@@ -4766,7 +4716,7 @@
     {
       "label": "dotenv",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_dotenv",
@@ -4776,7 +4726,7 @@
     {
       "label": "deleteService()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L5",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteservice",
@@ -4786,7 +4736,7 @@
     {
       "label": "deleteCategory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L22",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deletecategory",
@@ -4796,7 +4746,7 @@
     {
       "label": "deleteEditingType()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L39",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteeditingtype",
@@ -4806,7 +4756,7 @@
     {
       "label": "deleteAdsServices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L59",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteadsservices",
@@ -4816,7 +4766,7 @@
     {
       "label": "deleteAdsCampaignDetails()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L103",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteadscampaigndetails",
@@ -4826,7 +4776,7 @@
     {
       "label": "deleteAdsCampaignEntryById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L141",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteadscampaignentrybyid",
@@ -4836,7 +4786,7 @@
     {
       "label": "deleteGraphicEntryById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L226",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deletegraphicentrybyid",
@@ -4846,7 +4796,7 @@
     {
       "label": "deleteClientById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L318",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteclientbyid",
@@ -4856,7 +4806,7 @@
     {
       "label": "deleteQuoatationById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L460",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deletequoatationbyid",
@@ -4866,7 +4816,7 @@
     {
       "label": "deletePlanNameDetail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L526",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteplannamedetail",
@@ -4876,7 +4826,7 @@
     {
       "label": "deletePlanData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L577",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteplandata",
@@ -4886,7 +4836,7 @@
     {
       "label": "deletePlanNotesbyid()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L605",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteplannotesbyid",
@@ -4896,7 +4846,7 @@
     {
       "label": "deletePlanDataByService()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L617",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteplandatabyservice",
@@ -4906,7 +4856,7 @@
     {
       "label": "deletePlanbyChangeNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L645",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteplanbychangenotes",
@@ -4916,7 +4866,7 @@
     {
       "label": "deleteClientAllPlanData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L673",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteclientallplandata",
@@ -4926,7 +4876,7 @@
     {
       "label": "deletePlanClientNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L760",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteplanclientnotes",
@@ -4936,7 +4886,7 @@
     {
       "label": "removeMemberFromTeam()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L782",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_removememberfromteam",
@@ -4946,7 +4896,7 @@
     {
       "label": "deleteTeam()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L819",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteteam",
@@ -4956,7 +4906,7 @@
     {
       "label": "deleteComplimenatryById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L856",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deletecomplimenatrybyid",
@@ -4966,7 +4916,7 @@
     {
       "label": "deleteNoteById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L946",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deletenotebyid",
@@ -4976,7 +4926,7 @@
     {
       "label": "deleteDiscountById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L979",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deletediscountbyid",
@@ -4986,7 +4936,7 @@
     {
       "label": "deleteInvoiceById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1012",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteinvoicebyid",
@@ -4996,7 +4946,7 @@
     {
       "label": "deleteRequirementsBundle()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1103",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleterequirementsbundle",
@@ -5006,7 +4956,7 @@
     {
       "label": "deleteAllInvoiceServiceHistory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1130",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteallinvoiceservicehistory",
@@ -5016,7 +4966,7 @@
     {
       "label": "deleteInvoiceAdsCampaignEntryById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1171",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteinvoiceadscampaignentrybyid",
@@ -5026,7 +4976,7 @@
     {
       "label": "deleteInvoiceNoteById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1256",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteinvoicenotebyid",
@@ -5036,7 +4986,7 @@
     {
       "label": "deleteInvoiceClientNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1294",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteinvoiceclientnotes",
@@ -5046,7 +4996,7 @@
     {
       "label": "deleteInvoiceComplimenatryById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1314",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteinvoicecomplimenatrybyid",
@@ -5056,7 +5006,7 @@
     {
       "label": "deleteAdditionalById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1406",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteadditionalbyid",
@@ -5066,7 +5016,7 @@
     {
       "label": "deleteRemainingAmountById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1444",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteremainingamountbyid",
@@ -5076,7 +5026,7 @@
     {
       "label": "deleteSeoClient()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1482",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteseoclient",
@@ -5086,7 +5036,7 @@
     {
       "label": "deleteSeoKeyword()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1517",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deleteseokeyword",
@@ -5096,7 +5046,7 @@
     {
       "label": "deleteDiscountSettingById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_deleteController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_deleteController.js",
       "source_location": "L1551",
       "_origin": "ast",
       "id": "re_controller_re_deletecontroller_deletediscountsettingbyid",
@@ -5106,7 +5056,7 @@
     {
       "label": "re_genratecoatetion.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion",
@@ -5116,7 +5066,7 @@
     {
       "label": "fs",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_fs",
@@ -5126,7 +5076,7 @@
     {
       "label": "path",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_path",
@@ -5136,7 +5086,7 @@
     {
       "label": "multer",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_multer",
@@ -5146,7 +5096,7 @@
     {
       "label": "{ PDFDocument }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L4",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_pdfdocument",
@@ -5156,7 +5106,7 @@
     {
       "label": "puppeteer",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L5",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_puppeteer",
@@ -5166,7 +5116,7 @@
     {
       "label": "ILovePDF",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L6",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_ilovepdf",
@@ -5176,7 +5126,7 @@
     {
       "label": "ILovePDFFile",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L7",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_ilovepdffile",
@@ -5186,7 +5136,7 @@
     {
       "label": "TEMP_DIR",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L10",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_temp_dir",
@@ -5196,7 +5146,7 @@
     {
       "label": "{\r\n  ASSETS_DIR,\r\n  HEADER_HEIGHT,\r\n  FOOTER_HEIGHT,\r\n  CONTENT_TOP_PADDING,\r\n  embedImageToPdf,\r\n  drawHeader,\r\n  drawFooter,\r\n  drawWatermark,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L15",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_assets_dir_header_height_footer_height_content_top_padding_embedimagetopdf_drawheader_drawfooter_drawwatermark",
@@ -5206,7 +5156,7 @@
     {
       "label": "upload",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L41",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_upload",
@@ -5216,7 +5166,7 @@
     {
       "label": "processUpload()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L58",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_processupload",
@@ -5226,7 +5176,7 @@
     {
       "label": "deleteFile()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L65",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_deletefile",
@@ -5236,7 +5186,7 @@
     {
       "label": "validatePdfFile()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L80",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_validatepdffile",
@@ -5246,7 +5196,7 @@
     {
       "label": "convertDocxToPdf()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L113",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_convertdocxtopdf",
@@ -5256,7 +5206,7 @@
     {
       "label": "applyHeaderFooterWithMargins()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L185",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_applyheaderfooterwithmargins",
@@ -5266,7 +5216,7 @@
     {
       "label": "uploadAndConvert()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L266",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_uploadandconvert",
@@ -5276,7 +5226,7 @@
     {
       "label": "generateInvoicePdf()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_genratecoatetion.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_genratecoatetion.js",
       "source_location": "L348",
       "_origin": "ast",
       "id": "re_controller_re_genratecoatetion_generateinvoicepdf",
@@ -5286,7 +5236,7 @@
     {
       "label": "re_getController.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller",
@@ -5296,7 +5246,7 @@
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_db",
@@ -5306,7 +5256,7 @@
     {
       "label": "dotenv",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_dotenv",
@@ -5316,7 +5266,7 @@
     {
       "label": "getAddServices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L5",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getaddservices",
@@ -5326,7 +5276,7 @@
     {
       "label": "getAddCategories()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L37",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getaddcategories",
@@ -5336,7 +5286,7 @@
     {
       "label": "getAddEditingTypes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L76",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getaddeditingtypes",
@@ -5346,7 +5296,7 @@
     {
       "label": "getAllServiceData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L114",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getallservicedata",
@@ -5356,7 +5306,7 @@
     {
       "label": "getAdsServices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L148",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getadsservices",
@@ -5366,7 +5316,7 @@
     {
       "label": "getAllServiceDatas()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L178",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getallservicedatas",
@@ -5376,7 +5326,7 @@
     {
       "label": "getCalculatorTransactions()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L258",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getcalculatortransactions",
@@ -5386,7 +5336,7 @@
     {
       "label": "getByIDCalculatorTransactions()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L290",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getbyidcalculatortransactions",
@@ -5396,7 +5346,7 @@
     {
       "label": "getByIDAdsCampaignDetails()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L328",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getbyidadscampaigndetails",
@@ -5406,7 +5356,7 @@
     {
       "label": "getClientDetailsById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L366",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getclientdetailsbyid",
@@ -5416,7 +5366,7 @@
     {
       "label": "getClientTxnHistory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L404",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getclienttxnhistory",
@@ -5426,7 +5376,7 @@
     {
       "label": "getClientServiceHistory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L493",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getclientservicehistory",
@@ -5436,7 +5386,7 @@
     {
       "label": "getClientServiceHistoryAssign()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L555",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getclientservicehistoryassign",
@@ -5446,7 +5396,7 @@
     {
       "label": "getAllClientsTxnHistory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L686",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getallclientstxnhistory",
@@ -5456,7 +5406,7 @@
     {
       "label": "getAllBD()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L805",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getallbd",
@@ -5466,7 +5416,7 @@
     {
       "label": "getClientDetailsEmp()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L839",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getclientdetailsemp",
@@ -5476,7 +5426,7 @@
     {
       "label": "getClientsTxnHistoryByEmployee()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L884",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getclientstxnhistorybyemployee",
@@ -5486,7 +5436,7 @@
     {
       "label": "optionalServiceAmounts()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L984",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_optionalserviceamounts",
@@ -5496,7 +5446,7 @@
     {
       "label": "getPlanData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1013",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getplandata",
@@ -5506,7 +5456,7 @@
     {
       "label": "getPlanDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1045",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getplandatabyid",
@@ -5516,7 +5466,7 @@
     {
       "label": "getPlanDetails()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1082",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getplandetails",
@@ -5526,7 +5476,7 @@
     {
       "label": "getPlanDetailsById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1114",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getplandetailsbyid",
@@ -5536,7 +5486,7 @@
     {
       "label": "getPlanNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1152",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getplannotes",
@@ -5546,7 +5496,7 @@
     {
       "label": "getClientNotesbyId()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1184",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getclientnotesbyid",
@@ -5556,7 +5506,7 @@
     {
       "label": "retrieveUser()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1222",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_retrieveuser",
@@ -5566,7 +5516,7 @@
     {
       "label": "getAssignmentByTxn()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1258",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getassignmentbytxn",
@@ -5576,7 +5526,7 @@
     {
       "label": "getAssignedQuotations()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1351",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getassignedquotations",
@@ -5586,7 +5536,7 @@
     {
       "label": "getAssignedQuotationsByEmployeeName()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1425",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getassignedquotationsbyemployeename",
@@ -5596,7 +5546,7 @@
     {
       "label": "getProgressByTxn()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1479",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getprogressbytxn",
@@ -5606,7 +5556,7 @@
     {
       "label": "retrieveTeam()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1512",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_retrieveteam",
@@ -5616,7 +5566,7 @@
     {
       "label": "retrieveTeamById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1544",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_retrieveteambyid",
@@ -5626,7 +5576,7 @@
     {
       "label": "getAssignmentsSummary()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1600",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getassignmentssummary",
@@ -5636,7 +5586,7 @@
     {
       "label": "getByIDComplimentaryData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1658",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getbyidcomplimentarydata",
@@ -5646,7 +5596,7 @@
     {
       "label": "getRequirementsLink()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1696",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getrequirementslink",
@@ -5656,7 +5606,7 @@
     {
       "label": "getRequirementsDetail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1741",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getrequirementsdetail",
@@ -5666,7 +5616,7 @@
     {
       "label": "getNoteData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1852",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getnotedata",
@@ -5676,7 +5626,7 @@
     {
       "label": "getByIDDiscountData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1915",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getbyiddiscountdata",
@@ -5686,7 +5636,7 @@
     {
       "label": "getInvoiceByIdData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1952",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getinvoicebyiddata",
@@ -5696,7 +5646,7 @@
     {
       "label": "getinInvoiceServiceHistory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L1990",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getininvoiceservicehistory",
@@ -5706,7 +5656,7 @@
     {
       "label": "getAllInvoiceServiceHistory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2053",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getallinvoiceservicehistory",
@@ -5716,7 +5666,7 @@
     {
       "label": "getComplimentaryInvoiceData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2158",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getcomplimentaryinvoicedata",
@@ -5726,7 +5676,7 @@
     {
       "label": "getInvoiceClientDetailsById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2196",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getinvoiceclientdetailsbyid",
@@ -5736,7 +5686,7 @@
     {
       "label": "getInvoiceGraphic()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2233",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getinvoicegraphic",
@@ -5746,7 +5696,7 @@
     {
       "label": "getInvoiceAdsCampaign()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2271",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getinvoiceadscampaign",
@@ -5756,7 +5706,7 @@
     {
       "label": "getInvoiceNoteData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2308",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getinvoicenotedata",
@@ -5766,7 +5716,7 @@
     {
       "label": "getInvoiceClientNotesbyId()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2339",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getinvoiceclientnotesbyid",
@@ -5776,7 +5726,7 @@
     {
       "label": "getAllInvoice()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2376",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getallinvoice",
@@ -5786,7 +5736,7 @@
     {
       "label": "getAdditionByIdData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2408",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getadditionbyiddata",
@@ -5796,7 +5746,7 @@
     {
       "label": "getRemainingAmountByIdData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2445",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getremainingamountbyiddata",
@@ -5806,7 +5756,7 @@
     {
       "label": "getSeoClientsWithKeywords()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2483",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getseoclientswithkeywords",
@@ -5816,7 +5766,7 @@
     {
       "label": "getDiscountSetting()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_getController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_getController.js",
       "source_location": "L2517",
       "_origin": "ast",
       "id": "re_controller_re_getcontroller_getdiscountsetting",
@@ -5826,7 +5776,7 @@
     {
       "label": "re_pdfHelpers.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers",
@@ -5836,7 +5786,7 @@
     {
       "label": "fs",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L8",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_fs",
@@ -5846,7 +5796,7 @@
     {
       "label": "path",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L9",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_path",
@@ -5856,7 +5806,7 @@
     {
       "label": "{ PDFDocument }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L10",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_pdfdocument",
@@ -5866,7 +5816,7 @@
     {
       "label": "ASSETS_DIR",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L13",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_assets_dir",
@@ -5876,7 +5826,7 @@
     {
       "label": "embedImageToPdf()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L19",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_embedimagetopdf",
@@ -5886,7 +5836,7 @@
     {
       "label": "drawHeader()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L41",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_drawheader",
@@ -5896,7 +5846,7 @@
     {
       "label": "drawFooter()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L56",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_drawfooter",
@@ -5906,7 +5856,7 @@
     {
       "label": "drawWatermark()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L71",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_drawwatermark",
@@ -5916,7 +5866,7 @@
     {
       "label": "loadBrandImages()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L91",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_loadbrandimages",
@@ -5926,7 +5876,7 @@
     {
       "label": "addBrandedPage()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_pdfHelpers.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_pdfHelpers.js",
       "source_location": "L105",
       "_origin": "ast",
       "id": "re_controller_re_pdfhelpers_addbrandedpage",
@@ -5936,7 +5886,7 @@
     {
       "label": "re_proposalController.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller",
@@ -5946,7 +5896,7 @@
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_db",
@@ -5956,7 +5906,7 @@
     {
       "label": "{ addBrandedPage, embedImageToPdf, loadBrandImages, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_TOP_PADDING }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_addbrandedpage_embedimagetopdf_loadbrandimages_header_height_footer_height_content_top_padding",
@@ -5966,7 +5916,7 @@
     {
       "label": "{ PDFDocument, rgb, StandardFonts }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_pdfdocument_rgb_standardfonts",
@@ -5976,7 +5926,7 @@
     {
       "label": "fs",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L4",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_fs",
@@ -5986,7 +5936,7 @@
     {
       "label": "path",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L5",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_path",
@@ -5996,7 +5946,7 @@
     {
       "label": "{ sendProposalEmail, sendProposalAdminNotifyEmail }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L6",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_sendproposalemail_sendproposaladminnotifyemail",
@@ -6006,7 +5956,7 @@
     {
       "label": "{ sendProposalWhatsApp, sendProposalAdminNotifyWA }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L7",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_sendproposalwhatsapp_sendproposaladminnotifywa",
@@ -6016,7 +5966,7 @@
     {
       "label": "puppeteer",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L8",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_puppeteer",
@@ -6026,7 +5976,7 @@
     {
       "label": "{ generatePublicAccessToken }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L9",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_generatepublicaccesstoken",
@@ -6036,7 +5986,7 @@
     {
       "label": "notificationService",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L10",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_notificationservice",
@@ -6046,7 +5996,7 @@
     {
       "label": "getImageDataURI()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L13",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getimagedatauri",
@@ -6056,7 +6006,7 @@
     {
       "label": "textToHtml()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L26",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_texttohtml",
@@ -6066,7 +6016,7 @@
     {
       "label": "parseJsonValue()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L62",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_parsejsonvalue",
@@ -6076,7 +6026,7 @@
     {
       "label": "toJsonString()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L72",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_tojsonstring",
@@ -6086,7 +6036,7 @@
     {
       "label": "hasRenderableContent()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L85",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_hasrenderablecontent",
@@ -6096,7 +6046,7 @@
     {
       "label": "valueToText()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L93",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_valuetotext",
@@ -6106,7 +6056,7 @@
     {
       "label": "notesToText()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L113",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_notestotext",
@@ -6116,7 +6066,7 @@
     {
       "label": "TEMP_DIR",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L120",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_temp_dir",
@@ -6126,7 +6076,7 @@
     {
       "label": "runQuery()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L125",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_runquery",
@@ -6136,7 +6086,7 @@
     {
       "label": "createProposal()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L136",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_createproposal",
@@ -6146,7 +6096,7 @@
     {
       "label": "updateProposal()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L233",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_updateproposal",
@@ -6156,7 +6106,7 @@
     {
       "label": "getProposalById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L341",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getproposalbyid",
@@ -6166,7 +6116,7 @@
     {
       "label": "getProposalsByClient()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L365",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getproposalsbyclient",
@@ -6176,7 +6126,7 @@
     {
       "label": "getAllProposals()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L382",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getallproposals",
@@ -6186,7 +6136,7 @@
     {
       "label": "deleteProposal()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L406",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_deleteproposal",
@@ -6196,7 +6146,7 @@
     {
       "label": "updateProposalStatus()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L424",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_updateproposalstatus",
@@ -6206,17 +6156,17 @@
     {
       "label": "sendProposalToClient()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L437",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_sendproposaltoclient",
-      "community": 0,
+      "community": 9,
       "norm_label": "sendproposaltoclient()"
     },
     {
       "label": "createProforma()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L536",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_createproforma",
@@ -6226,7 +6176,7 @@
     {
       "label": "getProformasByClient()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L596",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getproformasbyclient",
@@ -6236,7 +6186,7 @@
     {
       "label": "getAllProformas()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L608",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getallproformas",
@@ -6246,7 +6196,7 @@
     {
       "label": "getFinalInvoices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L625",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getfinalinvoices",
@@ -6256,7 +6206,7 @@
     {
       "label": "getProformasByProposal()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L642",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getproformasbyproposal",
@@ -6266,7 +6216,7 @@
     {
       "label": "deleteProforma()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L654",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_deleteproforma",
@@ -6276,7 +6226,7 @@
     {
       "label": "beginTransaction()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L677",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_begintransaction",
@@ -6286,7 +6236,7 @@
     {
       "label": "commitTransaction()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L678",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_committransaction",
@@ -6296,7 +6246,7 @@
     {
       "label": "rollbackTransaction()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L679",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_rollbacktransaction",
@@ -6306,7 +6256,7 @@
     {
       "label": "recordProposalPayment()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L681",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_recordproposalpayment",
@@ -6316,7 +6266,7 @@
     {
       "label": "markPaymentReceived()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L775",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_markpaymentreceived",
@@ -6326,7 +6276,7 @@
     {
       "label": "getProposalPaymentSummary()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L790",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getproposalpaymentsummary",
@@ -6336,7 +6286,7 @@
     {
       "label": "getPaymentRecordsByClient()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L823",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getpaymentrecordsbyclient",
@@ -6346,7 +6296,7 @@
     {
       "label": "getAllPaymentRecords()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L835",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getallpaymentrecords",
@@ -6356,7 +6306,7 @@
     {
       "label": "approvePayment()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L851",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_approvepayment",
@@ -6366,7 +6316,7 @@
     {
       "label": "generateInvoiceFromProforma()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L1027",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_generateinvoicefromproforma",
@@ -6376,7 +6326,7 @@
     {
       "label": "getProposalInvoices()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L1193",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getproposalinvoices",
@@ -6386,7 +6336,7 @@
     {
       "label": "createProposalPdfBuffer()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L1212",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_createproposalpdfbuffer",
@@ -6396,7 +6346,7 @@
     {
       "label": "generateProposalPdf()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L1633",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_generateproposalpdf",
@@ -6406,7 +6356,7 @@
     {
       "label": "getRevenueHistory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L1648",
       "_origin": "ast",
       "id": "re_controller_re_proposalcontroller_getrevenuehistory",
@@ -6416,7 +6366,7 @@
     {
       "label": "re_publicController.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller",
@@ -6426,7 +6376,7 @@
     {
       "label": "jwt",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_jwt",
@@ -6436,7 +6386,7 @@
     {
       "label": "crypto",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_crypto",
@@ -6446,7 +6396,7 @@
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_db",
@@ -6456,7 +6406,7 @@
     {
       "label": "dotenv",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L4",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_dotenv",
@@ -6466,7 +6416,7 @@
     {
       "label": "puppeteer",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L5",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_puppeteer",
@@ -6476,7 +6426,7 @@
     {
       "label": "path",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L6",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_path",
@@ -6486,7 +6436,7 @@
     {
       "label": "fs",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L7",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_fs",
@@ -6496,7 +6446,7 @@
     {
       "label": "TEMP_DIR",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L11",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_temp_dir",
@@ -6506,7 +6456,7 @@
     {
       "label": "hashToken()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L17",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_hashtoken",
@@ -6516,7 +6466,7 @@
     {
       "label": "logPublicAccess()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L22",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_logpublicaccess",
@@ -6526,7 +6476,7 @@
     {
       "label": "queryDb()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L43",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_querydb",
@@ -6536,17 +6486,17 @@
     {
       "label": "generatePublicAccessToken()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L56",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_generatepublicaccesstoken",
-      "community": 14,
+      "community": 9,
       "norm_label": "generatepublicaccesstoken()"
     },
     {
       "label": "validateTokenAndGetPayload()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L110",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_validatetokenandgetpayload",
@@ -6556,7 +6506,7 @@
     {
       "label": "getPublicInvoiceData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L154",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_getpublicinvoicedata",
@@ -6566,7 +6516,7 @@
     {
       "label": "getPublicInvoicePdf()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L281",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_getpublicinvoicepdf",
@@ -6576,7 +6526,7 @@
     {
       "label": "getPublicProposalData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L366",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_getpublicproposaldata",
@@ -6586,7 +6536,7 @@
     {
       "label": "getPublicProposalPdf()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_publicController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_publicController.js",
       "source_location": "L409",
       "_origin": "ast",
       "id": "re_controller_re_publiccontroller_getpublicproposalpdf",
@@ -6596,7 +6546,7 @@
     {
       "label": "re_reminders.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_reminders",
@@ -6606,7 +6556,7 @@
     {
       "label": "cron",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_reminders_cron",
@@ -6616,7 +6566,7 @@
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_reminders_db",
@@ -6626,7 +6576,7 @@
     {
       "label": "moment",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_controller_re_reminders_moment",
@@ -6636,7 +6586,7 @@
     {
       "label": "{\r\n  sendDailyPaymentSummaryEmail,\r\n  TZ,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L4",
       "_origin": "ast",
       "id": "re_controller_re_reminders_senddailypaymentsummaryemail_tz",
@@ -6646,7 +6596,7 @@
     {
       "label": "{\r\n  sendPeriodicPaymentSummaryWA,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L8",
       "_origin": "ast",
       "id": "re_controller_re_reminders_sendperiodicpaymentsummarywa",
@@ -6656,7 +6606,7 @@
     {
       "label": "runQuery()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L14",
       "_origin": "ast",
       "id": "re_controller_re_reminders_runquery",
@@ -6666,7 +6616,7 @@
     {
       "label": "runPeriodicPaymentSummary()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_reminders.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_reminders.js",
       "source_location": "L23",
       "_origin": "ast",
       "id": "re_controller_re_reminders_runperiodicpaymentsummary",
@@ -6676,7 +6626,7 @@
     {
       "label": "re_sendEmails.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_sendemails",
@@ -6686,7 +6636,7 @@
     {
       "label": "moment",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_moment",
@@ -6696,7 +6646,7 @@
     {
       "label": "nodemailer",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_nodemailer",
@@ -6706,7 +6656,7 @@
     {
       "label": "path",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_path",
@@ -6716,7 +6666,7 @@
     {
       "label": "transporter",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L5",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_transporter",
@@ -6726,7 +6676,7 @@
     {
       "label": "isEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L17",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_isemail",
@@ -6736,7 +6686,7 @@
     {
       "label": "getLogoAttachment()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L22",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_getlogoattachment",
@@ -6746,7 +6696,7 @@
     {
       "label": "sendProposalEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L31",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_sendproposalemail",
@@ -6756,7 +6706,7 @@
     {
       "label": "sendFinalInvoiceEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L82",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_sendfinalinvoiceemail",
@@ -6766,7 +6716,7 @@
     {
       "label": "sendProposalAdminNotifyEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L129",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_sendproposaladminnotifyemail",
@@ -6776,7 +6726,7 @@
     {
       "label": "sendDailyPaymentSummaryEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L187",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_senddailypaymentsummaryemail",
@@ -6786,7 +6736,7 @@
     {
       "label": "sendPaymentReceivedAlertEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L232",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_sendpaymentreceivedalertemail",
@@ -6796,7 +6746,7 @@
     {
       "label": "sendInvoiceAdminNotifyEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
       "source_location": "L309",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_sendinvoiceadminnotifyemail",
@@ -6804,10 +6754,20 @@
       "norm_label": "sendinvoiceadminnotifyemail()"
     },
     {
+      "label": "sendPasswordResetOtpEmail()",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
+      "source_location": "L348",
+      "_origin": "ast",
+      "id": "re_controller_re_sendemails_sendpasswordresetotpemail",
+      "community": 0,
+      "norm_label": "sendpasswordresetotpemail()"
+    },
+    {
       "label": "sendRegistrationOtpEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendEmails.js",
-      "source_location": "L348",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
+      "source_location": "L386",
       "_origin": "ast",
       "id": "re_controller_re_sendemails_sendregistrationotpemail",
       "community": 0,
@@ -6816,7 +6776,7 @@
     {
       "label": "re_sendWhatsApp.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp",
@@ -6826,7 +6786,7 @@
     {
       "label": "axios",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_axios",
@@ -6836,7 +6796,7 @@
     {
       "label": "sendInvoiceWhatsApp()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L11",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendinvoicewhatsapp",
@@ -6846,7 +6806,7 @@
     {
       "label": "sendProposalWhatsApp()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L34",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendproposalwhatsapp",
@@ -6856,7 +6816,7 @@
     {
       "label": "DEFAULT_LANG_FALLBACK",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L62",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_default_lang_fallback",
@@ -6866,7 +6826,7 @@
     {
       "label": "normalizeMsisdn()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L64",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_normalizemsisdn",
@@ -6876,7 +6836,7 @@
     {
       "label": "sleep()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L74",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sleep",
@@ -6886,7 +6846,7 @@
     {
       "label": "postToGraph()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L76",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_posttograph",
@@ -6896,7 +6856,7 @@
     {
       "label": "sendOnce()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L94",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendonce",
@@ -6906,7 +6866,7 @@
     {
       "label": "sendWhatsAppTemplate()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L143",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendwhatsapptemplate",
@@ -6916,7 +6876,7 @@
     {
       "label": "sendProposalAdminNotifyWA()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L219",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendproposaladminnotifywa",
@@ -6926,7 +6886,7 @@
     {
       "label": "sendPeriodicPaymentSummaryWA()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L254",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendperiodicpaymentsummarywa",
@@ -6936,7 +6896,7 @@
     {
       "label": "sendPaymentReceivedAlertWA()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L285",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendpaymentreceivedalertwa",
@@ -6946,7 +6906,7 @@
     {
       "label": "sendInvoiceAdminNotifyWA()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_sendWhatsApp.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendWhatsApp.js",
       "source_location": "L340",
       "_origin": "ast",
       "id": "re_controller_re_sendwhatsapp_sendinvoiceadminnotifywa",
@@ -6956,7 +6916,7 @@
     {
       "label": "re_seoController.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_seoController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_seoController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_seocontroller",
@@ -6966,7 +6926,7 @@
     {
       "label": "axios",
       "file_type": "code",
-      "source_file": "server/re_controller/re_seoController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_seoController.js",
       "source_location": "L177",
       "_origin": "ast",
       "id": "re_controller_re_seocontroller_axios",
@@ -6976,7 +6936,7 @@
     {
       "label": "puppeteer",
       "file_type": "code",
-      "source_file": "server/re_controller/re_seoController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_seoController.js",
       "source_location": "L178",
       "_origin": "ast",
       "id": "re_controller_re_seocontroller_puppeteer",
@@ -6986,7 +6946,7 @@
     {
       "label": "IN_MEMORY_PDF_CACHE",
       "file_type": "code",
-      "source_file": "server/re_controller/re_seoController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_seoController.js",
       "source_location": "L183",
       "_origin": "ast",
       "id": "re_controller_re_seocontroller_in_memory_pdf_cache",
@@ -6996,7 +6956,7 @@
     {
       "label": "fetchPSI()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_seoController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_seoController.js",
       "source_location": "L185",
       "_origin": "ast",
       "id": "re_controller_re_seocontroller_fetchpsi",
@@ -7006,7 +6966,7 @@
     {
       "label": "buildReportHtml()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_seoController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_seoController.js",
       "source_location": "L218",
       "_origin": "ast",
       "id": "re_controller_re_seocontroller_buildreporthtml",
@@ -7016,7 +6976,7 @@
     {
       "label": "pagespeedReportpdf()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_seoController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_seoController.js",
       "source_location": "L387",
       "_origin": "ast",
       "id": "re_controller_re_seocontroller_pagespeedreportpdf",
@@ -7026,7 +6986,7 @@
     {
       "label": "re_updateController.js",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller",
@@ -7036,7 +6996,7 @@
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_db",
@@ -7046,7 +7006,7 @@
     {
       "label": "dotenv",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_dotenv",
@@ -7056,7 +7016,7 @@
     {
       "label": "moment",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_moment",
@@ -7064,30 +7024,10 @@
       "norm_label": "moment"
     },
     {
-      "label": "nodemailer",
-      "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "re_controller_re_updatecontroller_nodemailer",
-      "community": 17,
-      "norm_label": "nodemailer"
-    },
-    {
-      "label": "transporter",
-      "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L7",
-      "_origin": "ast",
-      "id": "re_controller_re_updatecontroller_transporter",
-      "community": 17,
-      "norm_label": "transporter"
-    },
-    {
       "label": "updateService()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L27",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L7",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateservice",
       "community": 17,
@@ -7096,8 +7036,8 @@
     {
       "label": "updateCategory()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L44",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updatecategory",
       "community": 17,
@@ -7106,8 +7046,8 @@
     {
       "label": "updateEditingType()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L61",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L41",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateeditingtype",
       "community": 17,
@@ -7116,8 +7056,8 @@
     {
       "label": "updateCalculatorDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L81",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updatecalculatordatabyid",
       "community": 17,
@@ -7126,8 +7066,8 @@
     {
       "label": "updateClientDetails()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L222",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L202",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateclientdetails",
       "community": 17,
@@ -7136,8 +7076,8 @@
     {
       "label": "updatePlanNameDetail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L326",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L306",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateplannamedetail",
       "community": 17,
@@ -7146,8 +7086,8 @@
     {
       "label": "updatePlandata()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L384",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L364",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateplandata",
       "community": 17,
@@ -7156,8 +7096,8 @@
     {
       "label": "updatePlanNotes()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L464",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L444",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateplannotes",
       "community": 17,
@@ -7166,8 +7106,8 @@
     {
       "label": "updateServiceData()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L481",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L461",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateservicedata",
       "community": 17,
@@ -7176,8 +7116,8 @@
     {
       "label": "isEmail()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L499",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L479",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_isemail",
       "community": 17,
@@ -7186,8 +7126,8 @@
     {
       "label": "reassignQuotation()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L503",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L483",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_reassignquotation",
       "community": 17,
@@ -7196,8 +7136,8 @@
     {
       "label": "updateNoteDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L579",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L559",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updatenotedatabyid",
       "community": 17,
@@ -7206,8 +7146,8 @@
     {
       "label": "updateClientNoteDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L608",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L588",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateclientnotedatabyid",
       "community": 17,
@@ -7216,8 +7156,8 @@
     {
       "label": "updateDiscountDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L636",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L616",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updatediscountdatabyid",
       "community": 17,
@@ -7226,8 +7166,8 @@
     {
       "label": "updateComplimenatryDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L664",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L644",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updatecomplimenatrydatabyid",
       "community": 17,
@@ -7236,8 +7176,8 @@
     {
       "label": "updateInvoiceDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L802",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L782",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateinvoicedatabyid",
       "community": 17,
@@ -7246,8 +7186,8 @@
     {
       "label": "updateInvoiceNoteDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L861",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L841",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateinvoicenotedatabyid",
       "community": 17,
@@ -7256,8 +7196,8 @@
     {
       "label": "updateInvoiceClientNoteDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L889",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L869",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateinvoiceclientnotedatabyid",
       "community": 17,
@@ -7266,8 +7206,8 @@
     {
       "label": "updateInvoiceComplimenatryDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L917",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L897",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateinvoicecomplimenatrydatabyid",
       "community": 17,
@@ -7276,8 +7216,8 @@
     {
       "label": "updateAdditionalDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L976",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L956",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateadditionaldatabyid",
       "community": 17,
@@ -7286,8 +7226,8 @@
     {
       "label": "updateRemainingDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L1034",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L1014",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateremainingdatabyid",
       "community": 17,
@@ -7296,8 +7236,8 @@
     {
       "label": "updateSeoClient()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L1064",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L1044",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateseoclient",
       "community": 17,
@@ -7306,8 +7246,8 @@
     {
       "label": "updateSeoKeyword()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L1138",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L1118",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updateseokeyword",
       "community": 17,
@@ -7316,8 +7256,8 @@
     {
       "label": "updateDiscountSettingDataById()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L1189",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L1169",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updatediscountsettingdatabyid",
       "community": 17,
@@ -7326,8 +7266,8 @@
     {
       "label": "updateQuotationApprovalStatus()",
       "file_type": "code",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L1218",
+      "source_file": "server/revenue_engen_server/re_controller/re_updateController.js",
+      "source_location": "L1198",
       "_origin": "ast",
       "id": "re_controller_re_updatecontroller_updatequotationapprovalstatus",
       "community": 17,
@@ -7336,7 +7276,7 @@
     {
       "label": "re_authenticateToken.js",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_authenticateToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_authenticateToken.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_middleware_re_authenticatetoken",
@@ -7346,7 +7286,7 @@
     {
       "label": "verifyAdminToken",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_authenticateToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_authenticateToken.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_middleware_re_authenticatetoken_verifyadmintoken",
@@ -7356,7 +7296,7 @@
     {
       "label": "authenticateToken()",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_authenticateToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_authenticateToken.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_middleware_re_authenticatetoken_authenticatetoken",
@@ -7366,7 +7306,7 @@
     {
       "label": "re_verifyAdminToken.js",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_verifyAdminToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_middleware_re_verifyadmintoken",
@@ -7376,7 +7316,7 @@
     {
       "label": "jwt",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_verifyAdminToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_middleware_re_verifyadmintoken_jwt",
@@ -7386,7 +7326,7 @@
     {
       "label": "{ db }",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_verifyAdminToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_middleware_re_verifyadmintoken_db",
@@ -7396,7 +7336,7 @@
     {
       "label": "dotenv",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_verifyAdminToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L3",
       "_origin": "ast",
       "id": "re_middleware_re_verifyadmintoken_dotenv",
@@ -7406,7 +7346,7 @@
     {
       "label": "verifyAdminToken()",
       "file_type": "code",
-      "source_file": "server/re_middleware/re_verifyAdminToken.js",
+      "source_file": "server/revenue_engen_server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L6",
       "_origin": "ast",
       "id": "re_middleware_re_verifyadmintoken_verifyadmintoken",
@@ -7416,7 +7356,7 @@
     {
       "label": "re_router.js",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_router_re_router",
@@ -7426,7 +7366,7 @@
     {
       "label": "express",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "re_router_re_router_express",
@@ -7436,7 +7376,7 @@
     {
       "label": "{\r\n  register,\r\n  login,\r\n  forgotPassword,\r\n  // insertServices,\r\n  // getServices,\r\n  // updateServices,\r\n  insertAdsServices,\r\n  updateAdsServices,\r\n  insertClientDetails,\r\n  getClientDetails,\r\n  getClientsByEmployee,\r\n  addServices,\r\n  addCategories,\r\n  addEditingTypes,\r\n  saveCalculatorData,\r\n  saveAdsCampaign,\r\n  registerBD,\r\n  verifyOtpAndResetPassword,\r\n  saveCalculatorDataOfPlan,\r\n  saveCalculatorDataOfPlanDetail,\r\n  saveClientWithPlan,\r\n  addNotebyplan,\r\n  savePlanClientNotes,\r\n  saveClientIdwiseNotes,\r\n  assignQuotation,\r\n  setDoneQty,\r\n  incrementDoneQty,\r\n  reassignQuotation,\r\n  createTeam,\r\n  addMembersToTeam,\r\n  assignQuotationToTeam,\r\n  saveComplimentaryData,\r\n  generateClientLink,\r\n  submitRequirement,\r\n  saveNotesData,\r\n  saveDiscountData,\r\n  saveInvoiceData,\r\n  saveInvoiceGD,\r\n  saveDirectProforma,\r\n  saveInvoiceAdsCampaign,\r\n  saveInvoiceComplimentaryData,\r\n  saveInvoiceCalculatorData,\r\n  saveInvoiceNotesData,\r\n  saveInvoiceClientIdwiseNotes,\r\n  saveAdditionalData,\r\n  saveRemainingAmountData,\r\n  seoClientsDetails,\r\n  seoWebsiteKeyword,\r\n  saveDiscountSetting,\r\n  saveNotesbydefault,\r\n  sendRegisterAdminOtp,\r\n  registerAdminWithOtp,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L2",
       "_origin": "ast",
       "id": "re_router_re_router_register_login_forgotpassword_insertservices_getservices_updateservices_insertadsservices_updateadsservices_insertclientdetails_getclientdetails_getclientsbyemployee_addservices_addcategories_addeditingtypes_savecalculatordata_saveadscampaign_registerbd_verifyotpandresetpassword_savecalculatordataofplan_savecalculatordataofplandetail_saveclientwithplan_addnotebyplan_saveplanclientnotes_saveclientidwisenotes_assignquotation_setdoneqty_incrementdoneqty_reassignquotation_createteam_addmemberstoteam_assignquotationtoteam_savecomplimentarydata_generateclientlink_submitrequirement_savenotesdata_savediscountdata_saveinvoicedata_saveinvoicegd_savedirectproforma_saveinvoiceadscampaign_saveinvoicecomplimentarydata_saveinvoicecalculatordata_saveinvoicenotesdata_saveinvoiceclientidwisenotes_saveadditionaldata_saveremainingamountdata_seoclientsdetails_seowebsitekeyword_savediscountsetting_savenotesbydefault_sendregisteradminotp_registeradminwithotp",
@@ -7446,7 +7386,7 @@
     {
       "label": "{\r\n  getAddServices,\r\n  getAddCategories,\r\n  getAddEditingTypes,\r\n  getAllServiceData,\r\n  getAdsServices,\r\n  getAllServiceDatas,\r\n  getCalculatorTransactions,\r\n  getByIDCalculatorTransactions,\r\n  getByIDAdsCampaignDetails,\r\n  getClientDetailsById,\r\n  getClientTxnHistory,\r\n  getClientServiceHistory,\r\n  getClientDetailsEmp,\r\n  getAllClientsTxnHistory,\r\n  getClientsTxnHistoryByEmployee,\r\n  getAllBD,\r\n  optionalServiceAmounts,\r\n  getPlanData,\r\n  getPlanDetails,\r\n  getPlanDetailsById,\r\n  getPlanDataById,\r\n  getPlanNotes,\r\n  getClientNotesbyId,\r\n  retrieveUser,\r\n  getAssignmentByTxn,\r\n  getAssignedQuotations,\r\n  getProgressByTxn,\r\n  getAssignedQuotationsByEmployeeName,\r\n  retrieveTeam,\r\n  retrieveTeamById,\r\n  getAssignmentsSummary,\r\n  getByIDComplimentaryData,\r\n  getRequirementsLink,\r\n  getRequirementsDetail,\r\n  getNoteData,\r\n  getByIDDiscountData,\r\n  getInvoiceByIdData,\r\n  getinInvoiceServiceHistory,\r\n  getAllInvoiceServiceHistory,\r\n  getClientServiceHistoryAssign,\r\n  getComplimentaryInvoiceData,\r\n  getInvoiceClientDetailsById,\r\n  getInvoiceGraphic,\r\n  getInvoiceAdsCampaign,\r\n  getInvoiceNoteData,\r\n  getInvoiceClientNotesbyId,\r\n  getAllInvoice,\r\n  getAdditionByIdData,\r\n  getRemainingAmountByIdData,\r\n  getSeoClientsWithKeywords,\r\n  getDiscountSetting,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L56",
       "_origin": "ast",
       "id": "re_router_re_router_getaddservices_getaddcategories_getaddeditingtypes_getallservicedata_getadsservices_getallservicedatas_getcalculatortransactions_getbyidcalculatortransactions_getbyidadscampaigndetails_getclientdetailsbyid_getclienttxnhistory_getclientservicehistory_getclientdetailsemp_getallclientstxnhistory_getclientstxnhistorybyemployee_getallbd_optionalserviceamounts_getplandata_getplandetails_getplandetailsbyid_getplandatabyid_getplannotes_getclientnotesbyid_retrieveuser_getassignmentbytxn_getassignedquotations_getprogressbytxn_getassignedquotationsbyemployeename_retrieveteam_retrieveteambyid_getassignmentssummary_getbyidcomplimentarydata_getrequirementslink_getrequirementsdetail_getnotedata_getbyiddiscountdata_getinvoicebyiddata_getininvoiceservicehistory_getallinvoiceservicehistory_getclientservicehistoryassign_getcomplimentaryinvoicedata_getinvoiceclientdetailsbyid_getinvoicegraphic_getinvoiceadscampaign_getinvoicenotedata_getinvoiceclientnotesbyid_getallinvoice_getadditionbyiddata_getremainingamountbyiddata_getseoclientswithkeywords_getdiscountsetting",
@@ -7456,7 +7396,7 @@
     {
       "label": "{\r\n  deleteService,\r\n  deleteCategory,\r\n  deleteEditingType,\r\n  deleteAdsServices,\r\n  deleteAdsCampaignDetails,\r\n  deleteAdsCampaignEntryById,\r\n  deleteGraphicEntryById,\r\n  deleteClientById,\r\n  deleteQuoatationById,\r\n  deletePlanNameDetail,\r\n  deletePlanNotesbyid,\r\n  deletePlanDataByService,\r\n  deletePlanbyChangeNotes,\r\n  deleteClientAllPlanData,\r\n  deletePlanClientNotes,\r\n  removeMemberFromTeam,\r\n  deleteTeam,\r\n  deleteComplimenatryById,\r\n  deleteNoteById,\r\n  deleteRequirementsBundle,\r\n  deleteDiscountById,\r\n  deleteInvoiceById,\r\n  deleteAllInvoiceServiceHistory,\r\n  deleteInvoiceAdsCampaignEntryById,\r\n  deleteInvoiceNoteById,\r\n  deleteInvoiceClientNotes,\r\n  deleteInvoiceComplimenatryById,\r\n  deleteAdditionalById,\r\n  deleteRemainingAmountById,\r\n  deleteSeoClient,\r\n  deleteSeoKeyword,\r\n  deleteDiscountSettingById,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L109",
       "_origin": "ast",
       "id": "re_router_re_router_deleteservice_deletecategory_deleteeditingtype_deleteadsservices_deleteadscampaigndetails_deleteadscampaignentrybyid_deletegraphicentrybyid_deleteclientbyid_deletequoatationbyid_deleteplannamedetail_deleteplannotesbyid_deleteplandatabyservice_deleteplanbychangenotes_deleteclientallplandata_deleteplanclientnotes_removememberfromteam_deleteteam_deletecomplimenatrybyid_deletenotebyid_deleterequirementsbundle_deletediscountbyid_deleteinvoicebyid_deleteallinvoiceservicehistory_deleteinvoiceadscampaignentrybyid_deleteinvoicenotebyid_deleteinvoiceclientnotes_deleteinvoicecomplimenatrybyid_deleteadditionalbyid_deleteremainingamountbyid_deleteseoclient_deleteseokeyword_deletediscountsettingbyid",
@@ -7466,7 +7406,7 @@
     {
       "label": "{\r\n  updateService,\r\n  updateCategory,\r\n  updateEditingType,\r\n  updateCalculatorDataById,\r\n  updateClientDetails,\r\n  updatePlandata,\r\n  updatePlanNameDetail,\r\n  updatePlanNotes,\r\n  updateServiceData,\r\n  updateComplimenatryDataById,\r\n  updateNoteDataById,\r\n  updateClientNoteDataById,\r\n  updateDiscountDataById,\r\n  updateInvoiceDataById,\r\n  updateInvoiceNoteDataById,\r\n  updateInvoiceClientNoteDataById,\r\n  updateInvoiceComplimenatryDataById,\r\n\r\n  updateAdditionalDataById,\r\n  updateRemainingDataById,\r\n  updateSeoClient,\r\n  updateSeoKeyword,\r\n  updateDiscountSettingDataById,\r\n  updateQuotationApprovalStatus,\r\n  // reassignQuotation,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L143",
       "_origin": "ast",
       "id": "re_router_re_router_updateservice_updatecategory_updateeditingtype_updatecalculatordatabyid_updateclientdetails_updateplandata_updateplannamedetail_updateplannotes_updateservicedata_updatecomplimenatrydatabyid_updatenotedatabyid_updateclientnotedatabyid_updatediscountdatabyid_updateinvoicedatabyid_updateinvoicenotedatabyid_updateinvoiceclientnotedatabyid_updateinvoicecomplimenatrydatabyid_updateadditionaldatabyid_updateremainingdatabyid_updateseoclient_updateseokeyword_updatediscountsettingdatabyid_updatequotationapprovalstatus_reassignquotation",
@@ -7476,7 +7416,7 @@
     {
       "label": "{\r\n  submitToAdmin,\r\n  sendQuotationToClient,\r\n  markClientQuotationApproved,              \r\n  generateProformaInvoice,\r\n  getPaymentSummary,\r\n  recordPaymentAndGenerateFinalInvoice,\r\n  invoiceSentNotify,\r\n  /* --- FOR FUTURE DEVELOPMENT OK ---\r\n  saveStrategy,\r\n  sendStrategyToAdmin,\r\n  getStrategy,\r\n  sendStrategyToClient,\r\n  markClientStrategyDecision,\r\n  assignTeamLead,\r\n  getSFEmployees,\r\n  getSFTeams,\r\n  getSFTeamLeads,\r\n  assignTaskOwners,\r\n  getTasksByTxn,\r\n  getRemarks,\r\n*/\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L171",
       "_origin": "ast",
       "id": "re_router_re_router_submittoadmin_sendquotationtoclient_markclientquotationapproved_generateproformainvoice_getpaymentsummary_recordpaymentandgeneratefinalinvoice_invoicesentnotify_for_future_development_ok_savestrategy_sendstrategytoadmin_getstrategy_sendstrategytoclient_markclientstrategydecision_assignteamlead_getsfemployees_getsfteams_getsfteamleads_assigntaskowners_gettasksbytxn_getremarks",
@@ -7486,7 +7426,7 @@
     {
       "label": "{\r\n  getPublicInvoiceData,\r\n  getPublicInvoicePdf,\r\n  getPublicProposalData,\r\n  getPublicProposalPdf,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L195",
       "_origin": "ast",
       "id": "re_router_re_router_getpublicinvoicedata_getpublicinvoicepdf_getpublicproposaldata_getpublicproposalpdf",
@@ -7496,7 +7436,7 @@
     {
       "label": "authenticateToken",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L202",
       "_origin": "ast",
       "id": "re_router_re_router_authenticatetoken",
@@ -7506,7 +7446,7 @@
     {
       "label": "{\r\n  createProposal,\r\n  updateProposal,\r\n  getProposalById,\r\n  getProposalsByClient,\r\n  deleteProposal,\r\n  updateProposalStatus,\r\n  generateProposalPdf,\r\n  getAllProposals,\r\n  sendProposalToClient,\r\n  createProforma,\r\n  getProformasByClient,\r\n  getAllProformas,\r\n  recordProposalPayment,\r\n  approvePayment,\r\n  getPaymentRecordsByClient,\r\n  getAllPaymentRecords,\r\n  getProformasByProposal,\r\n  markPaymentReceived,\r\n  getProposalPaymentSummary,\r\n  deleteProforma,\r\n  getFinalInvoices,\r\n  generateInvoiceFromProforma,\r\n  getProposalInvoices,\r\n  getRevenueHistory,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L208",
       "_origin": "ast",
       "id": "re_router_re_router_createproposal_updateproposal_getproposalbyid_getproposalsbyclient_deleteproposal_updateproposalstatus_generateproposalpdf_getallproposals_sendproposaltoclient_createproforma_getproformasbyclient_getallproformas_recordproposalpayment_approvepayment_getpaymentrecordsbyclient_getallpaymentrecords_getproformasbyproposal_markpaymentreceived_getproposalpaymentsummary_deleteproforma_getfinalinvoices_generateinvoicefromproforma_getproposalinvoices_getrevenuehistory",
@@ -7516,7 +7456,7 @@
     {
       "label": "{\r\n  uploadAndConvert: genratecoatetion,\r\n  generateInvoicePdf,\r\n}",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L234",
       "_origin": "ast",
       "id": "re_router_re_router_uploadandconvert_genratecoatetion_generateinvoicepdf",
@@ -7526,12 +7466,82 @@
     {
       "label": "router",
       "file_type": "code",
-      "source_file": "server/re_router/re_router.js",
+      "source_file": "server/revenue_engen_server/re_router/re_router.js",
       "source_location": "L238",
       "_origin": "ast",
       "id": "re_router_re_router_router",
       "community": 2,
       "norm_label": "router"
+    },
+    {
+      "label": "notificationService.js",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "re_services_notificationservice",
+      "community": 0,
+      "norm_label": "notificationservice.js"
+    },
+    {
+      "label": "{\n  sendFinalInvoiceEmail,\n  sendInvoiceAdminNotifyEmail,\n  sendPaymentReceivedAlertEmail,\n}",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "re_services_notificationservice_sendfinalinvoiceemail_sendinvoiceadminnotifyemail_sendpaymentreceivedalertemail",
+      "community": 0,
+      "norm_label": "{\n  sendfinalinvoiceemail,\n  sendinvoiceadminnotifyemail,\n  sendpaymentreceivedalertemail,\n}"
+    },
+    {
+      "label": "{\n  sendInvoiceWhatsApp,\n  sendInvoiceAdminNotifyWA,\n  sendPaymentReceivedAlertWA,\n}",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L7",
+      "_origin": "ast",
+      "id": "re_services_notificationservice_sendinvoicewhatsapp_sendinvoiceadminnotifywa_sendpaymentreceivedalertwa",
+      "community": 0,
+      "norm_label": "{\n  sendinvoicewhatsapp,\n  sendinvoiceadminnotifywa,\n  sendpaymentreceivedalertwa,\n}"
+    },
+    {
+      "label": "handleFinalInvoice()",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "re_services_notificationservice_handlefinalinvoice",
+      "community": 0,
+      "norm_label": "handlefinalinvoice()"
+    },
+    {
+      "label": "handlePaymentAlert()",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L69",
+      "_origin": "ast",
+      "id": "re_services_notificationservice_handlepaymentalert",
+      "community": 0,
+      "norm_label": "handlepaymentalert()"
+    },
+    {
+      "label": "handlers",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L136",
+      "_origin": "ast",
+      "id": "re_services_notificationservice_handlers",
+      "community": 0,
+      "norm_label": "handlers"
+    },
+    {
+      "label": "dispatch()",
+      "file_type": "code",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L149",
+      "_origin": "ast",
+      "id": "re_services_notificationservice_dispatch",
+      "community": 0,
+      "norm_label": "dispatch()"
     },
     {
       "label": "server.js",
@@ -7562,76 +7572,6 @@
       "id": "server_server_os",
       "community": 23,
       "norm_label": "os"
-    },
-    {
-      "label": "notificationService.js",
-      "file_type": "code",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "services_notificationservice",
-      "community": 0,
-      "norm_label": "notificationservice.js"
-    },
-    {
-      "label": "{\n  sendFinalInvoiceEmail,\n  sendInvoiceAdminNotifyEmail,\n  sendPaymentReceivedAlertEmail,\n}",
-      "file_type": "code",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "services_notificationservice_sendfinalinvoiceemail_sendinvoiceadminnotifyemail_sendpaymentreceivedalertemail",
-      "community": 0,
-      "norm_label": "{\n  sendfinalinvoiceemail,\n  sendinvoiceadminnotifyemail,\n  sendpaymentreceivedalertemail,\n}"
-    },
-    {
-      "label": "{\n  sendInvoiceWhatsApp,\n  sendInvoiceAdminNotifyWA,\n  sendPaymentReceivedAlertWA,\n}",
-      "file_type": "code",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L7",
-      "_origin": "ast",
-      "id": "services_notificationservice_sendinvoicewhatsapp_sendinvoiceadminnotifywa_sendpaymentreceivedalertwa",
-      "community": 0,
-      "norm_label": "{\n  sendinvoicewhatsapp,\n  sendinvoiceadminnotifywa,\n  sendpaymentreceivedalertwa,\n}"
-    },
-    {
-      "label": "handleFinalInvoice()",
-      "file_type": "code",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L17",
-      "_origin": "ast",
-      "id": "services_notificationservice_handlefinalinvoice",
-      "community": 0,
-      "norm_label": "handlefinalinvoice()"
-    },
-    {
-      "label": "handlePaymentAlert()",
-      "file_type": "code",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L69",
-      "_origin": "ast",
-      "id": "services_notificationservice_handlepaymentalert",
-      "community": 0,
-      "norm_label": "handlepaymentalert()"
-    },
-    {
-      "label": "handlers",
-      "file_type": "code",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L136",
-      "_origin": "ast",
-      "id": "services_notificationservice_handlers",
-      "community": 0,
-      "norm_label": "handlers"
-    },
-    {
-      "label": "dispatch()",
-      "file_type": "code",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L149",
-      "_origin": "ast",
-      "id": "services_notificationservice_dispatch",
-      "community": 0,
-      "norm_label": "dispatch()"
     }
   ],
   "links": [
@@ -9119,9 +9059,9 @@
       "source_file": "client/src/Admin/AdminInvoice.orig.jsx",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_admininvoice_orig",
-      "target": "admin_admininvoice_orig_admininvoice",
-      "confidence_score": 1.0
+      "target": "admin_admininvoice_orig_admininvoice"
     },
     {
       "relation": "contains",
@@ -9129,9 +9069,9 @@
       "source_file": "client/src/Admin/AdminInvoice.orig.jsx",
       "source_location": "L3529",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_admininvoice_orig",
-      "target": "admin_admininvoice_orig_wrapper",
-      "confidence_score": 1.0
+      "target": "admin_admininvoice_orig_wrapper"
     },
     {
       "relation": "imports_from",
@@ -9140,9 +9080,9 @@
       "source_file": "client/src/Admin/AdminInvoice.orig.jsx",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_admininvoice_orig",
-      "target": "config_apibaseurl",
-      "confidence_score": 1.0
+      "target": "config_apibaseurl"
     },
     {
       "relation": "imports",
@@ -9151,9 +9091,9 @@
       "source_file": "client/src/Admin/AdminInvoice.orig.jsx",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_admininvoice_orig",
-      "target": "config_apibaseurl_api_base_url",
-      "confidence_score": 1.0
+      "target": "config_apibaseurl_api_base_url"
     },
     {
       "relation": "imports_from",
@@ -9162,9 +9102,9 @@
       "source_file": "client/src/Admin/AdminInvoice.orig.jsx",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_admininvoice_orig",
-      "target": "user_userslice",
-      "confidence_score": 1.0
+      "target": "user_userslice"
     },
     {
       "relation": "imports_from",
@@ -9173,9 +9113,9 @@
       "source_file": "client/src/Admin/AdminInvoice.orig.jsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_admininvoice_orig",
-      "target": "utils_proformapricing",
-      "confidence_score": 1.0
+      "target": "utils_proformapricing"
     },
     {
       "relation": "imports",
@@ -9184,9 +9124,9 @@
       "source_file": "client/src/Admin/AdminInvoice.orig.jsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_admininvoice_orig",
-      "target": "utils_proformapricing_classifyproformaservices",
-      "confidence_score": 1.0
+      "target": "utils_proformapricing_classifyproformaservices"
     },
     {
       "relation": "contains",
@@ -11472,9 +11412,9 @@
       "source_file": "client/src/Admin/Quotation_orig.jsx",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_quotation_orig",
-      "target": "admin_quotation_orig_quotation",
-      "confidence_score": 1.0
+      "target": "admin_quotation_orig_quotation"
     },
     {
       "relation": "contains",
@@ -11482,9 +11422,9 @@
       "source_file": "client/src/Admin/Quotation_orig.jsx",
       "source_location": "L2330",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_quotation_orig",
-      "target": "admin_quotation_orig_wrapper",
-      "confidence_score": 1.0
+      "target": "admin_quotation_orig_wrapper"
     },
     {
       "relation": "imports_from",
@@ -11493,9 +11433,9 @@
       "source_file": "client/src/Admin/Quotation_orig.jsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_quotation_orig",
-      "target": "config_apibaseurl",
-      "confidence_score": 1.0
+      "target": "config_apibaseurl"
     },
     {
       "relation": "imports",
@@ -11504,9 +11444,9 @@
       "source_file": "client/src/Admin/Quotation_orig.jsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_quotation_orig",
-      "target": "config_apibaseurl_api_base_url",
-      "confidence_score": 1.0
+      "target": "config_apibaseurl_api_base_url"
     },
     {
       "relation": "imports_from",
@@ -11515,9 +11455,9 @@
       "source_file": "client/src/Admin/Quotation_orig.jsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_quotation_orig",
-      "target": "user_userslice",
-      "confidence_score": 1.0
+      "target": "user_userslice"
     },
     {
       "relation": "imports_from",
@@ -11526,9 +11466,9 @@
       "source_file": "client/src/Admin/Quotation_orig.jsx",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_quotation_orig",
-      "target": "utils_proformapricing",
-      "confidence_score": 1.0
+      "target": "utils_proformapricing"
     },
     {
       "relation": "imports",
@@ -11537,9 +11477,9 @@
       "source_file": "client/src/Admin/Quotation_orig.jsx",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "admin_quotation_orig",
-      "target": "utils_proformapricing_classifyproformaservices",
-      "confidence_score": 1.0
+      "target": "utils_proformapricing_classifyproformaservices"
     },
     {
       "relation": "contains",
@@ -15282,16 +15222,6 @@
       "target": "utils_proformapricing_classifyproformaservices"
     },
     {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "scratch_quotation.jsx",
-      "source_location": "L794",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "scratch_quotation",
-      "target": "scratch_quotation_f"
-    },
-    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -15446,9 +15376,9 @@
       "source_file": "server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_verifyadmintoken",
-      "target": "server_connect",
-      "confidence_score": 1.0
+      "target": "server_connect"
     },
     {
       "relation": "contains",
@@ -15584,9 +15514,9 @@
       "source_file": "server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_verifyadmintoken",
-      "target": "server_connect_db",
-      "confidence_score": 1.0
+      "target": "server_connect_db"
     },
     {
       "relation": "contains",
@@ -16142,31 +16072,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L7",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "re_controller_re_controller",
-      "target": "re_controller_re_controller_nodemailer"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/re_controller/re_controller.js",
       "source_location": "L3057",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "re_controller_re_controller",
       "target": "re_controller_re_controller_nowiststring"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L263",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "re_controller_re_controller",
-      "target": "re_controller_re_controller_passwordotpemail"
     },
     {
       "relation": "contains",
@@ -16491,22 +16401,12 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L21",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "re_controller_re_controller",
-      "target": "re_controller_re_controller_transporter"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/re_controller/re_controller.js",
-      "source_location": "L8",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "re_controller_re_controller",
-      "target": "re_controller_re_controller_tz_sendregistrationotpemail"
+      "target": "re_controller_re_controller_tz_sendregistrationotpemail_sendpasswordresetotpemail",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -16538,6 +16438,17 @@
       "confidence_score": 1.0,
       "source": "re_controller_re_controller",
       "target": "re_controller_re_sendemails"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_controller/re_controller.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "re_controller_re_controller",
+      "target": "re_controller_re_sendemails_sendpasswordresetotpemail",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -20484,12 +20395,12 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/re_controller/re_proposalController.js",
+      "source_file": "server/revenue_engen_server/re_controller/re_proposalController.js",
       "source_location": "L10",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "re_controller_re_proposalcontroller",
-      "target": "services_notificationservice"
+      "target": "re_services_notificationservice",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -21870,6 +21781,16 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
+      "source_location": "L348",
+      "weight": 1.0,
+      "source": "re_controller_re_sendemails",
+      "target": "re_controller_re_sendemails_sendpasswordresetotpemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "server/re_controller/re_sendEmails.js",
       "source_location": "L232",
       "weight": 1.0,
@@ -21921,12 +21842,12 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendemails"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendemails",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -21949,6 +21870,17 @@
       "confidence_score": 1.0,
       "source": "re_controller_re_sendemails_sendfinalinvoiceemail",
       "target": "re_controller_re_sendemails_isemail"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
+      "source_location": "L349",
+      "weight": 1.0,
+      "source": "re_controller_re_sendemails_sendpasswordresetotpemail",
+      "target": "re_controller_re_sendemails_isemail",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -22031,6 +21963,17 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_controller/re_sendEmails.js",
+      "source_location": "L373",
+      "weight": 1.0,
+      "source": "re_controller_re_sendemails_sendpasswordresetotpemail",
+      "target": "re_controller_re_sendemails_getlogoattachment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
       "source_file": "server/re_controller/re_sendEmails.js",
       "source_location": "L298",
       "weight": 1.0,
@@ -22075,66 +22018,66 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendemails_sendfinalinvoiceemail"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendemails_sendfinalinvoiceemail",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L29",
       "weight": 1.0,
-      "source": "services_notificationservice_handlefinalinvoice",
+      "source": "re_services_notificationservice_handlefinalinvoice",
       "target": "re_controller_re_sendemails_sendfinalinvoiceemail"
     },
     {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendemails_sendpaymentreceivedalertemail"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendemails_sendpaymentreceivedalertemail",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L90",
       "weight": 1.0,
-      "source": "services_notificationservice_handlepaymentalert",
+      "source": "re_services_notificationservice_handlepaymentalert",
       "target": "re_controller_re_sendemails_sendpaymentreceivedalertemail"
     },
     {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendemails_sendinvoiceadminnotifyemail"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendemails_sendinvoiceadminnotifyemail",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L41",
       "weight": 1.0,
-      "source": "services_notificationservice_handlefinalinvoice",
+      "source": "re_services_notificationservice_handlefinalinvoice",
       "target": "re_controller_re_sendemails_sendinvoiceadminnotifyemail"
     },
     {
@@ -22271,12 +22214,12 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendwhatsapp"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendwhatsapp",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -22293,22 +22236,22 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendwhatsapp_sendinvoicewhatsapp"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendwhatsapp_sendinvoicewhatsapp",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L35",
       "weight": 1.0,
-      "source": "services_notificationservice_handlefinalinvoice",
+      "source": "re_services_notificationservice_handlefinalinvoice",
       "target": "re_controller_re_sendwhatsapp_sendinvoicewhatsapp"
     },
     {
@@ -22414,44 +22357,44 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendwhatsapp_sendpaymentreceivedalertwa"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendwhatsapp_sendpaymentreceivedalertwa",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L107",
       "weight": 1.0,
-      "source": "services_notificationservice_handlepaymentalert",
+      "source": "re_services_notificationservice_handlepaymentalert",
       "target": "re_controller_re_sendwhatsapp_sendpaymentreceivedalertwa"
     },
     {
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "re_controller_re_sendwhatsapp_sendinvoiceadminnotifywa"
+      "source": "re_services_notificationservice",
+      "target": "re_controller_re_sendwhatsapp_sendinvoiceadminnotifywa",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "server/services/notificationService.js",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
       "source_location": "L48",
       "weight": 1.0,
-      "source": "services_notificationservice_handlefinalinvoice",
+      "source": "re_services_notificationservice_handlefinalinvoice",
       "target": "re_controller_re_sendwhatsapp_sendinvoiceadminnotifywa"
     },
     {
@@ -22580,31 +22523,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "re_controller_re_updatecontroller",
-      "target": "re_controller_re_updatecontroller_nodemailer"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/re_controller/re_updateController.js",
       "source_location": "L504",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "re_controller_re_updatecontroller",
       "target": "re_controller_re_updatecontroller_reassignquotation"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/re_controller/re_updateController.js",
-      "source_location": "L7",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "re_controller_re_updatecontroller",
-      "target": "re_controller_re_updatecontroller_transporter"
     },
     {
       "relation": "contains",
@@ -23271,9 +23194,9 @@
       "source_file": "server/re_middleware/re_authenticateToken.js",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_authenticatetoken",
-      "target": "re_middleware_re_authenticatetoken_authenticatetoken",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_authenticatetoken_authenticatetoken"
     },
     {
       "relation": "contains",
@@ -23281,9 +23204,9 @@
       "source_file": "server/re_middleware/re_authenticateToken.js",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_authenticatetoken",
-      "target": "re_middleware_re_authenticatetoken_verifyadmintoken",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_authenticatetoken_verifyadmintoken"
     },
     {
       "relation": "imports_from",
@@ -23292,9 +23215,9 @@
       "source_file": "server/re_middleware/re_authenticateToken.js",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_authenticatetoken",
-      "target": "re_middleware_re_verifyadmintoken",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_verifyadmintoken"
     },
     {
       "relation": "imports_from",
@@ -23303,9 +23226,9 @@
       "source_file": "server/re_router/re_router.js",
       "source_location": "L202",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_router_re_router",
-      "target": "re_middleware_re_authenticatetoken",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_authenticatetoken"
     },
     {
       "relation": "calls",
@@ -23314,9 +23237,9 @@
       "source_file": "server/re_middleware/re_authenticateToken.js",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_authenticatetoken_authenticatetoken",
-      "target": "re_middleware_re_authenticatetoken_verifyadmintoken",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_authenticatetoken_verifyadmintoken"
     },
     {
       "relation": "contains",
@@ -23324,9 +23247,9 @@
       "source_file": "server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_verifyadmintoken",
-      "target": "re_middleware_re_verifyadmintoken_db",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_verifyadmintoken_db"
     },
     {
       "relation": "contains",
@@ -23334,9 +23257,9 @@
       "source_file": "server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_verifyadmintoken",
-      "target": "re_middleware_re_verifyadmintoken_dotenv",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_verifyadmintoken_dotenv"
     },
     {
       "relation": "contains",
@@ -23344,9 +23267,9 @@
       "source_file": "server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_verifyadmintoken",
-      "target": "re_middleware_re_verifyadmintoken_jwt",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_verifyadmintoken_jwt"
     },
     {
       "relation": "contains",
@@ -23354,9 +23277,9 @@
       "source_file": "server/re_middleware/re_verifyAdminToken.js",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "re_middleware_re_verifyadmintoken",
-      "target": "re_middleware_re_verifyadmintoken_verifyadmintoken",
-      "confidence_score": 1.0
+      "target": "re_middleware_re_verifyadmintoken_verifyadmintoken"
     },
     {
       "relation": "contains",
@@ -23471,6 +23394,66 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L149",
+      "weight": 1.0,
+      "source": "re_services_notificationservice",
+      "target": "re_services_notificationservice_dispatch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "re_services_notificationservice",
+      "target": "re_services_notificationservice_handlefinalinvoice",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "re_services_notificationservice",
+      "target": "re_services_notificationservice_handlepaymentalert",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "re_services_notificationservice",
+      "target": "re_services_notificationservice_handlers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "re_services_notificationservice",
+      "target": "re_services_notificationservice_sendfinalinvoiceemail_sendinvoiceadminnotifyemail_sendpaymentreceivedalertemail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "server/revenue_engen_server/re_services/notificationService.js",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "re_services_notificationservice",
+      "target": "re_services_notificationservice_sendinvoicewhatsapp_sendinvoiceadminnotifywa_sendpaymentreceivedalertwa",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "server/server.js",
       "source_location": "L1",
       "weight": 1.0,
@@ -23487,68 +23470,8 @@
       "confidence_score": 1.0,
       "source": "server_server",
       "target": "server_server_os"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L72",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "services_notificationservice_dispatch"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L15",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "services_notificationservice_handlefinalinvoice"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L61",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "services_notificationservice_handlepaymentalert"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L59",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "services_notificationservice_handlers"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "services_notificationservice_sendfinalinvoiceemail_sendinvoiceadminnotifyemail_sendpaymentreceivedalertemail"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "server/services/notificationService.js",
-      "source_location": "L7",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "services_notificationservice",
-      "target": "services_notificationservice_sendinvoicewhatsapp_sendinvoiceadminnotifywa_sendpaymentreceivedalertwa"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "7f1c0b25f5d0d3a625b5077689ae03ed98e82225"
+  "built_at_commit": "0ec82c1f3c03ef8570209ef3ce5363f7a97333da"
 }

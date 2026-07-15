@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useTheme } from "../context/ThemeContext";
 import {
   Palette,
   Megaphone,
@@ -45,6 +46,8 @@ export default function ServicesLanding() {
   const [loading, setLoading] = useState(false);
   const [notesData, setNotesData] = useState([]);
   const { currentUser, token } = useSelector((state) => state.user);
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [showModal, setShowModal] = useState(false);
   const userName = currentUser?.name;
   const dispatch = useDispatch();
@@ -508,7 +511,14 @@ export default function ServicesLanding() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 relative overflow-hidden flex flex-col">
+    <div
+      className="h-screen relative overflow-hidden flex flex-col"
+      style={{
+        background: isLight
+          ? 'linear-gradient(135deg, #fdf6ec 0%, #fef3e8 50%, #fdf6ec 100%)'
+          : 'linear-gradient(to bottom right, #030712, #0f172a, #030712)',
+      }}
+    >
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -right-32 w-[420px] h-[420px] bg-red-500/[0.06] rounded-full blur-3xl animate-pulse" />

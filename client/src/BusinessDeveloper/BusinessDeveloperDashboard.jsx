@@ -1,4 +1,5 @@
 import React, { lazy, useEffect, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 import {
   User,
   Clock,
@@ -30,6 +31,8 @@ const BusinessDeveloperDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [activeTab, setActiveTab] = useState("clients");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -73,14 +76,29 @@ const BusinessDeveloperDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden">
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        background: isLight
+          ? 'linear-gradient(135deg, #fdf6ec 0%, #fef3e8 50%, #fdf6ec 100%)'
+          : 'linear-gradient(to bottom right, #111827, #1e293b, #111827)',
+      }}
+    >
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <header className="fixed top-0 left-0 right-0 z-30 h-16 bg-gray-800/30 backdrop-blur-xl border-b border-gray-700/50">
+      <header
+        className="fixed top-0 left-0 right-0 z-30 h-16"
+        style={{
+          backgroundColor: isLight ? '#ffffff' : 'rgba(31, 41, 55, 0.3)',
+          borderBottom: isLight ? '1px solid rgba(234,88,12,0.25)' : '1px solid rgba(55, 65, 81, 0.5)',
+          boxShadow: isLight ? '0 2px 20px rgba(234,88,12,0.12), 0 1px 4px rgba(0,0,0,0.06)' : 'none',
+          backdropFilter: 'blur(24px)',
+        }}
+      >
         <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-full flex justify-between items-center">
             <div>

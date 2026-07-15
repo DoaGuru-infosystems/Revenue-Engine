@@ -1,5 +1,5 @@
 import React, { lazy, useEffect, useState } from "react";
-import ThemeToggle from "../Components/ThemeToggle";
+import { useTheme } from "../context/ThemeContext";
 import {
   User,
   Users,
@@ -43,6 +43,8 @@ const AdminDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("admin-active-tab") || "clients";
   });
@@ -108,10 +110,23 @@ const AdminDashboard = () => {
       {/* Full Screen Animated Background (From Login) */ }
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute -inset-[100%] opacity-40 mix-blend-screen bg-cover bg-center animate-[spin_60s_linear_infinite]"
-          style={ { backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCT9v6iizuoHxfKhHFpYAnJztv_3ApbHHC7Dyvq4D7pQzsVbIF-0pDnsBvhENFyWxnoiInnFwgsVWc5ENucoHd7CEUoA9DeAzNMmADjsz1J0FDPFcd7o74IXDwID61ElImaeyHJCCOCovXD_rkAj8KKLMkRgVOHfm_TNvaZ5VmSDHJZbByQZx8VLFFdoChrpBmjLktpnTinMSwpwQUh-r_-D8Th-33QUlcqUrHEzkFU3TiQoR1o3t-Unmchd64GWrJTf3-MD25CC3Xf')` } }
-        ></div>
-        <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-3xl"></div>
+          className="absolute -inset-[100%] bg-cover bg-center animate-[spin_60s_linear_infinite]"
+          style={{
+            backgroundImage: isLight
+              ? 'none'
+              : `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCT9v6iizuoHxfKhHFpYAnJztv_3ApbHHC7Dyvq4D7pQzsVbIF-0pDnsBvhENFyWxnoiInnFwgsVWc5ENucoHd7CEUoA9DeAzNMmADjsz1J0FDPFcd7o74IXDwID61ElImaeyHJCCOCovXD_rkAj8KKLMkRgVOHfm_TNvaZ5VmSDHJZbByQZx8VLFFdoChrpBmjLktpnTinMSwpwQUh-r_-D8Th-33QUlcqUrHEzkFU3TiQoR1o3t-Unmchd64GWrJTf3-MD25CC3Xf')`,
+            opacity: isLight ? 0 : 0.4,
+            mixBlendMode: isLight ? 'normal' : 'screen',
+          }}
+        />
+        <div
+          className="absolute inset-0 backdrop-blur-3xl"
+          style={{
+            backgroundColor: isLight
+              ? 'rgba(253,246,236,0.82)'
+              : 'rgba(2, 6, 23, 0.70)',
+          }}
+        />
 
         {/* Animated Orbs */ }
         <div className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-orange-600/30 rounded-full blur-[100px] animate-[pulse_8s_ease-in-out_infinite]"></div>
@@ -121,8 +136,17 @@ const AdminDashboard = () => {
       {/* Header */ }
       {/* <header className="relative z-10 bg-gray-800/30 backdrop-blur-xl border-b border-gray-700/50"> */ }
       <header
-        className="fixed top-0 left-0 right-0 z-30 h-16 backdrop-blur-xl"
-        style={{ backgroundColor: 'var(--bg-header)', borderBottom: '1px solid var(--border-color)' }}
+        className="fixed top-0 left-0 right-0 z-30 h-16"
+        style={{
+          backgroundColor: isLight ? '#ffffff' : 'var(--bg-header)',
+          borderBottom: isLight
+            ? '1px solid rgba(234, 88, 12, 0.25)'
+            : '1px solid var(--border-color)',
+          boxShadow: isLight
+            ? '0 2px 20px rgba(234, 88, 12, 0.12), 0 1px 4px rgba(0,0,0,0.06)'
+            : 'none',
+          backdropFilter: 'blur(24px)',
+        }}
       >
         <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-full flex justify-between items-center">
@@ -150,9 +174,6 @@ const AdminDashboard = () => {
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
-
-              {/* Theme Toggle */}
-              <ThemeToggle />
 
               {/* CSMS Button */}
               <a

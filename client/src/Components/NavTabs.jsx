@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 export default function NavTabs({
   tabs = [],
@@ -9,6 +10,8 @@ export default function NavTabs({
   className = "",
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   useEffect(() => {
     if (!persistKey) return;
@@ -41,12 +44,18 @@ export default function NavTabs({
         className={[
           "hidden lg:block",
           containerStyles,
-          "h-12 backdrop-blur-xl",
+          "h-12",
           className,
         ].join(" ")}
         style={{
-          backgroundColor: 'var(--bg-nav)',
-          borderBottom: '1px solid var(--border-color)',
+          backgroundColor: isLight ? '#ffffff' : 'var(--bg-nav)',
+          borderBottom: isLight
+            ? '2px solid rgba(234, 88, 12, 0.2)'
+            : '1px solid var(--border-color)',
+          boxShadow: isLight
+            ? '0 2px 12px rgba(234, 88, 12, 0.08)'
+            : 'none',
+          backdropFilter: 'blur(16px)',
         }}
       >
         <div className="h-full w-full px-3 lg:px-4">

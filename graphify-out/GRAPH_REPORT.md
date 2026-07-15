@@ -1,16 +1,16 @@
 # Graph Report - Revenue Engine  (2026-07-15)
 
 ## Corpus Check
-- 143 files · ~343,736 words
+- 143 files · ~298,966 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 763 nodes · 1507 edges · 40 communities (37 shown, 3 thin omitted)
+- 757 nodes · 1505 edges · 37 communities (34 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7f1c0b25`
+- Built from commit: `0ec82c1f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -35,12 +35,10 @@
 - [[_COMMUNITY_Community 17|Community 17]]
 - [[_COMMUNITY_Community 18|Community 18]]
 - [[_COMMUNITY_Community 19|Community 19]]
-- [[_COMMUNITY_Community 20|Community 20]]
 - [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_Community 33|Community 33]]
-- [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 41|Community 41]]
 
@@ -52,37 +50,39 @@
 5. `moment` - 16 edges
 6. `BusinessDeveloperDashboard` - 11 edges
 7. `db` - 9 edges
-8. `sendWhatsAppTemplate()` - 9 edges
-9. `sendProposalToClient()` - 8 edges
-10. `createProposalPdfBuffer()` - 8 edges
+8. `getLogoAttachment()` - 9 edges
+9. `sendWhatsAppTemplate()` - 9 edges
+10. `sendProposalToClient()` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `History()` --calls--> `toNumber()`  [INFERRED]
   client/src/Admin/History.jsx → client/src/Components/InvoiceServices.jsx
-- `History()` --calls--> `calcAdsRowTotal()`  [EXTRACTED]
-  client/src/Admin/History.jsx → client/src/utils/proformaPricing.js
-- `History()` --calls--> `classifyProformaServices()`  [EXTRACTED]
-  client/src/Admin/History.jsx → client/src/utils/proformaPricing.js
 - `getBillableTotals()` --calls--> `classifyProformaServices()`  [EXTRACTED]
   client/src/Admin/ProposalBuilder.jsx → client/src/utils/proformaPricing.js
-- `sendProposalToClient()` --calls--> `generatePublicAccessToken()`  [EXTRACTED]
-  server/re_controller/re_proposalController.js → server/re_controller/re_publicController.js
+- `sendProposalToClient()` --calls--> `sendProposalAdminNotifyEmail()`  [EXTRACTED]
+  server/revenue_engen_server/re_controller/re_proposalController.js → server/revenue_engen_server/re_controller/re_sendEmails.js
+- `sendProposalToClient()` --calls--> `sendProposalEmail()`  [EXTRACTED]
+  server/revenue_engen_server/re_controller/re_proposalController.js → server/revenue_engen_server/re_controller/re_sendEmails.js
+- `sendProposalToClient()` --calls--> `sendProposalAdminNotifyWA()`  [EXTRACTED]
+  server/revenue_engen_server/re_controller/re_proposalController.js → server/revenue_engen_server/re_controller/re_sendWhatsApp.js
 
 ## Import Cycles
 - None detected.
 
-## Communities (40 total, 3 thin omitted)
+## Communities (37 total, 3 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.09
-Nodes (40): sendRegisterAdminOtp(), sendProposalToClient(), cron, { db }, moment, runPeriodicPaymentSummary(), runQuery(), {
+Nodes (40): sendRegisterAdminOtp(), cron, { db }, moment, runPeriodicPaymentSummary(), runQuery(), {
   sendDailyPaymentSummaryEmail,
   TZ,
+}, {
+  sendPeriodicPaymentSummaryWA,
 } (+32 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (32): addCategories(), addMembersToTeam(), addNotebyplan(), addServices(), createTeam(), incrementDoneQty(), insertAdsServices(), insertClientDetails() (+24 more)
+Cohesion: 0.05
+Nodes (58): addCategories(), addEditingTypes(), addMembersToTeam(), addNotebyplan(), addServices(), assignQuotation(), assignQuotationToTeam(), bcrypt (+50 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.05
@@ -98,35 +98,35 @@ Nodes (29): author, dependencies, axios, axios-retry, bcryptjs, cors, dotenv, ex
 
 ### Community 5 - "Community 5"
 Cohesion: 0.06
-Nodes (37): AdminAddPlan(), AdminCalculator(), PaginationContainer, AdminAddServices, AdminAdsCampign, AdminClientDetails, AdminServicesHistory, AssignQuotation (+29 more)
+Nodes (35): AdminAddPlan(), AdminAddServices, AdminAdsCampign, AdminClientDetails, AdminServicesHistory, AssignQuotation, HistoryHub, RegisterBD (+27 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.08
 Nodes (23): GlobalStyle, SERVICES, PremiumLoader(), ThemeToggle(), ThemeContext, ThemeProvider(), useTheme(), persistConfig (+15 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.11
-Nodes (7): PaginationContainer, PaginationContainer, PaginationContainer, PaginationContainer, BusinessDeveloperDashboard, initialState, userSlice
+Cohesion: 0.18
+Nodes (3): PaginationContainer, PaginationContainer, BusinessDeveloperDashboard
 
 ### Community 8 - "Community 8"
 Cohesion: 0.22
 Nodes (6): PaginationContainer, LegacyQuotationTableBD(), PaymentModal(), ProposalActions(), ProposalTable(), PROPOSAL_STATUS_MAP
 
 ### Community 9 - "Community 9"
-Cohesion: 0.08
-Nodes (45): { addBrandedPage, embedImageToPdf, loadBrandImages, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_TOP_PADDING }, approvePayment(), beginTransaction(), commitTransaction(), createProforma(), createProposal(), createProposalPdfBuffer(), { db } (+37 more)
+Cohesion: 0.07
+Nodes (47): { addBrandedPage, embedImageToPdf, loadBrandImages, HEADER_HEIGHT, FOOTER_HEIGHT, CONTENT_TOP_PADDING }, approvePayment(), beginTransaction(), commitTransaction(), createProforma(), createProposal(), createProposalPdfBuffer(), { db } (+39 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.08
-Nodes (6): AdminComplimentaryData(), PaginationContainer, PaginationContainer, CreateProposalModal(), API_BASE_URL, CalculatorBD
+Nodes (5): PaginationContainer, PaginationContainer, PaginationContainer, CreateProposalModal(), API_BASE_URL
 
 ### Community 11 - "Community 11"
-Cohesion: 0.12
-Nodes (14): BDInvoice(), Wrapper, BDNoteSection(), DiscountSetting(), InvoiceAds(), InvoiceNoteSection(), Wrapper, AddService (+6 more)
+Cohesion: 0.11
+Nodes (17): BDInvoice(), Wrapper, BDNoteSection(), DiscountSetting(), InvoiceAds(), InvoiceNoteSection(), Wrapper, AddService (+9 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.10
-Nodes (15): AdminPlanHistory(), DiscountSetting(), InvoiceAds(), InvoiceHistory(), InvoiceNoteSection(), Quotation(), Wrapper, AdminCalculator (+7 more)
+Cohesion: 0.05
+Nodes (27): AdminCalculator(), PaginationContainer, AdminComplimentaryData(), AdminPlanHistory(), DiscountSetting(), BalanceProformaHistory, HistoryHub(), InvoiceHistory (+19 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.06
@@ -134,19 +134,15 @@ Nodes (34): { db }, deleteAdditionalById(), deleteAdsCampaignDetails(), deleteAd
 
 ### Community 14 - "Community 14"
 Cohesion: 0.10
-Nodes (26): crypto, { db }, dotenv, fs, generatePublicAccessToken(), getPublicInvoiceData(), getPublicInvoicePdf(), getPublicProposalData() (+18 more)
-
-### Community 15 - "Community 15"
-Cohesion: 0.06
-Nodes (26): addEditingTypes(), assignQuotation(), assignQuotationToTeam(), bcrypt, crypto, { db }, dotenv, forgototpStore (+18 more)
+Nodes (25): crypto, { db }, dotenv, fs, getPublicInvoiceData(), getPublicInvoicePdf(), getPublicProposalData(), getPublicProposalPdf() (+17 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.21
 Nodes (4): InoviceComplmentary(), InvoiceCalculation(), InoviceComplmentary(), InvoiceCalculation()
 
 ### Community 17 - "Community 17"
-Cohesion: 0.10
-Nodes (28): { db }, dotenv, moment, nodemailer, transporter, updateAdditionalDataById(), updateCalculatorDataById(), updateCategory() (+20 more)
+Cohesion: 0.11
+Nodes (26): { db }, dotenv, moment, updateAdditionalDataById(), updateCalculatorDataById(), updateCategory(), updateClientDetails(), updateClientNoteDataById() (+18 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.12
@@ -162,48 +158,44 @@ Nodes (27): applyHeaderFooterWithMargins(), {
 }, convertDocxToPdf(), deleteFile(), fs, generateInvoicePdf(), ILovePDF, ILovePDFFile (+19 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.22
+Cohesion: 0.21
 Nodes (5): ServiceProgressTable(), SkeletonTable(), PaginationContainer, keyOf(), ServiceProgressTable()
 
 ### Community 22 - "Community 22"
 Cohesion: 0.13
-Nodes (17): AdsCampaignCalculator(), History(), getClientDisplayName(), ProposalBuilder(), getClientDisplayName(), getClientRecord(), ProposalBuilderBD(), formatRs() (+9 more)
+Nodes (17): AdsCampaignCalculator(), getBillableTotals(), getClientDisplayName(), ProposalBuilder(), getClientDisplayName(), getClientRecord(), ProposalBuilderBD(), formatRs() (+9 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.29
 Nodes (6): app, cors, dotenv, express, morgan, re_apiRouter
 
-### Community 34 - "Community 34"
-Cohesion: 0.12
-Nodes (10): BalanceProformaHistory, HistoryHub(), InvoiceHistory, PaymentHistory, ProformaHistory, ProposalHistory, RevenueHistory, SUB_TABS (+2 more)
-
 ### Community 40 - "Community 40"
 Cohesion: 0.14
-Nodes (11): Wrapper, getBillableTotals(), Wrapper, QuotationTypeModal(), EMPTY_ARRAY, GenerateProformaModal(), Header(), getClientDisplayName() (+3 more)
+Nodes (12): Wrapper, History(), Wrapper, Wrapper, QuotationTypeModal(), EMPTY_ARRAY, GenerateProformaModal(), Header() (+4 more)
 
 ### Community 41 - "Community 41"
 Cohesion: 0.38
 Nodes (6): axios, buildReportHtml(), fetchPSI(), IN_MEMORY_PDF_CACHE, pagespeedReportpdf(), puppeteer
 
 ## Knowledge Gaps
-- **228 isolated node(s):** `name`, `private`, `version`, `type`, `dev` (+223 more)
+- **224 isolated node(s):** `name`, `private`, `version`, `type`, `dev` (+219 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `API_BASE_URL` connect `Community 10` to `Community 34`, `Community 5`, `Community 6`, `Community 7`, `Community 40`, `Community 8`, `Community 11`, `Community 12`, `Community 16`, `Community 19`, `Community 21`, `Community 22`?**
-  _High betweenness centrality (0.033) - this node is a cross-community bridge._
-- **Why does `db` connect `Community 14` to `Community 0`, `Community 2`, `Community 9`, `Community 13`, `Community 15`, `Community 17`?**
+- **Why does `API_BASE_URL` connect `Community 10` to `Community 5`, `Community 6`, `Community 7`, `Community 40`, `Community 8`, `Community 11`, `Community 12`, `Community 15`, `Community 16`, `Community 19`, `Community 21`, `Community 22`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+- **Why does `db` connect `Community 14` to `Community 0`, `Community 1`, `Community 2`, `Community 9`, `Community 13`, `Community 17`?**
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `PremiumLoader()` connect `Community 6` to `Community 11`, `Community 12`?**
   _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **What connects `name`, `private`, `version` to the rest of the system?**
-  _228 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _224 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.0898989898989899 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08888888888888889 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.0625 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05288207297726071 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.05407925407925408 - nodes in this community are weakly interconnected._

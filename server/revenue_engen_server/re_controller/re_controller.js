@@ -4,7 +4,11 @@ const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { TZ, sendRegistrationOtpEmail, sendPasswordResetOtpEmail } = require("./re_sendEmails");
+const {
+  TZ,
+  sendRegistrationOtpEmail,
+  sendPasswordResetOtpEmail,
+} = require("./re_sendEmails");
 dotenv.config();
 
 const registerOtpStore = new Map();
@@ -16,8 +20,6 @@ setInterval(() => {
     }
   }
 }, 60 * 1000);
-
-
 
 exports.register = async (req, res) => {
   const { employee_name, employee_role, employee_email, employee_password } =
@@ -241,7 +243,6 @@ exports.login = async (req, res) => {
 
 const forgototpStore = new Map();
 
-
 exports.forgotPassword = async (req, res) => {
   const { User } = req.body;
 
@@ -270,7 +271,15 @@ exports.forgotPassword = async (req, res) => {
         expiresAt: Date.now() + 5 * 60 * 1000,
       });
 
-      await sendPasswordResetOtpEmail(user.employee_email, otp);
+      try {
+        await sendPasswordResetOtpEmail(user.employee_email, otp);
+      } catch (mailErr) {
+        console.error("[forgotPassword] email send failed:", mailErr);
+        return res.status(500).json({
+          status: "Failure",
+          message: "Could not send OTP email. Please try again later.",
+        });
+      }
 
       return res.status(200).json({
         status: "Success",
@@ -1012,7 +1021,8 @@ exports.saveCalculatorData = (req, res) => {
             // Only Quotation saved
             return res.status(200).json({
               status: "Success",
-              message: "Quotation saved successfully (re_invoice not created yet)",
+              message:
+                "Quotation saved successfully (re_invoice not created yet)",
             });
           }
         });
@@ -1099,7 +1109,8 @@ exports.saveAdsCampaign = async (req, res) => {
         // Only ads campaign saved
         return res.status(200).json({
           status: "Success",
-          message: "Ads campaign saved successfully (re_invoice not created yet).",
+          message:
+            "Ads campaign saved successfully (re_invoice not created yet).",
         });
       }
     });

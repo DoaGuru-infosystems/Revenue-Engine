@@ -55,12 +55,12 @@ const baseClientForm = {
 // Centralised so every field / button in this screen stays visually
 // consistent and themes (light + dark) in one place.
 const inputClass =
-  "w-full rounded-xl border border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-slate-950/60 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 ease-out focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 hover:border-gray-400 dark:hover:border-white/20";
+  "w-full rounded-xl border border-[var(--border-light)] bg-transparent px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-all duration-200 ease-out focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 hover:border-[var(--border-color)]";
 
 const labelClass = "mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400";
 
 const cardClass =
-  "rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/60 shadow-sm dark:shadow-xl dark:backdrop-blur-xl";
+  "rounded-2xl border shadow-xl backdrop-blur-xl transition-all duration-300";
 
 const btnPrimary =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 transition-all duration-200 ease-out hover:from-orange-600 hover:to-red-700 hover:shadow-orange-500/35 disabled:cursor-not-allowed disabled:opacity-50 disabled:grayscale disabled:shadow-none";
@@ -69,7 +69,7 @@ const btnPrimarySmall =
   "inline-flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all duration-200 ease-out hover:bg-orange-600";
 
 const btnSecondary =
-  "inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all duration-200 ease-out hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white";
+  "inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--border-light)] bg-[var(--btn-secondary-bg)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-all duration-200 ease-out hover:bg-[var(--btn-secondary-hover)]";
 
 const iconBtn =
   "rounded-xl p-2 text-gray-400 dark:text-gray-500 transition-all duration-200 ease-out hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white";
@@ -320,7 +320,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         {/* ── Client List ── */}
-        <div className={`${cardClass} p-4 sm:p-5 xl:col-span-3`}>
+        <div className={`${cardClass} p-4 sm:p-5 xl:col-span-3`} style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white">Clients</h2>
@@ -406,7 +406,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
         {/* ── Form + Summary ── */}
         <div className="flex flex-col gap-6 xl:col-span-9 lg:flex-row">
           {/* Proforma Form */}
-          <form onSubmit={handleSubmitProforma} noValidate className={`${cardClass} flex-1 p-5 sm:p-7`}>
+          <form onSubmit={handleSubmitProforma} noValidate className={`${cardClass} flex-1 p-5 sm:p-7`} style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <div className="mb-6 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-500/10 ring-1 ring-inset ring-orange-500/20">
@@ -707,7 +707,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
               </div>
 
               {Array.isArray(proformaForm.notes_snapshot) && proformaForm.notes_snapshot.length > 0 && (
-                <div className="mt-4 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] p-4">
+                <div className="mt-4 rounded-xl border border-[var(--border-light)] bg-[var(--hover-bg)] p-4">
                   <div className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                     Selected Notes
                   </div>
@@ -751,7 +751,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
           </form>
 
           {/* Quick Summary Panel */}
-          <aside className={`${cardClass} w-full self-start p-5 sm:p-6 lg:w-72 lg:shrink-0`}>
+          <aside className={`${cardClass} w-full self-start p-5 sm:p-6 lg:w-72 lg:shrink-0`} style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <div className="mb-5 flex items-center gap-2">
               <FileText size={14} className="text-orange-500" />
               <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-orange-500/80">Quick Summary</span>
@@ -793,10 +793,10 @@ function InstantProforma({ onBack, handleSessionExpired }) {
           onClick={closeAddClientModal}
         >
           <div
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border shadow-2xl backdrop-blur-xl" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] p-6">
+            <div className="flex items-start justify-between border-b border-[var(--border-light)] bg-transparent p-6">
               <div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">Add New Client</h3>
                 <p className="mt-0.5 text-[11.5px] text-gray-400 dark:text-gray-500">Fill in the client's information</p>

@@ -21,6 +21,13 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Calculator API");
 });
 
+process.on("unhandledRejection", (reason) => {
+  console.error("[UNHANDLED REJECTION]", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[UNCAUGHT EXCEPTION]", err);
+});
+
 // 404 handler
 // app.use("*", (req, res) => {
 //   res.status(404).json({ error: "Route not found" });
