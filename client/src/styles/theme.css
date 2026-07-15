@@ -107,11 +107,8 @@
 }
 
 /* ── Smooth theme transition ──────────────────────────────── */
-[data-theme] * {
-  transition: background-color 0.35s ease, color 0.25s ease,
-    border-color 0.35s ease, box-shadow 0.35s ease;
-}
-
+/* REMOVED: Using [data-theme] * causes severe performance lag due to calculating transitions on every DOM element simultaneously. 
+   Transitions should be applied locally via Tailwind utility classes (e.g., transition-colors) on specific elements. */
 /* ================================================================
    PREMIUM LIGHT MODE — Animated Background
    ================================================================ */
