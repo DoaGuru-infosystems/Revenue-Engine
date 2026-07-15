@@ -1584,44 +1584,62 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
     const headerImageURI = getImageDataURI("Header.png");
     const footerImageURI = getImageDataURI("DG_Footer.jpg");
 
-    const headerTemplate = `
-      <style>#header, #footer { padding: 0 !important; margin: 0 !important; }</style>
-      <div style="width: 100%; height: 100%; margin: 0; padding: 0; display: flex; align-items: flex-start; -webkit-print-color-adjust: exact;">
-        <img src="${headerImageURI}" style="width: 100%; height: auto; object-fit: cover; margin: 0; padding: 0;" />
+    // Inject print CSS and repeating header/footer wrappers into the existing HTML
+    const printReadyHtml = htmlContent.replace('</head>', `
+      <style>
+        @media print {
+          @page { margin: 0; }
+          body { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important;
+            margin: 0;
+            padding: 0;
+          }
+          .page-content { padding: 0 40px; }
+          .print-header-space { height: 130px; }
+          .print-footer-space { height: 100px; }
+          .print-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; z-index: 1000; text-align: center; background: white; }
+          .print-footer { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; z-index: 1000; text-align: center; background: white; }
+          /* Ensure table rows do not break */
+          tr { page-break-inside: avoid; }
+        }
+        @media screen {
+          body { background: #525659; margin: 0; padding: 20px; display: flex; justify-content: center; }
+          .document-wrapper { background: white; width: 210mm; min-height: 297mm; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative; }
+          .page-content { padding: 0 40px; }
+          .print-header-space { height: 130px; }
+          .print-footer-space { height: 100px; }
+          .print-header { position: absolute; top: 0; left: 0; right: 0; width: 100%; z-index: 1000; text-align: center; }
+          .print-footer { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; z-index: 1000; text-align: center; }
+        }
+      </style>
+    </head>`).replace('<body>', `<body>
+      <div class="document-wrapper">
+        <div class="print-header">
+          <img src="${headerImageURI}" style="width: 100%; object-fit: cover;" />
+        </div>
+        
+        <table style="width: 100%; border: none; margin: 0; padding: 0;">
+          <thead><tr><td style="border: none; padding: 0;"><div class="print-header-space"></div></td></tr></thead>
+          <tbody>
+            <tr>
+              <td style="border: none; padding: 0;">
+                <div class="page-content">
+    `).replace('</body>', `
+                </div>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot><tr><td style="border: none; padding: 0;"><div class="print-footer-space"></div></td></tr></tfoot>
+        </table>
+
+        <div class="print-footer">
+          <img src="${footerImageURI}" style="width: 100%; object-fit: cover;" />
+        </div>
       </div>
-    `;
+    </body>`);
 
-    const footerTemplate = `
-      <div style="width: 100%; height: 100%; margin: 0; padding: 0; display: flex; align-items: flex-end; -webkit-print-color-adjust: exact;">
-        <img src="${footerImageURI}" style="width: 100%; height: auto; object-fit: cover; margin: 0; padding: 0;" />
-      </div>
-    `;
-
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    const page = await browser.newPage();
-    
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: headerTemplate,
-      footerTemplate: footerTemplate,
-      margin: {
-        top: '110px',
-        bottom: '80px',
-        left: '40px',
-        right: '40px'
-      }
-    });
-    
-    await browser.close();
-
-    return pdfBuffer;
+    return printReadyHtml;
   } catch (error) {
     console.error("createProposalPdfBuffer error:", error);
     throw error;
@@ -1633,15 +1651,13 @@ exports.createProposalPdfBuffer = createProposalPdfBuffer;
 exports.generateProposalPdf = async (req, res) => {
   try {
     const { id } = req.params;
-    const pdfBuffer = await createProposalPdfBuffer(id);
-    const fileName = `Proposal_${id}_${Date.now()}.pdf`;
+    const htmlString = await createProposalPdfBuffer(id);
     
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.send(pdfBuffer);
+    // Instead of returning a PDF buffer, we return the print-ready HTML
+    res.status(200).json({ status: "Success", html: htmlString });
   } catch (error) {
     console.error("generateProposalPdf error:", error);
-    res.status(500).json({ status: "Failure", message: "Server error generating PDF" });
+    res.status(500).json({ status: "Failure", message: "Server error generating HTML for PDF" });
   }
 };
 

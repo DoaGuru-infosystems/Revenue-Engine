@@ -261,17 +261,24 @@ export default function ProposalBuilderBD() {
     try {
       setLoading(true);
       const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${idToDownload}/pdf`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
+        headers: { Authorization: `Bearer ${token}` }
       });
       
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Proposal_${getClientDisplayName(clientData)}_${new Date().toISOString().split('T')[0]}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
+      if (res.data.status === "Success" && res.data.html) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.open();
+        printWindow.document.write(res.data.html);
+        printWindow.document.close();
+        
+        printWindow.onload = () => {
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+        };
+      } else {
+        throw new Error("Failed to generate PDF HTML");
+      }
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: "error", title: "PDF Error", text: "Failed to generate PDF." });

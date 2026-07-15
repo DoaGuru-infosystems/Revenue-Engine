@@ -185,16 +185,25 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
         navigate(`${basePath}/create-invoice/${proposal.client_id}?proposalId=${proposal.id}`);
       } else if (actionType === "download_pdf") {
         const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposal.id}/pdf`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob'
+          headers: { Authorization: `Bearer ${token}` }
         });
-        const url = window.URL.createObjectURL(new Blob([res.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `Proposal_${proposal.id}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        link.parentNode.removeChild(link);
+        
+        if (res.data.status === "Success" && res.data.html) {
+          const printWindow = window.open('', '_blank');
+          printWindow.document.open();
+          printWindow.document.write(res.data.html);
+          printWindow.document.close();
+          
+          // Allow base64 images to render before printing
+          printWindow.onload = () => {
+            printWindow.focus();
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+          };
+        } else {
+          throw new Error("Failed to generate PDF HTML");
+        }
       } else if (actionType === "delete_proposal") {
         if (proposal.proforma_id) {
           Swal.fire({
