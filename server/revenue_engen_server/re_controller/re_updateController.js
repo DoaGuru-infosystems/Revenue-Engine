@@ -3,7 +3,6 @@ const dotenv = require("dotenv");
 const moment = require("moment-timezone");
 dotenv.config();
 
-
 exports.updateService = async (req, res) => {
   const { service_id } = req.params;
   const { service_name } = req.body;

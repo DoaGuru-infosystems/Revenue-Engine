@@ -1277,11 +1277,14 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
       }
     });
     pricing = finalPricing;
+    const documentTitle = `${(proposal.client_name || 'Client').toUpperCase()} Proposal`;
+    
     let htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
+      <title>${documentTitle}</title>
       <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.5; }
         h1 { color: #004d80; margin-bottom: 5px; }
