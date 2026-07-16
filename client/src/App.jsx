@@ -46,14 +46,14 @@ function App() {
     <>
       <GlobalStyle />
 
-      {/* Global Theme Toggle — fixed top-right on every page */}
+      {/* Global Theme Toggle — fixed top-right on every page */ }
       <div
-        style={{
+        style={ {
           position: "fixed",
           top: "12px",
           right: "16px",
           zIndex: 99999,
-        }}
+        } }
       >
         <ThemeToggle />
       </div>
@@ -75,7 +75,6 @@ function App() {
             location.pathname !== "/password-reset"} */}
           <Routes>
             <Route path="/public/r/:slug" element={ <PublicRequirementForm /> } />
-            <Route path="/public/invoice/:token" element={ <PublicInvoice /> } />
             <Route path="/public/re_invoice/:token" element={ <PublicInvoice /> } />
             <Route path="/public/proposal/:token" element={ <PublicProposal /> } />
 
