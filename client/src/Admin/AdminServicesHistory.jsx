@@ -21,12 +21,27 @@ const AdminServicesHistory = () => {
     editing_type_id: "",
     editing_type_name: "",
     amount: "",
+    category_id: "",
+    category_name: "",
+    service_id: "",
   });
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [services, setServices] = useState([]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const fetchServices = async () => {
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/getAddServices`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setServices(res.data.data || []);
+    } catch (error) {
+      console.error("Error fetching services", error);
+    }
+  };
 
   const handleUnauthorized = () => {
     Swal.fire({
@@ -69,6 +84,7 @@ const AdminServicesHistory = () => {
 
   useEffect(() => {
     fetchData();
+    fetchServices();
   }, []);
 
   const handleClose = () => {
@@ -77,6 +93,9 @@ const AdminServicesHistory = () => {
       editing_type_id: "",
       editing_type_name: "",
       amount: "",
+      category_id: "",
+      category_name: "",
+      service_id: "",
     });
   };
 
@@ -326,6 +345,9 @@ const AdminServicesHistory = () => {
                                 editing_type_id: item.editing_type_id,
                                 editing_type_name: item.editing_type_name,
                                 amount: item.amount,
+                                category_id: item.category_id,
+                                category_name: item.category_name,
+                                service_id: item.service_id,
                               });
                               setShowModal(true);
                             }}
@@ -381,6 +403,9 @@ const AdminServicesHistory = () => {
                           editing_type_id: item.editing_type_id,
                           editing_type_name: item.editing_type_name,
                           amount: item.amount,
+                          category_id: item.category_id,
+                          category_name: item.category_name,
+                          service_id: item.service_id,
                         });
                         setShowModal(true);
                       }}
@@ -454,6 +479,37 @@ const AdminServicesHistory = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
+                <label className="mb-1 block text-sm text-slate-300">Service</label>
+                <select
+                  name="service_id"
+                  value={formData.service_id}
+                  onChange={handleChange}
+                  className={inputClassName}
+                  required
+                >
+                  <option value="" disabled>Select a service</option>
+                  {services.map((s) => (
+                    <option key={s.service_id} value={s.service_id}>
+                      {s.service_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm text-slate-300">Category</label>
+                <input
+                  type="text"
+                  name="category_name"
+                  value={formData.category_name}
+                  onChange={handleChange}
+                  className={inputClassName}
+                  placeholder="Enter category name"
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="mb-1 block text-sm text-slate-300">Editing Type</label>
                 <input
                   type="text"
@@ -461,8 +517,7 @@ const AdminServicesHistory = () => {
                   value={formData.editing_type_name}
                   onChange={handleChange}
                   className={inputClassName}
-                  placeholder="Enter editing type name"
-                  required
+                  placeholder="Enter editing type name (optional)"
                 />
               </div>
 

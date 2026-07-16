@@ -459,19 +459,36 @@ exports.updatePlanNotes = async (req, res) => {
 
 exports.updateServiceData = async (req, res) => {
   const { editing_type_id } = req.params;
-  const { editing_type_name, amount } = req.body;
+  const { editing_type_name, amount, category_id, category_name, service_id } = req.body;
 
-  db.query(
-    "UPDATE re_editing_types SET editing_type_name = ?, amount = ? WHERE editing_type_id = ?",
-    [editing_type_name, amount, editing_type_id],
-    (err, result) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ status: "Failure", message: "Database error" });
-      res.json({ status: "Success", message: "Edit updated successfully" });
-    },
-  );
+  try {
+    if (category_id) {
+      await new Promise((resolve, reject) => {
+        db.query(
+          "UPDATE re_categories SET category_name = ?, service_id = ? WHERE category_id = ?",
+          [category_name, service_id, category_id],
+          (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          }
+        );
+      });
+    }
+
+    db.query(
+      "UPDATE re_editing_types SET editing_type_name = ?, amount = ? WHERE editing_type_id = ?",
+      [editing_type_name, amount, editing_type_id],
+      (err, result) => {
+        if (err)
+          return res
+            .status(500)
+            .json({ status: "Failure", message: "Database error" });
+        res.json({ status: "Success", message: "Edit updated successfully" });
+      },
+    );
+  } catch (error) {
+    res.status(500).json({ status: "Failure", message: "Database error" });
+  }
 };
 // NEW Work
 
