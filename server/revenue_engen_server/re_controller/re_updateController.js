@@ -459,7 +459,8 @@ exports.updatePlanNotes = async (req, res) => {
 
 exports.updateServiceData = async (req, res) => {
   const { editing_type_id } = req.params;
-  const { editing_type_name, amount, category_id, category_name, service_id } = req.body;
+  const { editing_type_name, amount, category_id, category_name, service_id } =
+    req.body;
 
   try {
     if (category_id) {
@@ -470,7 +471,7 @@ exports.updateServiceData = async (req, res) => {
           (err, result) => {
             if (err) reject(err);
             else resolve(result);
-          }
+          },
         );
       });
     }
