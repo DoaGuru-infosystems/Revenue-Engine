@@ -13,6 +13,8 @@
     "@lottiefiles/dotlottie-react": "^0.14.0",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.9.0",
+    "baseline-browser-mapping": "^2.10.43",
+    "caniuse-lite": "^1.0.30001806",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^3.0.2",
     "jspdf-autotable": "^5.0.2",

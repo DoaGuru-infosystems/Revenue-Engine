@@ -678,17 +678,29 @@ export default function ProposalBuilder() {
     try {
       setLoading(true);
       const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal/${idToDownload}/pdf`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Proposal_${getClientDisplayName(clientData)}_${new Date().toISOString().split('T')[0]}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
+      if (res.data.status === "Success" && res.data.html) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.open();
+        printWindow.document.write(res.data.html);
+        printWindow.document.close();
+        
+        // Extract title to set as PDF filename
+        const titleMatch = res.data.html.match(/<title>(.*?)<\/title>/i);
+        const docTitle = titleMatch ? titleMatch[1] : `Proposal_${getClientDisplayName(clientData)}`;
+        printWindow.document.title = docTitle;
+        
+        setTimeout(() => {
+          if (!printWindow.closed) {
+            printWindow.focus();
+            printWindow.print();
+          }
+        }, 1000);
+      } else {
+        throw new Error("Failed to generate PDF HTML");
+      }
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: "error", title: "PDF Error", text: "Failed to generate PDF." });
@@ -725,6 +737,38 @@ export default function ProposalBuilder() {
     }
   };
 
+  const markAsApproved = async () => {
+    if (!proposalId) return;
+    try {
+      const confirm = await Swal.fire({
+        title: 'Approve Proposal?',
+        text: "Are you sure you want to manually mark this proposal as approved?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Approve',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#10b981',
+      });
+      
+      if (!confirm.isConfirmed) return;
+      
+      setLoading(true);
+      const res = await axios.put(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposalId}/status`, 
+        { status: "approved" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (res.data.status === "Success") {
+        Swal.fire({ icon: "success", title: "Approved!", text: "Proposal has been marked as approved manually." });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({ icon: "error", title: "Error", text: "Failed to mark as approved." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 pb-24">
       {/* Header */ }
@@ -745,6 +789,9 @@ export default function ProposalBuilder() {
             <>
               <button onClick={ () => sendToClient() } className="flex items-center gap-2 px-4 py-2 bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl hover:bg-red-600/30 transition text-sm font-semibold">
                 <Send className="w-4 h-4" /> Send to Client
+              </button>
+              <button onClick={ () => markAsApproved() } className="flex items-center gap-2 px-4 py-2 bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold">
+                <CheckCircle className="w-4 h-4" /> Mark Approved
               </button>
               <button onClick={ () => downloadPdf() } className="flex items-center gap-2 px-4 py-2 bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 rounded-xl hover:bg-yellow-600/30 transition text-sm font-semibold">
                 <Download className="w-4 h-4" /> Download PDF

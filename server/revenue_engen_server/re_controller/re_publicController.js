@@ -1,3 +1,4 @@
+// local code re_publicController
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { db } = require("../../connect");
@@ -302,42 +303,9 @@ exports.getPublicInvoicePdf = async (req, res) => {
         .json({ status: "Failure", message: "HTML content missing" });
     }
 
-    const uniqueId = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const outputPdfPath = path.join(
-      TEMP_DIR,
-      `puppeteer_final_${uniqueId}.pdf`,
-    );
-
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-
-    const pdfBuffer = page.pdf
-      ? await page.pdf({
-          format: "A4",
-          printBackground: true,
-          margin: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
-        })
-      : await page.pdf({
-          format: "A4",
-          printBackground: true,
-        });
-
-    await browser.close();
-
-    fs.writeFileSync(outputPdfPath, pdfBuffer);
-    const finalPdfBytes = fs.readFileSync(outputPdfPath);
-    const fileName = invoiceName ? `${invoiceName}.pdf` : "re_invoice.pdf";
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.send(finalPdfBytes);
-
-    if (fs.existsSync(outputPdfPath)) fs.unlinkSync(outputPdfPath);
+    // Since the client already constructs the full HTML, we just return it back.
+    // The client will use window.print() to generate the PDF locally.
+    res.status(200).json({ status: "Success", html: htmlContent });
   } catch (error) {
     await logPublicAccess("unknown", null, req, "403: " + error.message);
     if (
@@ -429,15 +397,12 @@ exports.getPublicProposalPdf = async (req, res) => {
       } catch (e) {}
     }
 
-    const pdfBuffer = await proposalController.createProposalPdfBuffer(
+    const htmlString = await proposalController.createProposalPdfBuffer(
       decoded.txn_id,
       snapshot,
     );
-    const fileName = `Proposal-${decoded.txn_id}.pdf`;
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.send(pdfBuffer);
+    res.status(200).json({ status: "Success", html: htmlString });
   } catch (error) {
     await logPublicAccess("proposal", null, req, "PDF_403: " + error.message);
     if (

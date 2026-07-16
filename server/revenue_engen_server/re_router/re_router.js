@@ -1,4 +1,5 @@
-﻿const express = require("express");
+// local code re_router
+const express = require("express");
 const {
   register,
   login,
@@ -171,7 +172,7 @@ const {
 const {
   submitToAdmin,
   sendQuotationToClient,
-  markClientQuotationApproved,              
+  markClientQuotationApproved,
   generateProformaInvoice,
   getPaymentSummary,
   recordPaymentAndGenerateFinalInvoice,
@@ -241,6 +242,7 @@ const router = express.Router();
 router.get("/public/invoice/:token", getPublicInvoiceData);
 router.post("/public/invoice/:token/pdf", getPublicInvoicePdf);
 router.get("/public/proposal/:token", getPublicProposalData);
+router.get("/public/proposal/:token/pdf", getPublicProposalPdf);
 router.post("/public/proposal/:token/pdf", getPublicProposalPdf);
 
 //  ? new assignment workflow

@@ -1,3 +1,4 @@
+// local code re_genratecoatetion
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
@@ -360,43 +361,10 @@ exports.generateInvoicePdf = async (req, res) => {
         .json({ status: "Failure", message: "HTML content missing" });
     }
 
-    console.log(
-      `\n[START PUPPETEER FLOW] ─────────────────────────────────────`,
-    );
-    console.log(
-      `[PUPPETEER] re_invoice Name: ${invoiceName}, Is GST Flag: ${isGst}`,
-    );
-
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, {
-      waitUntil: "networkidle2",
-      timeout: 60000,
-    });
-
-    // Raw content layout (zero margins, background enable)
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
-    });
-
-    await browser.close();
-
-    // Canvas process skip for re_invoice because frontend HTML already has repeating Header/Footer natively
-    // using <thead> and <tfoot>, and we allowed Puppeteer to print it natively.
-
-    const fileName = invoiceName ? `${invoiceName}.pdf` : "re_invoice.pdf";
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.send(pdfBuffer);
-
-    console.log(`[DONE] ✔ Perfect structural re_invoice delivered.`);
+    // Puppeteer has been removed to fix cPanel crashes.
+    // The frontend now handles printing the invoice directly using window.print().
+    // We just return the HTML back as a success response.
+    res.status(200).json({ status: "Success", html: htmlContent });
   } catch (error) {
     console.error("[PUPPETEER ERROR]", error);
     if (!res.headersSent) {

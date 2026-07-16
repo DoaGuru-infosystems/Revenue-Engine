@@ -125,22 +125,40 @@ function ProformaServices() {
     if (!token) { setLoading(false); return; }
     setLoading(true);
     try {
-      const [graphicRes, adsRes, optionalRes, plansRes] = await Promise.all([
-        axios.get(`${baseURL}/auth/api/re_calculator/services/category/editing`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${baseURL}/auth/api/re_calculator/getAdsServices`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`),
-        axios.get(`${baseURL}/auth/api/re_calculator/getAllPlanData`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
+      let graphicRes, adsRes, optionalRes, plansRes;
+
+      try {
+        graphicRes = await axios.get(`${baseURL}/auth/api/re_calculator/services/category/editing`);
+      } catch (e) { console.error("Error fetching graphic services:", e); }
+
+      try {
+        adsRes = await axios.get(`${baseURL}/auth/api/re_calculator/getAdsServices`, { headers: { Authorization: `Bearer ${token}` } });
+      } catch (e) { console.error("Error fetching ads services:", e); }
+
+      try {
+        optionalRes = await axios.get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`);
+      } catch (e) { console.error("Error fetching optional amounts:", e); }
+
+      try {
+        plansRes = await axios.get(`${baseURL}/auth/api/re_calculator/getAllPlanData`, { headers: { Authorization: `Bearer ${token}` } });
+      } catch (e) { console.error("Error fetching plans data:", e); }
+
       const graphicData = Array.isArray(graphicRes?.data?.data) ? graphicRes.data.data : [];
       const adsData = Array.isArray(adsRes?.data?.data) ? adsRes.data.data : [];
       const optionalData = Array.isArray(optionalRes?.data?.data) ? optionalRes.data.data : [];
       const plansRawData = Array.isArray(plansRes?.data?.data) ? plansRes.data.data : [];
+
       setGraphicServices(graphicData.filter((s) => String(s.service_name || "").toLowerCase() !== "complimentary"));
       setAdsServices(adsData);
       setOptionalServices(optionalData);
       setGraphicAddons(createInitialAddonState(optionalData));
       setPlansData(plansRawData);
+
+      if (!graphicRes && !adsRes && !plansRes) {
+        throw new Error("All endpoints failed");
+      }
     } catch (error) {
+      console.error("fetchServiceOptions error:", error);
       if (error.response?.status === 401) { handleSessionExpired(); return; }
       Swal.fire({ icon: "error", title: "Error", text: "Unable to load service options." });
     } finally { setLoading(false); }
@@ -579,7 +597,8 @@ function ProformaServices() {
           font-family: 'Sora', sans-serif;
           min-height: 100vh;
           position: relative;
-          background: #07080f;
+          background: var(--bg-primary);
+          color: var(--text-primary);
           padding: 1.75rem 1.5rem;
         }
 
@@ -613,11 +632,11 @@ function ProformaServices() {
 
         /* ── Cards ── */
         .is-card {
-          background: rgba(255,255,255,0.022);
-          border: 1px solid rgba(255,255,255,0.065);
+          background: var(--bg-card);
+          border: 1px solid var(--border-light);
           border-radius: 20px;
           backdrop-filter: blur(20px);
-          box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+          box-shadow: 0 8px 40px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
         }
 
         /* ── Labels / Inputs ── */
@@ -633,25 +652,25 @@ function ProformaServices() {
 
         .is-input {
           width: 100%;
-          background: rgba(255,255,255,0.025);
-          border: 1px solid rgba(255,255,255,0.07);
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-light);
           border-radius: 11px;
           padding: 9px 13px;
           font-size: 13px;
           font-family: 'Sora', sans-serif;
-          color: #e8e8f0;
+          color: var(--text-primary);
           outline: none;
           transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
           box-sizing: border-box;
         }
-        .is-input::placeholder { color: rgba(255,255,255,0.18); }
+        .is-input::placeholder { color: var(--text-muted); }
         .is-input:focus {
           border-color: rgba(184,150,46,0.4);
           background: rgba(184,150,46,0.035);
           box-shadow: 0 0 0 3px rgba(184,150,46,0.07);
         }
         .is-input:disabled { opacity: 0.4; cursor: not-allowed; }
-        .is-input option { background: #0d0e1a; color: #e8e8f0; }
+        .is-input option { background: var(--bg-primary); color: var(--text-primary); }
         select.is-input { appearance: none; cursor: pointer; }
 
         /* ── Section title ── */
@@ -697,7 +716,7 @@ function ProformaServices() {
           padding: 10px 14px;
         }
         .is-tile-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(184,150,46,0.5); margin-bottom: 6px; }
-        .is-tile-val { font-size: 13px; font-weight: 500; color: #e0e0f0; display: flex; align-items: center; gap: 7px; }
+        .is-tile-val { font-size: 13px; font-weight: 500; color: var(--text-primary); display: flex; align-items: center; gap: 7px; }
 
         /* ── Addon checkbox row ── */
         .is-addon-row {
@@ -806,14 +825,14 @@ function ProformaServices() {
           gap: 6px;
           background: none;
           border: none;
-          color: rgba(255,255,255,0.35);
+          color: var(--text-muted);
           font-family: 'Sora', sans-serif;
           font-size: 12.5px;
           cursor: pointer;
           padding: 0;
           transition: color 0.2s;
         }
-        .is-btn-back:hover { color: rgba(255,255,255,0.75); }
+        .is-btn-back:hover { color: var(--text-primary); }
 
         .is-btn-remove {
           background: rgba(239,68,68,0.06);
@@ -856,18 +875,18 @@ function ProformaServices() {
         .is-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
         .is-table tbody tr:hover { background: rgba(184,150,46,0.025); }
         .is-table tbody tr:last-child { border-bottom: none; }
-        .is-table tbody td { padding: 14px 16px; color: #d0d0e0; vertical-align: middle; }
+        .is-table tbody td { padding: 14px 16px; color: var(--text-primary); vertical-align: middle; }
         .is-table tbody td.right { text-align: right; }
 
         /* ── Table input ── */
         .is-table-input {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-light);
           border-radius: 8px;
           padding: 6px 10px;
           font-size: 12.5px;
           font-family: 'Sora', sans-serif;
-          color: #e0e0f0;
+          color: var(--text-primary);
           outline: none;
           transition: border-color 0.2s, box-shadow 0.2s;
         }
@@ -919,7 +938,7 @@ function ProformaServices() {
           font-family: 'Cormorant Garamond', serif;
           font-size: 2.2rem;
           font-weight: 600;
-          color: #fff;
+          color: var(--text-primary);
           letter-spacing: -0.01em;
           line-height: 1.15;
         }
@@ -998,6 +1017,69 @@ function ProformaServices() {
         .is-panel-icon.cyan { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); color: #67e8f9; }
         .is-panel-icon.amber { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: #fcd34d; }
         .is-panel-icon.gold { background: rgba(184,150,46,0.12); border: 1px solid rgba(184,150,46,0.22); color: #d4a940; }
+
+        /* ── LIGHT THEME OVERRIDES ── */
+        [data-theme="light"] .is-root { background: #f8f4ef; color: #1a1a2e; }
+        [data-theme="light"] .is-bg { 
+          background: radial-gradient(ellipse 55% 40% at 10% 0%, rgba(234,88,12,0.04) 0%, transparent 65%),
+                      radial-gradient(ellipse 45% 50% at 90% 100%, rgba(234,88,12,0.03) 0%, transparent 60%);
+        }
+        [data-theme="light"] .is-grid { opacity: 0.4; filter: invert(1); }
+        [data-theme="light"] .is-card { 
+          background: rgba(255, 255, 255, 0.85); 
+          border: 1px solid rgba(234, 88, 12, 0.15);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        [data-theme="light"] .is-input {
+          background: rgba(255,255,255,0.9);
+          border-color: rgba(234, 88, 12, 0.2);
+          color: #1a1a2e;
+        }
+        [data-theme="light"] .is-input:focus {
+          border-color: #ea580c;
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(234,88,12,0.1);
+        }
+        [data-theme="light"] .is-input::placeholder { color: #9ca3af; }
+        [data-theme="light"] .is-input option { background: #fff; color: #1a1a2e; }
+        
+        [data-theme="light"] .is-section-title { color: #ea580c; font-weight: 700; }
+        [data-theme="light"] .is-section-title::after { background: linear-gradient(90deg, rgba(234,88,12,0.2), transparent); }
+        
+        [data-theme="light"] .is-info-tile { background: rgba(255,255,255,0.7); border-color: rgba(234,88,12,0.1); }
+        [data-theme="light"] .is-tile-label { color: #ea580c; font-weight: 700; }
+        [data-theme="light"] .is-tile-val { color: #1a1a2e; font-weight: 600; }
+        
+        [data-theme="light"] .is-addon-row { border-bottom-color: rgba(0,0,0,0.05); }
+        [data-theme="light"] .is-preview { background: rgba(234,88,12,0.05); border-color: rgba(234,88,12,0.15); }
+        [data-theme="light"] .is-range-box { background: rgba(255,255,255,0.8); border-color: rgba(234,88,12,0.1); }
+        
+        [data-theme="light"] .is-btn-back { color: #6b7280; }
+        [data-theme="light"] .is-btn-back:hover { color: #1a1a2e; }
+        
+        [data-theme="light"] .is-table thead tr { background: rgba(234,88,12,0.05); border-bottom-color: rgba(234,88,12,0.1); }
+        [data-theme="light"] .is-table thead th { color: #ea580c; font-weight: 700; }
+        [data-theme="light"] .is-table tbody tr { border-bottom-color: rgba(0,0,0,0.05); }
+        [data-theme="light"] .is-table tbody tr:hover { background: rgba(234,88,12,0.03); }
+        [data-theme="light"] .is-table tbody td { color: #374151; font-weight: 500; }
+        [data-theme="light"] .is-table-input { background: #fff; border-color: rgba(234,88,12,0.2); color: #1a1a2e; }
+        [data-theme="light"] .is-table-input:focus { border-color: #ea580c; box-shadow: 0 0 0 2px rgba(234,88,12,0.1); }
+        
+        [data-theme="light"] .is-btn-remove { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2); color: #dc2626; }
+        [data-theme="light"] .is-btn-remove:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); }
+        
+        [data-theme="light"] .is-page-title { color: #1a1a2e; }
+        [data-theme="light"] .is-page-title span { background: linear-gradient(135deg, #ea580c, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        [data-theme="light"] .is-divider { background: linear-gradient(90deg, transparent, rgba(234,88,12,0.15), transparent); }
+        
+        [data-theme="light"] .is-empty { color: #6b7280; }
+        [data-theme="light"] .is-empty-icon { color: rgba(234,88,12,0.3); }
+        [data-theme="light"] .is-footer-bar { border-top-color: rgba(234,88,12,0.15); background: rgba(255,255,255,0.8); }
+        
+        [data-theme="light"] .is-panel-icon.cyan { background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.2); color: #0891b2; }
+        [data-theme="light"] .is-panel-icon.amber { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); color: #d97706; }
+        [data-theme="light"] .is-panel-icon.gold { background: rgba(234,88,12,0.1); border-color: rgba(234,88,12,0.2); color: #ea580c; }
 
         @media (max-width: 640px) {
           .is-root { padding: 1.25rem 1rem; }

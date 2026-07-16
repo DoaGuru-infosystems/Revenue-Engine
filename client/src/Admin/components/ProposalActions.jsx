@@ -157,6 +157,27 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
             fetchProposals();
           }
         }
+      } else if (actionType === "mark_approved") {
+        const confirm = await Swal.fire({
+          title: 'Approve Proposal?',
+          text: "Are you sure you want to manually mark this proposal as approved?",
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, Approve',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#10b981',
+        });
+        
+        if (!confirm.isConfirmed) return;
+        
+        Swal.fire({ title: 'Approving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const res = await axios.put(`${API_BASE_URL}/auth/api/re_calculator/proposal/${proposal.id}/status`, { status: "approved", updated_by: "System" }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data.status === "Success") {
+          Swal.fire({ icon: "success", title: "Approved!", text: "Proposal marked as approved.", timer: 1500, showConfirmButton: false });
+          fetchProposals();
+        }
       } else if (actionType === "generate_proforma") {
         if (handleCreateProformaFromProposal) {
           handleCreateProformaFromProposal(proposal);
@@ -193,6 +214,11 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
           printWindow.document.open();
           printWindow.document.write(res.data.html);
           printWindow.document.close();
+          
+          // Extract title to set as PDF filename
+          const titleMatch = res.data.html.match(/<title>(.*?)<\/title>/i);
+          const docTitle = titleMatch ? titleMatch[1] : `${proposal.client_name || 'Client'} Proposal`;
+          printWindow.document.title = docTitle;
           
           // Allow base64 images to render before printing
           printWindow.onload = () => {
@@ -258,11 +284,18 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
             </li>
             
             {['draft', 'sent', 'changes', 'rejected'].includes(proposal.status) && (
-              <li>
-                <button onClick={() => handleAction("send_to_client")} className="w-full text-left px-4 py-2 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition-all flex items-center gap-2">
-                  <Send size={14} /> {['sent', 'changes', 'rejected'].includes(proposal.status) ? 'Send Again' : 'Send to Client'}
-                </button>
-              </li>
+              <>
+                <li>
+                  <button onClick={() => handleAction("send_to_client")} className="w-full text-left px-4 py-2 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition-all flex items-center gap-2">
+                    <Send size={14} /> {['sent', 'changes', 'rejected'].includes(proposal.status) ? 'Send Again' : 'Send to Client'}
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => handleAction("mark_approved")} className="w-full text-left px-4 py-2 hover:bg-green-500/10 text-green-400 hover:text-green-300 transition-all flex items-center gap-2">
+                    <CheckCircle size={14} /> Mark Approved
+                  </button>
+                </li>
+              </>
             )}
             
             {proposal.status === 'sent' && (

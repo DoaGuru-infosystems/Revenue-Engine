@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API_BASE_URL from "../config/apiBaseUrl";
+import axios from "axios";
 import img3 from "../assets/DOAGURU IT Solution.png";
 
 export default function PublicProposal() {
@@ -40,32 +41,38 @@ export default function PublicProposal() {
   const handleDownloadPDF = async () => {
     try {
       setDownloading(true);
-      const res = await fetch(`${API_BASE_URL}/auth/api/re_calculator/public/proposal/${token}/pdf`);
       
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to download PDF");
+      // Open window immediately to prevent popup blocker
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write("<h2>Generating PDF, please wait...</h2>");
       }
-
-      let filename = "Proposal.pdf";
-      const disposition = res.headers.get("Content-Disposition");
-      if (disposition && disposition.indexOf("attachment") !== -1) {
-        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-        const matches = filenameRegex.exec(disposition);
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, "");
+      
+      const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/public/proposal/${token}/pdf`, {});
+      
+      if (res.data.status === "Success" && res.data.html) {
+        if (printWindow) {
+          printWindow.document.open();
+          printWindow.document.write(res.data.html);
+          printWindow.document.close();
+          
+          // Extract title to set as PDF filename
+          const titleMatch = res.data.html.match(/<title>(.*?)<\/title>/i);
+          const docTitle = titleMatch ? titleMatch[1] : "Proposal";
+          printWindow.document.title = docTitle;
+          
+          // Allow base64 images to render before printing
+          printWindow.onload = () => {
+            printWindow.focus();
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+          };
         }
+      } else {
+        if (printWindow) printWindow.close();
+        throw new Error(res.data.message || "Failed to generate PDF");
       }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
     } catch (err) {
       console.error(err);
       alert("Error downloading PDF: " + err.message);

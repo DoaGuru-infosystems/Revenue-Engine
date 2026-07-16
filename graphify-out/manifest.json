@@ -10,8 +10,8 @@
     "semantic_hash": "bcb22cc5b9b86c67f53ad73b1855f082"
   },
   "client/package.json": {
-    "mtime": 1783402076.3683412,
-    "ast_hash": "61a9f78c543c7b7dfac81c7b27f15c6f",
+    "mtime": 1784190263.6396568,
+    "ast_hash": "cb7c5d82955450ecb308b76e68a87a4f",
     "semantic_hash": ""
   },
   "client/postcss.config.js": {
@@ -50,8 +50,8 @@
     "semantic_hash": ""
   },
   "client/src/Admin/AdminDashboard.jsx": {
-    "mtime": 1783924228.270317,
-    "ast_hash": "a09fe91827494d405d0454f3388c64ef",
+    "mtime": 1784115352.6865287,
+    "ast_hash": "6a30052b4c9e1852d5430a2e211c4515",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminExplorePlans.jsx": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "client/src/Admin/AdminInvoice.jsx": {
-    "mtime": 1784033462.9164221,
-    "ast_hash": "37fb00cb2db289040225859d465bf8c5",
+    "mtime": 1784189002.677762,
+    "ast_hash": "13893a238a0fa19405c597f6567cf8cb",
     "semantic_hash": ""
   },
   "client/src/Admin/AdminPlanHistory.jsx": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "client/src/Admin/ServicesLanding.jsx": {
-    "mtime": 1784033463.4334147,
-    "ast_hash": "ffe2b13f3fa329d15531e7bb5d5fbabc",
+    "mtime": 1784114818.237027,
+    "ast_hash": "183bbfb24e591951a78537069bacf8c4",
     "semantic_hash": ""
   },
   "client/src/Admin/SkeletonTable.jsx": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "client/src/App.jsx": {
-    "mtime": 1784007076.4494557,
-    "ast_hash": "8d96a21b7651e4abe2b4cf11b3be685a",
+    "mtime": 1784189047.0443342,
+    "ast_hash": "3ad6ee7a05412be2d3cbc44703a6d506",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/AddService.jsx": {
@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/BusinessDeveloperDashboard.jsx": {
-    "mtime": 1783661599.2774396,
-    "ast_hash": "1512fb816512781471459240da53ce95",
+    "mtime": 1784115384.7931209,
+    "ast_hash": "1d163f02efd16f892c682c30b89163c8",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/CalculatorBD.jsx": {
@@ -330,19 +330,19 @@
     "semantic_hash": ""
   },
   "client/src/Components/Header.jsx": {
-    "mtime": 1783661599.3002641,
-    "ast_hash": "b4bebf76009a483c5be3e74538093eee",
+    "mtime": 1784181498.900401,
+    "ast_hash": "9677dd8de96b3366619f2aceadd68f8f",
     "semantic_hash": ""
   },
   "client/src/Components/InvoiceServices.jsx": {
-    "mtime": 1784033464.0021741,
-    "ast_hash": "2acc975f2acbb35c5b86612b27d73830",
+    "mtime": 1784182600.523765,
+    "ast_hash": "6f33fd8f0e792430b00180b5cf08c69e",
     "semantic_hash": ""
   },
   "client/src/Components/NavTabs.jsx": {
-    "mtime": 1780384501.850969,
-    "ast_hash": "5da8378a4b7a5baef03e06a2f39ff15c",
-    "semantic_hash": "5da8378a4b7a5baef03e06a2f39ff15c"
+    "mtime": 1784115370.4057295,
+    "ast_hash": "91563b5926578b02a39fe8e9a9b46178",
+    "semantic_hash": ""
   },
   "client/src/Components/ThemeToggle.jsx": {
     "mtime": 1783661599.3037064,
@@ -395,8 +395,8 @@
     "semantic_hash": "cf86bb1ee35b7b5ac87847831eaaa133"
   },
   "client/tailwind.config.js": {
-    "mtime": 1783661444.927454,
-    "ast_hash": "4a78f819784b9282ca46786b084f0719",
+    "mtime": 1784115946.1874845,
+    "ast_hash": "eb7ac977813fae1f42ab48af1c6a1c8f",
     "semantic_hash": ""
   },
   "client/vite.config.js": {
@@ -430,13 +430,13 @@
     "semantic_hash": "f1da5432fc0ed0651cde824b65002a5b"
   },
   "client/src/Admin/ProposalBuilder.jsx": {
-    "mtime": 1784033463.2108946,
-    "ast_hash": "237616d263851d1fc09e0dc6b92bb8ff",
+    "mtime": 1784185824.3112698,
+    "ast_hash": "0e6979996f7f6ef0936b3df557a79c2d",
     "semantic_hash": ""
   },
   "client/src/BusinessDeveloper/ProposalBuilderBD.jsx": {
-    "mtime": 1784033463.7614505,
-    "ast_hash": "1c5a623450d830c5bc4cdfbdb16f27b4",
+    "mtime": 1784187006.6611216,
+    "ast_hash": "1f8e93fc033c618edf3270d89912a6be",
     "semantic_hash": ""
   },
   "client/src/config/proposalDefaults.js": {
@@ -455,8 +455,8 @@
     "semantic_hash": ""
   },
   "client/src/Admin/components/ProposalActions.jsx": {
-    "mtime": 1784033462.7649515,
-    "ast_hash": "a91d0cfe4157acb2927cd598bfe266a0",
+    "mtime": 1784185443.7503366,
+    "ast_hash": "9ee94aa34afba1902e237f078c68279f",
     "semantic_hash": ""
   },
   "client/src/Admin/components/ProposalTable.jsx": {
@@ -585,8 +585,8 @@
     "semantic_hash": ""
   },
   "client/src/Client/PublicProposal.jsx": {
-    "mtime": 1784033463.8947089,
-    "ast_hash": "557353e2c6a9eb28c93888f456115b85",
+    "mtime": 1784187932.8956954,
+    "ast_hash": "286acd221545945cdbe990441da5b042",
     "semantic_hash": ""
   },
   "server/sql/2026-07-08-public-proposals-and-logs.sql": {
@@ -605,8 +605,8 @@
     "semantic_hash": ""
   },
   "client/src/Components/InstantProforma.jsx": {
-    "mtime": 1784033463.9683032,
-    "ast_hash": "3f0a011276cb17ac75911514f1de4fc7",
+    "mtime": 1784116189.7572865,
+    "ast_hash": "a1e2a2867c9ac91e6cceb564a1b58499",
     "semantic_hash": ""
   },
   "server/revenue_engine.sql": {
@@ -640,8 +640,8 @@
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_controller/re_genratecoatetion.js": {
-    "mtime": 1784101211.2047877,
-    "ast_hash": "b1560e6b016c98d031779993bb2a3e17",
+    "mtime": 1784179616.439034,
+    "ast_hash": "32d26b83cc92d24c68e73db49d3bbba1",
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_controller/re_getController.js": {
@@ -655,13 +655,13 @@
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_controller/re_proposalController.js": {
-    "mtime": 1784101211.378806,
-    "ast_hash": "287803509236b72576c4942449fff57c",
+    "mtime": 1784188519.6345353,
+    "ast_hash": "273836f74dc54bfe63288fd4c951821a",
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_controller/re_publicController.js": {
-    "mtime": 1784101211.4233332,
-    "ast_hash": "cde518f5986b31bb752d509d71fdf4b0",
+    "mtime": 1784184365.5980742,
+    "ast_hash": "72dec07852b73ac299a3640f1b3c7de4",
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_controller/re_reminders.js": {
@@ -685,8 +685,8 @@
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_controller/re_updateController.js": {
-    "mtime": 1784106786.9731483,
-    "ast_hash": "74464e664e91d5f5a53179b2e52e1bec",
+    "mtime": 1784121615.0550308,
+    "ast_hash": "6c14b3567e8d29335d0b79bf7f37744d",
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_controller/re_workflowcontroller.JS": {
@@ -705,8 +705,8 @@
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_router/re_router.js": {
-    "mtime": 1784033592.8481016,
-    "ast_hash": "aafa674e465b428102c31e4917aa974c",
+    "mtime": 1784188222.6561503,
+    "ast_hash": "189d0428bee58d93f539d0d93dbdfe1b",
     "semantic_hash": ""
   },
   "server/revenue_engen_server/re_services/notificationService.js": {

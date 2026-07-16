@@ -628,6 +628,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       setNotesData(publicData.notesData || []);
       setProformaPayments(publicData.proformaPayments || []);
       setPredefinedNotes([]);
+      setLoading(false);
       return;
     }
 
@@ -1844,11 +1845,16 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       const originalImages = invoiceElement.getElementsByTagName("img");
       const clonedImages = invoiceClone.getElementsByTagName("img");
 
-      // 2. Signature image ko automatic Base64 data URL me convert karein
+      // 2. Images ko automatic Base64 data URL me convert karein
       for (let i = 0; i < originalImages.length; i++) {
-        const altText = originalImages[i].getAttribute("alt") || "";
+        const altText = (originalImages[i].getAttribute("alt") || "").toLowerCase();
 
-        if (altText.toLowerCase().includes("signature") || altText.toLowerCase().includes("authorized")) {
+        if (
+          altText.includes("signature") || 
+          altText.includes("authorized") ||
+          altText.includes("footer") ||
+          altText.includes("header")
+        ) {
           try {
             const canvas = document.createElement("canvas");
             canvas.width = originalImages[i].naturalWidth || originalImages[i].width;
@@ -1859,7 +1865,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
             // Base64 direct source assign karein cloned image ko
             clonedImages[i].src = canvas.toDataURL("image/png");
           } catch (imgErr) {
-            console.error("Signature base64 conversion failed, fallback to relative:", imgErr);
+            console.error("Image base64 conversion failed, fallback to relative:", imgErr);
           }
         }
       }
@@ -1878,25 +1884,30 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
             .print\\:hidden { display: none !important; }
 
             @media print {
-              /* ✅ FIX 1: page-wrapper ki min-h-[297mm] Puppeteer mein override nahi hoti
-                 Wrapper styled-component CSS Puppeteer ko milti hi nahi.
-                 Bina is fix ke: page-wrapper 297mm force karta hai + footer div flow mein
-                 extra height leta hai = content 297mm se zyada = page 2 */
+              @page {
+                size: A4;
+                margin: 0mm;
+              }
+              body, html { margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
+              
+              /* ✅ FIX 1: Remove forced heights that cause spillover to next page */
               .page-wrapper {
                 min-height: auto !important;
                 height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                page-break-after: avoid !important;
               }
 
-              /* ✅ FIX 2: Footer div ko wapas fixed position pe rakho
-                 Yahi asli bug hai — bina position:fixed ke footer ~50-60mm flow space leta hai
-                 jisse bank-details section page 2 pe chali jaati thi */
+              /* ✅ FIX 2: Footer div ko wapas fixed position pe rakho */
               .print-fixed-footer {
                 position: fixed !important;
                 left: 0 !important;
                 right: 0 !important;
                 bottom: 0 !important;
                 width: 100% !important;
-                height: 15mm !important;
+                height: 25mm !important;
                 display: flex !important;
                 pointer-events: none !important;
                 z-index: 9999 !important;
@@ -1926,42 +1937,29 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
         ? `${clientOrganization.replace(/\s+/g, '_')}_Invoice`
         : `${clientName.replace(/\s+/g, '_')}_Invoice`;
 
-      console.log("Sending PDF Request with isGST state:", isGST);
+      // Assign dynamic filename to window title so default PDF save name matches
+      const originalTitle = document.title;
+      document.title = dynamicFileName;
 
-      // 5. Backend request hit karein isGST state flag ke saath
-      const url = publicMode
-        ? `${baseURL}/auth/api/re_calculator/public/invoice/${publicToken}/pdf`
-        : `${baseURL}/auth/api/re_calculator/generate-invoice`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          htmlContent: fullHtmlCode,
-          invoiceName: dynamicFileName,
-          isGst: isGST // React component ki dynamic state pass ho rahi hai
-        }),
-      });
-
-      if (!response.ok) throw new Error("Backend PDF Generation workflow failed.");
-
-      // 6. Direct file browser pipeline trigger karein
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `${dynamicFileName}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
+      // Print directly from the frontend since we already generated the full HTML
+      const printWindow = window.open('', '_blank');
+      printWindow.document.open();
+      printWindow.document.write(fullHtmlCode);
+      printWindow.document.title = dynamicFileName;
+      printWindow.document.close();
+      
+      printWindow.onload = () => {
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+          // Restore original title
+          document.title = originalTitle;
+        }, 500);
+      };
 
     } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("PDF download karne mein dikkat aayi. Kripya console logs check karein.");
+      console.error("Error generating PDF:", error);
+      alert("PDF generate karne mein dikkat aayi. Kripya console logs check karein.");
     }
   };
   const handleSelect = (note) => {
@@ -2775,11 +2773,10 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
             </tr>
           </tbody>
 
-          {/* NAYA CODE: Empty Tfoot to reserve space for fixed footer on every page */ }
           <tfoot className="print:table-footer-group">
             <tr>
               <td className="p-0 m-0">
-                <div className="h-[15mm] w-full"></div>
+                <div className="h-[25mm] w-full"></div>
               </td>
             </tr>
           </tfoot>

@@ -76,6 +76,7 @@ function App() {
           <Routes>
             <Route path="/public/r/:slug" element={ <PublicRequirementForm /> } />
             <Route path="/public/invoice/:token" element={ <PublicInvoice /> } />
+            <Route path="/public/re_invoice/:token" element={ <PublicInvoice /> } />
             <Route path="/public/proposal/:token" element={ <PublicProposal /> } />
 
             {/* <Route
