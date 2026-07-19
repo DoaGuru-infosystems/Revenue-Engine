@@ -260,8 +260,8 @@
     "semantic_hash": "d0bd48bd85a17c93bb9e122d959168c7"
   },
   "client/src/Admin/components/ProformaManagerModal.jsx": {
-    "mtime": 1784443701.6276138,
-    "ast_hash": "0b0dffef073d8579a611f283ed4d76e8",
+    "mtime": 1784442852.8887687,
+    "ast_hash": "64155cc03e3f63ab41ab17251d2fdfbb",
     "semantic_hash": ""
   },
   "client/src/Admin/components/ProposalActions.jsx": {
@@ -605,9 +605,9 @@
     "semantic_hash": "b5b6fb99a159308fa2976d338222992c"
   },
   "server/revenue_engen_server/re_controller/re_proposalController.js": {
-    "mtime": 1784443612.24745,
-    "ast_hash": "754cb80ffb4287b0a16eedfab96bafba",
-    "semantic_hash": ""
+    "mtime": 1784435074.9250677,
+    "ast_hash": "64195c2dd2378e15fe53c76b4acc133e",
+    "semantic_hash": "64195c2dd2378e15fe53c76b4acc133e"
   },
   "server/revenue_engen_server/re_controller/re_publicController.js": {
     "mtime": 1784435074.9260697,

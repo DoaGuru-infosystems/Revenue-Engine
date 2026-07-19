@@ -1557,10 +1557,6 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
                     className="px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition text-sm font-medium">
                     Reset
                   </button>
-                  <button onClick={ handleShowDiscount }
-                    className="px-4 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition text-sm font-semibold">
-                    <BadgePercent className="w-4 h-4 inline mr-1" />{ selecteddiscount ? "Edit Discount" : "Discount" }
-                  </button>
                 </div>
               </div>
 

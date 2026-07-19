@@ -1,7 +1,7 @@
 # Graph Report - Revenue Engin  (2026-07-19)
 
 ## Corpus Check
-- 144 files · ~301,868 words
+- 144 files · ~301,730 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

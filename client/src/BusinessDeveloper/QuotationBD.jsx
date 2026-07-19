@@ -771,7 +771,14 @@ const { id, txn_id } = useParams();
             📊 Dashboard
           </button>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (window.history.length > 1 && window.history.state && window.history.state.idx > 0) {
+                navigate(-1);
+              } else {
+                window.close();
+                setTimeout(() => navigate("/BD/dashboard"), 300);
+              }
+            }}
             className="bg-gray-600 text-white rounded-full px-4 py-2"
           >
             🔙 Back

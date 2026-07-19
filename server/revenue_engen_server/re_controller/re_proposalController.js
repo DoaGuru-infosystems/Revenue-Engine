@@ -858,6 +858,21 @@ exports.recordProposalPayment = async (req, res) => {
         .json({ status: "Failure", message: "Proforma not found" });
     const proforma = proformaRows[0];
 
+    // Validate that the payment amount does not exceed the pending amount
+    const existingPayments = await runQuery(
+      `SELECT SUM(amount) as totalReceived FROM re_proposal_payment_records WHERE proforma_id = ? AND status != 'rejected'`,
+      [proforma_id]
+    );
+    const totalReceived = Number(existingPayments[0]?.totalReceived) || 0;
+    const pendingAmount = Number(proforma.total_amount) - totalReceived;
+    
+    if (Number(amount) > pendingAmount) {
+      return res.status(400).json({ 
+        status: "Failure", 
+        message: `Payment amount (₹${Number(amount).toLocaleString()}) cannot exceed the pending amount (₹${pendingAmount.toLocaleString()})` 
+      });
+    }
+
     const proposalRows = await runQuery(
       `SELECT * FROM re_proposals WHERE id = ?`,
       [proposal_id],

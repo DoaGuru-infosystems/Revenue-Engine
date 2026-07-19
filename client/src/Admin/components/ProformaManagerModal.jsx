@@ -249,6 +249,17 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   const handleRecordPayment = async (e) => {
     e.preventDefault();
     if (!selectedProforma) return;
+
+    // Validate that the payment amount does not exceed pending amount
+    const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id);
+    const totalReceived = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const pendingAmount = Number(selectedProforma.total_amount) - totalReceived;
+    
+    if (Number(paymentForm.amount) > pendingAmount) {
+      Swal.fire('Validation Error', `Amount cannot exceed the pending balance of ₹${pendingAmount.toLocaleString()}`, 'warning');
+      return;
+    }
+
     setSavingPayment(true);
 
     try {
@@ -411,7 +422,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={ () => handleViewProforma(proforma) }
-                          className="px-4 py-2 bg-green-600/20 text-green-300 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold whitespace-nowrap"
+                          className="px-4 py-2 bg-green-600/20 text-green-700 dark:text-green-300 border border-green-500 dark:border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold whitespace-nowrap"
                         >
                           View Proforma
                         </button>
@@ -425,20 +436,20 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       <div className="flex flex-wrap items-center gap-3">
                         <button
                           onClick={ () => handleDeleteProforma(proforma.id) }
-                          className="px-4 py-2 bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl hover:bg-red-600/30 transition text-sm font-semibold flex items-center gap-2"
+                          className="px-4 py-2 bg-red-600/20 text-red-700 dark:text-red-400 border border-red-500 dark:border-red-500/30 rounded-xl hover:bg-red-600/30 transition text-sm font-semibold flex items-center gap-2"
                         >
                           <Trash className="w-4 h-4" /> Delete Proforma
                         </button>
                         { !isPaid && (
                           <button
                             onClick={ () => openPaymentModal(proforma) }
-                            className="px-4 py-2 bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 rounded-xl hover:bg-yellow-600/30 transition text-sm font-semibold flex items-center gap-2"
+                            className="px-4 py-2 bg-yellow-600/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-500/30 rounded-xl hover:bg-yellow-600/30 transition text-sm font-semibold flex items-center gap-2"
                           >
                             <CreditCard className="w-4 h-4" /> Record Payment
                           </button>
                         ) }
                         { isPaid && (
-                          <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-xs font-bold uppercase flex items-center gap-1">
+                          <span className="px-3 py-1 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-500/30 rounded-full text-xs font-bold uppercase flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Fully Paid
                           </span>
                         ) }
@@ -476,7 +487,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                                 <td className="py-3 text-center">
                                   { p.status === 'pending_approval' ? (
                                     <div className="flex flex-col items-center gap-2">
-                                      <span className="px-2 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-xs font-bold uppercase">Pending</span>
+                                      <span className="px-2 py-1 bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500 dark:border-amber-500/30 rounded text-xs font-bold uppercase">Pending</span>
                                       <button
                                         onClick={ () => handleApprovePayment(p.id) }
                                         disabled={ approvingPaymentId === p.id }
@@ -487,13 +498,13 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                                     </div>
                                   ) : p.status === 'approved' ? (
                                     <div className="flex flex-col items-center gap-2">
-                                      <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center"><CheckCircle2 className="w-3 h-3" /> Approved</span>
+                                      <span className="px-2 py-1 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center"><CheckCircle2 className="w-3 h-3" /> Approved</span>
                                       <button 
                                         onClick={() => {
                                           const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
                                           window.open(`#/admin/invoice/${proposal.client_id}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
                                         }}
-                                        className="px-3 py-1 bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
+                                        className="px-3 py-1 bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500 dark:border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
                                       >
                                         View Invoice
                                       </button>
@@ -541,7 +552,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Amount Received</label>
-                  <input type="number" step="0.01" required value={ paymentForm.amount } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                  <input type="number" step="0.01" required value={ paymentForm.amount } max={ selectedProforma ? Number(selectedProforma.total_amount) - payments.filter(p => p.proforma_id === selectedProforma.id).reduce((sum, p) => sum + Number(p.amount), 0) : undefined } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Date</label>

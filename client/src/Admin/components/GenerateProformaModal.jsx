@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import { ChevronDown, CalendarDays, FilePlus2, X, Hash, Building2, Phone, CreditCard, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useTheme } from "../../context/ThemeContext";
 import API_BASE_URL from "../../config/apiBaseUrl";
 import { classifyProformaServices, calcAdsRowTotal } from "../../utils/proformaPricing";
 
@@ -22,6 +23,7 @@ const GenerateProformaModal = ({
 }) => {
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
 
@@ -217,92 +219,291 @@ const GenerateProformaModal = ({
   return createPortal(
     <>
       <style>{ `
+        .ci-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          background: rgba(0,0,0,0.7);
+          backdrop-filter: blur(12px);
+          animation: fadeIn 0.2s ease both;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .ci-modal-card {
+          position: relative;
+          width: 100%;
+          max-width: 980px;
+          background: #0a0b14;
+          border: 1px solid rgba(99,102,241,0.25);
+          border-radius: 24px;
+          overflow: hidden;
+          max-height: 92vh;
+          box-shadow: 0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04);
+          animation: fadeUp 0.3s ease both;
+        }
+        [data-theme="light"] .ci-modal-card {
+          background: #ffffff;
+          border-color: rgba(99,102,241,0.15);
+          box-shadow: 0 40px 100px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        .ci-modal-header {
+          padding: 1.25rem 1.5rem;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(99,102,241,0.05);
+        }
+        [data-theme="light"] .ci-modal-header {
+          border-bottom-color: rgba(0,0,0,0.08);
+          background: rgba(99,102,241,0.02);
+        }
+
+        .ci-header-icon-wrap {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          background: rgba(99,102,241,0.15);
+          border: 1px solid rgba(99,102,241,0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        [data-theme="light"] .ci-header-icon-wrap {
+          background: rgba(99,102,241,0.08);
+          border-color: rgba(99,102,241,0.15);
+        }
+
+        .ci-modal-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #ffffff;
+        }
+        [data-theme="light"] .ci-modal-title {
+          color: #1e1b4b;
+        }
+
+        .ci-modal-subtitle {
+          font-size: 11px;
+          color: rgba(255,255,255,0.3);
+          margin-top: 2px;
+        }
+        [data-theme="light"] .ci-modal-subtitle {
+          color: rgba(0,0,0,0.5);
+        }
+
+        .ci-client-highlight { color: #a5b4fc; }
+        [data-theme="light"] .ci-client-highlight { color: #4f46e5; }
+
+        .ci-close-btn {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 8px;
+          padding: 6px;
+          color: rgba(255,255,255,0.4);
+          cursor: pointer;
+          display: flex;
+          transition: all 0.2s;
+        }
+        .ci-close-btn:hover {
+          background: rgba(255,255,255,0.08);
+          color: #fff;
+        }
+        [data-theme="light"] .ci-close-btn {
+          background: rgba(0,0,0,0.03);
+          border-color: rgba(0,0,0,0.08);
+          color: rgba(0,0,0,0.5);
+        }
+        [data-theme="light"] .ci-close-btn:hover {
+          background: rgba(0,0,0,0.06);
+          color: #000;
+        }
+
+        .ci-meta-bar {
+          padding: 12px 24px;
+          background: rgba(52,211,153,0.05);
+          border-bottom: 1px solid rgba(52,211,153,0.1);
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        [data-theme="light"] .ci-meta-bar {
+          background: rgba(52,211,153,0.03);
+          border-bottom-color: rgba(52,211,153,0.08);
+        }
+
+        .ci-meta-label {
+          color: rgba(255,255,255,0.35);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          font-size: 10px;
+        }
+        [data-theme="light"] .ci-meta-label {
+          color: rgba(0,0,0,0.5);
+        }
+
+        .ci-meta-val {
+          color: rgba(255,255,255,0.45);
+        }
+        [data-theme="light"] .ci-meta-val {
+          color: #374151;
+        }
+
+        .ci-form-body {
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          max-height: 78vh;
+          overflow-y: auto;
+        }
+
         .ci-scroll::-webkit-scrollbar { width: 4px; }
         .ci-scroll::-webkit-scrollbar-track { background: transparent; }
         .ci-scroll::-webkit-scrollbar-thumb { background: rgba(184,150,46,0.2); border-radius: 99px; }
         .ci-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         @media (max-width: 640px) { .ci-grid-2 { grid-template-columns: 1fr; } }
+        
         .ci-label { display: block; font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+        [data-theme="light"] .ci-label { color: #4b5563; }
+
+        .ci-label-optional { font-size: 10px; color: rgba(255,255,255,0.2); font-weight: 400; text-transform: none; }
+        [data-theme="light"] .ci-label-optional { color: rgba(0,0,0,0.4); }
+
         .ci-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; color: #e8e8f0; font-size: 13px; outline: none; transition: all 0.2s; }
+        [data-theme="light"] .ci-input { background: #ffffff; border: 1px solid rgba(0,0,0,0.15); color: #111827; }
+
         .ci-input::placeholder { color: rgba(255,255,255,0.18); }
+        [data-theme="light"] .ci-input::placeholder { color: rgba(0,0,0,0.4); }
+
         .ci-input:focus { border-color: rgba(184,150,46,0.45); background: rgba(184,150,46,0.04); }
+        [data-theme="light"] .ci-input:focus { border-color: #d4a940; background: rgba(212,169,64,0.04); }
+
         .ci-input option { background: #0d0e1a; color: #e8e8f0; }
+        [data-theme="light"] .ci-input option { background: #ffffff; color: #111827; }
+
         .ci-input-icon { position: relative; }
         .ci-input-icon .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.2); width: 16px; height: 16px; }
+        [data-theme="light"] .ci-input-icon .icon { color: rgba(0,0,0,0.4); }
+
         .ci-input-icon .ci-input { padding-left: 36px; }
         .ci-input-icon .chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: rgba(255,255,255,0.2); pointer-events: none; }
+        [data-theme="light"] .ci-input-icon .chevron { color: rgba(0,0,0,0.4); }
+
         select.ci-input { appearance: none; padding-right: 36px; cursor: pointer; }
+        
         .ci-date-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.04); border: none; color: rgba(255,255,255,0.3); border-radius: 6px; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .ci-date-btn:hover { background: rgba(184,150,46,0.2); color: #d4a940; }
+        [data-theme="light"] .ci-date-btn { background: rgba(0,0,0,0.03); color: rgba(0,0,0,0.5); }
+        [data-theme="light"] .ci-date-btn:hover { background: rgba(212,169,64,0.15); color: #b8922c; }
+
         .ci-date-input::-webkit-calendar-picker-indicator { opacity: 0; display: none; -webkit-appearance: none; }
         .ci-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 12px; border: none; font-size: 13px; font-weight: 700; color: #0d0e1a; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #c9a83a 0%, #d4a940 45%, #b8922c 100%); }
         .ci-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(184,150,46,0.25); }
         .ci-btn-primary:active { transform: translateY(1px); }
         .ci-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+        
         .ci-btn-secondary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.04); }
         .ci-btn-secondary:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.14); }
+        [data-theme="light"] .ci-btn-secondary { border: 1px solid rgba(0,0,0,0.1); color: #374151; background: rgba(0,0,0,0.02); }
+        [data-theme="light"] .ci-btn-secondary:hover { background: rgba(0,0,0,0.05); color: #111827; border-color: rgba(0,0,0,0.15); }
+
+        .ci-table-container { border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.02); }
+        [data-theme="light"] .ci-table-container { border-color: rgba(0,0,0,0.08); background: rgba(0,0,0,0.01); }
+        .ci-table { width: 100%; border-collapse: collapse; }
+
+        .ci-th-dm { background: rgba(99,102,241,0.12); }
+        [data-theme="light"] .ci-th-dm { background: rgba(99,102,241,0.06); }
+        .ci-th-ads { background: rgba(168,85,247,0.12); }
+        [data-theme="light"] .ci-th-ads { background: rgba(168,85,247,0.06); }
+        .ci-th-comp { background: rgba(34,197,94,0.12); }
+        [data-theme="light"] .ci-th-comp { background: rgba(34,197,94,0.06); }
+
+        .ci-th-cell, .ci-th-cell-right { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); color: #c7d2fe; }
+        .ci-th-cell-right { text-align: right; }
+        [data-theme="light"] .ci-th-cell, [data-theme="light"] .ci-th-cell-right { border-bottom-color: rgba(0,0,0,0.08); color: #4f46e5; }
+
+        .ci-td-cell, .ci-td-cell-right { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
+        .ci-td-cell-right { text-align: right; color: #e8e8f0; }
+        [data-theme="light"] .ci-td-cell { border-bottom-color: rgba(0,0,0,0.04); color: #374151; }
+        [data-theme="light"] .ci-td-cell-right { border-bottom-color: rgba(0,0,0,0.04); color: #111827; }
+
+        .ci-tr-subrow { background: rgba(255,255,255,0.01); }
+        [data-theme="light"] .ci-tr-subrow { background: rgba(0,0,0,0.015); }
+
+        .ci-tfoot-dm { background: rgba(99,102,241,0.08); }
+        [data-theme="light"] .ci-tfoot-dm { background: rgba(99,102,241,0.04); }
+        .ci-tfoot-ads { background: rgba(168,85,247,0.08); }
+        [data-theme="light"] .ci-tfoot-ads { background: rgba(168,85,247,0.04); }
+        .ci-tfoot-comp-row { background: rgba(34,197,94,0.08); }
+        [data-theme="light"] .ci-tfoot-comp-row { background: rgba(34,197,94,0.04); }
+
+        .ci-footer-label { color: #c7d2fe; border-top: 1px solid rgba(99,102,241,0.2); }
+        [data-theme="light"] .ci-footer-label { color: #312e81; border-top-color: rgba(99,102,241,0.15); }
+        .ci-footer-value { color: #f0f5ff; border-top: 1px solid rgba(99,102,241,0.2); }
+        [data-theme="light"] .ci-footer-value { color: #111827; border-top-color: rgba(99,102,241,0.15); }
+
+        .ci-footer-ads-label { color: #d8b4fe; border-top: 1px solid rgba(168,85,247,0.2); }
+        [data-theme="light"] .ci-footer-ads-label { color: #581c87; border-top-color: rgba(168,85,247,0.15); }
+        .ci-footer-ads-value { color: #f0f5ff; border-top: 1px solid rgba(168,85,247,0.2); }
+        [data-theme="light"] .ci-footer-ads-value { color: #111827; border-top-color: rgba(168,85,247,0.15); }
+
+        .ci-footer-comp-label { color: #86efac; border-top: 1px solid rgba(34,197,94,0.2); }
+        [data-theme="light"] .ci-footer-comp-label { color: #15803d; border-top-color: rgba(34,197,94,0.15); }
+        .ci-footer-comp-value { color: #f0f5ff; border-top: 1px solid rgba(34,197,94,0.2); }
+        [data-theme="light"] .ci-footer-comp-value { color: #111827; border-top-color: rgba(34,197,94,0.15); }
+
+        .ci-comp-border-top { border-top: 1px solid rgba(255,255,255,0.08); }
+        [data-theme="light"] .ci-comp-border-top { border-top-color: rgba(0,0,0,0.08); }
+
+        .ci-text-orange { color: #f97316; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+
+        .ci-empty-text { text-align: center; color: rgba(255,255,255,0.5); padding: 1rem 0; }
+        [data-theme="light"] .ci-empty-text { color: rgba(0,0,0,0.45); }
+
+        .ci-summary-sub { font-size: 12px; color: #93c5fd; margin-bottom: 2px; }
+        [data-theme="light"] .ci-summary-sub { color: #1d4ed8; }
+        .ci-summary-disc { font-size: 12px; color: #f87171; margin-bottom: 2px; }
+        [data-theme="light"] .ci-summary-disc { color: #dc2626; }
+        .ci-summary-taxable, .ci-summary-gst, .ci-summary-sub-gst, .ci-summary-ads { font-size: 12px; color: #c7d2fe; margin-bottom: 2px; }
+        [data-theme="light"] .ci-summary-taxable, [data-theme="light"] .ci-summary-gst, [data-theme="light"] .ci-summary-sub-gst, [data-theme="light"] .ci-summary-ads { color: #374151; }
+        .ci-summary-grand { font-size: 14px; font-weight: 700; color: #c7d2fe; }
+        [data-theme="light"] .ci-summary-grand { color: #111827; }
+
+        .ci-modal-footer { display: flex; gap: 10px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; }
+        [data-theme="light"] .ci-modal-footer { border-top-color: rgba(0,0,0,0.08); }
+
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
       <div
-        style={ {
-          position: "fixed",
-          inset: 0,
-          zIndex: 9999,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "1rem",
-          // background: "rgba(0,0,0,0.85)",
-          // backdropFilter: "blur(16px)",
-        } }
+        className="ci-modal-overlay"
         onClick={ onClose }
       >
         <div
-          style={ {
-            position: "relative",
-            width: "100%",
-            maxWidth: 980,
-            background: "#0a0b14",
-            border: "1px solid rgba(99,102,241,0.25)",
-            borderRadius: 24,
-            overflow: "hidden",
-            maxHeight: "92vh",
-            boxShadow: "0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.04)",
-            animation: "fadeUp 0.3s ease both",
-          } }
+          className="ci-modal-card"
           onClick={ (e) => e.stopPropagation() }
         >
-          <div
-            style={ {
-              padding: "1.25rem 1.5rem",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              background: "rgba(99,102,241,0.05)",
-            } }
-          >
+          <div className="ci-modal-header">
             <div style={ { display: "flex", alignItems: "center", gap: 12 } }>
-              <div
-                style={ {
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  background: "rgba(99,102,241,0.15)",
-                  border: "1px solid rgba(99,102,241,0.25)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                } }
-              >
+              <div className="ci-header-icon-wrap">
                 <FilePlus2 size={ 18 } style={ { color: "#a5b4fc" } } />
               </div>
               <div>
-                <div style={ { fontSize: 16, fontWeight: 700, color: "#fff" } }>Generate Proforma Invoice</div>
-                <div style={ { fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 } }>
+                <div className="ci-modal-title">Generate Proforma Invoice</div>
+                <div className="ci-modal-subtitle">
                   For:{ " " }
-                  <span style={ { color: "#a5b4fc", fontWeight: 600 } }>
+                  <span className="ci-client-highlight" style={ { fontWeight: 600 } }>
                     { currentClientName }
                   </span>
                 </div>
@@ -311,43 +512,16 @@ const GenerateProformaModal = ({
             <button
               type="button"
               onClick={ onClose }
-              style={ {
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 8,
-                padding: 6,
-                color: "rgba(255,255,255,0.4)",
-                cursor: "pointer",
-                display: "flex",
-                transition: "all 0.2s",
-              } }
+              className="ci-close-btn"
             >
               <X size={ 18 } />
             </button>
           </div>
 
-          <div
-            style={ {
-              padding: "12px 24px",
-              background: "rgba(52,211,153,0.05)",
-              borderBottom: "1px solid rgba(52,211,153,0.1)",
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              flexWrap: "wrap",
-            } }
-          >
+          <div className="ci-meta-bar">
             <div style={ { display: "flex", alignItems: "center", gap: 6, fontSize: 12 } }>
               <Hash size={ 12 } style={ { color: "rgba(52,211,153,0.6)" } } />
-              <span
-                style={ {
-                  color: "rgba(255,255,255,0.35)",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.07em",
-                  fontSize: 10,
-                } }
-              >
+              <span className="ci-meta-label">
                 { selectedProposalForProforma ? 'PROPOSAL:' : 'TXN:' }
               </span>
               <span
@@ -364,7 +538,7 @@ const GenerateProformaModal = ({
             { currentClientOrg && (
               <div style={ { display: "flex", alignItems: "center", gap: 6, fontSize: 12 } }>
                 <Building2 size={ 12 } style={ { color: "rgba(184,150,46,0.5)" } } />
-                <span style={ { color: "rgba(255,255,255,0.45)" } }>
+                <span className="ci-meta-val">
                   { currentClientOrg }
                 </span>
               </div>
@@ -372,22 +546,14 @@ const GenerateProformaModal = ({
             { currentClientPhone && (
               <div style={ { display: "flex", alignItems: "center", gap: 6, fontSize: 12 } }>
                 <Phone size={ 12 } style={ { color: "rgba(184,150,46,0.5)" } } />
-                <span style={ { color: "rgba(255,255,255,0.45)" } }>{ currentClientPhone }</span>
+                <span className="ci-meta-val">{ currentClientPhone }</span>
               </div>
             ) }
           </div>
 
           <form
             onSubmit={ handleCreateInvoice }
-            style={ {
-              padding: "1.5rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              maxHeight: "78vh",
-              overflowY: "auto",
-            } }
-            className="ci-scroll"
+            className="ci-form-body ci-scroll"
           >
             { (!selectedTxn || selectedProposalForProforma) && (
               <div style={ { marginBottom: 16 } }>
@@ -464,7 +630,7 @@ const GenerateProformaModal = ({
                     value={ formData.duration_start_date }
                     onChange={ handleChange }
                     className="ci-input ci-date-input"
-                    style={ { colorScheme: "dark", paddingRight: 42 } }
+                    style={ { colorScheme: theme === "dark" ? "dark" : "light", paddingRight: 42 } }
                     required
                   />
                   <button
@@ -490,7 +656,7 @@ const GenerateProformaModal = ({
                     min={ formData.duration_start_date || undefined }
                     onChange={ handleChange }
                     className="ci-input ci-date-input"
-                    style={ { colorScheme: "dark", paddingRight: 42 } }
+                    style={ { colorScheme: theme === "dark" ? "dark" : "light", paddingRight: 42 } }
                     required
                   />
                   <button
@@ -522,14 +688,7 @@ const GenerateProformaModal = ({
               <div>
                 <label className="ci-label">
                   Client PAN Number{ " " }
-                  <span
-                    style={ {
-                      fontSize: 10,
-                      color: "rgba(255,255,255,0.2)",
-                      fontWeight: 400,
-                      textTransform: "none",
-                    } }
-                  >
+                  <span className="ci-label-optional">
                     (optional)
                   </span>
                 </label>
@@ -547,12 +706,12 @@ const GenerateProformaModal = ({
             <div>
               <label className="ci-label">Quotation Services Preview</label>
               { quotationPreviewLoading && (
-                <div style={ { textAlign: "center", color: "rgba(255,255,255,0.5)", padding: "1rem 0" } }>
+                <div className="ci-empty-text">
                   Loading services...
                 </div>
               ) }
               { !quotationPreviewLoading && quotationServicesPreview.length === 0 && (
-                <div style={ { textAlign: "center", color: "rgba(255,255,255,0.5)", padding: "1rem 0" } }>
+                <div className="ci-empty-text">
                   No services found for this quotation.
                 </div>
               ) }
@@ -609,25 +768,19 @@ const GenerateProformaModal = ({
 
                 const grandTotal = dmSubtotalWithGst + adsTotal;
 
-                const thBase = { textAlign: "left", padding: "9px 12px", fontSize: 11, fontWeight: 700, borderBottom: "1px solid rgba(255,255,255,0.08)" };
-                const thR = { ...thBase, textAlign: "right" };
-                const tdL = { padding: "8px 12px", fontSize: 12, borderBottom: "1px solid rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.85)" };
-                const tdR = { ...tdL, textAlign: "right" };
-                const tdR2 = { ...tdL, textAlign: "right", color: "#e8e8f0" };
-
                 return (
                   <div style={ { display: "flex", flexDirection: "column", gap: 14 } }>
                     { dmServices.length > 0 && (
-                      <div style={ { border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden", background: "rgba(255,255,255,0.02)" } }>
+                      <div className="ci-table-container">
                         <div style={ { maxHeight: 220, overflow: "auto" } } className="ci-scroll">
-                          <table style={ { width: "100%", borderCollapse: "collapse", fontSize: 12 } }>
+                          <table className="ci-table">
                             <thead>
-                              <tr style={ { background: "rgba(99,102,241,0.12)" } }>
-                                <th style={ { ...thBase, color: "#c7d2fe" } }>DM Service</th>
-                                <th style={ { ...thBase, color: "#c7d2fe" } }>Service Name</th>
-                                <th style={ { ...thR, color: "#c7d2fe" } }>Qty</th>
-                                <th style={ { ...thR, color: "#c7d2fe" } }>Price (₹)</th>
-                                <th style={ { ...thR, color: "#c7d2fe" } }>Total (₹)</th>
+                              <tr className="ci-th-dm">
+                                <th className="ci-th-cell">DM Service</th>
+                                <th className="ci-th-cell">Service Name</th>
+                                <th className="ci-th-cell-right">Qty</th>
+                                <th className="ci-th-cell-right">Price (₹)</th>
+                                <th className="ci-th-cell-right">Total (₹)</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -640,47 +793,47 @@ const GenerateProformaModal = ({
                                 return (
                                   <React.Fragment key={ `dm-${idx}` }>
                                     <tr>
-                                      <td style={ { ...tdL, color: "#f97316", fontWeight: 500 } }>{ (svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || "N/A") }</td>
-                                      <td style={ tdL }>{ getServiceDisplayName((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.category_name || "N/A")) }</td>
-                                      <td style={ tdR2 }>{ qty }</td>
-                                      <td style={ tdR2 }>₹{ basePrice.toLocaleString("en-IN") }</td>
-                                      <td style={ tdR2 }>₹{ (basePrice * qty).toLocaleString("en-IN") }</td>
+                                      <td className="ci-td-cell ci-text-orange font-medium">{ (svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || "N/A") }</td>
+                                      <td className="ci-td-cell">{ getServiceDisplayName((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.category_name || "N/A")) }</td>
+                                      <td className="ci-td-cell-right">{ qty }</td>
+                                      <td className="ci-td-cell-right">₹{ basePrice.toLocaleString("en-IN") }</td>
+                                      <td className="ci-td-cell-right">₹{ (basePrice * qty).toLocaleString("en-IN") }</td>
                                     </tr>
                                     { th2 > 0 && (
-                                      <tr style={ { background: "rgba(103, 11, 11, 0.02)" } }>
-                                        <td style={ { ...tdL, color: "#f97316", fontWeight: 500 } }>Thumbnail Creation Total</td>
-                                        <td style={ tdL }></td>
-                                        <td style={ tdR2 }>{ qty }</td>
-                                        <td style={ tdR2 }>₹{ th2.toLocaleString("en-IN") }</td>
-                                        <td style={ tdR2 }>₹{ (th2 * qty).toLocaleString("en-IN") }</td>
+                                      <tr className="ci-tr-subrow">
+                                        <td className="ci-td-cell ci-text-orange font-medium">Thumbnail Creation Total</td>
+                                        <td className="ci-td-cell"></td>
+                                        <td className="ci-td-cell-right">{ qty }</td>
+                                        <td className="ci-td-cell-right">₹{ th2.toLocaleString("en-IN") }</td>
+                                        <td className="ci-td-cell-right">₹{ (th2 * qty).toLocaleString("en-IN") }</td>
                                       </tr>
                                     ) }
                                     { cp > 0 && (
-                                      <tr style={ { background: "rgba(255,255,255,0.02)" } }>
-                                        <td style={ { ...tdL, color: "#f97316", fontWeight: 500 } }>Meta Growth & Content Management Total</td>
-                                        <td style={ tdL }></td>
-                                        <td style={ tdR2 }>{ qty }</td>
-                                        <td style={ tdR2 }>₹{ cp.toLocaleString("en-IN") }</td>
-                                        <td style={ tdR2 }>₹{ (cp * qty).toLocaleString("en-IN") }</td>
+                                      <tr className="ci-tr-subrow">
+                                        <td className="ci-td-cell ci-text-orange font-medium">Meta Growth & Content Management Total</td>
+                                        <td className="ci-td-cell"></td>
+                                        <td className="ci-td-cell-right">{ qty }</td>
+                                        <td className="ci-td-cell-right">₹{ cp.toLocaleString("en-IN") }</td>
+                                        <td className="ci-td-cell-right">₹{ (cp * qty).toLocaleString("en-IN") }</td>
                                       </tr>
                                     ) }
                                     { yt2 > 0 && (
-                                      <tr style={ { background: "rgba(255,255,255,0.02)" } }>
-                                        <td style={ { ...tdL, color: "#f97316", fontWeight: 500 } }>YouTube Channel Growth & Optimization Total</td>
-                                        <td style={ tdL }></td>
-                                        <td style={ tdR2 }>{ qty }</td>
-                                        <td style={ tdR2 }>₹{ yt2.toLocaleString("en-IN") }</td>
-                                        <td style={ tdR2 }>₹{ (yt2 * qty).toLocaleString("en-IN") }</td>
+                                      <tr className="ci-tr-subrow">
+                                        <td className="ci-td-cell ci-text-orange font-medium">YouTube Channel Growth & Optimization Total</td>
+                                        <td className="ci-td-cell"></td>
+                                        <td className="ci-td-cell-right">{ qty }</td>
+                                        <td className="ci-td-cell-right">₹{ yt2.toLocaleString("en-IN") }</td>
+                                        <td className="ci-td-cell-right">₹{ (yt2 * qty).toLocaleString("en-IN") }</td>
                                       </tr>
                                     ) }
                                   </React.Fragment>
                                 );
                               }) }
                             </tbody>
-                            <tfoot>
-                              <tr style={ { background: "rgba(99,102,241,0.08)" } }>
-                                <td colSpan={ 4 } style={ { ...tdR, fontWeight: 700, color: "#c7d2fe", borderTop: "1px solid rgba(99,102,241,0.2)" } }>DM Service Total</td>
-                                <td style={ { ...tdR, fontWeight: 700, color: "#f0f5ff", borderTop: "1px solid rgba(99,102,241,0.2)" } }>₹{ dmTotal.toLocaleString("en-IN") }</td>
+                            <tfoot className="ci-tfoot-dm">
+                              <tr>
+                                <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-label">DM Service Total</td>
+                                <td className="ci-td-cell-right font-bold ci-footer-value">₹{ dmTotal.toLocaleString("en-IN") }</td>
                               </tr>
                             </tfoot>
                           </table>
@@ -688,35 +841,32 @@ const GenerateProformaModal = ({
                       </div>
                     ) }
 
-                    { adsServices.length > 0 && (
-                      <div style={ { border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden", background: "rgba(255,255,255,0.02)" } }>
+                         { adsServices.length > 0 && (
+                      <div className="ci-table-container">
                         <div style={ { maxHeight: 220, overflow: "auto" } } className="ci-scroll">
-                          <table style={ { width: "100%", borderCollapse: "collapse", fontSize: 12 } }>
+                          <table className="ci-table">
                             <thead>
-                              <tr style={ { background: "rgba(168,85,247,0.12)" } }>
-                                <th style={ { ...thBase, color: "#d8b4fe" } }>Ads Services</th>
-                                <th style={ { ...thR, color: "#d8b4fe" } }>Budget (₹)</th>
+                              <tr className="ci-th-ads">
+                                <th className="ci-th-cell">Ads Services</th>
+                                <th className="ci-th-cell-right">Budget (₹)</th>
                               </tr>
                             </thead>
                             <tbody>
                               { adsServices.map((svc, idx) => {
-
-
-
-                                const adsCategoryName = getServiceDisplayName(svc.category || svc.category_name || svc.service_name || "N/A");
-                                const amount = Number(svc.amount || svc.budget || 0);
-                                return (
-                                  <tr key={ `ads-${idx}` }>
-                                    <td style={ { ...tdL, color: "#60a5fa", fontWeight: 500 } }>{ adsCategoryName }</td>
-                                    <td style={ tdR2 }>₹{ amount.toLocaleString("en-IN") }</td>
-                                  </tr>
-                                );
+                                 const adsCategoryName = getServiceDisplayName(svc.category || svc.category_name || svc.service_name || "N/A");
+                                 const amount = Number(svc.amount || svc.budget || 0);
+                                 return (
+                                   <tr key={ `ads-${idx}` }>
+                                     <td className="ci-td-cell font-medium" style={ { color: "#60a5fa" } }>{ adsCategoryName }</td>
+                                     <td className="ci-td-cell-right">₹{ amount.toLocaleString("en-IN") }</td>
+                                   </tr>
+                                 );
                               }) }
                             </tbody>
-                            <tfoot>
-                              <tr style={ { background: "rgba(168,85,247,0.08)" } }>
-                                <td colSpan={ 1 } style={ { ...tdR, fontWeight: 700, color: "#d8b4fe", borderTop: "1px solid rgba(168,85,247,0.2)" } }>Ads Total</td>
-                                <td style={ { ...tdR, fontWeight: 700, color: "#f0f5ff", borderTop: "1px solid rgba(168,85,247,0.2)" } }>₹{ adsTotal.toLocaleString("en-IN") }</td>
+                            <tfoot className="ci-tfoot-ads">
+                              <tr>
+                                <td colSpan={ 1 } className="ci-td-cell-right font-bold ci-footer-ads-label">Ads Total</td>
+                                <td className="ci-td-cell-right font-bold ci-footer-ads-value">₹{ adsTotal.toLocaleString("en-IN") }</td>
                               </tr>
                             </tfoot>
                           </table>
@@ -729,16 +879,16 @@ const GenerateProformaModal = ({
                         return sum + (Number(svc.editing_type_amount || svc.amount || 0) * Number(svc.quantity || 1));
                       }, 0);
                       return (
-                        <div style={ { border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden", background: "rgba(255,255,255,0.02)" } }>
+                        <div className="ci-table-container">
                           <div style={ { maxHeight: 180, overflow: "auto" } } className="ci-scroll">
-                            <table style={ { width: "100%", borderCollapse: "collapse", fontSize: 12 } }>
+                            <table className="ci-table">
                               <thead>
-                                <tr style={ { background: "rgba(34,197,94,0.12)" } }>
-                                  <th style={ { ...thBase, color: "#86efac" } }>Complimentary Service</th>
-                                  <th style={ { ...thBase, color: "#86efac" } }>Service Name</th>
-                                  <th style={ { ...thR, color: "#86efac" } }>Qty</th>
-                                  <th style={ { ...thR, color: "#86efac" } }>Price (₹)</th>
-                                  <th style={ { ...thR, color: "#86efac" } }>Total (₹)</th>
+                                <tr className="ci-th-comp">
+                                  <th className="ci-th-cell">Complimentary Service</th>
+                                  <th className="ci-th-cell">Service Name</th>
+                                  <th className="ci-th-cell-right">Qty</th>
+                                  <th className="ci-th-cell-right">Price (₹)</th>
+                                  <th className="ci-th-cell-right">Total (₹)</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -747,23 +897,23 @@ const GenerateProformaModal = ({
                                   const price = Number(svc.editing_type_amount || svc.amount || 0);
                                   return (
                                     <tr key={ `comp-${idx}` }>
-                                      <td style={ { ...tdL, color: "#60a5fa" } }>{ getServiceDisplayName((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")) }</td>
-                                      <td style={ tdL }>{ (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A") }</td>
-                                      <td style={ tdR2 }>{ qty }</td>
-                                      <td style={ tdR2 }>₹{ price.toLocaleString("en-IN") }</td>
-                                      <td style={ tdR2 }>₹{ (price * qty).toLocaleString("en-IN") }</td>
+                                      <td className="ci-td-cell" style={ { color: "#60a5fa" } }>{ getServiceDisplayName((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")) }</td>
+                                      <td className="ci-td-cell">{ (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A") }</td>
+                                      <td className="ci-td-cell-right">{ qty }</td>
+                                      <td className="ci-td-cell-right">₹{ price.toLocaleString("en-IN") }</td>
+                                      <td className="ci-td-cell-right">₹{ (price * qty).toLocaleString("en-IN") }</td>
                                     </tr>
                                   );
                                 }) }
                               </tbody>
                               <tfoot>
                                 <tr>
-                                  <td colSpan={ 4 } style={ { ...tdR, fontWeight: 600, borderTop: "1px solid rgba(255,255,255,0.08)" } }>Total</td>
-                                  <td style={ { ...tdR, fontWeight: 600, borderTop: "1px solid rgba(255,255,255,0.08)" } }>₹{ compRawTotal.toLocaleString("en-IN") }</td>
+                                  <td colSpan={ 4 } className="ci-td-cell-right font-medium ci-comp-border-top">Total</td>
+                                  <td className="ci-td-cell-right font-medium ci-comp-border-top">₹{ compRawTotal.toLocaleString("en-IN") }</td>
                                 </tr>
-                                <tr style={ { background: "rgba(34,197,94,0.08)" } }>
-                                  <td colSpan={ 4 } style={ { ...tdR, fontWeight: 700, color: "#86efac", borderTop: "1px solid rgba(34,197,94,0.2)" } }>Complimentary Total</td>
-                                  <td style={ { ...tdR, fontWeight: 700, color: "#f0f5ff", borderTop: "1px solid rgba(34,197,94,0.2)" } }>₹0</td>
+                                <tr className="ci-tfoot-comp-row">
+                                  <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-comp-label">Complimentary Total</td>
+                                  <td className="ci-td-cell-right font-bold ci-footer-comp-value">₹0</td>
                                 </tr>
                               </tfoot>
                             </table>
@@ -775,31 +925,31 @@ const GenerateProformaModal = ({
                     <div style={ { textAlign: "right", paddingTop: 4 } }>
                       { discountAmt > 0 && (
                         <>
-                          <div style={ { fontSize: 12, color: "#93c5fd", marginBottom: 2 } }>
+                          <div className="ci-summary-sub">
                             Subtotal: ₹{ dmTotal.toLocaleString("en-IN") }
                           </div>
-                          <div style={ { fontSize: 12, color: "#f87171", marginBottom: 2 } }>
+                          <div className="ci-summary-disc">
                             Discount: -₹{ discountAmt.toLocaleString("en-IN") }
                           </div>
                         </>
                       ) }
-                      <div style={ { fontSize: 12, color: "#c7d2fe", marginBottom: 2 } }>
+                      <div className="ci-summary-taxable">
                         Taxable Amount: ₹{ dmTotalAfterDiscount.toLocaleString("en-IN") }
                       </div>
                       { isGST && (
-                        <div style={ { fontSize: 12, color: "#c7d2fe", marginBottom: 2 } }>
+                        <div className="ci-summary-gst">
                           GST @18%: ₹{ dmGstAmount.toLocaleString("en-IN") }
                         </div>
                       ) }
-                      <div style={ { fontSize: 13, fontWeight: 600, color: "#c7d2fe", marginBottom: 6 } }>
+                      <div className="ci-summary-sub-gst font-semibold">
                         Subtotal: ₹{ dmSubtotalWithGst.toLocaleString("en-IN") }
                       </div>
                       { adsTotal > 0 && (
-                        <div style={ { fontSize: 13, fontWeight: 600, color: "#c7d2fe", marginBottom: 6 } }>
+                        <div className="ci-summary-ads font-semibold">
                           Ads Services Total: ₹{ adsTotal.toLocaleString("en-IN") }
                         </div>
                       ) }
-                      <div style={ { fontSize: 14, fontWeight: 700, color: "#c7d2fe" } }>
+                      <div className="ci-summary-grand">
                         Grand Total: ₹{ grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
                       </div>
                     </div>
@@ -808,16 +958,7 @@ const GenerateProformaModal = ({
               })() }
             </div>
 
-            <div
-              style={ {
-                display: "flex",
-                gap: 10,
-                justifyContent: "flex-end",
-                paddingTop: 8,
-                borderTop: "1px solid rgba(255,255,255,0.05)",
-                marginTop: 4,
-              } }
-            >
+            <div className="ci-modal-footer">
               <button type="button" onClick={ onClose } className="ci-btn-secondary">
                 Cancel
               </button>

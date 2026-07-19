@@ -42,6 +42,7 @@ export default function ProposalBuilderBD() {
 
   const [predefinedNotes, setPredefinedNotes] = useState([]);
   const [manualNote, setManualNote] = useState("");
+  const [proposalStatus, setProposalStatus] = useState("");
 
   const [openSections, setOpenSections] = useState(
     PROPOSAL_SECTIONS.reduce((acc, sec) => ({ ...acc, [sec.key]: false }), {})
@@ -111,6 +112,7 @@ export default function ProposalBuilderBD() {
         setBillingType(p.billing_type);
         setBillingStartDate(p.billing_start_date ? p.billing_start_date.split('T')[0] : "");
         setBillingEndDate(p.billing_end_date ? p.billing_end_date.split('T')[0] : "");
+        setProposalStatus(p.status || "");
         
         const loadedSections = typeof p.sections_json === "string" ? JSON.parse(p.sections_json) : p.sections_json;
         const loadedToggles = typeof p.optional_toggles === "string" ? JSON.parse(p.optional_toggles) : p.optional_toggles;
@@ -327,8 +329,19 @@ export default function ProposalBuilderBD() {
     }
   };
 
+  const isReadOnly = ["invoiced", "payment_received", "partially_paid"].includes(proposalStatus);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 pb-24">
+      {isReadOnly && (
+        <div className="max-w-5xl mx-auto mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center gap-3 shadow-lg">
+          <CheckCircle className="w-6 h-6 text-red-400" />
+          <div>
+            <h4 className="text-red-400 font-bold text-sm">Editing Locked</h4>
+            <p className="text-red-300 text-xs mt-0.5">An invoice has been generated for this proposal. Further edits are disabled.</p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="max-w-5xl mx-auto flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
@@ -711,20 +724,33 @@ export default function ProposalBuilderBD() {
             Status: <span className="text-red-400">{proposalId ? 'Draft / Saved' : 'Unsaved'}</span>
           </div>
           <div className="flex gap-3">
-            <button 
-              onClick={() => saveProposal(false)}
-              disabled={loading}
-              className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 rounded-xl font-semibold transition"
-            >
-              {loading ? "Saving..." : "Save Draft"}
-            </button>
-            <button 
-              onClick={() => saveProposal(true)}
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-semibold shadow-lg shadow-red-900/20 transition"
-            >
-              <Save className="w-4 h-4" /> Save & Generate PDF
-            </button>
+            {!isReadOnly && (
+              <>
+                <button 
+                  onClick={() => saveProposal(false)}
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 rounded-xl font-semibold transition"
+                >
+                  {loading ? "Saving..." : "Save Draft"}
+                </button>
+                <button 
+                  onClick={() => saveProposal(true)}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-semibold shadow-lg shadow-red-900/20 transition"
+                >
+                  <Save className="w-4 h-4" /> Save & Generate PDF
+                </button>
+              </>
+            )}
+            {isReadOnly && (
+              <button
+                onClick={() => downloadPdf(proposalId)}
+                disabled={loading}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white rounded-xl font-semibold shadow-lg transition"
+              >
+                <Download className="w-4 h-4" /> Download PDF
+              </button>
+            )}
           </div>
         </div>
       </div>

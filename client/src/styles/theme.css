@@ -201,8 +201,6 @@
 [data-theme="light"] .bg-gray-800\/30,
 [data-theme="light"] .bg-gray-800\/40 {
   background: rgba(255, 255, 255, 0.82) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
   box-shadow: 0 4px 24px rgba(234, 88, 12, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06) !important;
   border-color: rgba(234, 88, 12, 0.12) !important;
 }
@@ -210,15 +208,12 @@
 [data-theme="light"] .bg-gray-800\/50,
 [data-theme="light"] .bg-gray-800\/60 {
   background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
   box-shadow: 0 4px 24px rgba(234, 88, 12, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }
 
 [data-theme="light"] .bg-gray-800\/70,
 [data-theme="light"] .bg-gray-800\/80 {
   background: rgba(255, 255, 255, 0.93) !important;
-  backdrop-filter: blur(20px) !important;
 }
 
 [data-theme="light"] .bg-gray-800\/95 {
