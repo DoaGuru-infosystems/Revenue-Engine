@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/user/userSlice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import API_BASE_URL from "../config/apiBaseUrl";
 
 const AdminComplimentaryData = () => {
@@ -33,6 +33,8 @@ const dispatch = useDispatch();
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
   const { id, clientId, proposalId } = useParams();
+  const searchParams = new URLSearchParams(useLocation().search);
+  const docTypeFromURL = searchParams.get("doc");
   const effectiveClientId = id || clientId;
   const [data, setData] = useState([]);
 
@@ -225,15 +227,31 @@ const dispatch = useDispatch();
     };
 
     // ✅ Only Quotation API (no invoice)
-    const quotationRequest = editId
-      ? axios.put(
-          `${baseURL}/auth/api/re_calculator/updateComplimenatryDataById/${editId}`,
-          payload
-        )
-      : axios.post(
-          `${baseURL}/auth/api/re_calculator/saveComplimentaryData`,
-          payload
-        );
+    let quotationRequest;
+    if (docTypeFromURL === "proforma") {
+      quotationRequest = axios.put(
+        `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+        {
+          proformaId: proposalId,
+          action: editId ? "update" : "add",
+          editId,
+          item: { ...payload, source: "custom_complimentary" },
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      quotationRequest = editId
+        ? axios.put(
+            `${baseURL}/auth/api/re_calculator/updateComplimenatryDataById/${editId}`,
+            payload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        : axios.post(
+            `${baseURL}/auth/api/re_calculator/saveComplimentaryData`,
+            payload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+    }
 
     quotationRequest
       .then((res) => {
@@ -499,17 +517,27 @@ const dispatch = useDispatch();
   const fetchData = async () => {
     if (!effectiveClientId || !proposalId) return;
     try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${effectiveClientId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log(data.data);
-      setGetData(data.data);
+      let endpoint = `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${effectiveClientId}`;
+      if (docTypeFromURL === "proforma") {
+        endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`;
+      }
+      const { data } = await axios.get(endpoint, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (docTypeFromURL === "proforma") {
+        const parsed = JSON.parse(data.data.pricing_snapshot || "[]");
+        // Only get complimentary services
+        const filtered = parsed.filter(
+          item => item.source === 'custom_complimentary' || item.service_name?.toLowerCase() === 'complimentary'
+        );
+        setGetData(filtered);
+      } else {
+        setGetData(data.data);
+      }
     } catch (error) {
       console.log(error);
       if (error.response && error.response.status === 401) {
@@ -582,9 +610,22 @@ const dispatch = useDispatch();
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${entryId}`
-      );
+      let res;
+      if (docTypeFromURL === "proforma") {
+        res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: proposalId,
+            action: "delete",
+            entryId: entryId
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        res = await axios.delete(
+          `${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${entryId}`
+        );
+      }
 
       const result = res.data;
 

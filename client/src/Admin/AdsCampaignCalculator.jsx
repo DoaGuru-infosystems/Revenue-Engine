@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/user/userSlice";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../config/apiBaseUrl";
 
 const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
@@ -12,6 +11,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const params = useParams();
   const id = params.id || params.clientId;
   const proposalId = proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
+  const searchParams = new URLSearchParams(useLocation().search);
+  const docTypeFromURL = searchParams.get("doc");
   const { currentUser, token } = useSelector((state) => state.user);
 
   const userName = currentUser?.name;
@@ -275,16 +276,50 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           return;
         }
 
-        const response = await fetch(
-          `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ adsItems: results }),
-          }
-        );
+        let response;
+        if (docTypeFromURL === "proforma") {
+          const proformaItems = results.map(newRecord => ({
+            id: newRecord.id,
+            service_name: 'Ads Campaign',
+            category_name: newRecord.category,
+            quantity: 1,
+            unit_price: newRecord.total,
+            total_price: newRecord.total,
+            total_amount: newRecord.total,
+            include_in_total: true,
+            source: 'custom_ads',
+            budget: newRecord.amount,
+            percent: newRecord.percent,
+            charge: newRecord.charge,
+          }));
+          response = await fetch(
+            `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                proformaId: proposalId,
+                action: "addBulk",
+                item: proformaItems
+              }),
+            }
+          );
+        } else {
+          response = await fetch(
+            `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ adsItems: results }),
+            }
+          );
+        }
 
         const result = await response.json();
         if (result.status === "Success") {
@@ -320,17 +355,27 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const fetchData = async () => {
     if (!id || !proposalId) return;
     try {
-      const res = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      let endpoint = `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`;
+      if (docTypeFromURL === "proforma") {
+        endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`;
+      }
+      const res = await axios.get(endpoint, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (res.data.status === "Success") {
-        setGetData(res.data.data);
+        if (docTypeFromURL === "proforma") {
+          const parsed = JSON.parse(res.data.data.pricing_snapshot || "[]");
+          // Only get Ads Campaign services
+          const filtered = parsed.filter(
+            item => item.source === 'custom_ads' || item.service_type === "Ads Campaign" || item.category === "Ads Campaign"
+          );
+          setGetData(filtered);
+        } else {
+          setGetData(res.data.data);
+        }
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -366,14 +411,27 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${entryId}`
-      );
+      let res;
+      if (docTypeFromURL === "proforma") {
+        res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: proposalId,
+            action: "delete",
+            entryId: entryId
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        res = await axios.delete(
+          `${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${entryId}`
+        );
+      }
 
       const result = res.data;
 
       if (result.status === "Success") {
-        setGetData((prev) => prev.filter((item) => item.id !== entryId));
+        setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
 
         Swal.fire({
           icon: "success",
@@ -409,12 +467,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
             📢 Ads Campaign Budget Calculator
           </h3>
 
-          <button
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition"
-          >
-            ← Go Back
-          </button>
+
 
           {loading && (
             <div className="p-4 rounded-lg bg-red-600/20 text-red-300 border border-red-500">

@@ -69,6 +69,7 @@ export default function Quotation() {
   });
   const [showMetaAd, setShowMetaAd] = useState(true);
   const [showGoogleAd, setShowGoogleAd] = useState(true);
+  const [proformaMeta, setProformaMeta] = useState(null);
   const dropdownRef = useRef(null);
   const getServiceDisplayName = (name) => {
     if (!name) return name;
@@ -333,6 +334,10 @@ export default function Quotation() {
         const proformas = res.data.data;
         const proforma = proformas.find(p => p.id === parseInt(txn_id));
         if (proforma) {
+          setProformaMeta({
+            has_invoice: proforma.has_invoice,
+            proposal_id: proforma.proposal_id,
+          });
           let p = null;
           let propRes = null;
           if (proforma.proposal_id) {
@@ -386,7 +391,8 @@ export default function Quotation() {
             });
 
             try {
-              const liveNotes = JSON.parse(p.notes_json || proforma.notes_snapshot || p.terms_notes_json || "[]");
+              const notesSource = docTypeFromURL === "proforma" ? proforma.notes_snapshot : (p.notes_json || proforma.notes_snapshot || p.terms_notes_json);
+              const liveNotes = JSON.parse(notesSource || "[]");
               const formattedNotes = liveNotes.map((note, idx) => ({ 
                 id: idx + 1, 
                 note_name: typeof note === 'string' ? note : note.note_name || "" 
@@ -417,7 +423,8 @@ export default function Quotation() {
 
           try {
             const livePricing = propRes && propRes.data.status === "Success" && propRes.data.data ? propRes.data.data.pricing_table_json : null;
-            const parsed = JSON.parse(livePricing || proforma.pricing_snapshot || "[]");
+            const pricingSource = docTypeFromURL === "proforma" ? proforma.pricing_snapshot : (livePricing || proforma.pricing_snapshot);
+            const parsed = JSON.parse(pricingSource || "[]");
             const { dmServices, adsServices } = classifyProformaServices(parsed);
 
             const compServices = parsed.filter(item => item.source === 'custom_complimentary' || item.service_name?.toLowerCase() === 'complimentary').map(item => ({
@@ -1140,9 +1147,15 @@ export default function Quotation() {
           >
             🖨️ Print
           </button>
-          { clientDataReceived.tag_received_amt === "received" ? null : (
+          { clientDataReceived.tag_received_amt === "received" || (docTypeFromURL === "proforma" && proformaMeta?.has_invoice) ? null : (
             <button
-              onClick={ () => navigate(`/admin/ServicesLanding/${id}/${txn_id}`) }
+              onClick={ () => {
+                if (docTypeFromURL === "proforma") {
+                  navigate(`/admin/ServicesLanding/${id}/${txn_id}?doc=proforma`);
+                } else {
+                  navigate(`/admin/ServicesLanding/${id}/${txn_id}`);
+                }
+              } }
               className="bg-orange-600 text-white rounded-full px-4 py-2"
             >
               ✏️ Edit
@@ -1239,10 +1252,10 @@ export default function Quotation() {
                           <thead className="bg-orange-100">
                             <tr>
                               <th className="border w-[10rem] px-2 py-1 text-left">
-                                DM Service
+                               Services
                               </th>
                               <th className="border w-[20rem] px-2 py-1 text-left">
-                                Service Name
+                               Categories 
                               </th>
                               <th className="border px-2 py-1 text-right">
                                 Quantity
@@ -1494,7 +1507,7 @@ export default function Quotation() {
                                     className="border px-2 py-1 text-right"
                                     colSpan={ 4 }
                                   >
-                                    DM Service Total
+                                    Services Total
                                   </td>
                                   <td className="border px-2 py-1 text-right">
                                     ₹{ dmServiceTotal }

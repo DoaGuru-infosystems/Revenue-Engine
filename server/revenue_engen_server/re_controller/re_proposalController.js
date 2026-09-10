@@ -731,7 +731,13 @@ exports.createProforma = async (req, res) => {
 exports.getProformasByClient = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const q = `SELECT * FROM re_proposal_proforma WHERE client_id = ? ORDER BY created_at DESC`;
+    const q = `
+      SELECT p.*,
+             (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
+      FROM re_proposal_proforma p
+      WHERE p.client_id = ?
+      ORDER BY p.created_at DESC
+    `;
     const results = await runQuery(q, [clientId]);
     res.status(200).json({ status: "Success", data: results });
   } catch (error) {
@@ -743,7 +749,8 @@ exports.getProformasByClient = async (req, res) => {
 exports.getAllProformas = async (req, res) => {
   try {
     const q = `
-      SELECT p.*, c.client_name, c.client_organization
+      SELECT p.*, c.client_name, c.client_organization,
+             (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
       ORDER BY p.created_at DESC
@@ -776,7 +783,13 @@ exports.getFinalInvoices = async (req, res) => {
 exports.getProformasByProposal = async (req, res) => {
   try {
     const { proposalId } = req.params;
-    const q = `SELECT * FROM re_proposal_proforma WHERE proposal_id = ? ORDER BY created_at DESC`;
+    const q = `
+      SELECT p.*,
+             (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
+      FROM re_proposal_proforma p
+      WHERE p.proposal_id = ?
+      ORDER BY p.created_at DESC
+    `;
     const results = await runQuery(q, [proposalId]);
     res.status(200).json({ status: "Success", data: results });
   } catch (error) {
@@ -2280,8 +2293,52 @@ exports.getRevenueHistory = async (req, res) => {
       totals: { totalInvoiced, totalReceived, totalPending, totalTds },
       invoices,
     });
+};
+
+exports.getProformaSnapshot = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const results = await runQuery(`SELECT pricing_snapshot FROM re_proposal_proforma WHERE id = ?`, [id]);
+    if (results.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Proforma not found" });
+    }
+    res.status(200).json({ status: "Success", data: results[0] });
   } catch (error) {
-    console.error("getRevenueHistory error:", error);
+    console.error("getProformaSnapshot error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.updateProformaSnapshot = async (req, res) => {
+  try {
+    const { proformaId, action, item, editId, entryId } = req.body;
+    const results = await runQuery(`SELECT pricing_snapshot FROM re_proposal_proforma WHERE id = ?`, [proformaId]);
+    if (results.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Proforma not found" });
+    }
+
+    let parsed = JSON.parse(results[0].pricing_snapshot || "[]");
+
+    if (action === "add") {
+      item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+      parsed.push(item);
+    } else if (action === "addBulk") {
+      item.forEach(i => {
+        i.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+        parsed.push(i);
+      });
+    } else if (action === "update") {
+      parsed = parsed.map(p => String(p.id) === String(editId) ? { ...item, id: editId } : p);
+    } else if (action === "delete") {
+      parsed = parsed.filter(p => String(p.id) !== String(entryId));
+    }
+
+    const updatedSnapshot = JSON.stringify(parsed);
+    await runQuery(`UPDATE re_proposal_proforma SET pricing_snapshot = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
+    
+    res.status(200).json({ status: "Success", message: "Proforma updated" });
+  } catch (error) {
+    console.error("updateProformaSnapshot error:", error);
     res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };

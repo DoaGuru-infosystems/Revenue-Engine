@@ -231,6 +231,8 @@ const {
   generateInvoiceFromProforma,
   getProposalInvoices,
   getRevenueHistory,
+  getProformaSnapshot,
+  updateProformaSnapshot,
 } = require("../re_controller/re_proposalController");
 const {
   uploadAndConvert: genratecoatetion,
@@ -648,6 +650,16 @@ router.post("/proposal/:id/pdf", authenticateToken, generateProposalPdf);
 router.post("/proposal/:id/send", authenticateToken, sendProposalToClient);
 router.put(
   "/proposal/:id/mark-payment-received",
+  authenticateToken,
+  markPaymentReceived,
+);
+
+router.get("/proformas/snapshot/:id", authenticateToken, getProformaSnapshot);
+router.put("/proformas/snapshot", authenticateToken, updateProformaSnapshot);
+
+router.post("/proposals/:id/payment", authenticateToken, recordProposalPayment);
+router.post(
+  "/proposals/:id/payment-received",
   authenticateToken,
   markPaymentReceived,
 );

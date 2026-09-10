@@ -346,6 +346,8 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
   const id = params.id || params.clientId;
   // Use override if provided (when embedded in ProposalBuilder), else fall back to URL param
   const proposalId = proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
+  const searchParams = new URLSearchParams(useLocation().search);
+  const docTypeFromURL = searchParams.get("doc");
   const [data, setData] = useState([]);
   const [selectedService, setSelectedService] = useState("");
   const [selecteddiscount, setSelecteddiscount] = useState(null);
@@ -684,15 +686,31 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
       employee: userName,
     };
 
-    const quotationRequest = editId
-      ? axios.put(
-        `${baseURL}/auth/api/re_calculator/updateGraphicEntryById/${editId}`,
-        payload
-      )
-      : axios.post(
-        `${baseURL}/auth/api/re_calculator/saveCalculatorData`,
-        payload
+    let quotationRequest;
+    if (docTypeFromURL === "proforma") {
+      quotationRequest = axios.put(
+        `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+        {
+          proformaId: proposalId,
+          action: editId ? "update" : "add",
+          editId,
+          item: payload,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+    } else {
+      quotationRequest = editId
+        ? axios.put(
+          `${baseURL}/auth/api/re_calculator/updateGraphicEntryById/${editId}`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        : axios.post(
+          `${baseURL}/auth/api/re_calculator/saveCalculatorData`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+    }
 
     quotationRequest
       .then((res) => {
@@ -1293,17 +1311,27 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
     }
     if (!id || !proposalId) return;
     try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log(data.data);
-      setGetData(data.data);
+      let endpoint = `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`;
+      if (docTypeFromURL === "proforma") {
+        endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`;
+      }
+      const { data } = await axios.get(endpoint, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (docTypeFromURL === "proforma") {
+        const parsed = JSON.parse(data.data.pricing_snapshot || "[]");
+        // Only get Graphic/SEO services for this calculator
+        const filtered = parsed.filter(
+          item => item.source !== 'custom_complimentary' && item.service_name?.toLowerCase() !== 'complimentary' && item.service_type !== "Ads Campaign" && item.category !== "Ads Campaign" && !item.amount
+        );
+        setGetData(filtered);
+      } else {
+        setGetData(data.data);
+      }
     } catch (error) {
       console.log(error);
       if (error.response && error.response.status === 401) {
@@ -1393,14 +1421,27 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
     }
 
     try {
-      const res = await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${entryId}`
-      );
+      let res;
+      if (docTypeFromURL === "proforma") {
+        res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: proposalId,
+            action: "delete",
+            entryId: entryId
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        res = await axios.delete(
+          `${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${entryId}`
+        );
+      }
 
       const result = res.data;
 
       if (result.status === "Success") {
-        setGetData((prev) => prev.filter((item) => item.id !== entryId));
+        setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
 
         Swal.fire({
           icon: "success",

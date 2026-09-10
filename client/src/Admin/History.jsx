@@ -1409,7 +1409,7 @@ const History = () => {
                   previewLoading={quotationPreviewLoading}
                   selectedTxn={selectedTxn}
                   handleCreateInvoiceForTxn={handleCreateInvoiceForTxn}
-                  proposalsList={proposals}
+                  proposalsList={proposals.filter(p => p.status === "client_approved")}
                   initialSelectedProposalId={initialSelectedProposalId}
                 />
           ) }
