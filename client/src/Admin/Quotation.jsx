@@ -341,6 +341,21 @@ export default function Quotation() {
             });
             if (propRes.data.status === "Success") {
               p = propRes.data.data;
+              try {
+                const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (clientRes.data.status === "Success") {
+                  const c = clientRes.data.data;
+                  p.phone = c.phone || p.phone;
+                  p.address = c.address || p.address;
+                  p.client_name = c.client_name || p.client_name;
+                  p.client_organization = c.client_organization || p.client_organization;
+                  p.email = c.email || p.email;
+                }
+              } catch (e) {
+                console.error("Error fetching live client data for proforma fallback", e);
+              }
             }
           } else {
             const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
@@ -1204,14 +1219,11 @@ export default function Quotation() {
                         </p>
                       </div>
                       <div className="text-end text-xs">
-                        <h2 className="text-md font-bold">
-                          { selectedplan } Plan
-                        </h2>
-                        <p>{ moment().format("DD/MM/YYYY") }</p>
-                        <p>
+                        <p className="font-bold">
                           { sourceFromURL === "proposal" || docTypeFromURL === "proforma" ? null : <span className="font-bold text-amber-600 border border-amber-600 px-1 py-0.5 rounded mr-1">Legacy</span> }
                           { docTypeFromURL === "proforma" ? "Proforma Invoice: " : "Quotation: " } { txn_id }
                         </p>
+                        <p>{ moment().format("DD/MM/YYYY") }</p>
                       </div>
                       {/* <div className="text-right text-gray-600 break-words">
                     <p>1815, Wright Town, Jabalpur,</p>
@@ -1758,7 +1770,7 @@ export default function Quotation() {
                         {/* Signature */ }
                         <div className="mt-3 text-center border border-gray-400 rounded-md p-0.5 inline-block">
                           <img
-                            src={ isGST ? img4 : img3 }
+                            src={ img4 }
                             alt="Authorized Signature"
                             className="mx-auto h-[40px] w-[100px] min-w-[30px] max-w-none object-contain"
                           />

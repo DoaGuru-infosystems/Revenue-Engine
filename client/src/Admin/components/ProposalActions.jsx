@@ -274,57 +274,59 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
         Actions <ChevronDown size={16} className="ml-2" />
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/60 rounded-xl shadow-2xl z-50 py-1">
-          <ul className="py-1 text-sm text-gray-300">
-            <li>
-              <button onClick={() => handleAction("view")} className="w-full text-left px-4 py-2 hover:bg-gray-800/80 hover:text-white transition-all flex items-center gap-2">
-                <Eye size={14} className="text-gray-400" /> View / Edit Proposal
-              </button>
-            </li>
-            
-            {['draft', 'sent', 'changes', 'rejected'].includes(proposal.status) && (
-              <>
+      {isOpen && (() => {
+        const status = proposal.status?.toLowerCase() || "";
+        return (
+          <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/60 rounded-xl shadow-2xl z-50 py-1">
+            <ul className="py-1 text-sm text-gray-300">
+              <li>
+                <button onClick={() => handleAction("view")} className="w-full text-left px-4 py-2 hover:bg-gray-800/80 hover:text-white transition-all flex items-center gap-2">
+                  <Eye size={14} className="text-gray-400" /> View / Edit Proposal
+                </button>
+              </li>
+              
+              {['draft', 'sent', 'changes', 'rejected'].includes(status) && (
+                <>
+                  <li>
+                    <button onClick={() => handleAction("send_to_client")} className="w-full text-left px-4 py-2 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition-all flex items-center gap-2">
+                      <Send size={14} /> {['sent', 'changes', 'rejected'].includes(status) ? 'Send Again' : 'Send to Client'}
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => handleAction("mark_approved")} className="w-full text-left px-4 py-2 hover:bg-green-500/10 text-green-400 hover:text-green-300 transition-all flex items-center gap-2">
+                      <CheckCircle size={14} /> Mark Approved
+                    </button>
+                  </li>
+                </>
+              )}
+              
+              {status === 'sent' && (
                 <li>
-                  <button onClick={() => handleAction("send_to_client")} className="w-full text-left px-4 py-2 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition-all flex items-center gap-2">
-                    <Send size={14} /> {['sent', 'changes', 'rejected'].includes(proposal.status) ? 'Send Again' : 'Send to Client'}
+                  <button onClick={() => handleAction("mark_client_response")} className="w-full text-left px-4 py-2 hover:bg-blue-500/10 text-blue-400 hover:text-blue-300 transition-all flex items-center gap-2">
+                    <CheckCircle size={14} /> Mark Client Response
                   </button>
                 </li>
+              )}
+              
+              {['approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
                 <li>
-                  <button onClick={() => handleAction("mark_approved")} className="w-full text-left px-4 py-2 hover:bg-green-500/10 text-green-400 hover:text-green-300 transition-all flex items-center gap-2">
-                    <CheckCircle size={14} /> Mark Approved
+                  <button onClick={() => handleAction("generate_proforma")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
+                    <FilePlus size={14} /> Generate Proforma
                   </button>
                 </li>
-              </>
-            )}
-            
-            {proposal.status === 'sent' && (
-              <li>
-                <button onClick={() => handleAction("mark_client_response")} className="w-full text-left px-4 py-2 hover:bg-blue-500/10 text-blue-400 hover:text-blue-300 transition-all flex items-center gap-2">
-                  <CheckCircle size={14} /> Mark Client Response
-                </button>
-              </li>
-            )}
-            
-            {['approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(proposal.status) && (
-              <li>
-                <button onClick={() => handleAction("generate_proforma")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
-                  <FilePlus size={14} /> Generate Proforma
-                </button>
-              </li>
-            )}
+              )}
 
-            {['proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(proposal.status) && (
-              <li>
-                <button onClick={() => handleAction("record_payment")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
-                  <CreditCard size={14} /> Record Payment
-                </button>
-              </li>
-            )}
+              {['proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
+                <li>
+                  <button onClick={() => handleAction("record_payment")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
+                    <CreditCard size={14} /> Record Payment
+                  </button>
+                </li>
+              )}
 
 
 
-            {['draft', 'sent', 'changes', 'rejected', 'approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(proposal.status) && (
+              {['draft', 'sent', 'changes', 'rejected', 'approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
               <li>
                 <button onClick={() => handleAction("download_pdf")} className="w-full text-left px-4 py-2 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all flex items-center gap-2">
                   <FilePlus size={14} /> Download PDF
@@ -339,7 +341,8 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
             </li>
           </ul>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

@@ -335,7 +335,7 @@ const DiscountModal = ({
 };
 
 
-const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
+const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
   const location = useLocation();
   const [serviceType, setServiceType] = useState("paid");
   const baseURL = API_BASE_URL;
@@ -344,7 +344,8 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
   const userName = currentUser?.name;
   const params = useParams();
   const id = params.id || params.clientId;
-  const proposalId = params.proposalId;
+  // Use override if provided (when embedded in ProposalBuilder), else fall back to URL param
+  const proposalId = proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
   const [data, setData] = useState([]);
   const [selectedService, setSelectedService] = useState("");
   const [selecteddiscount, setSelecteddiscount] = useState(null);
@@ -617,7 +618,7 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
       const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
       if (addons[key]) {
         const amount = parseFloat(opt.amount);
-        const totalForThisAddon = amount * quantity; // ✅ multiply by quantity
+        const totalForThisAddon = amount * quantity;
         optionalTotal += totalForThisAddon;
 
         const lowerKey = key.toLowerCase();
@@ -634,6 +635,39 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
     const finalAmount = baseAmount + optionalTotal;
     setTotal(finalAmount);
 
+    // ── IN-MEMORY MODE (embedded inside ProposalBuilder) ──────────────────────
+    // Jab onServiceAdded prop ho, DB call skip karo — sirf row return karo
+    if (onServiceAdded) {
+      const row = {
+        id: editId || Date.now(), // update existing id if editing
+        service_name: selectedService,
+        category_name: selectedCategory,
+        editing_type_name: selectedEditingType.editing_type_name,
+        editing_type_amount: selectedEditingType.amount,
+        quantity,
+        unit_price: selectedEditingType.amount,
+        total_price: finalAmount,
+        total_amount: finalAmount,
+        include_content_posting,
+        include_thumbnail_creation,
+        include_youtube_video_posting,
+        include_in_total: true,
+        source: 'custom_graphic',
+      };
+      onServiceAdded(row);
+      Swal.fire({
+        icon: "success",
+        title: "Added!",
+        text: "Service added to proposal. Click Save to save everything.",
+        showConfirmButton: false,
+        timer: 1200,
+      });
+      resetForm();
+      setLoading(false);
+      return;
+    }
+
+    // ── DB MODE (standalone calculator, not embedded) ─────────────────────────
     const payload = {
       txn_id: proposalId,
       client_id: id,
@@ -645,12 +679,11 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
       quantity,
       include_content_posting,
       include_thumbnail_creation,
-      include_youtube_video_posting,   // ← yeh missing tha
+      include_youtube_video_posting,
       total_amount: finalAmount,
       employee: userName,
     };
 
-    // --- Only Quotation API ---
     const quotationRequest = editId
       ? axios.put(
         `${baseURL}/auth/api/re_calculator/updateGraphicEntryById/${editId}`,
@@ -672,20 +705,17 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
               : "Quotation saved successfully",
             showConfirmButton: false,
             timer: 1000,
-            // timerProgressBar: true,
           });
           resetForm();
           fetchData();
           if (onSaveComplete) onSaveComplete();
         } else if (res.data.status === "Alert") {
-          // Handle backend "Failure" response
           Swal.fire({
             icon: "warning",
             title: "Already Exists",
             text: res.data.message || "This service already exists",
             showConfirmButton: false,
             timer: 1000,
-            // timerProgressBar: true,
           });
           resetForm();
           fetchData();
@@ -693,7 +723,6 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
       })
       .catch((err) => {
         console.error("Save error:", err);
-
         Swal.fire({
           icon: "error",
           title: "Error",
@@ -702,13 +731,13 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
             "Failed to save quotation. Please try again.",
           showConfirmButton: false,
           timer: 1000,
-          // timerProgressBar: true,
         });
       })
       .finally(() => {
         setLoading(false);
       });
   };
+
 
   const resetForm = () => {
     setEditId(null);
@@ -1258,6 +1287,10 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
   };
 
   const fetchData = async () => {
+    if (embeddedData) {
+      setGetData(embeddedData);
+      return;
+    }
     if (!id || !proposalId) return;
     try {
       const { data } = await axios.get(
@@ -1291,6 +1324,7 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
     }
   };
   const getAllPlanNotes = async () => {
+    if (!id || !proposalId) return;
     try {
       const response = await axios.get(
         `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${id}/${proposalId}`,
@@ -1323,9 +1357,13 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
   };
 
   useEffect(() => {
-    fetchData();
+    if (embeddedData) {
+      setGetData(embeddedData);
+    } else {
+      fetchData();
+    }
     getAllPlanNotes();
-  }, [id, proposalId]);
+  }, [id, proposalId, embeddedData]);
 
   console.log(getData);
 
@@ -1341,6 +1379,18 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
     });
 
     if (!confirm.isConfirmed) return;
+
+    if (onServiceDeleted) {
+      onServiceDeleted(entryId);
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Service removed from proposal.",
+        showConfirmButton: false,
+        timer: 1000,
+      });
+      return;
+    }
 
     try {
       const res = await axios.delete(
@@ -1560,33 +1610,35 @@ const AdminCalculator = ({ hideNotes, onSaveComplete }) => {
                 </div>
               </div>
 
-              {/* Total Summary Card */ }
-              <div className={ cardCls }>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold text-gray-400">Summary</span>
-                  { selecteddiscount && <span className="text-xs bg-green-500/20 text-green-400 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Discount Applied</span> }
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>Subtotal</span><span className="font-semibold text-white">₹{ grandTotal.toLocaleString() }</span>
+              {/* Total Summary Card */}
+              {!onServiceAdded && (
+                <div className={cardCls}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-400">Summary</span>
+                    {selecteddiscount && <span className="text-xs bg-green-500/20 text-green-400 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Discount Applied</span>}
                   </div>
-                  { selecteddiscount && (
-                    <div className="flex justify-between items-center text-sm text-green-600">
-                      <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" />Discount { selecteddiscount.discount_type === "percent" ? `(${selecteddiscount.discount_per}%)` : `(₹${parseFloat(selecteddiscount.discount_amt).toLocaleString()})` }</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">− ₹{ discountAmount.toFixed(2) }</span>
-                        <button onClick={ handleShowDiscount } className="p-1 rounded hover:bg-green-100 text-green-600"><Pencil className="w-3 h-3" /></button>
-                        <button onClick={ () => handleDeleteDiscount(selecteddiscount.id) } className="p-1 rounded hover:bg-red-100 text-red-500"><Trash2 className="w-3 h-3" /></button>
-                      </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>Subtotal</span><span className="font-semibold text-white">₹{grandTotal.toLocaleString()}</span>
                     </div>
-                  ) }
-                  { selecteddiscount && <div className="h-px bg-gray-700" /> }
-                  <div className="flex justify-between font-bold text-base text-white">
-                    <span>{ selecteddiscount ? "Total Payable" : "Grand Total" }</span>
-                    <span className={ selecteddiscount ? "text-green-600" : "text-red-600" }>₹{ selecteddiscount ? totalAfterDiscount.toFixed(2) : grandTotal.toLocaleString() }</span>
+                    {selecteddiscount && (
+                      <div className="flex justify-between items-center text-sm text-green-600">
+                        <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" />Discount {selecteddiscount.discount_type === "percent" ? `(${selecteddiscount.discount_per}%)` : `(₹${parseFloat(selecteddiscount.discount_amt).toLocaleString()})`}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">− ₹{discountAmount.toFixed(2)}</span>
+                          <button onClick={handleShowDiscount} className="p-1 rounded hover:bg-green-100 text-green-600"><Pencil className="w-3 h-3" /></button>
+                          <button onClick={() => handleDeleteDiscount(selecteddiscount.id)} className="p-1 rounded hover:bg-red-100 text-red-500"><Trash2 className="w-3 h-3" /></button>
+                        </div>
+                      </div>
+                    )}
+                    {selecteddiscount && <div className="h-px bg-gray-700" />}
+                    <div className="flex justify-between font-bold text-base text-white">
+                      <span>{selecteddiscount ? "Total Payable" : "Grand Total"}</span>
+                      <span className={selecteddiscount ? "text-green-600" : "text-red-600"}>₹{selecteddiscount ? totalAfterDiscount.toFixed(2) : grandTotal.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Orders List */ }
               { getData.length > 0 && (

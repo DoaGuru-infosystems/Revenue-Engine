@@ -26,6 +26,11 @@ const getBillableTotals = (table = []) => {
   return { dmTotal, adsTotal };
 };
 
+const getBillablePricingTotal = (table = []) => {
+  const { dmTotal, adsTotal } = getBillableTotals(table);
+  return dmTotal + adsTotal;
+};
+
 export default function ProposalBuilder() {
   const { clientId, proposalId } = useParams();
   const navigate = useNavigate();
@@ -131,64 +136,31 @@ export default function ProposalBuilder() {
     fetchPlanData();
     if (proposalId) {
       fetchProposalData();
+    } else {
+      // New proposal — mark as initialized so the form is editable
+      setIsInitialized(true);
     }
   }, [clientId, proposalId]);
 
-  const isCreatingDraft = React.useRef(false);
-
-  // Auto-draft creation when proposalId is undefined
+  // Inject actual client name into executive_summary once clientData is loaded
+  const clientNameInjected = React.useRef(false);
   useEffect(() => {
-    if (!proposalId && clientId) {
-      if (isCreatingDraft.current) return;
-      isCreatingDraft.current = true;
-
-      const handleDraft = async () => {
-        try {
-          // Check for existing empty drafts
-          const existingRes = await axios.get(`${API_BASE_URL}/auth/api/re_calculator/proposals/client/${clientId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          if (existingRes.data.status === "Success" && existingRes.data.data.length > 0) {
-            const drafts = existingRes.data.data.filter(p => p.status === 'draft' && Number(p.grand_total_excl_gst) === 0);
-            if (drafts.length > 0) {
-              // Reuse the most recent empty draft
-              const emptyDraft = drafts.sort((a, b) => b.id - a.id)[0];
-              navigate(`/admin/proposal-builder/${clientId}/${emptyDraft.id}`, { replace: true });
-              return;
-            }
-          }
-
-          // Generated once at proposal creation, flows to all downstream tables
-          const newTxnId = Date.now().toString();
-          const payload = {
-            client_id: clientId,
-            proposal_type: "development",
-            billing_type: "monthly",
-            pricing_table_json: [],
-            grand_total_excl_gst: 0,
-            status: "draft",
-            txn_id: newTxnId,
-            created_by: currentUser?.name || "Admin",
-            updated_by: currentUser?.name || "Admin"
-          };
-          const res = await axios.post(`${API_BASE_URL}/auth/api/re_calculator/proposal`, payload, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (res.data.status === "Success" || res.data.proposalId) {
-            setProposalTxnId(newTxnId);
-            navigate(`/admin/proposal-builder/${clientId}/${res.data.proposalId}`, { replace: true });
-          } else {
-            isCreatingDraft.current = false;
-          }
-        } catch (err) {
-          console.error("Failed to auto-create draft proposal:", err);
-          isCreatingDraft.current = false;
-        }
-      };
-      handleDraft();
-    }
-  }, [clientId, proposalId, navigate, token, currentUser]);
+    if (!clientData || clientNameInjected.current) return;
+    clientNameInjected.current = true;
+    const clientName = getClientDisplayName(clientData);
+    setSections(prev => {
+      const updated = { ...prev };
+      // Replace [Client Name] placeholder with actual name in executive_summary
+      if (typeof updated.executive_summary === 'string' && updated.executive_summary.includes('[Client Name]')) {
+        updated.executive_summary = updated.executive_summary.replace(/\[Client Name\]/g, clientName);
+      }
+      // Also replace in client_problem if it has the placeholder
+      if (typeof updated.client_problem === 'string' && updated.client_problem.includes('[Client Name]')) {
+        updated.client_problem = updated.client_problem.replace(/\[Client Name\]/g, clientName);
+      }
+      return updated;
+    });
+  }, [clientData]);
 
   // Save drafts to localStorage when things change
   useEffect(() => {
@@ -528,6 +500,28 @@ export default function ProposalBuilder() {
 
     setSearchQuery("");
     setDropdownOpen(false);
+  };
+
+  const handleServiceAdded = (row) => {
+    const normalized = normalizeRow(row);
+    setPricingTable(prevTable => {
+      const exists = prevTable.findIndex(p => p.id === normalized.id);
+      let newTable;
+      if (exists !== -1) {
+        newTable = [...prevTable];
+        newTable[exists] = normalized;
+      } else {
+        newTable = [...prevTable, normalized];
+      }
+      recalculateTotal(newTable);
+      return newTable;
+    });
+  };
+
+  const handleServiceDeleted = (id) => {
+    const newTable = pricingTable.filter(row => row.id !== id);
+    setPricingTable(newTable);
+    recalculateTotal(newTable);
   };
 
   const syncCustomServices = async () => {
@@ -1099,10 +1093,15 @@ export default function ProposalBuilder() {
                             <div className="relative w-full max-w-6xl bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 my-8">
                               <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900 rounded-t-2xl">
                                 <h2 className="text-xl font-bold text-white flex items-center gap-2"><Palette className="w-5 h-5 text-orange-400" /> Graphic & SEO Calculator</h2>
-                                <button onClick={ () => { setActiveCalculator(null); syncCustomServices(); } } className="w-8 h-8 rounded-lg hover:bg-gray-800 text-gray-400 flex items-center justify-center transition"><X className="w-5 h-5" /></button>
+                                <button onClick={ () => setActiveCalculator(null) } className="w-8 h-8 rounded-lg hover:bg-gray-800 text-gray-400 flex items-center justify-center transition"><X className="w-5 h-5" /></button>
                               </div>
                               <div className="p-4 max-h-[80vh] overflow-y-auto">
-                                <AdminCalculator hideNotes={ true } onSaveComplete={ syncCustomServices } />
+                                <AdminCalculator 
+                                  hideNotes={ true } 
+                                  onServiceAdded={ handleServiceAdded } 
+                                  onServiceDeleted={ handleServiceDeleted }
+                                  embeddedData={ pricingTable.filter(r => r.source === 'custom_graphic') }
+                                />
                               </div>
                             </div>
                           </div>
@@ -1113,10 +1112,15 @@ export default function ProposalBuilder() {
                             <div className="relative w-full max-w-6xl bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 my-8">
                               <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900 rounded-t-2xl">
                                 <h2 className="text-xl font-bold text-white flex items-center gap-2"><Megaphone className="w-5 h-5 text-red-400" /> Ads Campaign Calculator</h2>
-                                <button onClick={ () => { setActiveCalculator(null); syncCustomServices(); } } className="w-8 h-8 rounded-lg hover:bg-gray-800 text-gray-400 flex items-center justify-center transition"><X className="w-5 h-5" /></button>
+                                <button onClick={ () => setActiveCalculator(null) } className="w-8 h-8 rounded-lg hover:bg-gray-800 text-gray-400 flex items-center justify-center transition"><X className="w-5 h-5" /></button>
                               </div>
                               <div className="p-4 max-h-[80vh] overflow-y-auto">
-                                <AdsCampaignCalculator hideNotes={ true } onSaveComplete={ syncCustomServices } />
+                                <AdsCampaignCalculator 
+                                  hideNotes={ true } 
+                                  onServiceAdded={ handleServiceAdded } 
+                                  onServiceDeleted={ handleServiceDeleted }
+                                  embeddedData={ pricingTable.filter(r => r.source === 'custom_ads') }
+                                />
                               </div>
                             </div>
                           </div>

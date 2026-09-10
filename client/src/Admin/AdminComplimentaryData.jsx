@@ -530,6 +530,7 @@ const dispatch = useDispatch();
     }
   };
   const getAllPlanNotes = async () => {
+    if (!effectiveClientId || !proposalId) return;
     try {
       const response = await axios.get(
         `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${effectiveClientId}/${proposalId}`,

@@ -7,12 +7,13 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../config/apiBaseUrl";
 
-const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
+const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
   const baseURL = API_BASE_URL;
   const params = useParams();
   const id = params.id || params.clientId;
-  const proposalId = params.proposalId;
+  const proposalId = proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
   const { currentUser, token } = useSelector((state) => state.user);
+
   const userName = currentUser?.name;
   const [adsData, setAdsData] = useState([]);
   const [enteredAmount, setEnteredAmount] = useState({});
@@ -22,17 +23,28 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
   const [getData, setGetData] = useState([]);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  console.log(adsItems);
-  console.log(id, proposalId);
 
-  // Fetch ads data from API
+  // Sync embeddedData
+  useEffect(() => {
+    if (embeddedData) {
+      setAdsItems(embeddedData.map(r => ({
+        id: r.id,
+        category: r.category_name,
+        amount: r.budget,
+        percent: r.percent,
+        charge: r.charge,
+        total: r.total_price || r.total_amount
+      })));
+    }
+  }, [embeddedData]);
+
+  // Fetch ads configuration from API
   useEffect(() => {
     const fetchAds = async () => {
       try {
         setLoading(true);
         const response = await axios.get(
           `${API_BASE_URL}/auth/api/re_calculator/getAdsServices`,
-          // "https://revenueengine.siarasystems.com/auth/api/re_calculator/getAdsServices",
           {
             headers: {
               "Content-Type": "application/json",
@@ -43,22 +55,18 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
 
         if (response.data.status === "Success" && response.data.data) {
           setAdsData(response.data.data);
-          console.log("Ads data loaded:", response.data.data);
         } else {
           setError("Failed to load ads data");
         }
       } catch (error) {
-        console.error("Error fetching ads data:", error);
         setError("Failed to load ads data from server");
         if (error.response && error.response.status === 401) {
-          // Token is invalid or expired
           Swal.fire({
             title: "Session Expired",
             text: "Please login again.",
             icon: "warning",
             showConfirmButton: false,
             timer: 1000,
-            // timerProgressBar: true,
           }).then(() => {
             dispatch(clearUser());
             localStorage.removeItem("token");
@@ -71,177 +79,99 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
     };
 
     fetchAds();
-  }, []);
-  // useEffect(() => {
-  //   const fetchAds = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const response = await fetch(
-  //         `https://revenueengine.siarasystems.com/auth/api/re_calculator/getAdsServices`
-  //       );
-  //       const data = await response.json();
+  }, [baseURL, token, navigate, dispatch]);
 
-  //       if (data.status === "Success" && data.data) {
-  //         setAdsData(data.data);
-  //         console.log("Ads data loaded:", data.data);
-  //       } else {
-  //         setError("Failed to load ads data");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching ads data:", error);
-  //       setError("Failed to load ads data from server");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchAds();
-  // }, []);
-
-  // Generate unique ID
   const generateUniqueId = () => {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  // Round to nearest integer for currency
   const roundCurrency = (amount) => {
     return Math.round(amount);
   };
 
-  // Validate input amount
   const validateAmount = (value) => {
     const amount = parseFloat(value);
     return !isNaN(amount) && amount > 0 ? amount : null;
   };
 
-  //   const calculateAllAdsCost = () => {
-  //     setLoading(true);
-  //     setError("");
-
-  //     try {
-  //       // Validate adsData exists
-  //       if (!adsData || adsData.length === 0) {
-  //         setError("No ads data available");
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       const results = [];
-
-  //       Object.entries(enteredAmount).forEach(([category, amountValue]) => {
-  //         // Skip empty or invalid amounts
-  //         if (!amountValue || amountValue.trim() === "") return;
-
-  //         const amount = validateAmount(amountValue);
-  //         if (!amount) {
-  //           setError(`Invalid amount entered for ${category}`);
-  //           return;
-  //         }
-
-  //         // Find matching range for the category
-  //         const matched = adsData
-  //           .filter((ad) => ad.ads_category === category)
-  //           .find((range) => {
-  //             const start = parseInt(range.amt_range_start);
-  //             const end =
-  //               range.amt_range_end === "Above"
-  //                 ? Infinity
-  //                 : parseInt(range.amt_range_end);
-
-  //             // Validate range values
-  //             if (isNaN(start)) return false;
-  //             if (range.amt_range_end !== "Above" && isNaN(end)) return false;
-
-  //             return amount >= start && amount <= end;
-  //           });
-
-  //         if (matched) {
-  //           const percent = parseFloat(matched.percentage);
-  //           if (isNaN(percent)) {
-  //             setError(`Invalid percentage for ${category}`);
-  //             return;
-  //           }
-
-  //           const charge = roundCurrency((amount * percent) / 100);
-  //           const total = roundCurrency(amount + charge);
-
-  //           results.push({
-  //             id: generateUniqueId(),
-  //             category,
-  //             amount: roundCurrency(amount),
-  //             percent,
-  //             charge,
-  //             total,
-  //           });
-  //         } else {
-  //           setError(
-  //             `No matching range found for ${category} with amount ₹${amount}`
-  //           );
-  //         }
-  //       });
-
-  //       setAdsItems(results);
-  //     } catch (err) {
-  //       setError("An error occurred while calculating ads budget");
-  //       console.error("Calculation error:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  // Handle input change with validation
   const handleAmountChange = (category, value) => {
-    setError(""); // Clear previous errors
+    setError("");
     setEnteredAmount((prev) => ({
       ...prev,
       [category]: value,
     }));
   };
 
-  // Clear all data
-  const clearAll = () => {
+  const resetForm = () => {
     setEnteredAmount({});
-    setAdsItems([]);
     setError("");
   };
 
-  // Remove specific item
-  const removeItem = (itemId) => {
-    setAdsItems((prev) => prev.filter((item) => item.id !== itemId));
+  const clearAll = () => {
+    resetForm();
+    if (onServiceDeleted) {
+      adsItems.forEach(item => onServiceDeleted(item.id));
+    } else {
+      setAdsItems([]);
+    }
   };
 
-  // Calculate total
-  const totalAdsCost = adsItems.reduce((acc, item) => acc + item.total, 0);
+  const removeItem = async (itemId) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#4b5563",
+      confirmButtonText: "Yes, delete it!",
+    });
 
-  // Get unique categories
-  const categories = [...new Set(adsData.map((item) => item.ads_category))];
+    if (confirm.isConfirmed) {
+      if (onServiceDeleted) {
+        onServiceDeleted(itemId);
+        setAdsItems((prev) => prev.filter((item) => item.id !== itemId));
+        Swal.fire({
+          title: "Deleted!",
+          text: "Item has been removed from proposal.",
+          icon: "success",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+        return;
+      }
 
-  //   Get save Details
-  //   const handleSaveToDatabase = async () => {
-  //   try {
-  //     const response = await fetch("https://revenueengine.siarasystems.com/auth/api/re_calculator/saveAdsCampaign", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ adsItems }),
-  //     });
+      try {
+        const res = await axios.delete(
+          `${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${itemId}`
+        );
+        const result = res.data;
+        if (result.status === "Success") {
+          setAdsItems((prev) => prev.filter((item) => item.id !== itemId));
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Entry has been deleted.",
+            timer: 1000,
+            showConfirmButton: false,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting entry:", error);
+      }
+    }
+  };
 
-  //     const result = await response.json();
-  //     if (result.status === "Success") {
-  //       alert("Ads campaign saved successfully!");
-  //     } else {
-  //       alert("Failed to save: " + result.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Save error:", error);
-  //     alert("An error occurred while saving the campaign.");
-  //   }
-  // };
+  const handleEdit = (item) => {
+    setEnteredAmount((prev) => ({
+      ...prev,
+      [item.category]: item.amount,
+    }));
+  };
+
   const handleCalculateAndSave = async () => {
     setLoading(true);
     setError("");
-
-    const results = [];
 
     try {
       if (!adsData || adsData.length === 0) {
@@ -250,12 +180,16 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
         return;
       }
 
+      const results = [];
+      let hasError = false;
+
       Object.entries(enteredAmount).forEach(([category, amountValue]) => {
-        if (!amountValue || amountValue.trim() === "") return;
+        if (!amountValue || amountValue.toString().trim() === "") return;
 
         const amount = validateAmount(amountValue);
         if (!amount) {
           setError(`Invalid amount entered for ${category}`);
+          hasError = true;
           return;
         }
 
@@ -278,17 +212,20 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
           const percent = parseFloat(matched.percentage);
           if (isNaN(percent)) {
             setError(`Invalid percentage for ${category}`);
+            hasError = true;
             return;
           }
 
           const charge = roundCurrency((amount * percent) / 100);
           const total = roundCurrency(amount + charge);
 
+          const existingItem = adsItems.find(item => item.category === category);
+          
           results.push({
             txn_id: proposalId,
             client_id: id,
-            id: generateUniqueId(),
-            category,
+            id: existingItem ? existingItem.id : generateUniqueId(),
+            category: category,
             amount: roundCurrency(amount),
             percent,
             charge,
@@ -299,16 +236,47 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
           setError(
             `No matching range found for ${category} with amount ₹${amount}`
           );
+          hasError = true;
         }
       });
 
-      if (results.length > 0) {
-        setAdsItems(results); // update state
+      if (hasError) {
+        setLoading(false);
+        return;
+      }
 
-        // --- Save Ads Campaign only (Quotation) ---
+      if (results.length > 0) {
+        if (onServiceAdded) {
+          results.forEach(newRecord => {
+            onServiceAdded({
+              id: newRecord.id,
+              service_name: 'Ads Campaign',
+              category_name: newRecord.category,
+              quantity: 1,
+              unit_price: newRecord.total,
+              total_price: newRecord.total,
+              total_amount: newRecord.total,
+              include_in_total: true,
+              source: 'custom_ads',
+              budget: newRecord.amount,
+              percent: newRecord.percent,
+              charge: newRecord.charge,
+            });
+          });
+          Swal.fire({
+            icon: "success",
+            title: "Saved!",
+            text: "Ads campaign items updated in proposal.",
+            showConfirmButton: false,
+            timer: 1200,
+          });
+          resetForm();
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(
           `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
-          // "https://revenueengine.siarasystems.com/auth/api/re_calculator/saveAdsCampaign",
           {
             method: "POST",
             headers: {
@@ -328,8 +296,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
             text: "Ads campaign saved successfully!",
             showConfirmButton: false,
             timer: 1000,
-            // timerProgressBar: true,
           });
+          resetForm();
         } else {
           Swal.fire({
             icon: "error",
@@ -362,13 +330,10 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
         }
       );
       if (res.data.status === "Success") {
-        console.log(res.data);
         setGetData(res.data.data);
       }
     } catch (error) {
-      console.log(error);
       if (error.response && error.response.status === 401) {
-        // Token is invalid or expired
         Swal.fire({
           title: "Session Expired",
           text: "Please login again.",
@@ -387,16 +352,14 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
     fetchData();
   }, [id, proposalId]);
 
-  console.log(getData);
-
   const handleDelete = async (entryId) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: "Do you really want to delete this entry?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#e11d48", // red
-      cancelButtonColor: "#6b7280", // gray
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#6b7280",
       confirmButtonText: "Yes, delete it!",
     });
 
@@ -427,7 +390,6 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
         });
       }
     } catch (error) {
-      console.error("Error deleting entry:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -435,6 +397,9 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
       });
     }
   };
+
+  const categories = [...new Set(adsData.map((item) => item.ads_category))].filter(Boolean);
+  const totalAdsCost = adsItems.reduce((sum, item) => sum + item.total, 0);
 
   return (
     <>
@@ -518,10 +483,30 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
                   className="bg-gradient-to-r from-red-900/30 to-green-900/30 border border-white/10 p-4 rounded-lg"
                 >
                   <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <h5 className="text-lg font-semibold text-red-300 mb-2">
-                        📢 {item.category}
-                      </h5>
+                    <div className="w-full">
+                      <div className="flex justify-between items-center mb-2">
+                        <h5 className="text-lg font-semibold text-red-300">
+                          📢 {item.category}
+                        </h5>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="text-blue-400 hover:text-blue-600 transition"
+                            title="Edit"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="text-red-400 hover:text-red-600 transition text-xl leading-none"
+                            title="Delete"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                         <p>
                           💼 Budget:{" "}
@@ -540,12 +525,6 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-red-400 hover:text-red-600 text-xl"
-                    >
-                      ×
-                    </button>
                   </div>
                 </div>
               ))}
@@ -563,13 +542,6 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
             </div>
           )}
 
-          {!loading &&
-            adsItems.length === 0 &&
-            Object.keys(enteredAmount).length > 0 && (
-              <div className="text-center text-gray-400">
-                Enter amounts and click "Calculate & Save" to see results.
-              </div>
-            )}
           {getData.length > 0 && (
             <div className="mt-10 space-y-4">
               <h3 className="text-xl font-bold text-white">
@@ -592,9 +564,6 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
                       {item.percent}%)
                     </p>
                     <p>🧾 Total: ₹{parseFloat(item.total).toLocaleString()}</p>
-                    {/* <p className="text-sm text-white/60">
-                      🕒 {new Date(item.created_at).toLocaleString("en-IN")}
-                    </p> */}
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="bg-red-600 hover:bg-red-700 text-white text-lg rounded-full w-8 h-8 flex items-center justify-center"
@@ -610,154 +579,6 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete }) => {
       </div>
     </>
   );
-
-  // return (
-  //   <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
-  //     <div className="bg-white p-6 rounded-lg shadow-lg">
-  //       <h3 className="text-3xl font-bold mb-6 text-center text-red-600">
-  //         📢 Ads Campaign Budget Calculator
-  //       </h3>
-
-  //       {/* Loading State */}
-  //       {loading && (
-  //         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-  //           <div className="flex items-center">
-  //             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-700 mr-2"></div>
-  //             Loading ads data...
-  //           </div>
-  //         </div>
-  //       )}
-
-  //       {/* Error Display */}
-  //       {error && (
-  //         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-  //           <strong>Error:</strong> {error}
-  //         </div>
-  //       )}
-
-  //       {/* Input Section */}
-  //       {!loading && adsData.length > 0 && (
-  //         <div className="space-y-4 mb-6">
-  //           <h4 className="text-xl font-semibold mb-4">Enter Budget Amounts</h4>
-  //           {categories.map((category) => (
-  //             <div
-  //               key={category}
-  //               className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-gray-50 rounded"
-  //             >
-  //               <label className="sm:w-48 font-medium text-gray-700">
-  //                 {category}
-  //               </label>
-  //               <div className="flex-1">
-  //                 <input
-  //                   type="number"
-  //                   min="0"
-  //                   step="0.01"
-  //                   placeholder="Enter Budget Amount (₹)"
-  //                   value={enteredAmount[category] || ""}
-  //                   onChange={(e) =>
-  //                     handleAmountChange(category, e.target.value)
-  //                   }
-  //                   className="border border-gray-300 px-4 py-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-red-500"
-  //                 />
-  //               </div>
-  //             </div>
-  //           ))}
-  //         </div>
-  //       )}
-
-  //       {/* Action Buttons */}
-  //       {!loading && adsData.length > 0 && (
-  //         <div className="flex gap-4 mb-6">
-  //           <button
-  //             onClick={handleCalculateAndSave}
-  //             disabled={loading || Object.keys(enteredAmount).length === 0}
-  //             className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-  //           >
-  //             {loading ? "Calculating..." : "Calculate Ads Budget"}
-  //           </button>
-  //           <button
-  //             onClick={clearAll}
-  //             className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
-  //           >
-  //             Clear All
-  //           </button>
-  //         </div>
-  //       )}
-
-  //       {/* Results Section */}
-  //       {adsItems.length > 0 && (
-  //         <div className="mt-8 border-t pt-6">
-  //           <h4 className="text-xl font-semibold mb-4">Budget Breakdown</h4>
-  //           <div className="grid gap-4">
-  //             {adsItems.map((item) => (
-  //               <div
-  //                 key={item.id}
-  //                 className="bg-gradient-to-r from-red-50 to-green-50 p-4 rounded-lg border"
-  //               >
-  //                 <div className="flex justify-between items-start">
-  //                   <div className="flex-1">
-  //                     <p className="text-lg font-semibold text-red-700 mb-2">
-  //                       📢 {item.category}
-  //                     </p>
-  //                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-  //                       <p>
-  //                         💼 Budget:{" "}
-  //                         <span className="font-medium">
-  //                           ₹{item.amount.toLocaleString()}
-  //                         </span>
-  //                       </p>
-  //                       <p>
-  //                         📊 Charge ({item.percent}%):{" "}
-  //                         <span className="font-medium">
-  //                           ₹{item.charge.toLocaleString()}
-  //                         </span>
-  //                       </p>
-  //                       <p className="font-bold text-green-700">
-  //                         🧾 Total: ₹{item.total.toLocaleString()}
-  //                       </p>
-  //                     </div>
-  //                   </div>
-  //                   <button
-  //                     onClick={() => removeItem(item.id)}
-  //                     className="ml-4 text-red-500 hover:text-red-700 text-xl"
-  //                     title="Remove this item"
-  //                   >
-  //                     ×
-  //                   </button>
-  //                 </div>
-  //               </div>
-  //             ))}
-  //           </div>
-  //         </div>
-  //       )}
-
-  //       {/* Total Section */}
-  //       {adsItems.length > 0 && (
-  //         <div className="mt-8 border-t pt-6">
-  //           <div className="bg-green-100 p-6 rounded-lg text-center">
-  //             <h4 className="text-2xl font-bold text-green-800 mb-2">
-  //               💰 Total Ads Budget
-  //             </h4>
-  //             <p className="text-4xl font-bold text-green-600">
-  //               ₹{totalAdsCost.toLocaleString()}
-  //             </p>
-  //           </div>
-  //         </div>
-  //       )}
-
-  //       {/* No Results Message */}
-  //       {!loading &&
-  //         adsItems.length === 0 &&
-  //         Object.keys(enteredAmount).length > 0 && (
-  //           <div className="mt-8 text-center text-gray-500">
-  //             <p>
-  //               Enter amounts and click "Calculate Ads Budget" to see results.
-  //             </p>
-  //           </div>
-  //         )}
-  //     </div>
-  //   </div>
-  // );
 };
 
 export default AdsCampaignCalculator;

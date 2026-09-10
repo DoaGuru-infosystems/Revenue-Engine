@@ -214,6 +214,7 @@ export default function ServicesLanding() {
   };
 
   const fetchClientNotes = async () => {
+    if (!id || !proposalId) return;
     try {
       const res = await axios.get(
         `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${id}/${proposalId}`,

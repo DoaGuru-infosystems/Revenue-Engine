@@ -15,6 +15,8 @@ dist-ssr
 build.zip
 .zip
 /build
+graphify-out/
+graphify/
 
 # Editor directories and files
 .vscode/*

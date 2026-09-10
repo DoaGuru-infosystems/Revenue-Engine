@@ -2007,7 +2007,7 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
 
       if (discountVal > 0) {
         htmlContent += `<tr>
-          <td colspan="2" style="text-align: right; font-weight: bold; color: #cc0000;">re_discount (${discountType === "Percentage" ? `${discountVal}%` : "₹"})</td>
+          <td colspan="2" style="text-align: right; font-weight: bold; color: #cc0000;">Discount (${discountType === "Percentage" ? `${discountVal}%` : "₹"})</td>
           <td style="text-align: right; font-weight: bold; color: #cc0000;">- ₹ ${discountAmt.toLocaleString("en-IN")}</td>
         </tr>`;
       }
