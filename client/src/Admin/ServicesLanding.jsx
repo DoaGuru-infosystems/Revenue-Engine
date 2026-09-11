@@ -23,6 +23,7 @@ import {
   X,
   Star,
   CheckCircle2,
+  BadgePercent,
 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -30,6 +31,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import { clearUser } from "../redux/user/userSlice";
 import API_BASE_URL from "../config/apiBaseUrl";
+import ProposalDiscountModal from "./components/ProposalDiscountModal";
 
 export default function ServicesLanding() {
   const baseURL = API_BASE_URL;
@@ -50,6 +52,18 @@ export default function ServicesLanding() {
   const [showModal, setShowModal] = useState(false);
   const userName = currentUser?.name;
   const dispatch = useDispatch();
+
+  // ─── Discount State ───────────────────────────────────────────────────────
+  const [discountType, setDiscountType] = useState("Amount");
+  const [discountValue, setDiscountValue] = useState(0);
+  const [discountSettings, setDiscountSettings] = useState([]);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [formDataDis, setFormDataDis] = useState({
+    discount_type: "amount",
+    discount_amt: "",
+    discount_per: "",
+  });
+  // ──────────────────────────────────────────────────────────────────────────
 
   // ─── Search & Plan Popup State ────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
@@ -208,6 +222,27 @@ export default function ServicesLanding() {
         );
         setGetData(servicesOnly);
         setPlanName(parsed[0]?.plan_name || "");
+
+        if (data.data?.discount_snapshot) {
+          try {
+            const disc = typeof data.data.discount_snapshot === "string" ? JSON.parse(data.data.discount_snapshot) : data.data.discount_snapshot;
+            if (disc && Number(disc.value || disc.discount_amt || disc.discount_per) > 0) {
+              const isPercent = disc.type === "Percentage" || disc.discount_type === "percent";
+              const val = Number(disc.value || (isPercent ? disc.discount_per : disc.discount_amt) || 0);
+              setDiscountType(isPercent ? "Percentage" : "Amount");
+              setDiscountValue(val);
+            } else {
+              setDiscountType("Amount");
+              setDiscountValue(0);
+            }
+          } catch(e) {
+            setDiscountType("Amount");
+            setDiscountValue(0);
+          }
+        } else {
+          setDiscountType("Amount");
+          setDiscountValue(0);
+        }
       } else {
         const { data } = await axios.get(
           `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`,
@@ -298,6 +333,17 @@ export default function ServicesLanding() {
     });
   };
 
+  const fetchDiscountSettings = async () => {
+    try {
+      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/getDiscountSetting`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDiscountSettings(data.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchClient();
     fetchData();
@@ -305,6 +351,7 @@ export default function ServicesLanding() {
     fetchPlanData();
     fetchClientNotes();
     fetchComplimenatryData();
+    fetchDiscountSettings();
   }, [id, proposalId, docTypeFromURL]);
 
   // Close dropdown on outside click
@@ -327,11 +374,107 @@ export default function ServicesLanding() {
   const grandAdsTotal = getAdsData.reduce((acc, order) => acc + parseFloat(order.total || 0), 0);
   const grandComplimentryTotal = getComplimenatryData.reduce((acc, order) => acc + parseFloat(order.total_amount || 0), 0);
 
+  const calculatedDiscount = discountType === "Percentage"
+    ? (grandTotal * discountValue) / 100
+    : discountValue;
+  const dmTotalAfterDiscount = Math.max(0, grandTotal - calculatedDiscount);
+
   const graphLength = getData.length;
   const adsCampLength = getAdsData.length;
   const complimenatryLength = getComplimenatryData.length;
   const finalLength = graphLength + adsCampLength + complimenatryLength;
-  const totalAmount = grandTotal + grandAdsTotal;
+  const totalAmount = dmTotalAfterDiscount + grandAdsTotal;
+
+  const openDiscountModal = () => {
+    setFormDataDis({
+      discount_type: discountType === "Percentage" ? "percent" : "amount",
+      discount_amt: discountType === "Amount" ? (discountValue || "") : "",
+      discount_per: discountType === "Percentage" ? (discountValue || "") : "",
+    });
+    setShowDiscountModal(true);
+  };
+
+  const handleApplyDiscount = async (e) => {
+    e.preventDefault();
+    const isPercent = formDataDis.discount_type === "percent";
+    const val = Number(isPercent ? formDataDis.discount_per : formDataDis.discount_amt) || 0;
+
+    if (docTypeFromURL === "proforma") {
+      try {
+        setLoading(true);
+        const res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proforma/${proposalId}/discount`,
+          {
+            discount_type: isPercent ? "percent" : "amount",
+            discount_val: val,
+            discount_amt: isPercent ? 0 : val,
+            discount_per: isPercent ? val : 0,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          setDiscountType(isPercent ? "Percentage" : "Amount");
+          setDiscountValue(val);
+          setShowDiscountModal(false);
+          Swal.fire({
+            icon: "success",
+            title: "Discount Updated!",
+            text: "Proforma discount saved successfully.",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: "error", title: "Error", text: "Failed to update discount." });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setDiscountType(isPercent ? "Percentage" : "Amount");
+      setDiscountValue(val);
+      setShowDiscountModal(false);
+    }
+  };
+
+  const handleRemoveDiscount = async () => {
+    if (docTypeFromURL === "proforma") {
+      try {
+        setLoading(true);
+        const res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proforma/${proposalId}/discount`,
+          {
+            discount_type: "amount",
+            discount_val: 0,
+            discount_amt: 0,
+            discount_per: 0,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          setDiscountType("Amount");
+          setDiscountValue(0);
+          setShowDiscountModal(false);
+          Swal.fire({
+            icon: "success",
+            title: "Discount Removed!",
+            text: "Proforma discount cleared successfully.",
+            timer: 1200,
+            showConfirmButton: false,
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: "error", title: "Error", text: "Failed to remove discount." });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setDiscountType("Amount");
+      setDiscountValue(0);
+      setShowDiscountModal(false);
+    }
+  };
 
   // ─── Group plan data ───────────────────────────────────────────────────────
   const groupByPlan = (data) => {
@@ -661,7 +804,7 @@ export default function ServicesLanding() {
           </button>
 
           {/* Stats row */}
-          <div className="flex-1 flex overflow-x-auto sm:grid sm:grid-cols-4 gap-2 pb-1 pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className={`flex-1 flex overflow-x-auto sm:grid ${docTypeFromURL === "proforma" ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2 pb-1 pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent`}>
             {/* Total Amount */}
             <div className="min-w-[130px] sm:min-w-0 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-xl p-2.5 border border-white/10 hover:border-yellow-400/30 flex items-center gap-2 transition-all duration-200">
               <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-r" />
@@ -671,8 +814,34 @@ export default function ServicesLanding() {
               <div className="min-w-0">
                 <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider truncate">Amount</p>
                 <p className="text-sm font-bold text-white truncate">₹{totalAmount.toLocaleString()}</p>
+                {discountValue > 0 && (
+                  <p className="text-[9px] text-yellow-400/80 truncate">Disc: -₹{calculatedDiscount.toLocaleString()}</p>
+                )}
               </div>
             </div>
+
+            {/* Discount Card (in proforma mode) */}
+            {docTypeFromURL === "proforma" && (
+              <div className="min-w-[130px] sm:min-w-0 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-xl p-2.5 border border-white/10 hover:border-yellow-400/30 transition-all duration-200">
+                <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-amber-400 to-yellow-500 rounded-r" />
+                <button onClick={openDiscountModal} className="w-full text-left flex items-center justify-between gap-1.5 group/disc">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-8 h-8 bg-yellow-500/15 rounded-lg flex items-center justify-center shrink-0 group-hover/disc:scale-105 transition-transform">
+                      <BadgePercent className="w-4 h-4 text-yellow-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider truncate">Discount</p>
+                      <p className="text-sm font-bold text-yellow-400 truncate">
+                        {discountValue > 0 ? `₹${calculatedDiscount.toLocaleString()}` : "No Discount"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-yellow-400/20 text-yellow-300 font-semibold px-2 py-0.5 rounded border border-yellow-400/30 shrink-0">
+                    {discountValue > 0 ? "Edit" : "+ Add"}
+                  </span>
+                </button>
+              </div>
+            )}
             {/* Client */}
             <div className="min-w-[130px] sm:min-w-0 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-xl p-2.5 border border-white/10 hover:border-orange-400/30 flex items-center gap-2 transition-all duration-200">
               <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-orange-400 to-pink-500 rounded-r" />
@@ -1233,6 +1402,21 @@ export default function ServicesLanding() {
           </div>
         </div>
       )}
+
+      {/* ── Proposal / Proforma Discount Modal ────────────────────────────── */}
+      <ProposalDiscountModal
+        show={showDiscountModal}
+        onClose={() => setShowDiscountModal(false)}
+        onSubmit={handleApplyDiscount}
+        onDelete={discountValue > 0 ? handleRemoveDiscount : null}
+        formDataDis={formDataDis}
+        handleChangeDis={(e) => {
+          const { name, value } = e.target;
+          setFormDataDis((prev) => ({ ...prev, [name]: value }));
+        }}
+        grandTotal={grandTotal}
+        discountDataSet={discountSettings[0]}
+      />
     </div>
   );
 }

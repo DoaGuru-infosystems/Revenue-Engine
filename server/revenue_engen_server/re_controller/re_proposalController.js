@@ -385,41 +385,7 @@ exports.updateProposal = async (req, res) => {
       updated_by || "System",
       id,
     ]);
-
-    // Also update any generated proforma for this proposal so it stays synced with live data
-    const existingProformas = await runQuery(
-      `SELECT id, is_gst, gst_rate FROM re_proposal_proforma WHERE proposal_id = ?`,
-      [id],
-    );
-    if (existingProformas.length > 0) {
-      const base_amt = Number(grand_total_excl_gst || 0);
-      for (const prof of existingProformas) {
-        const gst_amt =
-          prof.is_gst &&
-          (Buffer.isBuffer(prof.is_gst)
-            ? prof.is_gst[0] === 1
-            : Number(prof.is_gst) === 1)
-            ? Number((base_amt * prof.gst_rate) / 100).toFixed(2)
-            : 0;
-        const total_amt = Number(base_amt) + Number(gst_amt);
-
-        await runQuery(
-          `
-          UPDATE re_proposal_proforma 
-          SET base_amount = ?, gst_amount = ?, total_amount = ?, pricing_snapshot = ?
-          WHERE id = ?
-        `,
-          [
-            base_amt,
-            gst_amt,
-            total_amt,
-            toJsonString(pricing_table_json, []),
-            prof.id,
-          ],
-        );
-      }
-    }
-
+    // Proforma is decoupled from proposal updates - existing proformas remain unchanged
     res.status(200).json({ status: "Success", message: "Proposal updated" });
   } catch (error) {
     console.error("updateProposal error:", error);
@@ -705,12 +671,48 @@ exports.createProforma = async (req, res) => {
       }
     });
 
+    let discountSnapshot = null;
+    try {
+      const sec = typeof proposal.sections_json === "string" ? JSON.parse(proposal.sections_json) : proposal.sections_json;
+      if (sec && sec.pricing_discount && Number(sec.pricing_discount.value) > 0) {
+        discountSnapshot = JSON.stringify(sec.pricing_discount);
+      }
+    } catch(e) {}
+
+    let finalBaseAmount = base_amount;
+    let finalGstAmount = gst_amount;
+    let finalTotalAmount = total_amount;
+
+    if (!finalBaseAmount || !finalTotalAmount) {
+      const dmTotal = serviceItems.reduce((sum, item) => {
+        if (item.service_name?.toLowerCase() === "complimentary" || item.source === "custom_complimentary") return sum;
+        return sum + Number(item.total_amount || item.total_price || 0);
+      }, 0);
+      const adsTotal = adsItems.reduce((sum, item) => sum + Number(item.amount || item.budget || item.total || 0), 0);
+      let discAmt = 0;
+      if (discountSnapshot) {
+        try {
+          const dObj = JSON.parse(discountSnapshot);
+          if (dObj.type === "Percentage") {
+            discAmt = (dmTotal * Number(dObj.value)) / 100;
+          } else {
+            discAmt = Number(dObj.value);
+          }
+        } catch(e) {}
+      }
+      const dmAfterDisc = Math.max(0, dmTotal - discAmt);
+      finalBaseAmount = dmAfterDisc + adsTotal;
+      const rate = Number(gst_rate) || 18;
+      finalGstAmount = is_gst ? Number(((dmAfterDisc * rate) / 100).toFixed(2)) : 0;
+      finalTotalAmount = finalBaseAmount + finalGstAmount;
+    }
+
     const q = `
       INSERT INTO re_proposal_proforma 
       (proposal_id, client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
        pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
-       duration_start_date, duration_end_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       duration_start_date, duration_end_date, discount_snapshot)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
       proposal_id,
@@ -718,9 +720,9 @@ exports.createProforma = async (req, res) => {
       proposal.txn_id, // Copied from parent proposal
       is_gst ? 1 : 0,
       gst_rate,
-      base_amount,
-      gst_amount,
-      total_amount,
+      finalBaseAmount,
+      finalGstAmount || 0,
+      finalTotalAmount,
       JSON.stringify(serviceItems),
       JSON.stringify(adsItems),
       proposal.notes_json,
@@ -730,6 +732,7 @@ exports.createProforma = async (req, res) => {
       created_by || "System",
       duration_start_date || null,
       duration_end_date || null,
+      discountSnapshot,
     ]);
 
     // Update proposal status and billing dates
@@ -2465,7 +2468,10 @@ exports.getRevenueHistory = async (req, res) => {
 exports.getProformaSnapshot = async (req, res) => {
   try {
     const { id } = req.params;
-    const results = await runQuery(`SELECT pricing_snapshot, ads_snapshot FROM re_proposal_proforma WHERE id = ?`, [id]);
+    const results = await runQuery(
+      `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, is_gst, gst_rate, base_amount, gst_amount, total_amount FROM re_proposal_proforma WHERE id = ?`,
+      [id]
+    );
     if (results.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Proforma not found" });
     }
@@ -2509,6 +2515,89 @@ exports.updateProformaSnapshot = async (req, res) => {
     res.status(200).json({ status: "Success", message: "Proforma updated" });
   } catch (error) {
     console.error("updateProformaSnapshot error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.updateProformaDiscount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { discount_type, discount_val, discount_amt, discount_per } = req.body;
+
+    const proformas = await runQuery(
+      `SELECT * FROM re_proposal_proforma WHERE id = ?`,
+      [id]
+    );
+    if (proformas.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Proforma not found" });
+    }
+    const prof = proformas[0];
+
+    let discountObj = null;
+    const hasDiscount = (discount_type === "percent" && Number(discount_per) > 0) ||
+                        (discount_type === "amount" && Number(discount_amt) > 0) ||
+                        Number(discount_val) > 0;
+
+    if (hasDiscount) {
+      const isPercent = discount_type === "percent" || discount_type === "Percentage";
+      const val = Number(discount_val || (isPercent ? discount_per : discount_amt) || 0);
+      discountObj = {
+        type: isPercent ? "Percentage" : "Amount",
+        value: val,
+        discount_type: isPercent ? "percent" : "amount",
+        discount_amt: isPercent ? 0 : val,
+        discount_per: isPercent ? val : 0,
+      };
+    }
+
+    const pricing = JSON.parse(prof.pricing_snapshot || "[]");
+    const ads = JSON.parse(prof.ads_snapshot || "[]");
+
+    const dmTotal = pricing.reduce((sum, item) => {
+      if (item.service_name?.toLowerCase() === "complimentary" || item.source === "custom_complimentary") return sum;
+      return sum + Number(item.total_amount || item.total_price || 0);
+    }, 0);
+
+    const adsTotal = ads.reduce((sum, item) => {
+      return sum + Number(item.amount || item.budget || item.total || 0);
+    }, 0);
+
+    let calculatedDiscount = 0;
+    if (discountObj) {
+      if (discountObj.type === "Percentage") {
+        calculatedDiscount = (dmTotal * discountObj.value) / 100;
+      } else {
+        calculatedDiscount = discountObj.value;
+      }
+    }
+
+    const dmAfterDiscount = Math.max(0, dmTotal - calculatedDiscount);
+    const isGst = prof.is_gst && (Buffer.isBuffer(prof.is_gst) ? prof.is_gst[0] === 1 : Number(prof.is_gst) === 1);
+    const gstRate = Number(prof.gst_rate) || 18;
+
+    const baseAmount = dmAfterDiscount + adsTotal;
+    const gstAmount = isGst ? Number(((dmAfterDiscount * gstRate) / 100).toFixed(2)) : 0;
+    const totalAmount = baseAmount + gstAmount;
+
+    await runQuery(
+      `UPDATE re_proposal_proforma 
+       SET discount_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
+       WHERE id = ?`,
+      [discountObj ? JSON.stringify(discountObj) : null, baseAmount, gstAmount, totalAmount, id]
+    );
+
+    res.status(200).json({
+      status: "Success",
+      message: "Proforma discount updated successfully",
+      data: {
+        discount_snapshot: discountObj ? JSON.stringify(discountObj) : null,
+        base_amount: baseAmount,
+        gst_amount: gstAmount,
+        total_amount: totalAmount,
+      }
+    });
+  } catch (error) {
+    console.error("updateProformaDiscount error:", error);
     res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };

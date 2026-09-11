@@ -5,6 +5,7 @@ const ProposalDiscountModal = ({
   show,
   onClose,
   onSubmit,
+  onDelete,
   formDataDis,
   handleChangeDis,
   grandTotal,
@@ -182,6 +183,15 @@ const ProposalDiscountModal = ({
 
           {/* Actions */}
           <div className="flex gap-2 pt-1">
+            {onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="px-3.5 py-2.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 rounded-xl text-sm font-semibold transition-all"
+              >
+                Remove
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}

@@ -233,6 +233,7 @@ const {
   getRevenueHistory,
   getProformaSnapshot,
   updateProformaSnapshot,
+  updateProformaDiscount,
 } = require("../re_controller/re_proposalController");
 const {
   uploadAndConvert: genratecoatetion,
@@ -656,6 +657,8 @@ router.put(
 
 router.get("/proformas/snapshot/:id", authenticateToken, getProformaSnapshot);
 router.put("/proformas/snapshot", authenticateToken, updateProformaSnapshot);
+router.put("/proformas/discount/:id", authenticateToken, updateProformaDiscount);
+router.put("/proforma/:id/discount", authenticateToken, updateProformaDiscount);
 
 router.post("/proposals/:id/payment", authenticateToken, recordProposalPayment);
 router.post(

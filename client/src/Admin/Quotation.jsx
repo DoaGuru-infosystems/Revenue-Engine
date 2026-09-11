@@ -404,20 +404,42 @@ export default function Quotation() {
             }
 
             try {
-              const sectionsData = typeof p.sections_json === 'string' ? JSON.parse(p.sections_json) : p.sections_json;
-              const pricingDiscount = sectionsData?.pricing_discount;
-              if (pricingDiscount && Number(pricingDiscount.value) > 0) {
-                const discType = pricingDiscount.type === 'Percentage' ? 'percent' : 'amount';
-                const discVal = Number(pricingDiscount.value);
-                setSelecteddiscount({
-                  discount_type: discType,
-                  discount_amt: discType === 'amount' ? discVal : 0,
-                  discount_per: discType === 'percent' ? discVal : 0,
-                });
+              let pricingDiscount = null;
+              if (docTypeFromURL === "proforma") {
+                if (proforma.discount_snapshot) {
+                  try {
+                    pricingDiscount = typeof proforma.discount_snapshot === 'string'
+                      ? JSON.parse(proforma.discount_snapshot)
+                      : proforma.discount_snapshot;
+                  } catch (e) {
+                    pricingDiscount = null;
+                  }
+                }
+              } else {
+                const sectionsData = typeof p?.sections_json === 'string' ? JSON.parse(p.sections_json) : p?.sections_json;
+                pricingDiscount = sectionsData?.pricing_discount;
+              }
+
+              if (pricingDiscount) {
+                const isPercent = pricingDiscount.type === 'Percentage' || pricingDiscount.discount_type === 'percent';
+                const discVal = Number(pricingDiscount.value ?? (isPercent ? pricingDiscount.discount_per : pricingDiscount.discount_amt) ?? 0);
+                if (discVal > 0) {
+                  setSelecteddiscount({
+                    id: proforma?.id,
+                    discount_type: isPercent ? 'percent' : 'amount',
+                    discount_amt: isPercent ? 0 : discVal,
+                    discount_per: isPercent ? discVal : 0,
+                    value: discVal,
+                    type: isPercent ? 'Percentage' : 'Amount',
+                  });
+                } else {
+                  setSelecteddiscount(null);
+                }
               } else {
                 setSelecteddiscount(null);
               }
             } catch (e) {
+              console.error("Error setting discount in Quotation:", e);
               setSelecteddiscount(null);
             }
           }
@@ -454,7 +476,6 @@ export default function Quotation() {
             setServiceData([]);
             setComplimentaryData([]);
           }
-          setDiscountDataSet(null);
           setLoading(false);
         }
       }
@@ -468,6 +489,7 @@ export default function Quotation() {
     if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
       fetchProformaData();
       fetchPredefinedNotes();
+      fetchDiscountSetting();
     } else {
       fetchServices();
       fetchClient();
@@ -858,10 +880,12 @@ export default function Quotation() {
 
   const handleShowDiscount = () => {
     if (selecteddiscount) {
+      const isPercent = selecteddiscount.discount_type === "percent" || selecteddiscount.type === "Percentage";
+      const val = selecteddiscount.value ?? (isPercent ? selecteddiscount.discount_per : selecteddiscount.discount_amt) ?? "";
       setFormDataDiscount({
-        discount_type: selecteddiscount.discount_type || "amount",
-        discount_per: selecteddiscount.discount_per || "",
-        discount_amt: selecteddiscount.discount_amt || "",
+        discount_type: isPercent ? "percent" : "amount",
+        discount_per: isPercent ? String(val) : "",
+        discount_amt: !isPercent ? String(val) : "",
       });
     } else {
       setFormDataDiscount({
@@ -1029,6 +1053,40 @@ export default function Quotation() {
           txn_id: txn_id,
         };
 
+      if (docTypeFromURL === "proforma") {
+        const response = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proforma/${txn_id}/discount`,
+          {
+            discount_type: isAmountType ? "amount" : "percent",
+            discount_val: enteredValue,
+            discount_amt: isAmountType ? enteredValue : 0,
+            discount_per: isAmountType ? 0 : enteredValue,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.status === "Success") {
+          Swal.fire({
+            icon: "success",
+            title: selecteddiscount ? "Updated!" : "Saved!",
+            text: "Proforma discount updated successfully",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+          fetchProformaData();
+          resetAndClose();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Failed!",
+            text: response.data.message || "Failed to save discount.",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        }
+        return;
+      }
+
       const response = selecteddiscount
         ? await axios.put(
           `${baseURL}/auth/api/re_calculator/updateDiscountDataById/${selecteddiscount.id}`,
@@ -1079,7 +1137,7 @@ export default function Quotation() {
   };
 
   const handleDeleteDiscount = async () => {
-    if (!selecteddiscount?.id) return;
+    if (!selecteddiscount && docTypeFromURL !== "proforma") return;
 
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -1095,6 +1153,35 @@ export default function Quotation() {
 
     setLoading(true);
     try {
+      if (docTypeFromURL === "proforma") {
+        await axios.put(
+          `${baseURL}/auth/api/re_calculator/proforma/${txn_id}/discount`,
+          {
+            discount_type: "amount",
+            discount_val: 0,
+            discount_amt: 0,
+            discount_per: 0,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setSelecteddiscount(null);
+        setShowModalDiscount(false);
+        setFormDataDiscount({
+          discount_type: "amount",
+          discount_per: "",
+          discount_amt: "",
+        });
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Discount has been deleted.",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+        fetchProformaData();
+        return;
+      }
+
       await axios.delete(
         `${baseURL}/auth/api/re_calculator/deleteDiscountById/${selecteddiscount.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -1775,11 +1862,27 @@ export default function Quotation() {
                     </section>
                   ) }
 
-                  {/* Grand Total Section with Bank Details */ }
-                  { docTypeFromURL === "proforma" && (
-                    <div className="print:hidden flex justify-end gap-3 mt-4 mb-2 pr-6">
-                      { adsData.some(ad => (ad.category_name || "").toLowerCase().includes("meta") && Number(ad.amount || ad.budget || 0) > 0) && (
-                        <label className="inline-flex items-center gap-1 mx-1 text-xs cursor-pointer font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-300">
+                  {/* Action row below service table: Discount on left, Ads toggles on right */}
+                  <div className="print:hidden flex items-center justify-between gap-3 mt-3 mb-2 px-1">
+                    <div>
+                      { clientDataReceived.tag_received_amt === "received" || (docTypeFromURL === "proforma" && proformaMeta?.has_invoice) ? null : (
+                        <button
+                          type="button"
+                          onClick={ handleShowDiscount }
+                          className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm ${
+                            selecteddiscount
+                              ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20"
+                              : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300 hover:border-gray-400"
+                          }`}
+                        >
+                          🏷️ { selecteddiscount ? "Edit Discount" : "Set Discount" }
+                        </button>
+                      ) }
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      { docTypeFromURL === "proforma" && adsData.some(ad => (ad.category_name || "").toLowerCase().includes("meta") && Number(ad.amount || ad.budget || 0) > 0) && (
+                        <label className="inline-flex items-center gap-1 text-xs cursor-pointer font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-300">
                           <input
                             type="checkbox"
                             checked={ showMetaAd }
@@ -1790,8 +1893,8 @@ export default function Quotation() {
                         </label>
                       ) }
 
-                      { adsData.some(ad => (ad.category_name || "").toLowerCase().includes("google") && Number(ad.amount || ad.budget || 0) > 0) && (
-                        <label className="inline-flex items-center gap-1 mx-1 text-xs cursor-pointer font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-300">
+                      { docTypeFromURL === "proforma" && adsData.some(ad => (ad.category_name || "").toLowerCase().includes("google") && Number(ad.amount || ad.budget || 0) > 0) && (
+                        <label className="inline-flex items-center gap-1 text-xs cursor-pointer font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-300">
                           <input
                             type="checkbox"
                             checked={ showGoogleAd }
@@ -1802,7 +1905,7 @@ export default function Quotation() {
                         </label>
                       ) }
                     </div>
-                  ) }
+                  </div>
                   <section className="terms-bank-section print:block px-6 py-2 text-sm text-gray-800 border-t mt-2">
                     <div className="bank-details-section flex justify-between w-full mb-2">
                       {/* LEFT SIDE: Bank Details */ }
@@ -1845,9 +1948,9 @@ export default function Quotation() {
                               <p>Subtotal ₹{ graphicTotal.toLocaleString("en-IN") }</p>
                               <p className="text-red-600 font-bold mt-1">
                                 Discount (
-                                { selecteddiscount.discount_type === "percent"
-                                  ? `${selecteddiscount.discount_per}%`
-                                  : `₹${selecteddiscount.discount_amt}` }
+                                { selecteddiscount?.discount_type === "percent"
+                                  ? `${selecteddiscount?.discount_per}%`
+                                  : `₹${selecteddiscount?.discount_amt}` }
                                 ): -₹{ discountAmount.toLocaleString("en-IN") }
                               </p>
                             </>
