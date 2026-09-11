@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 15, 2026 at 07:09 AM
+-- Generation Time: Sep 11, 2026 at 03:41 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -86,6 +86,16 @@ CREATE TABLE `re_ads_campaign_details_invoice` (
   `created_at` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `re_ads_campaign_details_invoice`
+--
+
+INSERT INTO `re_ads_campaign_details_invoice` (`id`, `txn_id`, `client_id`, `unique_id`, `category`, `amount`, `percent`, `charge`, `total`, `employee`, `created_at`) VALUES
+(1, '1789116460806', 266, '1789116472367-k44iya', 'Google Add', '5000', '20', '1000', '6000', 'Ad Dubay', '2026-09-11 08:47:52'),
+(2, '1789116460806', 266, '1789116472368-6198rv', 'Meta add', '5000', '12', '600', '5600', 'Ad Dubay', '2026-09-11 08:47:52'),
+(3, '1789133142036', 266, '1789133153225-6f2yoo', 'Google Add', '5000', '20', '1000', '6000', 'Ad Dubay', '2026-09-11 13:25:53'),
+(4, '1789133142036', 266, '1789133153236-79avuc', 'Meta add', '5000', '12', '600', '5600', 'Ad Dubay', '2026-09-11 13:25:53');
+
 -- --------------------------------------------------------
 
 --
@@ -150,6 +160,22 @@ CREATE TABLE `re_calculator_transactions` (
   `include_youtube_video_posting` decimal(10,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `re_calculator_transactions`
+--
+
+INSERT INTO `re_calculator_transactions` (`id`, `txn_id`, `client_id`, `service_name`, `category_name`, `editing_type_id`, `editing_type_name`, `editing_type_amount`, `quantity`, `include_content_posting`, `include_thumbnail_creation`, `total_amount`, `employee`, `plan_name`, `created_at`, `include_youtube_video_posting`) VALUES
+(1, '1', 114, 'website developmet', 'developmet', 1, NULL, '50000', '1', '0', '0', '50000', 'Ad Dubay', 'Customise', '2026-07-15 18:31:38', 0.00),
+(2, '1', 114, 'gmb', 'smo', 2, NULL, '5000', '1', '0', '0', '5000', 'Ad Dubay', 'Customise', '2026-07-15 18:31:46', 0.00),
+(3, '2', 266, 'website developmet', 'developmet', 1, NULL, '50000', '1', '0', '0', '50000', 'Ad Dubay', 'Customise', '2026-07-16 14:11:55', 0.00),
+(4, '2', 266, 'gmb', 'smo', 2, NULL, '5000', '1', '0', '0', '5000', 'Ad Dubay', 'Customise', '2026-07-16 14:12:00', 0.00),
+(5, NULL, 266, 'website developmet', 'developmet', 1, NULL, '50000', '4', '0', '0', '200000', 'Ad Dubay', 'Customise', '2026-09-10 14:26:27', 0.00),
+(6, NULL, 266, 'gmb', 'smo', 2, NULL, '5000', '1', '0', '0', '5000', 'Ad Dubay', 'Customise', '2026-09-10 14:26:33', 0.00),
+(7, NULL, 266, 'website developmet', 'developmet', 1, NULL, '50000', '1', '0', '0', '50000', 'Ad Dubay', 'Customise', '2026-09-10 14:26:52', 0.00),
+(8, NULL, 266, 'gmb', 'smo', 2, NULL, '5000', '5', '0', '0', '25000', 'Ad Dubay', 'Customise', '2026-09-10 14:27:21', 0.00),
+(9, NULL, 266, 'website developmet', 'developmet', 1, NULL, '50000', '1', '0', '0', '50000', 'Ad Dubay', 'Customise', '2026-09-10 14:27:50', 0.00),
+(10, NULL, 266, 'gmb', 'smo', 2, NULL, '5000', '3', '0', '0', '15000', 'Ad Dubay', 'Customise', '2026-09-10 14:28:08', 0.00);
+
 -- --------------------------------------------------------
 
 --
@@ -162,6 +188,15 @@ CREATE TABLE `re_categories` (
   `category_name` varchar(100) NOT NULL,
   `created_at` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_categories`
+--
+
+INSERT INTO `re_categories` (`category_id`, `service_id`, `category_name`, `created_at`) VALUES
+(1, 1, 'developmet', '2026-07-15 18:30:32'),
+(2, 2, 'smo', '2026-07-15 18:30:52'),
+(3, 3, 'standard editing', '2026-09-11 18:19:04');
 
 -- --------------------------------------------------------
 
@@ -241,6 +276,14 @@ CREATE TABLE `re_discount` (
   `created_at` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `re_discount`
+--
+
+INSERT INTO `re_discount` (`id`, `client_id`, `txn_id`, `discount_type`, `discount_per`, `discount_amt`, `created_at`) VALUES
+(1, 266, '1789112806172', 'Amount', 0, 1000, '2026-09-11 07:47:00'),
+(2, 266, '1789116460806', 'Amount', 0, 1000, '2026-09-11 08:47:52');
+
 -- --------------------------------------------------------
 
 --
@@ -275,6 +318,16 @@ CREATE TABLE `re_editing_types` (
   `amount` varchar(100) NOT NULL,
   `created_at` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_editing_types`
+--
+
+INSERT INTO `re_editing_types` (`editing_type_id`, `service_id`, `category_id`, `editing_type_name`, `amount`, `created_at`) VALUES
+(1, 1, 1, NULL, '50000', '2026-07-15 18:30:32'),
+(2, 2, 2, NULL, '5000', '2026-07-15 18:30:52'),
+(3, 3, 3, 'mobile', '1000', '2026-09-11 18:19:04'),
+(4, 3, 3, 'Tablet editing', '500', '2026-09-11 18:48:02');
 
 -- --------------------------------------------------------
 
@@ -323,6 +376,14 @@ CREATE TABLE `re_invoice` (
   `realized_meta_budget` decimal(15,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `re_invoice`
+--
+
+INSERT INTO `re_invoice` (`id`, `invoice_source`, `proposal_id`, `proforma_id`, `bill_type`, `base_amount`, `gst_rate`, `gst_amount`, `tds_amount`, `bill_number`, `txn_id`, `client_id`, `client_name`, `client_organization`, `email`, `phone`, `address`, `dg_employee`, `duration_start_date`, `duration_end_date`, `payment_mode`, `payment_date`, `payment_reference`, `client_gst_no`, `client_pan_no`, `tag_received_amt`, `received_amt`, `current_amt`, `previous_amt`, `pricing_snapshot`, `notes_snapshot`, `terms_snapshot`, `created_at`, `public_token_hash`, `public_token_expires`, `realized_ad_budget`, `realized_google_budget`, `realized_meta_budget`) VALUES
+(1, 'proposal', NULL, NULL, 'NON_GST', 60000.00, 18.00, 0.00, 500.00, '01', '1789130272454', 266, 'ashish', 'ashsih', 'ad201054@gmail.com', '9302300834', 'xyz', 'Ad Dubay', '2026-09-12 00:00:00.000', '2026-10-16 00:00:00.000', 'UPI', '2026-09-11', NULL, '', '', 'pending', '50000', '10000', '0', '[{\"id\":1789130016067,\"service_name\":\"website developmet\",\"category_name\":\"developmet\",\"editing_type_name\":null,\"editing_type_amount\":\"50000\",\"quantity\":1,\"unit_price\":\"50000\",\"total_price\":50000,\"total_amount\":50000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"website developmet - developmet\"},{\"id\":1789130025467,\"service_name\":\"gmb\",\"category_name\":\"smo\",\"editing_type_name\":null,\"editing_type_amount\":\"5000\",\"quantity\":2,\"unit_price\":\"5000\",\"total_price\":10000,\"total_amount\":10000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"gmb - smo\"}]', '[]', '[]', '2026-09-11 12:38:03', '5c948fed7ab01ae9e3dbcaddfd61eab2d6fd2ac8bb70365079e9e99fc11ecac1', '2026-10-11 12:38:03', 0.00, 0.00, 0.00),
+(2, 'proposal', NULL, 4, 'NON_GST', 74500.00, 18.00, 0.00, 400.00, '02', '1789133142036', 266, 'ashish', 'ashsih', 'ad201054@gmail.com', '9302300834', 'xyz', 'Ad Dubay', '2026-09-11 00:00:00.000', '2026-10-11 00:00:00.000', 'UPI', '2026-09-11', NULL, '', '', 'pending', '50000', '24500', '0', '[{\"id\":1789130839536,\"service_name\":\"website developmet\",\"category_name\":\"developmet\",\"editing_type_name\":null,\"editing_type_amount\":\"50000\",\"quantity\":1,\"unit_price\":\"50000\",\"total_price\":50000,\"total_amount\":50000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"website developmet - developmet\"},{\"id\":1789130844390,\"service_name\":\"gmb\",\"category_name\":\"smo\",\"editing_type_name\":null,\"editing_type_amount\":\"5000\",\"quantity\":5,\"unit_price\":\"5000\",\"total_price\":25000,\"total_amount\":25000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"gmb - smo\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":4,\"editing_type_name\":\"Tablet editing\",\"editing_type_amount\":\"500\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":500,\"employee\":\"Ad Dubay\",\"id\":\"1789132784008s2e\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":3,\"editing_type_name\":\"mobile\",\"editing_type_amount\":\"1000\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":1000,\"employee\":\"Ad Dubay\",\"id\":\"1789132795512ffl\"},{\"source\":\"custom_service_charge\",\"service_type\":\"Graphic Service\",\"service_name\":\"Service Charge\",\"category_name\":\"Google Add\",\"editing_type_name\":\"Google Add Campaign Management & Optimization (20%)\",\"quantity\":1,\"unit_price\":1000,\"editing_type_amount\":1000,\"total_price\":1000,\"total_amount\":1000,\"include_in_total\":true},{\"source\":\"custom_service_charge\",\"service_type\":\"Graphic Service\",\"service_name\":\"Service Charge\",\"category_name\":\"Meta add\",\"editing_type_name\":\"Meta add Campaign Management & Optimization (12%)\",\"quantity\":1,\"unit_price\":600,\"editing_type_amount\":600,\"total_price\":600,\"total_amount\":600,\"include_in_total\":true}]', '[]', '[]', '2026-09-11 13:25:53', 'd1c8989a0010e952cc6f9464c574edd19757026dccd3a7f9e226fb0c815886f3', '2026-10-11 13:25:53', 10000.00, 5000.00, 5000.00);
+
 -- --------------------------------------------------------
 
 --
@@ -361,6 +422,24 @@ CREATE TABLE `re_invoice_graphic` (
   `created_at` varchar(255) NOT NULL,
   `include_youtube_video_posting` decimal(10,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_invoice_graphic`
+--
+
+INSERT INTO `re_invoice_graphic` (`id`, `txn_id`, `client_id`, `service_name`, `category_name`, `editing_type_id`, `editing_type_name`, `editing_type_amount`, `quantity`, `include_content_posting`, `include_thumbnail_creation`, `total_amount`, `plan_name`, `employee`, `created_at`, `include_youtube_video_posting`) VALUES
+(5, '1789116460806', 266, 'website developmet', 'developmet', NULL, '', '50000', '1', '0', '0', '50000', '', 'Ad Dubay', '2026-09-11 08:47:52', 0.00),
+(6, '1789116460806', 266, 'gmb', 'smo', NULL, '', '5000', '1', '0', '0', '5000', '', 'Ad Dubay', '2026-09-11 08:47:52', 0.00),
+(7, '1789116460806', 266, 'Service Charge', 'Google Add', NULL, 'Google Add Campaign Management & Optimization (20%)', '1000', '1', '0', '0', '1000', '', 'Ad Dubay', '2026-09-11 08:47:52', 0.00),
+(8, '1789116460806', 266, 'Service Charge', 'Meta add', NULL, 'Meta add Campaign Management & Optimization (12%)', '600', '1', '0', '0', '600', '', 'Ad Dubay', '2026-09-11 08:47:52', 0.00),
+(9, '1789130272454', 266, 'website developmet', 'developmet', NULL, '', '50000', '1', '0', '0', '50000', '', 'Ad Dubay', '2026-09-11 12:38:03', 0.00),
+(10, '1789130272454', 266, 'gmb', 'smo', NULL, '', '5000', '2', '0', '0', '10000', '', 'Ad Dubay', '2026-09-11 12:38:03', 0.00),
+(11, '1789133142036', 266, 'website developmet', 'developmet', NULL, '', '50000', '1', '0', '0', '50000', '', 'Ad Dubay', '2026-09-11 13:25:53', 0.00),
+(12, '1789133142036', 266, 'gmb', 'smo', NULL, '', '5000', '5', '0', '0', '25000', '', 'Ad Dubay', '2026-09-11 13:25:53', 0.00),
+(13, '1789133142036', 266, 'video editing', 'standard editing', NULL, 'Tablet editing', '0', '1', '0', '0', '0', '', 'Ad Dubay', '2026-09-11 13:25:53', 0.00),
+(14, '1789133142036', 266, 'video editing', 'standard editing', NULL, 'mobile', '0', '1', '0', '0', '0', '', 'Ad Dubay', '2026-09-11 13:25:53', 0.00),
+(15, '1789133142036', 266, 'Service Charge', 'Google Add', NULL, 'Google Add Campaign Management & Optimization (20%)', '1000', '1', '0', '0', '1000', '', 'Ad Dubay', '2026-09-11 13:25:53', 0.00),
+(16, '1789133142036', 266, 'Service Charge', 'Meta add', NULL, 'Meta add Campaign Management & Optimization (12%)', '600', '1', '0', '0', '600', '', 'Ad Dubay', '2026-09-11 13:25:53', 0.00);
 
 -- --------------------------------------------------------
 
@@ -498,6 +577,13 @@ CREATE TABLE `re_proposals` (
   `public_snapshot_json` longtext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `re_proposals`
+--
+
+INSERT INTO `re_proposals` (`id`, `client_id`, `txn_id`, `proposal_type`, `billing_type`, `billing_start_date`, `billing_end_date`, `sections_json`, `optional_toggles`, `pricing_table_json`, `grand_total_excl_gst`, `terms_notes_json`, `status`, `pdf_path`, `created_by`, `updated_by`, `created_at`, `updated_at`, `notes_json`, `additional_remarks`, `client_instructions`, `public_token_hash`, `public_token_expires`, `public_snapshot_json`) VALUES
+(2, 266, '1789130846886', 'development', 'monthly', '2026-09-11', '2026-10-11', '{\"cover_page\":{\"duration\":\"1 Month\",\"proposal_date\":\"11 September 2026\",\"proposal_validity\":\"7 Days\",\"prepared_by\":\"DOAGuru InfoSystems\",\"website\":\"www.doaguru.com\"},\"executive_summary\":\"We are pleased to present this proposal for ashsih. This document outlines our recommended approach, scope of services, timeline, and investment to help achieve your business objectives.\\n\\nOur team has carefully evaluated your requirements and developed a comprehensive strategy that aligns with your goals and budget. We believe this partnership will deliver measurable results and drive sustainable growth for your organization.\",\"about_us\":\"DoaGuru InfoSystems is a leading digital solutions company specializing in web development, digital marketing, graphic design, and IT consulting. With a proven track record of delivering exceptional results, we partner with businesses of all sizes to transform their digital presence.\\n\\nOur Expertise:\\n• Digital Marketing (SEO, SEM, Social Media, Content Marketing)\\n• Web & App Development (React, Node.js, Mobile Apps)\\n• Graphic Design & Branding (Logo, UI/UX, Print Media)\\n• IT Consulting & Cloud Solutions\\n\\nWith a dedicated team of 50+ professionals and 200+ successful projects delivered, we bring the expertise and commitment needed to drive your business forward.\",\"client_problem\":\"Based on our initial discussions and analysis, we have identified the following key challenges that ashsih is currently facing:\\n\\n1. [Challenge 1] — Describe the specific problem area\\n2. [Challenge 2] — Describe another pain point\\n3. [Challenge 3] — Additional challenge\\n\\nThese challenges are impacting [area of business] and require a strategic, data-driven approach to resolve effectively.\",\"proposed_solution\":\"To address the challenges outlined above, we propose the following solution:\\n\\nApproach:\\nOur strategy combines [methodology/approach] with [tools/platforms] to deliver a comprehensive solution that addresses each challenge systematically.\\n\\nKey Components:\\n1. [Component 1] — Brief description of what this involves\\n2. [Component 2] — Brief description\\n3. [Component 3] — Brief description\\n\\nThis solution is designed to be scalable, measurable, and aligned with your business objectives.\",\"scope_of_work\":[],\"strategy_overview\":\"Our strategic approach involves a phased implementation:\\n\\nPhase 1 — Foundation & Setup (Month 1)\\n• Initial audit and analysis\\n• Strategy development and planning\\n• Tool setup and configuration\\n\\nPhase 2 — Execution & Optimization (Month 2-3)\\n• Campaign launch and management\\n• Content creation and distribution\\n• Performance monitoring and optimization\\n\\nPhase 3 — Growth & Scaling (Month 4+)\\n• Advanced optimization techniques\\n• Scaling successful campaigns\\n• Monthly reporting and strategy refinement\",\"timeline\":[],\"expected_results\":\"Based on our experience with similar projects, we anticipate the following results:\\n\\nWithin 3 Months:\\n• [Result 1 with metric, e.g., 30% increase in organic traffic]\\n• [Result 2 with metric]\\n\\nWithin 6 Months:\\n• [Result 3 with metric]\\n• [Result 4 with metric]\\n\\nNote: These projections are based on industry benchmarks and past performance. Actual results may vary based on market conditions and implementation consistency.\",\"pricing_investment\":[],\"terms_conditions\":[],\"notes_selection\":[],\"additional_remarks\":\"\",\"client_instructions\":\"\",\"why_choose_us\":\"Why DoaGuru InfoSystems?\\n\\n✓ Proven Track Record — 200+ successful projects across diverse industries\\n✓ Dedicated Team — Assigned project managers and specialists for each client\\n✓ Transparent Reporting — Monthly reports with clear metrics and ROI tracking\\n✓ Flexible Engagement — Customizable packages to fit your budget and goals\\n✓ 24/7 Support — Round-the-clock assistance for critical issues\\n✓ Result-Oriented — We focus on measurable outcomes, not just activities\",\"approval_acceptance\":{\"our_signatory_name\":\"\",\"our_signatory_designation\":\"\",\"client_signatory_name\":\"\",\"client_signatory_designation\":\"\",\"acceptance_date\":\"\"},\"pricing_discount\":{\"type\":\"Amount\",\"value\":0}}', '{\"client_problem\":false,\"strategy_overview\":false,\"timeline\":false,\"expected_results\":false,\"additional_remarks\":false,\"client_instructions\":false,\"why_choose_us\":false}', '[{\"id\":3,\"service\":\"website developmet - developmet\",\"service_name\":\"website developmet\",\"category_name\":\"developmet\",\"editing_type_name\":null,\"quantity\":\"1\",\"unit_price\":50000,\"total_price\":50000,\"include_in_total\":true,\"source\":\"custom_graphic\"},{\"id\":4,\"service\":\"gmb - smo\",\"service_name\":\"gmb\",\"category_name\":\"smo\",\"editing_type_name\":null,\"quantity\":\"1\",\"unit_price\":5000,\"total_price\":5000,\"include_in_total\":true,\"source\":\"custom_graphic\"},{\"id\":1789133024408,\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_name\":\"mobile\",\"editing_type_amount\":\"1000\",\"quantity\":1,\"unit_price\":\"1000\",\"total_price\":1000,\"total_amount\":1000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"video editing - standard editing (mobile)\"},{\"id\":1789133035616,\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_name\":\"Tablet editing\",\"editing_type_amount\":\"500\",\"quantity\":1,\"unit_price\":\"500\",\"total_price\":500,\"total_amount\":500,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"video editing - standard editing (Tablet editing)\"}]', 56500.00, '[]', 'proforma_generated', NULL, 'Ad Dubay', 'Ad Dubay', '2026-09-11 12:47:26', '2026-09-11 13:24:01', '[]', '', '', NULL, NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -530,6 +616,13 @@ CREATE TABLE `re_proposal_payment_records` (
   `realized_meta_budget` decimal(15,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `re_proposal_payment_records`
+--
+
+INSERT INTO `re_proposal_payment_records` (`id`, `proforma_id`, `proposal_id`, `client_id`, `amount`, `is_gst`, `tds_applicable`, `tds_percentage`, `tds_amount`, `final_amount`, `payment_date`, `payment_mode`, `transaction_reference`, `status`, `approved_by`, `remark`, `created_by`, `created_at`, `notes`, `txn_id`, `realized_ad_budget`, `realized_google_budget`, `realized_meta_budget`) VALUES
+(2, 4, 2, 266, 50000.00, 0, 1, 1.00, 400.00, 49600.00, '2026-09-11', 'UPI', '', 'approved', 'Ad Dubay', NULL, 'Ad Dubay', '2026-09-11 13:25:42', NULL, '1789133142036', 10000.00, 5000.00, 5000.00);
+
 -- --------------------------------------------------------
 
 --
@@ -552,6 +645,7 @@ CREATE TABLE `re_proposal_proforma` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `pricing_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Snapshot of proposal pricing_table_json' CHECK (json_valid(`pricing_snapshot`)),
+  `ads_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Snapshot of Ads Campaign budget items (JSON array)',
   `notes_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Snapshot of proposal notes_json' CHECK (json_valid(`notes_snapshot`)),
   `terms_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Snapshot of proposal terms_notes_json' CHECK (json_valid(`terms_snapshot`)),
   `remarks_snapshot` text DEFAULT NULL,
@@ -561,8 +655,16 @@ CREATE TABLE `re_proposal_proforma` (
   `public_token_hash` varchar(64) DEFAULT NULL,
   `public_token_expires` datetime DEFAULT NULL,
   `duration_start_date` date DEFAULT NULL,
-  `duration_end_date` date DEFAULT NULL
+  `duration_end_date` date DEFAULT NULL,
+  `discount_snapshot` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_proposal_proforma`
+--
+
+INSERT INTO `re_proposal_proforma` (`id`, `proposal_id`, `client_id`, `txn_id`, `is_gst`, `gst_rate`, `base_amount`, `gst_amount`, `total_amount`, `status`, `pdf_path`, `created_by`, `created_at`, `updated_at`, `pricing_snapshot`, `ads_snapshot`, `notes_snapshot`, `terms_snapshot`, `remarks_snapshot`, `client_instructions_snapshot`, `source_type`, `source_id`, `public_token_hash`, `public_token_expires`, `duration_start_date`, `duration_end_date`, `discount_snapshot`) VALUES
+(4, 2, 266, '1789132741976', 0, 18.00, 74500.00, 0.00, 74500.00, 'partially_paid', NULL, 'System', '2026-09-11 13:19:01', '2026-09-11 13:25:53', '[{\"id\":1789130839536,\"service_name\":\"website developmet\",\"category_name\":\"developmet\",\"editing_type_name\":null,\"editing_type_amount\":\"50000\",\"quantity\":1,\"unit_price\":\"50000\",\"total_price\":50000,\"total_amount\":50000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"website developmet - developmet\"},{\"id\":1789130844390,\"service_name\":\"gmb\",\"category_name\":\"smo\",\"editing_type_name\":null,\"editing_type_amount\":\"5000\",\"quantity\":5,\"unit_price\":\"5000\",\"total_price\":25000,\"total_amount\":25000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"gmb - smo\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":4,\"editing_type_name\":\"Tablet editing\",\"editing_type_amount\":\"500\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":500,\"employee\":\"Ad Dubay\",\"id\":\"1789132784008s2e\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":3,\"editing_type_name\":\"mobile\",\"editing_type_amount\":\"1000\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":1000,\"employee\":\"Ad Dubay\",\"id\":\"1789132795512ffl\"}]', '[{\"id\":\"178913277197992v\",\"service_name\":\"Ads Campaign\",\"category_name\":\"Google Add\",\"category\":\"Google Add\",\"quantity\":1,\"unit_price\":6000,\"total_price\":6000,\"total_amount\":6000,\"total\":6000,\"include_in_total\":true,\"source\":\"custom_ads\",\"budget\":5000,\"amount\":5000,\"percent\":20,\"charge\":1000},{\"id\":\"1789132771979sv2\",\"service_name\":\"Ads Campaign\",\"category_name\":\"Meta add\",\"category\":\"Meta add\",\"quantity\":1,\"unit_price\":5600,\"total_price\":5600,\"total_amount\":5600,\"total\":5600,\"include_in_total\":true,\"source\":\"custom_ads\",\"budget\":5000,\"amount\":5000,\"percent\":12,\"charge\":600}]', '[]', '[]', '', '', 'proposal', NULL, NULL, NULL, '2026-09-26', '2026-10-10', '{\"type\":\"Amount\",\"value\":500,\"discount_type\":\"amount\",\"discount_amt\":500,\"discount_per\":0}');
 
 -- --------------------------------------------------------
 
@@ -579,6 +681,31 @@ CREATE TABLE `re_public_access_logs` (
   `status` varchar(20) NOT NULL COMMENT 'Success, 403, 404, etc.',
   `accessed_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_public_access_logs`
+--
+
+INSERT INTO `re_public_access_logs` (`id`, `doc_type`, `doc_id`, `ip_address`, `user_agent`, `status`, `accessed_at`) VALUES
+(1, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36', 'Success', '2026-07-16 14:15:52'),
+(2, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:19:34'),
+(3, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:21:28'),
+(4, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:21:31'),
+(5, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:21:55'),
+(6, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:30:38'),
+(7, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:30:52'),
+(8, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:33:10'),
+(9, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:33:37'),
+(10, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 13:55:08'),
+(11, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:03:36'),
+(12, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:04:23'),
+(13, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:04:40'),
+(14, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:04:59'),
+(15, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:05:19'),
+(16, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:05:49'),
+(17, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:06:19'),
+(18, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 14:18:21'),
+(19, 'final', 2147483647, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36', 'Success', '2026-09-11 18:43:02');
 
 -- --------------------------------------------------------
 
@@ -647,6 +774,14 @@ CREATE TABLE `re_revenue_engine_ads` (
   `created_at` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `re_revenue_engine_ads`
+--
+
+INSERT INTO `re_revenue_engine_ads` (`id`, `ads_category`, `amt_range_start`, `amt_range_end`, `percentage`, `created_at`) VALUES
+(1, 'Meta add', '1000', '10000', '12', '2026-09-10 15:11:36'),
+(2, 'Google Add', '1000', '10000', '20', '2026-09-10 15:26:57');
+
 -- --------------------------------------------------------
 
 --
@@ -702,7 +837,7 @@ INSERT INTO `re_revenue_engine_client_details` (`id`, `client_name`, `client_org
 (97, 'Computer Hardware', 'Compact', 'deepanshushukla07@gmail.com', '4567890234', 'Jabalpur', 'Dev BD', '2025-09-02 12:16:30'),
 (99, 'Rajeev Kumar ', 'ARR Construction', '', '9685966806', 'Jabalpur ', 'Vishakha Agrahari', '2025-09-03 10:34:03'),
 (102, 'Jaideep Mishra ', 'Mekalsuta Eduspace ', '', '8435555515', 'jabalpur ', 'Vishakha Agrahari', '2025-09-03 17:57:28'),
-(114, 'google meta ', NULL, NULL, '7586868566', NULL, 'Dev BD', '2025-09-04 17:45:24'),
+(114, 'google meta ', NULL, NULL, '9302300834', NULL, 'Dev BD', '2026-07-16 14:08:18'),
 (119, 'Deepak GADs', NULL, 'deepu@example.com', '4567890232', NULL, 'Abhinav Pandey', '2025-09-04 18:00:51'),
 (120, 'Shashank Dubey', 'PR', '', '9754880013', '', 'Lavina Kukreja', '2025-09-08 11:40:35'),
 (121, 'Real Estate - Basic', 'Basic Plan', NULL, '774604774', NULL, 'Lavina Kukreja', '2025-09-08 14:43:46'),
@@ -823,7 +958,8 @@ INSERT INTO `re_revenue_engine_client_details` (`id`, `client_name`, `client_org
 (262, 'Kalpana Tiwari', 'Hybernest Yoga Center', NULL, '6263206039', 'Raipur, Chhattisgarh', 'Abhinav Pandey', '2026-06-17 17:27:36'),
 (263, 'Rahul Sen', 'Gauri Clinic', '', '8982025174', 'Amarpatan', 'Abhinav Pandey', '2026-07-06 12:00:18'),
 (264, 'Amarpatan Multispeciality Hospital', '', '', '7675355307', 'Near Baghelkhand Petrol Pump, Maihar-Rewa Road, Lalpur, Amarpatan', 'Abhinav Pandey', '2026-07-06 12:21:16'),
-(265, 'RPS Sportech Baminton Academy', '', '', '9993086016', 'Jabalpur', 'Abhinav Pandey', '2026-07-10 20:17:53');
+(265, 'RPS Sportech Baminton Academy', '', '', '9993086016', 'Jabalpur', 'Abhinav Pandey', '2026-07-10 20:17:53'),
+(266, 'ashish', 'ashsih', 'ad201054@gmail.com', '9302300834', 'xyz', 'Ad Dubay', '2026-07-16 14:11:33');
 
 -- --------------------------------------------------------
 
@@ -859,6 +995,15 @@ CREATE TABLE `re_services` (
   `service_name` varchar(100) NOT NULL,
   `created_at` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_services`
+--
+
+INSERT INTO `re_services` (`service_id`, `service_name`, `created_at`) VALUES
+(1, 'website developmet', '2026-07-15 18:30:16'),
+(2, 'gmb', '2026-07-15 18:30:40'),
+(3, 'video editing', '2026-09-11 18:18:21');
 
 -- --------------------------------------------------------
 
@@ -959,6 +1104,22 @@ CREATE TABLE `re_workflow_remarks` (
   `remark` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_workflow_remarks`
+--
+
+INSERT INTO `re_workflow_remarks` (`id`, `txn_id`, `action_type`, `actor_name`, `remark`, `created_at`) VALUES
+(1, '1784191509663', 'payment_recorded', 'Ad Dubay', 'Payment Recorded (Pending Approval)\nAmount : ₹10000\nTime : 16/7/2026, 2:15:09 pm', '2026-07-16 03:15:09'),
+(2, '1784191509663', 'payment_approved', 'Ad Dubay', 'Payment Approved\nAmount : ₹10000\nOutstanding : ₹45000\nInvoice Number : 01', '2026-07-16 03:15:27'),
+(3, '1789112806172', 'payment_recorded', 'Ad Dubay', 'Payment Recorded (Pending Approval)\nAmount : ₹10000\nTime : 11/9/2026, 1:16:46 pm', '2026-09-11 02:16:46'),
+(4, '1789112806172', 'payment_approved', 'Ad Dubay', 'Payment Approved\nAmount : ₹10000\nOutstanding : ₹55600\nInvoice Number : 02', '2026-09-11 02:17:00'),
+(5, '1789116460806', 'payment_recorded', 'Ad Dubay', 'Payment Recorded (Pending Approval)\nAmount : ₹10000\nTime : 11/9/2026, 2:17:40 pm', '2026-09-11 03:17:40'),
+(6, '1789116460806', 'payment_approved', 'Ad Dubay', 'Payment Approved\nAmount : ₹10000\nOutstanding : ₹55600\nInvoice Number : 01', '2026-09-11 03:17:52'),
+(7, '1789130272454', 'payment_recorded', 'Ad Dubay', 'Payment Recorded (Pending Approval)\nAmount : ₹50000\nTime : 11/9/2026, 6:07:52 pm', '2026-09-11 07:07:52'),
+(8, '1789130272454', 'payment_approved', 'Ad Dubay', 'Payment Approved\nAmount : ₹50000\nOutstanding : ₹10000\nInvoice Number : 01', '2026-09-11 07:08:03'),
+(9, '1789133142036', 'payment_recorded', 'Ad Dubay', 'Payment Recorded (Pending Approval)\nAmount : ₹50000\nTime : 11/9/2026, 6:55:42 pm', '2026-09-11 07:55:42'),
+(10, '1789133142036', 'payment_approved', 'Ad Dubay', 'Payment Approved\nAmount : ₹50000\nOutstanding : ₹24500\nInvoice Number : 02', '2026-09-11 07:55:53');
 
 -- --------------------------------------------------------
 
@@ -1330,7 +1491,7 @@ ALTER TABLE `re_ads_campaign_details`
 -- AUTO_INCREMENT for table `re_ads_campaign_details_invoice`
 --
 ALTER TABLE `re_ads_campaign_details_invoice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `re_amount_remaining`
@@ -1348,13 +1509,13 @@ ALTER TABLE `re_assign_quotation`
 -- AUTO_INCREMENT for table `re_calculator_transactions`
 --
 ALTER TABLE `re_calculator_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `re_categories`
 --
 ALTER TABLE `re_categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `re_client_requirement_links`
@@ -1378,7 +1539,7 @@ ALTER TABLE `re_complimentary_invoice`
 -- AUTO_INCREMENT for table `re_discount`
 --
 ALTER TABLE `re_discount`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `re_discount_settings`
@@ -1390,13 +1551,13 @@ ALTER TABLE `re_discount_settings`
 -- AUTO_INCREMENT for table `re_editing_types`
 --
 ALTER TABLE `re_editing_types`
-  MODIFY `editing_type_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `editing_type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `re_invoice`
 --
 ALTER TABLE `re_invoice`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `re_invoice_client_notes`
@@ -1408,7 +1569,7 @@ ALTER TABLE `re_invoice_client_notes`
 -- AUTO_INCREMENT for table `re_invoice_graphic`
 --
 ALTER TABLE `re_invoice_graphic`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `re_invoice_notes_data`
@@ -1456,25 +1617,25 @@ ALTER TABLE `re_plan_details`
 -- AUTO_INCREMENT for table `re_proposals`
 --
 ALTER TABLE `re_proposals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `re_proposal_payment_records`
 --
 ALTER TABLE `re_proposal_payment_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `re_proposal_proforma`
 --
 ALTER TABLE `re_proposal_proforma`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `re_public_access_logs`
 --
 ALTER TABLE `re_public_access_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `re_quotation_status`
@@ -1498,13 +1659,13 @@ ALTER TABLE `re_requirement_submission_items`
 -- AUTO_INCREMENT for table `re_revenue_engine_ads`
 --
 ALTER TABLE `re_revenue_engine_ads`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `re_revenue_engine_client_details`
 --
 ALTER TABLE `re_revenue_engine_client_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=266;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=267;
 
 --
 -- AUTO_INCREMENT for table `re_revenue_engine_employees`
@@ -1516,7 +1677,7 @@ ALTER TABLE `re_revenue_engine_employees`
 -- AUTO_INCREMENT for table `re_services`
 --
 ALTER TABLE `re_services`
-  MODIFY `service_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `service_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `re_service_progress`
@@ -1552,7 +1713,7 @@ ALTER TABLE `re_workflow_project_assignments`
 -- AUTO_INCREMENT for table `re_workflow_remarks`
 --
 ALTER TABLE `re_workflow_remarks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `re_workflow_strategy`
