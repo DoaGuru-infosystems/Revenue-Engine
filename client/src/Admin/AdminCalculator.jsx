@@ -604,7 +604,69 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
   );
 
   const handleSave = () => {
-    if (!selectedEditingType) return;
+    if (!selectedService) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation",
+        text: "Please select a service.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    if (!selectedCategory) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation",
+        text: "Please select a category.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    const hasEditingTypesToSelect =
+      getSelectedCategory?.editing_types?.some(
+        (et) =>
+          et.editing_type_name &&
+          et.editing_type_name.trim() !== "" &&
+          et.editing_type_name !== "null" &&
+          et.editing_type_name !== "N/A"
+      ) || (getSelectedCategory?.editing_types?.length > 1);
+
+    if (hasEditingTypesToSelect && (!selectedEditingType || !selectedEditingType.editing_type_id)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Editing Type Required",
+        text: "Is service category ke liye Editing Type chunna anivarya (mandatory) hai.",
+        showConfirmButton: true,
+      });
+      return;
+    }
+
+    if (!selectedEditingType) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation",
+        text: "Please select an editing type or pricing tier.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    if (!quantity || quantity <= 0 || isNaN(quantity)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation",
+        text: "Please enter a valid quantity of at least 1.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
     setLoading(true);
 
     // Base amount
@@ -1574,13 +1636,16 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
                         const catName = e.target.value;
                         setSelectedCategory(catName);
                         const category = getSelectedService?.categories.find(c => c.category_name === catName);
-                        if (category && category.editing_types && category.editing_types.length === 1 && category.editing_types[0].editing_type_name === null) {
+                        const hasRealEditingTypes = category?.editing_types?.some(
+                          et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A"
+                        );
+                        if (category && category.editing_types && category.editing_types.length === 1 && !hasRealEditingTypes) {
                           setSelectedEditingType(category.editing_types[0]);
                         } else {
                           setSelectedEditingType(null);
                         }
                       } }>
-                      <option value="">-- Choose --</option>
+                      <option value="">-- Choose Category --</option>
                       { getSelectedService?.categories.map((c) => <option key={ c.category_id } value={ c.category_name }>{ c.category_name }</option>) }
                     </select>
                   </div>
@@ -1588,13 +1653,13 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
 
                 {/* Row 2: Editing Type + Quantity */ }
                 <div className="grid grid-cols-2 gap-3">
-                  { !(getSelectedCategory?.editing_types?.length === 1 && getSelectedCategory.editing_types[0].editing_type_name === null) && (
+                  { (getSelectedCategory?.editing_types?.some(et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A") || (getSelectedCategory?.editing_types?.length > 1)) && (
                     <div>
-                      <label className={ labelCls }>Editing Type</label>
+                      <label className={ labelCls }>Editing Type <span className="text-red-500 font-bold">*</span></label>
                       <select value={ selectedEditingType?.editing_type_id || "" } disabled={ !!editId || !getSelectedCategory } className={ selectCls }
-                        onChange={ (e) => { const ed = getSelectedCategory?.editing_types.find((et) => et.editing_type_id === parseInt(e.target.value)); setSelectedEditingType(ed); } }>
-                        <option value="">-- Choose --</option>
-                        { getSelectedCategory?.editing_types.map((ed) => <option key={ ed.editing_type_id } value={ ed.editing_type_id }>{ ed.editing_type_name } — ₹{ ed.amount }</option>) }
+                        onChange={ (e) => { const ed = getSelectedCategory?.editing_types.find((et) => et.editing_type_id === parseInt(e.target.value)); setSelectedEditingType(ed || null); } }>
+                        <option value="">-- Choose Editing Type (Required) --</option>
+                        { getSelectedCategory?.editing_types.map((ed) => <option key={ ed.editing_type_id } value={ ed.editing_type_id }>{ ed.editing_type_name || "Standard" } — ₹{ ed.amount }</option>) }
                       </select>
                     </div>
                   ) }

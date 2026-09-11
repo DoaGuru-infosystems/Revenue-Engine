@@ -706,10 +706,20 @@ export default function ProposalBuilderBD() {
                             ) : (
                               pricingTable.map((row, i) => (
                                 <tr key={`sow-${i}`} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition">
-                                  <td className="p-3 text-gray-300 font-medium">{row.category_name || '-'}</td>
+                                  <td className="p-3 text-gray-300 font-medium">
+                                    {row.category_name || '-'}
+                                    {row.editing_type_name &&
+                                      row.editing_type_name !== 'null' &&
+                                      row.editing_type_name !== 'N/A' &&
+                                      row.editing_type_name !== 'undefined' &&
+                                      row.editing_type_name.toLowerCase() !== 'proposal item' &&
+                                      row.editing_type_name.trim().toLowerCase() !== (row.category_name || '').trim().toLowerCase() &&
+                                      row.editing_type_name.trim().toLowerCase() !== (row.service_name || row.service || '').trim().toLowerCase()
+                                      ? ` (${row.editing_type_name})`
+                                      : ''}
+                                  </td>
                                   <td className="p-3 text-gray-300">
                                     {row.service_name || row.service || '-'}
-                                    {row.editing_type_name ? <span className="text-gray-500 text-xs ml-1">({row.editing_type_name})</span> : ''}
                                   </td>
                                   <td className="p-3 text-center text-gray-300">{row.quantity || '-'}</td>
                                 </tr>

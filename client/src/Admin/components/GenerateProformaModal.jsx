@@ -87,6 +87,14 @@ const GenerateProformaModal = ({
           const prop = proposalsList.find((p) => String(p.id) === String(initialSelectedProposalId));
           if (prop) {
             handleCreateProformaFromProposal(prop);
+          } else {
+            axios.get(`${baseURL}/auth/api/re_calculator/proposal/${initialSelectedProposalId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            }).then(res => {
+              if (res.data.status === "Success" && res.data.data) {
+                handleCreateProformaFromProposal(res.data.data);
+              }
+            }).catch(err => console.error("Failed to load initial proposal:", err));
           }
         } else if (selectedTxn) {
           setQuotationServicesPreview(txnPreviewData);
@@ -102,6 +110,17 @@ const GenerateProformaModal = ({
   const handleCreateProformaFromProposal = (proposal) => {
     setSelectedProposalForProforma(proposal);
     setQuotationPreviewLoading(false);
+
+    if (proposal) {
+      setFormData(prev => ({
+        ...prev,
+        client_name: prev.client_name || proposal.client_name || "",
+        client_organization: prev.client_organization || proposal.client_organization || "",
+        email: prev.email || proposal.email || "",
+        phone: prev.phone || proposal.phone || "",
+        address: prev.address || proposal.address || "",
+      }));
+    }
 
     let previewData = [];
     try {
@@ -567,6 +586,11 @@ const GenerateProformaModal = ({
                       if (prop) handleCreateProformaFromProposal(prop);
                     } }
                   >
+                    { selectedProposalForProforma && !proposalsList.some(p => String(p.id) === String(selectedProposalForProforma.id)) && (
+                      <option key={ selectedProposalForProforma.id } value={ selectedProposalForProforma.id }>
+                        Proposal #{ selectedProposalForProforma.id } - { selectedProposalForProforma.grand_total_excl_gst } INR ({ selectedProposalForProforma.proposal_type }) - { selectedProposalForProforma.client_name || currentClientName }
+                      </option>
+                    ) }
                     { proposalsList.map(p => (
                       <option key={ p.id } value={ p.id }>Proposal #{ p.id } - { p.grand_total_excl_gst } INR ({ p.proposal_type }) - { p.client_name }</option>
                     )) }
@@ -794,7 +818,38 @@ const GenerateProformaModal = ({
                                   <React.Fragment key={ `dm-${idx}` }>
                                     <tr>
                                       <td className="ci-td-cell ci-text-orange font-medium">{ (svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || "N/A") }</td>
-                                      <td className="ci-td-cell">{ getServiceDisplayName((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.category_name || "N/A")) }</td>
+                                      <td className="ci-td-cell">
+                                        {(() => {
+                                          const isServiceCharge = (svc.service_name || "").toLowerCase() === "service charge";
+                                          if (isServiceCharge) {
+                                            return getServiceDisplayName(
+                                              (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item")
+                                                ? (svc.service || svc.category_name || svc.editing_type_name)
+                                                : (svc.editing_type_name || svc.category_name || "N/A")
+                                            );
+                                          }
+                                          const cat = svc.category_name && svc.category_name !== "N/A" ? svc.category_name : "";
+                                          const type =
+                                            svc.editing_type_name &&
+                                            svc.editing_type_name !== "N/A" &&
+                                            svc.editing_type_name !== "null" &&
+                                            svc.editing_type_name !== "undefined" &&
+                                            svc.editing_type_name.trim() !== "" &&
+                                            svc.editing_type_name.toLowerCase() !== "proposal item"
+                                              ? svc.editing_type_name.trim()
+                                              : "";
+
+                                          if (
+                                            cat &&
+                                            type &&
+                                            cat.trim().toLowerCase() !== type.toLowerCase() &&
+                                            type.toLowerCase() !== (svc.service_name || "").trim().toLowerCase()
+                                          ) {
+                                            return `${cat} (${type})`;
+                                          }
+                                          return cat || type || "N/A";
+                                        })()}
+                                      </td>
                                       <td className="ci-td-cell-right">{ qty }</td>
                                       <td className="ci-td-cell-right">₹{ basePrice.toLocaleString("en-IN") }</td>
                                       <td className="ci-td-cell-right">₹{ (basePrice * qty).toLocaleString("en-IN") }</td>

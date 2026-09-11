@@ -1409,7 +1409,9 @@ const History = () => {
                   previewLoading={quotationPreviewLoading}
                   selectedTxn={selectedTxn}
                   handleCreateInvoiceForTxn={handleCreateInvoiceForTxn}
-                  proposalsList={proposals.filter(p => p.status === "client_approved" || p.status === "approved")}
+                  proposalsList={proposals.filter(p => 
+                    ['approved', 'client_approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'partially_paid'].includes(p.status)
+                  )}
                   initialSelectedProposalId={initialSelectedProposalId}
                 />
           ) }

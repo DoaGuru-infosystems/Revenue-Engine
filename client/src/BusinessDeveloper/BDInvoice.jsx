@@ -1616,15 +1616,34 @@ export default function BDInvoice() {
                                       ) : null }
 
                                       <td className="border px-2 py-1">
-                                        { service.service === "Video Services"
-                                          ? ((edit.type && edit.type.toLowerCase() === "proposal item") || edit.type === "N/A" ? (edit.category || service.service) : `${edit.category || ""} With ${edit.type}`.trim())
-                                          : service.service === "Service Charge"
-                                            ? (edit.type && edit.type !== "N/A" && edit.type.toLowerCase().includes("management")
-                                                ? edit.type
-                                                : `${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type || "Management & Optimization"}`.trim())
-                                            : ((edit.type && edit.type.toLowerCase() === "proposal item") || edit.type === "N/A" || !edit.type)
-                                              ? (edit.category && edit.category !== "N/A" ? edit.category : service.service)
-                                              : (edit.category && edit.category !== "N/A" ? edit.category : edit.type) }
+                                        {(() => {
+                                          if (service.service === "Service Charge") {
+                                            return edit.type && edit.type !== "N/A" && edit.type.toLowerCase().includes("management")
+                                              ? edit.type
+                                              : `${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type || "Management & Optimization"}`.trim();
+                                          }
+
+                                          const cat = edit.category && edit.category !== "N/A" ? edit.category : "";
+                                          const type =
+                                            edit.type &&
+                                            edit.type !== "N/A" &&
+                                            edit.type !== "null" &&
+                                            edit.type !== "undefined" &&
+                                            edit.type.trim() !== "" &&
+                                            edit.type.toLowerCase() !== "proposal item"
+                                              ? edit.type.trim()
+                                              : "";
+
+                                          if (
+                                            cat &&
+                                            type &&
+                                            cat.trim().toLowerCase() !== type.toLowerCase() &&
+                                            type.toLowerCase() !== (service.service || "").trim().toLowerCase()
+                                          ) {
+                                            return `${cat} (${type})`;
+                                          }
+                                          return cat || type || service.service;
+                                        })()}
                                       </td>
                                       <td className="border px-2 py-1 text-right">
                                         { qty }

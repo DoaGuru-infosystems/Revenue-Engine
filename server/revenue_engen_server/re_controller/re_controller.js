@@ -861,22 +861,63 @@ exports.addEditingTypes = async (req, res) => {
   }
 
   try {
-    db.query(
-      "INSERT INTO re_editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
-      [service_id, category_id, editing_type_name, amount, createdAt],
-      (err, result) => {
-        if (err) {
-          return res
-            .status(500)
-            .json({ status: "Failure", message: "Database error" });
-        }
+    const trimmedName = editing_type_name && String(editing_type_name).trim();
+    if (trimmedName) {
+      db.query(
+        "SELECT editing_type_id FROM re_editing_types WHERE category_id = ? AND LOWER(TRIM(editing_type_name)) = LOWER(?)",
+        [category_id, trimmedName],
+        (checkErr, checkResult) => {
+          if (checkErr) {
+            return res.status(500).json({
+              status: "Failure",
+              message: "Database error during duplicate check",
+            });
+          }
 
-        res.status(201).json({
-          status: "Success",
-          message: "Editing type added successfully",
-        });
-      },
-    );
+          if (checkResult && checkResult.length > 0) {
+            return res.status(400).json({
+              status: "Failure",
+              message:
+                "Editing type with this name already exists for the selected category",
+            });
+          }
+
+          db.query(
+            "INSERT INTO re_editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
+            [service_id, category_id, trimmedName, amount, createdAt],
+            (err, result) => {
+              if (err) {
+                return res
+                  .status(500)
+                  .json({ status: "Failure", message: "Database error" });
+              }
+
+              res.status(201).json({
+                status: "Success",
+                message: "Editing type added successfully",
+              });
+            },
+          );
+        },
+      );
+    } else {
+      db.query(
+        "INSERT INTO re_editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
+        [service_id, category_id, null, amount, createdAt],
+        (err, result) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ status: "Failure", message: "Database error" });
+          }
+
+          res.status(201).json({
+            status: "Success",
+            message: "Editing type added successfully",
+          });
+        },
+      );
+    }
   } catch (error) {
     res.status(500).json({ status: "Failure", message: "Server error", error });
   }
@@ -4021,6 +4062,8 @@ exports.saveDirectProforma = (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
+  const proformaTxnId = txn_id || String(Date.now());
+
   const query = `
     INSERT INTO re_proposal_proforma (
       client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
@@ -4030,7 +4073,7 @@ exports.saveDirectProforma = (req, res) => {
 
   const values = [
     client_id,
-    txn_id,
+    proformaTxnId,
     is_gst,
     gst_rate,
     base_amount,

@@ -99,7 +99,7 @@ export const classifyProformaServices = (services) => {
         service_name: item.service_name || item.service,
         editing_type_name: isServiceCharge
           ? (item.editing_type_name || `${item.category_name || ""} Management & Optimization`)
-          : (item.editing_type_name || item.service_name || "Proposal Item"),
+          : (item.editing_type_name || null),
         quantity: item.quantity || 1,
         editing_type_amount: item.editing_type_amount || item.unit_price || item.amount || 0,
         total_amount: item.total_amount || item.total_price || item.unit_price || 0,

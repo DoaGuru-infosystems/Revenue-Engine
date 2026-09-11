@@ -398,14 +398,18 @@ export default function PublicProposal() {
                                 !isAds &&
                                 item.editing_type_name &&
                                 item.editing_type_name !== "null" &&
-                                item.editing_type_name !== "N/A"
+                                item.editing_type_name !== "N/A" &&
+                                item.editing_type_name !== "undefined" &&
+                                item.editing_type_name.toLowerCase() !== "proposal item" &&
+                                item.editing_type_name.trim().toLowerCase() !== (categoryName || "").trim().toLowerCase() &&
+                                item.editing_type_name.trim().toLowerCase() !== (serviceName || "").trim().toLowerCase()
                                   ? ` (${item.editing_type_name})`
                                   : "";
 
                               return (
                                 <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="px-6 py-4 font-medium text-slate-800">{categoryName}</td>
-                                  <td className="px-6 py-4 text-slate-700">{serviceName}{editingSuffix}</td>
+                                  <td className="px-6 py-4 font-medium text-slate-800">{categoryName}{editingSuffix}</td>
+                                  <td className="px-6 py-4 text-slate-700">{serviceName}</td>
                                   <td className="px-6 py-4 text-center">
                                     <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 font-medium text-xs">
                                       {quantityVal}

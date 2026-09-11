@@ -59,7 +59,9 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
             uniqueTxnData.push(item);
           }
         }
-        const approvedProposals = uniqueTxnData.filter(p => p.status === "client_approved" || p.status === "approved");
+        const approvedProposals = uniqueTxnData.filter(p => 
+          ['approved', 'client_approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'partially_paid'].includes(p.status)
+        );
         setProposalsList(approvedProposals);
       }
     } catch (error) {

@@ -488,7 +488,22 @@ const InvoiceCalculation = () => {
   };
 
   const handleSave = () => {
-    if (!selectedEditingType) return;
+    if (!selectedService) {
+      Swal.fire({ icon: "warning", title: "Validation", text: "Please select a service." });
+      return;
+    }
+    if (!selectedCategory) {
+      Swal.fire({ icon: "warning", title: "Validation", text: "Please select a category." });
+      return;
+    }
+    if (!selectedEditingType || !selectedEditingType.editing_type_id) {
+      Swal.fire({ icon: "warning", title: "Editing Type Required", text: "Please select an editing type." });
+      return;
+    }
+    if (!quantity || quantity <= 0) {
+      Swal.fire({ icon: "warning", title: "Validation", text: "Please enter a valid quantity of at least 1." });
+      return;
+    }
     setLoading(true);
     let baseAmount = selectedEditingType.amount * quantity;
     let optionalTotal = 0;
@@ -867,7 +882,9 @@ const InvoiceCalculation = () => {
 
               {getSelectedCategory && (
                 <div>
-                  <label className="block font-semibold mb-1">Select Editing Type</label>
+                  <label className="block font-semibold mb-1">
+                    Select Editing Type <span className="text-red-500">*</span>
+                  </label>
                   <select
                     className="w-full p-2 border rounded bg-white text-black"
                     value={selectedEditingType?.editing_type_id || ""}
@@ -875,11 +892,11 @@ const InvoiceCalculation = () => {
                       const edit = getSelectedCategory.editing_types.find(
                         (et) => et.editing_type_id === parseInt(e.target.value)
                       );
-                      setSelectedEditingType(edit);
+                      setSelectedEditingType(edit || null);
                     }}
                     disabled={!!editId}
                   >
-                    <option value="">-- Choose Editing Type --</option>
+                    <option value="">-- Choose Editing Type (Required) --</option>
                     {getSelectedCategory.editing_types.map((edit) => (
                       <option key={edit.editing_type_id} value={edit.editing_type_id}>
                         {edit.editing_type_name} - ₹{edit.amount}

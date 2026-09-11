@@ -1050,7 +1050,18 @@ export default function ProposalBuilder() {
                                       { items.map((row, idx) => (
                                         <tr key={ `${row.originalIndex}-${idx}` } className="border-b border-gray-800/50 hover:bg-gray-800/20 transition group">
                                           <td className="p-3">
-                                            <p className="font-medium text-gray-200">{ row.category_name || '-' }</p>
+                                            <p className="font-medium text-gray-200">
+                                              { row.category_name || '-' }
+                                              { row.editing_type_name &&
+                                                row.editing_type_name !== 'null' &&
+                                                row.editing_type_name !== 'N/A' &&
+                                                row.editing_type_name !== 'undefined' &&
+                                                row.editing_type_name.toLowerCase() !== 'proposal item' &&
+                                                row.editing_type_name.trim().toLowerCase() !== (row.category_name || '').trim().toLowerCase() &&
+                                                row.editing_type_name.trim().toLowerCase() !== (row.service_name || row.service || '').trim().toLowerCase()
+                                                ? ` (${row.editing_type_name})`
+                                                : '' }
+                                            </p>
                                             { row.source === 'plan' && <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mt-1 inline-block">Plan Service</span> }
                                             { row.source === 'custom_graphic' && <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full mt-1 inline-block">Graphic & SEO</span> }
                                             { row.source === 'custom_ads' && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full mt-1 inline-block">Ads Campaign</span> }
@@ -1342,7 +1353,18 @@ export default function ProposalBuilder() {
                             ) : (
                               pricingTable.map((row, i) => (
                                 <tr key={ `sow-${i}` } className="border-b border-gray-800/50 hover:bg-gray-800/20 transition">
-                                  <td className="p-3 text-gray-300 font-medium">{ row.category_name || '-' }</td>
+                                  <td className="p-3 text-gray-300 font-medium">
+                                    { row.category_name || '-' }
+                                    { row.editing_type_name &&
+                                      row.editing_type_name !== 'null' &&
+                                      row.editing_type_name !== 'N/A' &&
+                                      row.editing_type_name !== 'undefined' &&
+                                      row.editing_type_name.toLowerCase() !== 'proposal item' &&
+                                      row.editing_type_name.trim().toLowerCase() !== (row.category_name || '').trim().toLowerCase() &&
+                                      row.editing_type_name.trim().toLowerCase() !== (row.service_name || row.service || '').trim().toLowerCase()
+                                      ? ` (${row.editing_type_name})`
+                                      : '' }
+                                  </td>
                                   <td className="p-3 text-gray-300">
                                     { row.service_name || row.service || '-' }
                                   </td>

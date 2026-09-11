@@ -707,6 +707,9 @@ exports.createProforma = async (req, res) => {
       finalTotalAmount = finalBaseAmount + finalGstAmount;
     }
 
+    // Generate a unique txn_id for this proforma so each proforma has its own distinct identity
+    const proformaTxnId = String(Date.now());
+
     const q = `
       INSERT INTO re_proposal_proforma 
       (proposal_id, client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
@@ -717,7 +720,7 @@ exports.createProforma = async (req, res) => {
     const result = await runQuery(q, [
       proposal_id,
       client_id,
-      proposal.txn_id, // Copied from parent proposal
+      proformaTxnId,
       is_gst ? 1 : 0,
       gst_rate,
       finalBaseAmount,
@@ -2046,14 +2049,18 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
             !isAds &&
             item.editing_type_name &&
             item.editing_type_name !== "null" &&
-            item.editing_type_name !== "N/A"
+            item.editing_type_name !== "N/A" &&
+            item.editing_type_name !== "undefined" &&
+            item.editing_type_name.toLowerCase() !== "proposal item" &&
+            item.editing_type_name.trim().toLowerCase() !== (categoryName || "").trim().toLowerCase() &&
+            item.editing_type_name.trim().toLowerCase() !== (serviceName || "").trim().toLowerCase()
               ? ` (${item.editing_type_name})`
               : "";
 
           htmlContent += `<tr>
-            <td>${categoryName}</td>
+            <td>${categoryName}${editingSuffix}</td>
             <td>
-              ${serviceName}${editingSuffix}
+              ${serviceName}
             </td>
             <td style="text-align: center;">${quantityVal}</td>
           </tr>`;
