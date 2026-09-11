@@ -20,6 +20,7 @@ import {
   IndianRupeeIcon,
 } from "lucide-react";
 import { classifyProformaServices } from "../utils/proformaPricing";
+import { inrToWords } from "../utils/inrToWords";
 import API_BASE_URL from "../config/apiBaseUrl";
 export default function Quotation() {
   const baseURL = API_BASE_URL;
@@ -425,7 +426,18 @@ export default function Quotation() {
             const livePricing = propRes && propRes.data.status === "Success" && propRes.data.data ? propRes.data.data.pricing_table_json : null;
             const pricingSource = docTypeFromURL === "proforma" ? proforma.pricing_snapshot : (livePricing || proforma.pricing_snapshot);
             const parsed = JSON.parse(pricingSource || "[]");
-            const { dmServices, adsServices } = classifyProformaServices(parsed);
+
+            let adsParsed = [];
+            if (proforma.ads_snapshot) {
+              try {
+                adsParsed = JSON.parse(proforma.ads_snapshot || "[]");
+              } catch (adsErr) {
+                console.error("Failed to parse proforma.ads_snapshot", adsErr);
+              }
+            }
+
+            const combined = [...parsed, ...adsParsed];
+            const { dmServices, adsServices } = classifyProformaServices(combined);
 
             const compServices = parsed.filter(item => item.source === 'custom_complimentary' || item.service_name?.toLowerCase() === 'complimentary').map(item => ({
               ...item,
@@ -729,7 +741,15 @@ export default function Quotation() {
     (sum, service) =>
       sum +
       service.editingTypes.reduce(
-        (editSum, edit) => editSum + (edit.total || edit.price * edit.quantity),
+        (editSum, edit) => {
+          if (service.service === "Service Charge") {
+            const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
+            const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
+            if (isGoogle && !showGoogleAd) return editSum;
+            if (isMeta && !showMetaAd) return editSum;
+          }
+          return editSum + (edit.total || edit.price * edit.quantity);
+        },
         0
       ),
     0
@@ -1271,8 +1291,20 @@ export default function Quotation() {
 
                           <tbody>
                             {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */ }
-                            { graphicData.map((service, idx) =>
-                              service.editingTypes.map((edit, eidx) => {
+                            { graphicData.map((service, idx) => {
+                              const visibleEditingTypes = service.editingTypes.filter((edit) => {
+                                if (service.service === "Service Charge") {
+                                  const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
+                                  const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
+                                  if (isGoogle && !showGoogleAd) return false;
+                                  if (isMeta && !showMetaAd) return false;
+                                }
+                                return true;
+                              });
+
+                              if (visibleEditingTypes.length === 0) return null;
+
+                              return visibleEditingTypes.map((edit, eidx) => {
                                 const qty = Number(edit.quantity);
                                 const base = Number(edit.price);
                                 const totalBase = base * qty;
@@ -1282,11 +1314,11 @@ export default function Quotation() {
                                     key={ `graphic-${idx}-${eidx}` }
                                     className="bg-white"
                                   >
-                                    {/* Show DM Service name only once using rowspan */ }
+                                    {/* Show Services name only once using rowspan */ }
                                     { eidx === 0 ? (
                                       <td
                                         className="border px-2 py-1 align-center"
-                                        rowSpan={ service.editingTypes.length }
+                                        rowSpan={ visibleEditingTypes.length }
                                       >
                                         { service.service }
                                       </td>
@@ -1294,24 +1326,26 @@ export default function Quotation() {
 
                                     <td className="border px-2 py-1">
                                       { service.service === "Video Services"
-                                        ? `${edit.category} With ${edit.type}`
-                                        : service.service === "Service Charge" && edit.type && edit.type.startsWith("Management")
-                                          ? (`${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type}`.trim())
-                                          : edit.type }
+                                        ? ((edit.type && edit.type.toLowerCase() === "proposal item") || edit.type === "N/A" ? (edit.category || service.service) : `${edit.category || ""} With ${edit.type}`.trim())
+                                        : service.service === "Service Charge"
+                                          ? (edit.type && edit.type !== "N/A" && edit.type.toLowerCase().includes("management")
+                                              ? edit.type
+                                              : `${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type || "Management & Optimization"}`.trim())
+                                          : (edit.category && edit.category !== "N/A" ? edit.category : (edit.type && edit.type !== "N/A" ? edit.type : service.service)) }
                                     </td>
                                     <td className="border px-2 py-1 text-right">
                                       { qty }
                                     </td>
                                     <td className="border px-2 py-1 text-right">
-                                      ₹{ base }
+                                      ₹{ base.toLocaleString("en-IN") }
                                     </td>
                                     <td className="border px-2 py-1 text-right">
-                                      ₹{ totalBase }
+                                      ₹{ totalBase.toLocaleString("en-IN") }
                                     </td>
                                   </tr>
                                 );
-                              })
-                            ) }
+                              });
+                            }) }
 
                             {/* ================= THUMBNAIL CREATION TOTAL ================= */ }
                             { (() => {
@@ -1449,10 +1483,19 @@ export default function Quotation() {
                                 (sum, service) =>
                                   sum +
                                   service.editingTypes.reduce(
-                                    (s, edit) =>
-                                      s +
-                                      Number(edit.price) *
-                                      Number(edit.quantity),
+                                    (s, edit) => {
+                                      if (service.service === "Service Charge") {
+                                        const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
+                                        const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
+                                        if (isGoogle && !showGoogleAd) return s;
+                                        if (isMeta && !showMetaAd) return s;
+                                      }
+                                      return (
+                                        s +
+                                        Number(edit.price) *
+                                        Number(edit.quantity)
+                                      );
+                                    },
                                     0
                                   ),
                                 0
@@ -1796,70 +1839,51 @@ export default function Quotation() {
 
                       {/* RIGHT SIDE: Totals */ }
                       <div className="w-1/2 pl-3 text-right border-l border-gray-200">
-                        { (() => {
-                          const inrToWords = (num) => {
-                            const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-                            const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-                            const convert = (n) => {
-                              if (n < 20) return a[n];
-                              if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? "-" + a[n % 10] : "");
-                              if (n < 1000) return a[Math.floor(n / 100)] + " Hundred" + (n % 100 !== 0 ? " " + convert(n % 100) : "");
-                              if (n < 100000) return convert(Math.floor(n / 1000)) + " Thousand" + (n % 1000 !== 0 ? " " + convert(n % 1000) : "");
-                              if (n < 10000000) return convert(Math.floor(n / 100000)) + " Lakh" + (n % 100000 !== 0 ? " " + convert(n % 100000) : "");
-                              return convert(Math.floor(n / 10000000)) + " Crore" + (n % 10000000 !== 0 ? " " + convert(n % 10000000) : "");
-                            };
-                            if (num === 0) return "Zero Rupees";
-                            return convert(num) + " Rupees";
-                          };
-
-                          return (
-                            <div className="space-y-0.5 text-gray-700">
-                              { discountAmount > 0 && (
-                                <>
-                                  <p>Subtotal ₹{ graphicTotal.toLocaleString("en-IN") }</p>
-                                  <p className="text-red-600 font-bold mt-1">
-                                    Discount (
-                                    { selecteddiscount.discount_type === "percent"
-                                      ? `${selecteddiscount.discount_per}%`
-                                      : `₹${selecteddiscount.discount_amt}` }
-                                    ): -₹{ discountAmount.toLocaleString("en-IN") }
-                                  </p>
-                                </>
-                              ) }
-
-                              <p className="mt-1">Taxable Amount ₹{ dmTotalAfterDiscount.toLocaleString("en-IN") }</p>
-
-                              { isGST && (
-                                <>
-                                  <p>CGST @9% ₹{ (dmGstAmount / 2).toLocaleString("en-IN") }</p>
-                                  <p>SGST @9% ₹{ (dmGstAmount / 2).toLocaleString("en-IN") }</p>
-                                </>
-                              ) }
-
-                              <p className="font-bold mt-1">Subtotal ₹{ dmSubtotalWithGst.toLocaleString("en-IN") }</p>
-
-                              { adsData && adsData.length > 0 && adsData.map((ad, idx) => {
-                                const amount = Number(ad.amount || ad.budget || 0);
-                                const cat = (ad.category_name || "").toLowerCase();
-                                if (cat.includes("meta") && !showMetaAd) return null;
-                                if (cat.includes("google") && !showGoogleAd) return null;
-                                const adsCategoryName = ad.category_name || ad.service_name || "Ads";
-                                return (
-                                  <p key={ idx }>{ adsCategoryName } Budget ₹{ amount.toLocaleString("en-IN") }</p>
-                                );
-                              }) }
-
-                              <p className="text-lg font-bold text-green-700 mt-2">
-                                Grand Total ₹{ grandTotal.toLocaleString("en-IN") }
+                        <div className="space-y-0.5 text-gray-700">
+                          { discountAmount > 0 && (
+                            <>
+                              <p>Subtotal ₹{ graphicTotal.toLocaleString("en-IN") }</p>
+                              <p className="text-red-600 font-bold mt-1">
+                                Discount (
+                                { selecteddiscount.discount_type === "percent"
+                                  ? `${selecteddiscount.discount_per}%`
+                                  : `₹${selecteddiscount.discount_amt}` }
+                                ): -₹{ discountAmount.toLocaleString("en-IN") }
                               </p>
+                            </>
+                          ) }
 
-                              <div className="mt-1 pt-2 border-t text-right">
-                                <p className="text-xs text-gray-500">Total Amount (in words):</p>
-                                <p className="font-semibold text-gray-800 leading-snug">{ inrToWords(grandTotal) }</p>
-                              </div>
-                            </div>
-                          );
-                        })() }
+                          <p className="mt-1">Taxable Amount ₹{ dmTotalAfterDiscount.toLocaleString("en-IN") }</p>
+
+                          { isGST && (
+                            <>
+                              <p>CGST @9% ₹{ (dmGstAmount / 2).toLocaleString("en-IN") }</p>
+                              <p>SGST @9% ₹{ (dmGstAmount / 2).toLocaleString("en-IN") }</p>
+                            </>
+                          ) }
+
+                          <p className="font-bold mt-1">Subtotal ₹{ dmSubtotalWithGst.toLocaleString("en-IN") }</p>
+
+                          { adsData && adsData.length > 0 && adsData.map((ad, idx) => {
+                            const amount = Number(ad.amount || ad.budget || 0);
+                            const cat = (ad.category_name || "").toLowerCase();
+                            if (cat.includes("meta") && !showMetaAd) return null;
+                            if (cat.includes("google") && !showGoogleAd) return null;
+                            const adsCategoryName = ad.category_name || ad.service_name || "Ads";
+                            return (
+                              <p key={ idx }>{ adsCategoryName } Budget ₹{ amount.toLocaleString("en-IN") }</p>
+                            );
+                          }) }
+
+                          <p className="text-lg font-bold text-green-700 mt-2">
+                            Grand Total ₹{ Math.round(grandTotal).toLocaleString("en-IN") }
+                          </p>
+
+                          <div className="mt-1 pt-2 border-t text-right">
+                            <p className="text-xs text-gray-500">Total Amount (in words):</p>
+                            <p className="font-semibold text-gray-800 leading-snug">{ inrToWords(grandTotal) }</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </section>

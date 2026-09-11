@@ -129,8 +129,20 @@ export default function ProposalBuilderBD() {
         }
 
         setSections({ ...buildInitialSections(), ...loadedSections });
-        setToggles({ ...buildInitialToggles(), ...loadedToggles });
-        setPricingTable(loadedPricing || []);
+        const normalizedPricing = (loadedPricing || []).map((row) => {
+          const sName = row.service_name;
+          const cName = row.category_name;
+          const eName = row.editing_type_name;
+          const serviceTitle =
+            row.service ||
+            (eName && eName !== "null" && eName !== "N/A"
+              ? `${sName || "Service"} - ${cName || "Category"} (${eName})`
+              : sName && cName
+                ? `${sName} - ${cName}`
+                : sName || cName || "Service");
+          return { ...row, service: serviceTitle };
+        });
+        setPricingTable(normalizedPricing);
         setGrandTotal(p.grand_total_excl_gst || 0);
       }
     } catch (err) {
@@ -520,7 +532,7 @@ export default function ProposalBuilderBD() {
                                       {items.map((row, idx) => (
                                         <tr key={`${row.originalIndex}-${idx}`} className="border-b border-gray-800">
                                           <td className="py-2 pr-2">
-                                            <input type="text" value={row.service} onChange={e => handlePricingChange(row.originalIndex, 'service', e.target.value)} className="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-2 text-white" placeholder="Service name" />
+                                            <input type="text" value={row.service || row.service_name || ""} onChange={e => handlePricingChange(row.originalIndex, 'service', e.target.value)} className="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-2 text-white" placeholder="Service name" />
                                           </td>
                                           <td className="py-2 pr-2">
                                             <input type="number" value={row.quantity} onChange={e => handlePricingChange(row.originalIndex, 'quantity', e.target.value)} className="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-2 text-white" min="1" disabled={isAds} />

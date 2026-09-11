@@ -69,7 +69,8 @@ export default function ServicesLanding() {
       icon: Palette,
       gradient: "from-slate-600 to-gray-700",
       bgPattern: "bg-gradient-to-br from-slate-50 to-gray-50",
-      navigation: "/admin/calculator",
+      navigation: `/admin/calculator/${id}/${proposalId}`,
+      navigationState: { servicetype: "paid" },
       features: [
         "Logo Design",
         "Brand Identity",
@@ -87,7 +88,7 @@ export default function ServicesLanding() {
       icon: Megaphone,
       gradient: "from-red-600 to-slate-700",
       bgPattern: "bg-gradient-to-br from-red-50 to-slate-50",
-      navigation: "/admin/Adscalculator",
+      navigation: `/admin/Adscalculator/${id}/${proposalId}`,
       features: [
         "Social Media Ads",
         "Google Ads",
@@ -141,7 +142,11 @@ export default function ServicesLanding() {
   const docTypeFromURL = searchParams.get("doc");
 
   const handleCustomServiceNavigate = (card) => {
-    const navUrl = docTypeFromURL === "proforma" ? `${card.navigation}?doc=proforma` : card.navigation;
+    let target = card.navigation;
+    if (!target.includes(`/${id}/${proposalId}`)) {
+      target = `${target}/${id}/${proposalId}`;
+    }
+    const navUrl = docTypeFromURL === "proforma" ? `${target}?doc=proforma` : target;
     if (card.navigationState) {
       navigate(navUrl, { state: card.navigationState });
       return;
@@ -192,12 +197,25 @@ export default function ServicesLanding() {
   const fetchData = async () => {
     if (!id || !proposalId) return;
     try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setGetData(data.data);
-      setPlanName(data.data[0]?.plan_name || "");
+      if (docTypeFromURL === "proforma") {
+        const { data } = await axios.get(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
+        const servicesOnly = parsed.filter(
+          (item) => item.source !== "custom_complimentary" && item.service_name?.toLowerCase() !== "complimentary"
+        );
+        setGetData(servicesOnly);
+        setPlanName(parsed[0]?.plan_name || "");
+      } else {
+        const { data } = await axios.get(
+          `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setGetData(data.data || []);
+        setPlanName(data.data?.[0]?.plan_name || "");
+      }
     } catch (error) {
       if (error.response?.status === 401) handleUnauthorized();
     }
@@ -206,11 +224,28 @@ export default function ServicesLanding() {
   const fetchAdsData = async () => {
     if (!id || !proposalId) return;
     try {
-      const res = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data.status === "Success") setGetAdsData(res.data.data);
+      if (docTypeFromURL === "proforma") {
+        const res = await axios.get(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          const parsed = JSON.parse(res.data.data?.ads_snapshot || "[]");
+          const normalized = parsed.map((item) => ({
+            ...item,
+            category: item.category || item.category_name,
+            amount: item.amount || item.budget,
+            total: item.total || item.total_amount || item.total_price,
+          }));
+          setGetAdsData(normalized);
+        }
+      } else {
+        const res = await axios.get(
+          `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") setGetAdsData(res.data.data || []);
+      }
     } catch (error) {
       if (error.response?.status === 401) handleUnauthorized();
     }
@@ -233,11 +268,23 @@ export default function ServicesLanding() {
   const fetchComplimenatryData = async () => {
     if (!id || !proposalId) return;
     try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${id}`,
-        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-      );
-      setGetComplimenatryData(data.data);
+      if (docTypeFromURL === "proforma") {
+        const { data } = await axios.get(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`,
+          { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+        );
+        const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
+        const filtered = parsed.filter(
+          (item) => item.source === "custom_complimentary" || item.service_name?.toLowerCase() === "complimentary"
+        );
+        setGetComplimenatryData(filtered);
+      } else {
+        const { data } = await axios.get(
+          `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${id}`,
+          { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+        );
+        setGetComplimenatryData(data.data || []);
+      }
     } catch (error) {
       if (error.response?.status === 401) handleUnauthorized();
     }
@@ -258,7 +305,7 @@ export default function ServicesLanding() {
     fetchPlanData();
     fetchClientNotes();
     fetchComplimenatryData();
-  }, []);
+  }, [id, proposalId, docTypeFromURL]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -435,13 +482,21 @@ export default function ServicesLanding() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you want to delete this client plan data permanently?", icon: "warning", showCancelButton: true, confirmButtonText: "Yes, delete it!" });
     if (confirm.isConfirmed) {
       try {
-        const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteClientAllPlanData/${txn_id}`);
-        if (res.data.status === "Success") {
-          Swal.fire({ icon: "success", title: "Deleted!", text: "Plan has been deleted.", showConfirmButton: false, timer: 1000 });
-          setGetData([]); setPlanName(""); setNotesData([]); fetchClientNotes(); fetchAdsData(); setGetAdsData([]); setGetComplimenatryData([]);
+        if (docTypeFromURL === "proforma") {
+          await axios.put(
+            `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+            { proformaId: proposalId, action: "update", item: [], editId: null, snapshotType: 'services' },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
         } else {
-          Swal.fire("Error!", res.data.message || "Failed to delete plan.", "error");
+          const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteClientAllPlanData/${txn_id}`);
+          if (res.data.status !== "Success") {
+            Swal.fire("Error!", res.data.message || "Failed to delete plan.", "error");
+            return;
+          }
         }
+        Swal.fire({ icon: "success", title: "Deleted!", text: "Plan has been deleted.", showConfirmButton: false, timer: 1000 });
+        setGetData([]); setPlanName(""); setNotesData([]); fetchClientNotes(); fetchAdsData(); setGetAdsData([]); setGetComplimenatryData([]);
       } catch (err) {
         Swal.fire("Error!", "Something went wrong while deleting.", "error");
       }
@@ -452,13 +507,33 @@ export default function ServicesLanding() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${entryId}`);
-      if (res.data.status === "Success") {
-        setGetData((prev) => prev.filter((item) => item.id !== entryId));
-        Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
-        fetchClientNotes();
+      if (docTypeFromURL === "proforma") {
+        const res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: proposalId,
+            action: "delete",
+            entryId: entryId,
+            snapshotType: 'services',
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+          Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
+          fetchData();
+        } else {
+          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        }
       } else {
-        Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${entryId}`);
+        if (res.data.status === "Success") {
+          setGetData((prev) => prev.filter((item) => item.id !== entryId));
+          Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
+          fetchClientNotes();
+        } else {
+          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        }
       }
     } catch (error) {
       Swal.fire({ icon: "error", title: "Error", text: "An error occurred while deleting entry.", showConfirmButton: false, timer: 1000 });
@@ -469,13 +544,33 @@ export default function ServicesLanding() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${entryId}`);
-      if (res.data.status === "Success") {
-        setGetComplimenatryData((prev) => prev.filter((item) => item.id !== entryId));
-        Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
-        fetchComplimenatryData();
+      if (docTypeFromURL === "proforma") {
+        const res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: proposalId,
+            action: "delete",
+            entryId: entryId,
+            snapshotType: 'services',
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          setGetComplimenatryData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+          Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
+          fetchComplimenatryData();
+        } else {
+          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        }
       } else {
-        Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${entryId}`);
+        if (res.data.status === "Success") {
+          setGetComplimenatryData((prev) => prev.filter((item) => item.id !== entryId));
+          Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
+          fetchComplimenatryData();
+        } else {
+          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        }
       }
     } catch (error) {
       Swal.fire({ icon: "error", title: "Error", text: "An error occurred while deleting entry.", showConfirmButton: false, timer: 1000 });
@@ -502,13 +597,33 @@ export default function ServicesLanding() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
-      const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${entryId}`);
-      if (res.data.status === "Success") {
-        setGetData((prev) => prev.filter((item) => item.id !== entryId));
-        Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", timer: 1000, showConfirmButton: false });
-        fetchAdsData(); setGetAdsData([]); fetchClientNotes();
+      if (docTypeFromURL === "proforma") {
+        const res = await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: proposalId,
+            action: "delete",
+            entryId: entryId,
+            snapshotType: 'ads',
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          setGetAdsData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+          Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", timer: 1000, showConfirmButton: false });
+          fetchAdsData();
+        } else {
+          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        }
       } else {
-        Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        const res = await axios.delete(`${baseURL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${entryId}`);
+        if (res.data.status === "Success") {
+          setGetAdsData((prev) => prev.filter((item) => item.id !== entryId));
+          Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", timer: 1000, showConfirmButton: false });
+          fetchAdsData(); fetchClientNotes();
+        } else {
+          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Failed to delete entry.", showConfirmButton: false, timer: 1000 });
+        }
       }
     } catch (error) {
       Swal.fire({ icon: "error", title: "Error", text: "An error occurred while deleting entry.", showConfirmButton: false, timer: 1000 });
@@ -685,7 +800,7 @@ export default function ServicesLanding() {
                 const IconComponent = service.icon;
                 return (
                   <div key={service.id} className="w-full shrink-0 group relative overflow-hidden bg-gradient-to-r from-white/[0.06] to-white/[0.03] rounded-xl border border-white/10 hover:border-white/20 transition-all duration-200 flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3 py-2.5 cursor-pointer hover:bg-white/[0.09]"
-                    onClick={() => navigate(`${service.navigation}/${id}/${proposalId}`)}>
+                    onClick={() => handleCustomServiceNavigate(service)}>
                     <div className={`absolute left-0 top-0 w-[3px] h-full bg-gradient-to-b ${service.gradient} rounded-r opacity-70`} />
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${service.gradient} shadow flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105`}>
                       <IconComponent className="w-4 h-4 text-white" />
@@ -1106,11 +1221,11 @@ export default function ServicesLanding() {
               <p className="text-gray-400 text-sm mt-2">Choose how you want to generate this quotation</p>
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
-              <button onClick={() => { navigate(`/admin/quotation/${id}/${proposalId}?gst=1`); setShowModal(false); }}
+              <button onClick={() => { navigate(`/admin/quotation/${id}/${proposalId}?gst=1${docTypeFromURL === "proforma" ? "&doc=proforma" : ""}`); setShowModal(false); }}
                 className="flex-1 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
                 With GST (18%)
               </button>
-              <button onClick={() => { navigate(`/admin/quotation/${id}/${proposalId}?gst=0`); setShowModal(false); }}
+              <button onClick={() => { navigate(`/admin/quotation/${id}/${proposalId}?gst=0${docTypeFromURL === "proforma" ? "&doc=proforma" : ""}`); setShowModal(false); }}
                 className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
                 Without GST
               </button>

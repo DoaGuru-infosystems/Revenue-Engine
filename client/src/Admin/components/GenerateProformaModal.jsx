@@ -776,8 +776,8 @@ const GenerateProformaModal = ({
                           <table className="ci-table">
                             <thead>
                               <tr className="ci-th-dm">
-                                <th className="ci-th-cell">DM Service</th>
-                                <th className="ci-th-cell">Service Name</th>
+                                <th className="ci-th-cell">Services</th>
+                                <th className="ci-th-cell">Categories</th>
                                 <th className="ci-th-cell-right">Qty</th>
                                 <th className="ci-th-cell-right">Price (₹)</th>
                                 <th className="ci-th-cell-right">Total (₹)</th>
@@ -832,7 +832,7 @@ const GenerateProformaModal = ({
                             </tbody>
                             <tfoot className="ci-tfoot-dm">
                               <tr>
-                                <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-label">DM Service Total</td>
+                                <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-label">Services Total</td>
                                 <td className="ci-td-cell-right font-bold ci-footer-value">₹{ dmTotal.toLocaleString("en-IN") }</td>
                               </tr>
                             </tfoot>

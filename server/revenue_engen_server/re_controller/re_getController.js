@@ -2223,6 +2223,22 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
        );
        invoice.total_past_received = Number(pastPayments[0].total_past || 0);
        invoice.total_past_ad_budget = Number(pastPayments[0].total_past_ad || 0);
+
+       const proformaRows = await query(
+         "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot FROM re_proposal_proforma WHERE id = ?",
+         [invoice.proforma_id]
+       );
+       if (proformaRows.length > 0) {
+         if (!invoice.pricing_snapshot && proformaRows[0].pricing_snapshot) {
+           invoice.pricing_snapshot = proformaRows[0].pricing_snapshot;
+         }
+         if (!invoice.ads_snapshot && proformaRows[0].ads_snapshot) {
+           invoice.ads_snapshot = proformaRows[0].ads_snapshot;
+         }
+         if (!invoice.notes_snapshot && proformaRows[0].notes_snapshot) {
+           invoice.notes_snapshot = proformaRows[0].notes_snapshot;
+         }
+       }
     }
 
     res.status(200).json({ status: "Success", data: invoice });

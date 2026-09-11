@@ -43,46 +43,63 @@ export const classifyProformaServices = (services) => {
       const charge = Number(item.charge || item.ad_charge || 0);
       const category = item.category_name || item.service_name || item.service || "Ads Campaign";
 
-      // 1. Ads Budget strictly goes to adsServices
-      adsServices.push({
-        ...item,
-        service_type: "Ads Campaign",
-        category_name: category,
-        budget: budget,
-        amount: budget,
-        percent: percent,
-        charge: charge,
-        total_amount: budget,
-      });
-
       let campName = category;
       if (!campName.toLowerCase().includes("campaign")) {
         campName = campName + " Campaign";
       }
 
-      // 2. Ad Charge strictly goes to dmServices as a Graphic Service
-      if (charge > 0) {
-        dmServices.push({
+      // 1. Ads Budget strictly goes to adsServices (avoid duplicate ads)
+      const alreadyHasAd = adsServices.some(
+        a => (a.category_name && a.category_name.toLowerCase() === category.toLowerCase()) ||
+             (a.category && a.category.toLowerCase() === category.toLowerCase())
+      );
+      if (!alreadyHasAd) {
+        adsServices.push({
           ...item,
-          service_type: "Graphic Service",
-          service_name: "Service Charge",
+          service_type: "Ads Campaign",
           category_name: category,
-          editing_type_name: `${campName} Management & Optimization (${percent}%)`,
-          quantity: 1,
-          editing_type_amount: charge,
-          total_amount: charge,
-          total_price: charge,
-          unit_price: charge,
-          include_in_total: true,
+          budget: budget,
+          amount: budget,
+          percent: percent,
+          charge: charge,
+          total_amount: budget,
         });
+      }
+
+      // 2. Ad Charge strictly goes to dmServices as a Graphic Service (avoid duplicate charges)
+      if (charge > 0) {
+        const alreadyHasCharge = dmServices.some(
+          s => s.service_name === "Service Charge" && (
+            (s.category_name && s.category_name.toLowerCase() === category.toLowerCase()) ||
+            (s.category && s.category.toLowerCase() === category.toLowerCase())
+          )
+        );
+        if (!alreadyHasCharge) {
+          dmServices.push({
+            ...item,
+            service_type: "Graphic Service",
+            service_name: "Service Charge",
+            category_name: category,
+            editing_type_name: `${campName} Management & Optimization (${percent}%)`,
+            quantity: 1,
+            editing_type_amount: charge,
+            total_amount: charge,
+            total_price: charge,
+            unit_price: charge,
+            include_in_total: true,
+          });
+        }
       }
     } else {
       // DM service fallback
+      const isServiceCharge = (item.service_name || item.service) === "Service Charge";
       dmServices.push({
         ...item,
         service_type: "Graphic Service",
         service_name: item.service_name || item.service,
-        editing_type_name: item.editing_type_name || item.service_name || "Proposal Item",
+        editing_type_name: isServiceCharge
+          ? (item.editing_type_name || `${item.category_name || ""} Management & Optimization`)
+          : (item.editing_type_name || item.service_name || "Proposal Item"),
         quantity: item.quantity || 1,
         editing_type_amount: item.editing_type_amount || item.unit_price || item.amount || 0,
         total_amount: item.total_amount || item.total_price || item.unit_price || 0,

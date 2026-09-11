@@ -308,7 +308,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
                 </li>
               )}
               
-              {['approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
+              {['approved', 'client_approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
                 <li>
                   <button onClick={() => handleAction("generate_proforma")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
                     <FilePlus size={14} /> Generate Proforma
@@ -326,7 +326,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
 
 
 
-              {['draft', 'sent', 'changes', 'rejected', 'approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
+              {['draft', 'sent', 'changes', 'rejected', 'approved', 'client_approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
               <li>
                 <button onClick={() => handleAction("download_pdf")} className="w-full text-left px-4 py-2 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all flex items-center gap-2">
                   <FilePlus size={14} /> Download PDF

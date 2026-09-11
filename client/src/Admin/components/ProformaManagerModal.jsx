@@ -119,28 +119,80 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   let remainingGoogleAdBudget = 0;
   let remainingMetaAdBudget = 0;
 
-  if (selectedProforma && selectedProforma.pricing_snapshot) {
+  if (selectedProforma) {
     try {
-      const parsed = JSON.parse(selectedProforma.pricing_snapshot);
-      const { adsServices } = classifyProformaServices(parsed);
-      
-      const googleAds = adsServices.filter(ad => (ad.category_name||"").toLowerCase().includes("google"));
-      const metaAds = adsServices.filter(ad => (ad.category_name||"").toLowerCase().includes("meta"));
+      let combinedAds = [];
+
+      // 1. Dedicated ads_snapshot column (new structure)
+      if (selectedProforma.ads_snapshot) {
+        let parsedAds = [];
+        try {
+          parsedAds = typeof selectedProforma.ads_snapshot === "string"
+            ? JSON.parse(selectedProforma.ads_snapshot || "[]")
+            : selectedProforma.ads_snapshot;
+        } catch (e) {
+          console.error("Failed to parse ads_snapshot", e);
+        }
+        if (Array.isArray(parsedAds)) {
+          parsedAds.forEach(item => {
+            combinedAds.push({
+              ...item,
+              category_name: item.category_name || item.category || item.service_name || "",
+              budget: Number(item.budget || item.amount || item.total_price || item.unit_price || 0),
+            });
+          });
+        }
+      }
+
+      // 2. Legacy pricing_snapshot fallback
+      if (selectedProforma.pricing_snapshot) {
+        let parsedPricing = [];
+        try {
+          parsedPricing = typeof selectedProforma.pricing_snapshot === "string"
+            ? JSON.parse(selectedProforma.pricing_snapshot || "[]")
+            : selectedProforma.pricing_snapshot;
+        } catch (e) {
+          console.error("Failed to parse pricing_snapshot", e);
+        }
+        const { adsServices } = classifyProformaServices(parsedPricing);
+        if (Array.isArray(adsServices)) {
+          adsServices.forEach(item => {
+            if (!combinedAds.some(c => String(c.id) === String(item.id))) {
+              combinedAds.push({
+                ...item,
+                category_name: item.category_name || item.category || item.service_name || "",
+                budget: Number(item.budget || item.amount || item.total_price || item.unit_price || 0),
+              });
+            }
+          });
+        }
+      }
+
+      const googleAds = combinedAds.filter(ad => {
+        const cat = (ad.category_name || ad.category || "").toLowerCase();
+        return cat.includes("google");
+      });
+      const metaAds = combinedAds.filter(ad => {
+        const cat = (ad.category_name || ad.category || "").toLowerCase();
+        return cat.includes("meta") || cat.includes("facebook") || cat.includes("fb") || cat.includes("instagram");
+      });
 
       hasGoogleAd = googleAds.length > 0;
       hasMetaAd = metaAds.length > 0;
 
-      const totalGoogleBudget = googleAds.reduce((sum, ad) => sum + Number(ad.amount || ad.total_price || ad.unit_price || 0), 0);
-      const totalMetaBudget = metaAds.reduce((sum, ad) => sum + Number(ad.amount || ad.total_price || ad.unit_price || 0), 0);
+      const totalGoogleBudget = googleAds.reduce((sum, ad) => sum + Number(ad.budget || ad.amount || ad.total_price || ad.unit_price || 0), 0);
+      const totalMetaBudget = metaAds.reduce((sum, ad) => sum + Number(ad.budget || ad.amount || ad.total_price || ad.unit_price || 0), 0);
 
-      const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id);
+      const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status !== 'rejected');
       const alreadyPaidGoogle = proformaPayments.reduce((sum, p) => sum + Number(p.realized_google_budget || 0), 0);
       const alreadyPaidMeta = proformaPayments.reduce((sum, p) => sum + Number(p.realized_meta_budget || 0), 0);
 
       remainingGoogleAdBudget = Math.max(0, totalGoogleBudget - alreadyPaidGoogle);
       remainingMetaAdBudget = Math.max(0, totalMetaBudget - alreadyPaidMeta);
 
-    } catch (e) { }
+    } catch (e) {
+      console.error("Error calculating ad budget for Record Payment:", e);
+    }
   }
 
   useEffect(() => {

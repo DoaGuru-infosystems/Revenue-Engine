@@ -250,10 +250,33 @@ exports.getPublicInvoiceData = async (req, res) => {
         .json({ status: "Failure", message: "Document not found" });
     }
 
+    const clientData = clientDataRows[0];
+    if (clientData.proforma_id) {
+      try {
+        const proformaRows = await queryDb(
+          "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot FROM re_proposal_proforma WHERE id = ?",
+          [clientData.proforma_id]
+        );
+        if (proformaRows.length > 0) {
+          if (!clientData.pricing_snapshot && proformaRows[0].pricing_snapshot) {
+            clientData.pricing_snapshot = proformaRows[0].pricing_snapshot;
+          }
+          if (!clientData.ads_snapshot && proformaRows[0].ads_snapshot) {
+            clientData.ads_snapshot = proformaRows[0].ads_snapshot;
+          }
+          if (!clientData.notes_snapshot && proformaRows[0].notes_snapshot) {
+            clientData.notes_snapshot = proformaRows[0].notes_snapshot;
+          }
+        }
+      } catch (e) {
+        console.error("Error backfilling pricing_snapshot in getPublicInvoiceData:", e);
+      }
+    }
+
     res.status(200).json({
       status: "Success",
       data: {
-        clientData: clientDataRows[0],
+        clientData: clientData,
         serviceData: serviceDataRows,
         graphicData: graphicDataRows,
         adsData: adsDataRows,

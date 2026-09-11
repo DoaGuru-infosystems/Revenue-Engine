@@ -428,8 +428,17 @@ export default function ProposalBuilder() {
       }
     }
 
+    const serviceTitle =
+      row.service ||
+      (parsedEditingTypeName && parsedEditingTypeName !== "null" && parsedEditingTypeName !== "N/A"
+        ? `${parsedServiceName || "Service"} - ${parsedCategoryName || "Category"} (${parsedEditingTypeName})`
+        : (parsedServiceName && parsedCategoryName)
+          ? `${parsedServiceName} - ${parsedCategoryName}`
+          : parsedServiceName || parsedCategoryName || "Service");
+
     return {
       ...row,
+      service: serviceTitle,
       service_name: parsedServiceName || row.service_name,
       category_name: parsedCategoryName || row.category_name,
       editing_type_name: parsedEditingTypeName || row.editing_type_name,

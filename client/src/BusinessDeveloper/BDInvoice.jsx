@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { classifyProformaServices } from "../utils/proformaPricing";
+import { inrToWords } from "../utils/inrToWords";
 import moment from "moment";
 import Swal from "sweetalert2";
 import { clearUser } from "../redux/user/userSlice";
@@ -459,9 +460,14 @@ export default function BDInvoice() {
         groupedGraphic.push(service);
       }
 
+      const catName = item.category_name || item.service_name || "N/A";
+      const typeName = (item.editing_type_name && item.editing_type_name !== "N/A" && item.editing_type_name !== "null" && item.editing_type_name.trim() !== "")
+        ? item.editing_type_name
+        : catName;
+
       service.editingTypes.push({
-        category: item.category_name,
-        type: item.editing_type_name || "N/A",
+        category: catName,
+        type: typeName,
         quantity: Number(item.quantity) || 1,
         price: Number(item.editing_type_amount) || 0,
         include_content_posting: Number(item.include_content_posting) || 0,
@@ -1211,11 +1217,9 @@ export default function BDInvoice() {
   const realizedGoogleBudget = Number(clientData?.realized_google_budget || 0);
   const realizedMetaBudget = Number(clientData?.realized_meta_budget || 0);
 
-  const safeTotal = Math.floor(Number(totalForWords) || 0);
+  const safeTotal = Math.round(Number(totalForWords) || 0);
   const amountInWords = safeTotal > 0
-    ? numberToWords
-        .toWords(safeTotal)
-        .replace(/\b\w/g, (c) => c.toUpperCase()) + " Rupees Only"
+    ? inrToWords(safeTotal)
     : "Zero Rupees Only";
 
   if (loading) {
@@ -1571,10 +1575,10 @@ export default function BDInvoice() {
                             <thead style={{ background: "#e8edff", color: "#111827", fontSize: "11px" }}>
                               <tr>
                                 <th style={{ border: "1px solid #cfd8e3", padding: "6px 7px", textAlign: "left" }} className="w-[10rem]">
-                                  DM Service
+                                  Services
                                 </th>
                                 <th style={{ border: "1px solid #cfd8e3", padding: "6px 7px", textAlign: "left" }} className="w-[20rem]">
-                                  Service Name
+                                  Categories
                                 </th>
                                 <th style={{ border: "1px solid #cfd8e3", padding: "6px 7px", textAlign: "right" }}>
                                   Quantity
@@ -1589,7 +1593,7 @@ export default function BDInvoice() {
                             </thead>
 
                             <tbody>
-                              {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */ }
+                              {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */}
                               { graphicData.map((service, idx) =>
                                 service.editingTypes.map((edit, eidx) => {
                                   const qty = Number(edit.quantity || 1);
@@ -1601,7 +1605,7 @@ export default function BDInvoice() {
                                       key={ `graphic-${idx}-${eidx}` }
                                       className="bg-white"
                                     >
-                                      {/* Show DM Service name only once using rowspan */ }
+                                      {/* Show Services name only once using rowspan */}
                                       { eidx === 0 ? (
                                         <td
                                           className="border px-2 py-1 align-center"
@@ -1613,10 +1617,14 @@ export default function BDInvoice() {
 
                                       <td className="border px-2 py-1">
                                         { service.service === "Video Services"
-                                          ? `${edit.category} With ${edit.type}`
-                                          : service.service === "Service Charge" && edit.type && edit.type.startsWith("Management")
-                                            ? (`${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type}`.trim())
-                                          : edit.type }
+                                          ? ((edit.type && edit.type.toLowerCase() === "proposal item") || edit.type === "N/A" ? (edit.category || service.service) : `${edit.category || ""} With ${edit.type}`.trim())
+                                          : service.service === "Service Charge"
+                                            ? (edit.type && edit.type !== "N/A" && edit.type.toLowerCase().includes("management")
+                                                ? edit.type
+                                                : `${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type || "Management & Optimization"}`.trim())
+                                            : ((edit.type && edit.type.toLowerCase() === "proposal item") || edit.type === "N/A" || !edit.type)
+                                              ? (edit.category && edit.category !== "N/A" ? edit.category : service.service)
+                                              : (edit.category && edit.category !== "N/A" ? edit.category : edit.type) }
                                       </td>
                                       <td className="border px-2 py-1 text-right">
                                         { qty }
@@ -1980,7 +1988,7 @@ export default function BDInvoice() {
                                       className="border px-2 py-1 text-right"
                                       colSpan={ 4 }
                                     >
-                                      DM Service Total
+                                      Services Total
                                     </td>
                                     <td className="border px-2 py-1 text-right">
                                       ₹
@@ -2495,11 +2503,11 @@ export default function BDInvoice() {
                       {/* GST Breakdown */ }
                       { isGST && (
                         <div className="space-y-0.5 text-gray-700">
-                          <p>Taxable Amount ₹ { totalAfterDiscount.toFixed(0).toLocaleString() }</p>
+                          <p>Taxable Amount ₹ { Math.round(totalAfterDiscount).toLocaleString("en-IN") }</p>
                           <p>CGST @9% ₹ { (gstAmount / 2).toFixed(2) }</p>
                           <p>SGST @9% ₹ { (gstAmount / 2).toFixed(2) }</p>
                           <p className="font-bold text-gray-900 border-t border-gray-200 mt-1 pt-1">
-                            Total Billed Amount (Inc GST) ₹ { currentAmtPreviousAmt.toFixed(0).toLocaleString() }
+                            Total Billed Amount (Inc GST) ₹ { Math.round(currentAmtPreviousAmt).toLocaleString("en-IN") }
                           </p>
                         </div>
                       ) }
@@ -2520,12 +2528,12 @@ export default function BDInvoice() {
                         ) }
                         { selecteddiscount && (
                           <p className="text-green-600">
-                            <span className="font-semibold">After { selecteddiscount.discount_type === "percent" ? `${selecteddiscount.discount_per}%` : `₹${selecteddiscount.discount_amt}` } Discount:</span> ₹ { totalAfterDiscount.toLocaleString() }
+                            <span className="font-semibold">After { selecteddiscount.discount_type === "percent" ? `${selecteddiscount.discount_per}%` : `₹${selecteddiscount.discount_amt}` } Discount:</span> ₹ { Math.round(totalAfterDiscount).toLocaleString("en-IN") }
                           </p>
                         ) }
                         { !selecteddiscount && (
                           <p>
-                            <span className="font-semibold ">Invoice Total:</span> ₹ { currentAmtPreviousAmt.toFixed(0).toLocaleString() }
+                            <span className="font-semibold ">Invoice Total:</span> ₹ { Math.round(currentAmtPreviousAmt).toLocaleString("en-IN") }
                           </p>
                         ) }
 
@@ -2536,33 +2544,33 @@ export default function BDInvoice() {
                             <div className="space-y-0.5 text-sm text-gray-700">
                               <div className="flex justify-between mt-2 pt-1 border-t border-dashed border-gray-300">
                                 <span>Service Payment Received (Base + GST)</span>
-                                <span>₹ { (Number(clientData.received_amt || 0) - visibleAdBudget).toLocaleString() }</span>
+                                <span>₹ { Math.round(Number(clientData.received_amt || 0) - visibleAdBudget).toLocaleString("en-IN") }</span>
                               </div>
                               { realizedGoogleBudget > 0 && (
                                 <div className="flex justify-between">
                                   <span>Google Ad Budget Reimbursed</span>
-                                  <span>₹ { realizedGoogleBudget.toLocaleString() }</span>
+                                  <span>₹ { Math.round(realizedGoogleBudget).toLocaleString("en-IN") }</span>
                                 </div>
                               ) }
                               { realizedMetaBudget > 0 && (
                                 <div className="flex justify-between">
                                   <span>Meta Ad Budget Reimbursed</span>
-                                  <span>₹ { realizedMetaBudget.toLocaleString() }</span>
+                                  <span>₹ { Math.round(realizedMetaBudget).toLocaleString("en-IN") }</span>
                                 </div>
                               ) }
                               <div className="flex justify-between mt-1 pt-1 border-t border-dashed border-gray-300 font-semibold">
                                 <span>Gross Payments Received (Now)</span>
-                                <span>₹ { Number(clientData.received_amt || 0).toLocaleString() }</span>
+                                <span>₹ { Math.round(Number(clientData.received_amt || 0)).toLocaleString("en-IN") }</span>
                               </div>
                               { Number(clientData.tds_amount || 0) > 0 && (
                                 <div className="flex justify-between text-orange-600">
                                   <span>Less: TDS Deducted</span>
-                                  <span>₹ { Number(clientData.tds_amount).toLocaleString() }</span>
+                                  <span>₹ { Math.round(Number(clientData.tds_amount)).toLocaleString("en-IN") }</span>
                                 </div>
                               ) }
                               <div className="flex justify-between font-extrabold text-yellow-700 mt-1 pt-1 border-t border-gray-300">
                                 <span>Net Amount Credited to Bank</span>
-                                <span>₹ { (Number(clientData.received_amt || 0) - Number(clientData.tds_amount || 0)).toLocaleString() }</span>
+                                <span>₹ { Math.round(Number(clientData.received_amt || 0) - Number(clientData.tds_amount || 0)).toLocaleString("en-IN") }</span>
                               </div>
                             </div>
                           </div>
@@ -2572,30 +2580,30 @@ export default function BDInvoice() {
                             { clientData.received_amt && clientData.tag_received_amt !== "received" && (
                               <>
                                 { Number(clientData.tds_amount || 0) > 0 && (
-                                  <p className="text-orange-600">TDS Deducted ₹ { Number(clientData.tds_amount).toLocaleString() }</p>
-                                ) }
-                                <p>Received Amount ₹ { Number(clientData.received_amt || 0).toLocaleString() }</p>
-                                <p>Current Balance ₹ { Number(clientData.current_amt || 0).toFixed(0).toLocaleString() }</p>
+                                  <p className="text-orange-600">TDS Deducted ₹ { Math.round(Number(clientData.tds_amount)).toLocaleString("en-IN") }</p>
+                                )}
+                                <p>Received Amount ₹ { Math.round(Number(clientData.received_amt || 0)).toLocaleString("en-IN") }</p>
+                                <p>Current Balance ₹ { Math.round(Number(clientData.current_amt || 0)).toLocaleString("en-IN") }</p>
                               </>
                             ) }
 
                             { clientData.received_amt && clientData.tag_received_amt === "received" && (
                               <>
                                 { Number(clientData.tds_amount || 0) > 0 && (
-                                  <p className="text-orange-600">TDS Deducted ₹ { Number(clientData.tds_amount).toLocaleString() }</p>
-                                ) }
-                                <p>Received Amount ₹ { Number(clientData.received_amt || 0).toLocaleString() }</p>
-                                <p>Current Balance ₹ { Number(clientData.current_amt || 0).toFixed(0).toLocaleString() }</p>
+                                  <p className="text-orange-600">TDS Deducted ₹ { Math.round(Number(clientData.tds_amount)).toLocaleString("en-IN") }</p>
+                                )}
+                                <p>Received Amount ₹ { Math.round(Number(clientData.received_amt || 0)).toLocaleString("en-IN") }</p>
+                                <p>Current Balance ₹ { Math.round(Number(clientData.current_amt || 0)).toLocaleString("en-IN") }</p>
                               </>
                             ) }
 
                             { clientData.tag_received_amt === "pending" && (
                               <>
                                 { Number(clientData.tds_amount || 0) > 0 && (
-                                  <p className="text-orange-600">TDS Deducted ₹ { Number(clientData.tds_amount).toLocaleString() }</p>
-                                ) }
+                                  <p className="text-orange-600">TDS Deducted ₹ { Math.round(Number(clientData.tds_amount)).toLocaleString("en-IN") }</p>
+                                )}
                                 <p className="border-t font-extrabold text-lg text-green-800 pt-1 mt-1">
-                                  Current Balance ₹ { currentTotalAmount.toFixed(0).toLocaleString() }
+                                  Current Balance ₹ { Math.round(currentTotalAmount).toLocaleString("en-IN") }
                                 </p>
                               </>
                             ) }

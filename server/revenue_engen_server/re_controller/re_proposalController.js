@@ -679,6 +679,32 @@ exports.createProforma = async (req, res) => {
     const serviceItems = allPricingItems.filter(i => i.source !== 'custom_ads' && i.service_name !== 'Ads Campaign');
     const adsItems = allPricingItems.filter(i => i.source === 'custom_ads' || i.service_name === 'Ads Campaign');
 
+    // Also add Service Charge items for ads with charge > 0 into serviceItems
+    adsItems.forEach(ad => {
+      const charge = Number(ad.charge || ad.ad_charge || 0);
+      if (charge > 0) {
+        const catName = ad.category_name || ad.service_name || ad.service || "Ads Campaign";
+        let campName = catName;
+        if (!campName.toLowerCase().includes("campaign")) {
+          campName = campName + " Campaign";
+        }
+        const percent = ad.percent !== undefined && ad.percent !== null ? ad.percent : (ad.charge_percentage || ad.ad_percent || "N/A");
+        serviceItems.push({
+          source: "custom_service_charge",
+          service_type: "Graphic Service",
+          service_name: "Service Charge",
+          category_name: catName,
+          editing_type_name: `${campName} Management & Optimization (${percent}%)`,
+          quantity: 1,
+          unit_price: charge,
+          editing_type_amount: charge,
+          total_price: charge,
+          total_amount: charge,
+          include_in_total: true,
+        });
+      }
+    });
+
     const q = `
       INSERT INTO re_proposal_proforma 
       (proposal_id, client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
@@ -1237,9 +1263,48 @@ exports.approvePayment = async (req, res) => {
           email, phone, address, dg_employee, duration_start_date, duration_end_date,
           payment_mode, payment_date, payment_reference, client_gst_no, client_pan_no,
           tag_received_amt, received_amt, current_amt, previous_amt, tds_amount,
-          created_at, invoice_source, proforma_id, base_amount, gst_rate, gst_amount, realized_ad_budget, realized_google_budget, realized_meta_budget
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          created_at, invoice_source, proforma_id, base_amount, gst_rate, gst_amount, realized_ad_budget, realized_google_budget, realized_meta_budget,
+          pricing_snapshot, notes_snapshot, terms_snapshot
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
+      // 4.1 Prepare pricing snapshot ensuring Service Charge items are included
+      let items = [];
+      try { items = JSON.parse(proforma.pricing_snapshot || "[]"); } catch(e) { items = []; }
+      let adsFromSnapshot = [];
+      try { adsFromSnapshot = JSON.parse(proforma.ads_snapshot || "[]"); } catch(e) { adsFromSnapshot = []; }
+
+      adsFromSnapshot.forEach(ad => {
+        const charge = Number(ad.charge || ad.ad_charge || 0);
+        if (charge > 0) {
+          const catName = ad.category_name || ad.service_name || ad.service || "Ads Campaign";
+          const alreadyHas = items.some(i => 
+            (i.service_name === "Service Charge" || i.service === "Service Charge") &&
+            (i.category_name === catName || (i.editing_type_name && i.editing_type_name.toLowerCase().includes(catName.toLowerCase())))
+          );
+          if (!alreadyHas) {
+            let campName = catName;
+            if (!campName.toLowerCase().includes("campaign")) {
+              campName = campName + " Campaign";
+            }
+            const percent = ad.percent !== undefined && ad.percent !== null ? ad.percent : (ad.charge_percentage || ad.ad_percent || "N/A");
+            items.push({
+              source: "custom_service_charge",
+              service_type: "Graphic Service",
+              service_name: "Service Charge",
+              category_name: catName,
+              editing_type_name: `${campName} Management & Optimization (${percent}%)`,
+              quantity: 1,
+              unit_price: charge,
+              editing_type_amount: charge,
+              total_price: charge,
+              total_amount: charge,
+              include_in_total: true,
+            });
+          }
+        }
+      });
+      const finalPricingSnapshot = JSON.stringify(items);
+
       await runQuery(insertInvoiceQ, [
         bill_type,
         newBillNumber,
@@ -1272,10 +1337,13 @@ exports.approvePayment = async (req, res) => {
         payment.realized_ad_budget || 0,
         payment.realized_google_budget || 0,
         payment.realized_meta_budget || 0,
+        finalPricingSnapshot || proforma.pricing_snapshot || null,
+        proforma.notes_snapshot || null,
+        proforma.terms_snapshot || null,
       ]);
 
       // 5. PARSE pricing_snapshot JSON and copy to graphic/ads/comp
-      const items = JSON.parse(proforma.pricing_snapshot || "[]");
+      const insertedAdCategories = new Set();
       for (const item of items) {
         if (!item) continue;
         const isComplimentary =
@@ -1313,6 +1381,8 @@ exports.approvePayment = async (req, res) => {
         ) {
           const uniqueId =
             Date.now() + "-" + Math.random().toString(36).substr(2, 6);
+          const adCat = item.category_name || item.service_name || "";
+          insertedAdCategories.add(adCat.toLowerCase());
           const adQ = `
             INSERT INTO re_ads_campaign_details_invoice (
               txn_id, client_id, unique_id, category, amount, percent, charge, total, employee, created_at
@@ -1322,7 +1392,7 @@ exports.approvePayment = async (req, res) => {
             invoice_txn_id,
             client_id,
             uniqueId,
-            item.category_name || "",
+            adCat,
             item.budget || item.unit_price || 0,
             item.percent || 0,
             item.charge || 0,
@@ -1355,6 +1425,33 @@ exports.approvePayment = async (req, res) => {
             createdAt,
           ]);
         }
+      }
+
+      // Also ensure ads from ads_snapshot are inserted into re_ads_campaign_details_invoice
+      for (const adItem of adsFromSnapshot) {
+        if (!adItem) continue;
+        const adCat = adItem.category_name || adItem.service_name || "";
+        if (insertedAdCategories.has(adCat.toLowerCase())) continue;
+        insertedAdCategories.add(adCat.toLowerCase());
+
+        const uniqueId = Date.now() + "-" + Math.random().toString(36).substr(2, 6);
+        const adQ = `
+          INSERT INTO re_ads_campaign_details_invoice (
+            txn_id, client_id, unique_id, category, amount, percent, charge, total, employee, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        await runQuery(adQ, [
+          invoice_txn_id,
+          client_id,
+          uniqueId,
+          adCat,
+          adItem.budget || adItem.amount || adItem.unit_price || 0,
+          adItem.percent || adItem.charge_percentage || 0,
+          adItem.charge || adItem.ad_charge || 0,
+          adItem.total_price || adItem.budget || adItem.amount || 0,
+          proposal.created_by || "",
+          createdAt,
+        ]);
       }
 
       // 6. Notes & re_discount
@@ -1718,8 +1815,11 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
     const savedTerms = parseJsonValue(proposal.terms_notes_json, []) || [];
     const savedNotes = parseJsonValue(proposal.notes_json, []) || [];
 
+    const rawPricing = [...pricing];
+
     // Process pricing to split Ads Campaign and Service Charge for PDF display (matches UI logic)
-    const finalPricing = [];
+    const dmPricing = [];
+    const adsPricing = [];
     pricing.forEach((item) => {
       const isAds =
         item.source === "custom_ads" ||
@@ -1756,32 +1856,45 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
           item.service ||
           "Ads Campaign";
 
-        // 1. Ads Budget row
-        finalPricing.push({
-          ...item,
-          service: `Ads Campaign - ${category}`,
-          service_name: "Ads Campaign",
-          category_name: category,
-          quantity: "-",
-          total_price: budget,
-        });
-
-        // 2. Service Charge row
+        // 1. Service Charge row -> billable DM service (included in Subtotal)
         if (charge > 0) {
-          finalPricing.push({
+          dmPricing.push({
             ...item,
-            service: `Service Charge - ${category}`,
+            service: `Service Charge - ${category}${percent && percent !== "N/A" ? ` (${percent}%)` : ""}`,
             service_name: "Service Charge",
             category_name: category,
             quantity: 1,
             total_price: charge,
           });
         }
+
+        // 2. Ads Budget row -> separate Ads budget
+        adsPricing.push({
+          ...item,
+          service: `Ads Budget - ${category}`,
+          service_name: "Ads Campaign",
+          category_name: category,
+          quantity: "-",
+          total_price: budget,
+        });
       } else {
-        finalPricing.push(item);
+        const fallbackName =
+          item.service ||
+          (item.editing_type_name &&
+          item.editing_type_name !== "null" &&
+          item.editing_type_name !== "N/A"
+            ? `${item.service_name || "Service"} - ${item.category_name || "Category"} (${item.editing_type_name})`
+            : item.service_name && item.category_name
+              ? `${item.service_name} - ${item.category_name}`
+              : item.service_name || item.category_name || "Deliverable");
+
+        dmPricing.push({
+          ...item,
+          service: fallbackName,
+        });
       }
     });
-    pricing = finalPricing;
+    pricing = [...dmPricing, ...adsPricing];
     const documentTitle = `${(proposal.client_name || "Client").toUpperCase()} Proposal`;
 
     let htmlContent = `
@@ -1901,7 +2014,7 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
     // 6. Scope of Work (Deliverables Table)
     if (isSectionIncluded("scope_of_work")) {
       htmlContent += `<h2>SCOPE OF WORK</h2>`;
-      if (pricing && pricing.length > 0) {
+      if (rawPricing && rawPricing.length > 0) {
         htmlContent += `<table>
           <thead>
             <tr>
@@ -1911,13 +2024,35 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
             </tr>
           </thead>
           <tbody>`;
-        pricing.forEach((item) => {
+        rawPricing.forEach((item) => {
+          const isAds =
+            item.source === "custom_ads" ||
+            item.service_type === "Ads Campaign" ||
+            item.service_name === "Ads Campaign" ||
+            item.source_type === "ads_campaign";
+
+          const categoryName = item.category_name || (isAds ? "Ads Campaign" : "-");
+          const serviceName = isAds
+            ? (item.service_name || "Ads Campaign")
+            : (item.service_name || item.service || "-");
+          const quantityVal = isAds
+            ? (item.quantity || 1)
+            : (item.quantity || 1);
+
+          const editingSuffix =
+            !isAds &&
+            item.editing_type_name &&
+            item.editing_type_name !== "null" &&
+            item.editing_type_name !== "N/A"
+              ? ` (${item.editing_type_name})`
+              : "";
+
           htmlContent += `<tr>
-            <td>${item.category_name || "-"}</td>
+            <td>${categoryName}</td>
             <td>
-              ${item.service_name || item.service || "-"}
+              ${serviceName}${editingSuffix}
             </td>
-            <td style="text-align: center;">${item.quantity || "-"}</td>
+            <td style="text-align: center;">${quantityVal}</td>
           </tr>`;
         });
         htmlContent += `</tbody></table>`;
@@ -1987,9 +2122,19 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
         </thead>
         <tbody>`;
       pricing.forEach((item) => {
+        const itemTitle =
+          item.service ||
+          (item.editing_type_name &&
+          item.editing_type_name !== "null" &&
+          item.editing_type_name !== "N/A"
+            ? `${item.service_name || "Service"} - ${item.category_name || "Category"} (${item.editing_type_name})`
+            : item.service_name && item.category_name
+              ? `${item.service_name} - ${item.category_name}`
+              : item.service_name || item.category_name || "Deliverable");
+
         htmlContent += `<tr>
-          <td>${item.service || ""}</td>
-          <td style="text-align: center;">${item.quantity || 1}</td>
+          <td>${itemTitle}</td>
+          <td style="text-align: center;">${item.quantity !== undefined ? item.quantity : 1}</td>
           <td style="text-align: right;">₹ ${Number(item.total_price || 0).toLocaleString("en-IN")}</td>
         </tr>`;
       });
@@ -1998,21 +2143,17 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
       const discountVal = Number(pricingDiscount.value) || 0;
       const discountType = pricingDiscount.type || "Amount";
 
-      const dmSubtotal = pricing.reduce(
+      const dmSubtotal = dmPricing.reduce(
         (sum, item) =>
           sum +
-          (item.service_name === "Ads Campaign" ||
-          item.service_name?.toLowerCase() === "re_complimentary"
+          (item.service_name?.toLowerCase() === "re_complimentary" ||
+          item.include_in_total === false
             ? 0
             : Number(item.total_price) || 0),
         0,
       );
-      const adsSubtotal = pricing.reduce(
-        (sum, item) =>
-          sum +
-          (item.service_name === "Ads Campaign"
-            ? Number(item.total_price) || 0
-            : 0),
+      const adsSubtotal = adsPricing.reduce(
+        (sum, item) => sum + (Number(item.total_price) || 0),
         0,
       );
       const discountAmt =

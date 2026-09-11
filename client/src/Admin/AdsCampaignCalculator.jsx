@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../redux/user/userSlice";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { ArrowLeft } from "lucide-react";
 import API_BASE_URL from "../config/apiBaseUrl";
 
 const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
@@ -111,6 +112,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
 
   const clearAll = () => {
     resetForm();
+    setEditingId(null);
     if (onServiceDeleted) {
       adsItems.forEach(item => onServiceDeleted(item.id));
     } else {
@@ -495,13 +497,37 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const categories = [...new Set(adsData.map((item) => item.ads_category))].filter(Boolean);
   const totalAdsCost = adsItems.reduce((sum, item) => sum + item.total, 0);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      const fallbackUrl = docTypeFromURL === "proforma"
+        ? `/admin/ServicesLanding/${id}/${proposalId}?doc=proforma`
+        : `/admin/ServicesLanding/${id}/${proposalId}`;
+      navigate(fallbackUrl);
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 flex items-center justify-center p-4">
         <div className="w-full max-w-4xl bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 space-y-8 text-white">
-          <h3 className="text-3xl font-bold text-center text-white">
-            📢 Ads Campaign Budget Calculator
-          </h3>
+          <div className="relative flex items-center justify-center">
+            {!onServiceAdded && (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="absolute left-0 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-2 transition-all hover:scale-105 shadow-sm"
+                title="Go Back"
+              >
+                <ArrowLeft className="w-4 h-4 text-gray-200" />
+                <span className="text-sm font-medium hidden sm:inline">Back</span>
+              </button>
+            )}
+            <h3 className="text-2xl sm:text-3xl font-bold text-center text-white">
+              📢 Ads Campaign Budget Calculator
+            </h3>
+          </div>
 
 
 
@@ -660,9 +686,13 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
               {getData.map((item, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-white/10 border border-white/10 rounded-xl text-white"
+                  className={`p-4 border rounded-xl text-white transition-all ${
+                    editingId && String(editingId) === String(item.id)
+                      ? 'bg-yellow-500/15 border-yellow-400/40'
+                      : 'bg-white/10 border-white/10'
+                  }`}
                 >
-                  <div className="flex flex-wrap justify-between">
+                  <div className="flex flex-wrap justify-between items-center gap-2">
                     <p>
                       📢 <strong>{item.category}</strong>
                     </p>
@@ -674,12 +704,28 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                       {item.percent}%)
                     </p>
                     <p>🧾 Total: ₹{parseFloat(item.total).toLocaleString()}</p>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white text-lg rounded-full w-8 h-8 flex items-center justify-center"
-                    >
-                      ×
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {docTypeFromURL === "proforma" && (
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className={`text-white text-sm rounded-full w-8 h-8 flex items-center justify-center transition ${
+                            editingId && String(editingId) === String(item.id)
+                              ? 'bg-yellow-500 hover:bg-yellow-600'
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
+                          title="Edit this entry"
+                        >
+                          ✏️
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white text-lg rounded-full w-8 h-8 flex items-center justify-center"
+                        title="Delete this entry"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

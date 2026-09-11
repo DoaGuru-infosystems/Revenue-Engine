@@ -119,23 +119,110 @@ export default function PublicProposal() {
   };
 
   const sections = parseJson(data.sections_json, {});
-  const pricing = parseJson(data.pricing_table_json, []);
+  const rawPricing = parseJson(data.pricing_table_json, []);
   const terms = parseJson(data.terms_notes_json, []);
   
   const clientName = data.client_name || '';
   const organization = data.company_name || '';
-  
-  const getBillablePricingTotal = (table = []) =>
-    table.reduce((sum, row) => {
-      if (row?.include_in_total === false) return sum;
-      return sum + (Number(row?.total_price) || 0);
-    }, 0);
 
-  const subTotal = getBillablePricingTotal(pricing);
+  const dmPricing = [];
+  const adsPricing = [];
+  rawPricing.forEach((item) => {
+    const isAds =
+      item.source === "custom_ads" ||
+      item.service_type === "Ads Campaign" ||
+      item.service_name === "Ads Campaign" ||
+      item.source_type === "ads_campaign";
+
+    if (isAds) {
+      const explicitBudget =
+        item.budget !== undefined
+          ? item.budget
+          : item.ad_budget !== undefined
+            ? item.ad_budget
+            : item.amount !== undefined
+              ? item.amount
+              : null;
+      const charge = Number(item.charge || item.ad_charge || 0);
+      let budget = 0;
+      if (explicitBudget !== null) {
+        budget = Number(explicitBudget);
+      } else {
+        const fallback = Number(item.unit_price || item.total_price || 0);
+        budget = fallback > charge ? fallback - charge : fallback;
+      }
+
+      const percent =
+        item.percent !== undefined && item.percent !== null
+          ? item.percent
+          : item.ad_percent || "N/A";
+      const category =
+        item.category_name ||
+        item.service_name ||
+        item.service ||
+        "Ads Campaign";
+
+      if (charge > 0) {
+        dmPricing.push({
+          ...item,
+          service: `Service Charge - ${category}${percent && percent !== "N/A" ? ` (${percent}%)` : ""}`,
+          service_name: "Service Charge",
+          category_name: category,
+          quantity: 1,
+          total_price: charge,
+        });
+      }
+
+      adsPricing.push({
+        ...item,
+        service: `Ads Budget - ${category}`,
+        service_name: "Ads Campaign",
+        category_name: category,
+        quantity: "-",
+        total_price: budget,
+      });
+    } else {
+      const fallbackName =
+        item.service ||
+        (item.editing_type_name &&
+        item.editing_type_name !== "null" &&
+        item.editing_type_name !== "N/A"
+          ? `${item.service_name || "Service"} - ${item.category_name || "Category"} (${item.editing_type_name})`
+          : item.service_name && item.category_name
+            ? `${item.service_name} - ${item.category_name}`
+            : item.service_name || item.category_name || "Deliverable");
+
+      dmPricing.push({
+        ...item,
+        service: fallbackName,
+      });
+    }
+  });
+
+  const pricing = [...dmPricing, ...adsPricing];
+
+  const dmSubtotal = dmPricing.reduce(
+    (sum, item) =>
+      sum +
+      (item.service_name?.toLowerCase() === "re_complimentary" ||
+      item.include_in_total === false
+        ? 0
+        : Number(item.total_price) || 0),
+    0
+  );
+  const adsSubtotal = adsPricing.reduce(
+    (sum, item) => sum + (Number(item.total_price) || 0),
+    0
+  );
+
   const pricingDiscount = sections.pricing_discount || {};
   const discountVal = Number(pricingDiscount.value) || 0;
   const discountType = pricingDiscount.type || "Amount";
-  const discountAmt = discountType === 'Percentage' ? ((subTotal * discountVal) / 100) : discountVal;
+  const discountAmt =
+    discountType === "Percentage"
+      ? (dmSubtotal * discountVal) / 100
+      : discountVal;
+  const finalGrandTotal = Math.max(0, dmSubtotal - discountAmt) + adsSubtotal;
 
   const cover = typeof sections.cover_page === 'object' ? sections.cover_page : {};
   const propType = data.proposal_type === 'digital_marketing' ? 'Digital Marketing Proposal For' : 'Development Proposal For';
@@ -281,7 +368,7 @@ export default function PublicProposal() {
                 {isSectionIncluded("scope_of_work") && (
                   <div>
                     <SectionTitle>Scope of Work</SectionTitle>
-                    {pricing && pricing.length > 0 ? (
+                    {rawPricing && rawPricing.length > 0 ? (
                       <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
                         <table className="w-full text-left text-sm text-slate-600">
                           <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-xs tracking-wider border-b border-slate-200">
@@ -292,17 +379,41 @@ export default function PublicProposal() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
-                            {pricing.map((item, idx) => (
-                              <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-6 py-4 font-medium text-slate-800">{item.category_name || '-'}</td>
-                                <td className="px-6 py-4 text-slate-700">{item.service_name || item.service || '-'}</td>
-                                <td className="px-6 py-4 text-center">
-                                  <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 font-medium text-xs">
-                                    {item.quantity || '-'}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
+                            {rawPricing.map((item, idx) => {
+                              const isAds =
+                                item.source === "custom_ads" ||
+                                item.service_type === "Ads Campaign" ||
+                                item.service_name === "Ads Campaign" ||
+                                item.source_type === "ads_campaign";
+
+                              const categoryName = item.category_name || (isAds ? "Ads Campaign" : "-");
+                              const serviceName = isAds
+                                ? (item.service_name || "Ads Campaign")
+                                : (item.service_name || item.service || "-");
+                              const quantityVal = isAds
+                                ? (item.quantity || 1)
+                                : (item.quantity || 1);
+
+                              const editingSuffix =
+                                !isAds &&
+                                item.editing_type_name &&
+                                item.editing_type_name !== "null" &&
+                                item.editing_type_name !== "N/A"
+                                  ? ` (${item.editing_type_name})`
+                                  : "";
+
+                              return (
+                                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-6 py-4 font-medium text-slate-800">{categoryName}</td>
+                                  <td className="px-6 py-4 text-slate-700">{serviceName}{editingSuffix}</td>
+                                  <td className="px-6 py-4 text-center">
+                                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 font-medium text-xs">
+                                      {quantityVal}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -375,8 +486,8 @@ export default function PublicProposal() {
                         <tbody className="divide-y divide-slate-100">
                           {pricing.map((item, idx) => (
                             <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 font-medium text-slate-800">{item.service || ''}</td>
-                              <td className="px-6 py-4 text-center text-slate-700">{item.quantity || 1}</td>
+                              <td className="px-6 py-4 font-medium text-slate-800">{item.service}</td>
+                              <td className="px-6 py-4 text-center text-slate-700">{item.quantity !== undefined ? item.quantity : 1}</td>
                               <td className="px-6 py-4 text-right text-slate-700 font-medium">
                                 ₹ {Number(item.total_price || 0).toLocaleString('en-IN')}
                               </td>
@@ -384,28 +495,32 @@ export default function PublicProposal() {
                           ))}
                         </tbody>
                         <tfoot className="border-t border-slate-200">
+                          <tr className="bg-slate-50/50">
+                            <td colSpan="2" className="px-6 py-4 text-right font-semibold text-slate-600">Subtotal (Excl. GST)</td>
+                            <td className="px-6 py-4 text-right font-bold text-slate-800">₹ {dmSubtotal.toLocaleString('en-IN')}</td>
+                          </tr>
                           {discountVal > 0 && (
-                            <>
-                              <tr className="bg-slate-50/50">
-                                <td colSpan="2" className="px-6 py-4 text-right font-semibold text-slate-600">Subtotal (Excl. GST)</td>
-                                <td className="px-6 py-4 text-right font-bold text-slate-800">₹ {subTotal.toLocaleString('en-IN')}</td>
-                              </tr>
-                              <tr className="bg-slate-50/50">
-                                <td colSpan="2" className="px-6 py-3 text-right font-medium text-rose-500">
-                                  Discount ({discountType === 'Percentage' ? `${discountVal}%` : '₹'})
-                                </td>
-                                <td className="px-6 py-3 text-right font-bold text-rose-500">
-                                  - ₹ {discountAmt.toLocaleString('en-IN')}
-                                </td>
-                              </tr>
-                            </>
+                            <tr className="bg-slate-50/50">
+                              <td colSpan="2" className="px-6 py-3 text-right font-medium text-rose-500">
+                                Discount ({discountType === 'Percentage' ? `${discountVal}%` : '₹'})
+                              </td>
+                              <td className="px-6 py-3 text-right font-bold text-rose-500">
+                                - ₹ {discountAmt.toLocaleString('en-IN')}
+                              </td>
+                            </tr>
+                          )}
+                          {adsSubtotal > 0 && (
+                            <tr className="bg-slate-50/50">
+                              <td colSpan="2" className="px-6 py-4 text-right font-semibold text-slate-600">Ads Budget Total</td>
+                              <td className="px-6 py-4 text-right font-bold text-slate-800">₹ {adsSubtotal.toLocaleString('en-IN')}</td>
+                            </tr>
                           )}
                           <tr className="bg-blue-50/80">
                             <td colSpan="2" className="px-6 py-5 text-right font-bold text-blue-900 text-base uppercase tracking-wide">
                               Grand Total (Excl. GST)
                             </td>
                             <td className="px-6 py-5 text-right font-black text-blue-900 text-lg">
-                              ₹ {Number(data.grand_total_excl_gst || (subTotal - discountAmt)).toLocaleString('en-IN')}
+                              ₹ {Number(data.grand_total_excl_gst || finalGrandTotal).toLocaleString('en-IN')}
                             </td>
                           </tr>
                         </tfoot>

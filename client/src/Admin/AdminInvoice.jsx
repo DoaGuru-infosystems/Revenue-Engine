@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { classifyProformaServices } from "../utils/proformaPricing";
+import { inrToWords } from "../utils/inrToWords";
 import moment from "moment";
 import Swal from "sweetalert2";
 import { clearUser } from "../redux/user/userSlice";
@@ -517,7 +518,12 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
           try {
             const livePricing = propRes && propRes.data.status === "Success" && propRes.data.data ? propRes.data.data.pricing_table_json : null;
             const parsed = JSON.parse(livePricing || proforma.pricing_snapshot || "[]");
-            const { dmServices, adsServices } = classifyProformaServices(parsed);
+            let adsParsed = [];
+            if (proforma.ads_snapshot) {
+              try { adsParsed = JSON.parse(proforma.ads_snapshot || "[]"); } catch(e) {}
+            }
+            const combined = [...parsed, ...adsParsed];
+            const { dmServices, adsServices } = classifyProformaServices(combined);
             setServiceData([...dmServices, ...adsServices]);
           } catch (e) {
             console.error("Failed to parse proforma.pricing_snapshot", e);
@@ -567,7 +573,12 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
         try {
           const parsed = JSON.parse(client.pricing_snapshot || "[]");
-          const { dmServices, adsServices } = classifyProformaServices(parsed);
+          let adsParsed = [];
+          if (client.ads_snapshot) {
+            try { adsParsed = JSON.parse(client.ads_snapshot || "[]"); } catch(e) {}
+          }
+          const combined = [...parsed, ...adsParsed];
+          const { dmServices, adsServices } = classifyProformaServices(combined);
           setServiceData([...dmServices, ...adsServices]);
 
           const complimentary = parsed.filter(item =>
@@ -616,10 +627,38 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   useEffect(() => {
     if (publicMode && publicData) {
       setClientData(publicData.clientData || {});
-      const { dmServices, adsServices } = classifyProformaServices(publicData.serviceData || []);
-      const mappedGraphicData = (publicData.graphicData || []).map(item => ({ ...item, service_type: "Graphic Service" }));
-      const mappedAdsData = (publicData.adsData || []).map(item => ({ ...item, service_type: "Ads Campaign" }));
-      setServiceData([...dmServices, ...adsServices, ...mappedGraphicData, ...mappedAdsData]);
+
+      let parsedServices = [];
+      if (publicData.clientData?.pricing_snapshot) {
+        try {
+          const parsed = JSON.parse(publicData.clientData.pricing_snapshot || "[]");
+          let adsParsed = [];
+          if (publicData.clientData?.ads_snapshot) {
+            try { adsParsed = JSON.parse(publicData.clientData.ads_snapshot || "[]"); } catch(e) {}
+          }
+          const combined = [...parsed, ...adsParsed];
+          const { dmServices, adsServices } = classifyProformaServices(combined);
+          parsedServices = [...dmServices, ...adsServices];
+        } catch (e) {
+          console.error("Failed to parse publicData pricing_snapshot", e);
+        }
+      }
+
+      if (parsedServices.length === 0) {
+        const { dmServices, adsServices } = classifyProformaServices(publicData.serviceData || []);
+        const mappedGraphicData = (publicData.graphicData || []).map(item => ({
+          ...item,
+          service_type: "Graphic Service",
+          category_name: item.category_name || item.service_name || "",
+          editing_type_name: (item.editing_type_name && item.editing_type_name !== "N/A" && item.editing_type_name !== "null" && item.editing_type_name !== "")
+            ? item.editing_type_name
+            : (item.category_name || item.service_name || "N/A")
+        }));
+        const mappedAdsData = (publicData.adsData || []).map(item => ({ ...item, service_type: "Ads Campaign" }));
+        parsedServices = [...dmServices, ...adsServices, ...mappedGraphicData, ...mappedAdsData];
+      }
+
+      setServiceData(parsedServices);
 
       setComplimentaryData(publicData.complimentaryData || []);
       setDiscountDataSet(publicData.discountDataSet || null);
@@ -762,9 +801,14 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
         }
       }
 
+      const catName = item.category_name || item.service_name || "N/A";
+      const typeName = (item.editing_type_name && item.editing_type_name !== "N/A" && item.editing_type_name !== "null" && item.editing_type_name.trim() !== "")
+        ? item.editing_type_name
+        : catName;
+
       service.editingTypes.push({
-        category: item.category_name,
-        type: item.editing_type_name || "N/A",
+        category: catName,
+        type: typeName,
         quantity,
         price,
         include_content_posting,
@@ -1453,7 +1497,15 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
     (sum, service) =>
       sum +
       service.editingTypes.reduce(
-        (editSum, edit) => editSum + (edit.total || edit.price * edit.quantity),
+        (editSum, edit) => {
+          if (service.service === "Service Charge") {
+            const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
+            const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
+            if (isGoogle && !showGoogleAd) return editSum;
+            if (isMeta && !showMetaAd) return editSum;
+          }
+          return editSum + (edit.total || edit.price * edit.quantity);
+        },
         0
       ),
     0
@@ -1652,17 +1704,15 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       : calculatedSummaryBalance;
   const currentBalanceTextClass = "font-extrabold text-lg text-green-800";
   const floorAmount = (value) => Number(value || 0);
-  const formatAmountNoDecimals = (value) => Math.floor(floorAmount(value)).toLocaleString("en-IN");
+  const formatAmountNoDecimals = (value) => Math.round(floorAmount(value)).toLocaleString("en-IN");
   const formatAmount = (value) => floorAmount(value).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const netBankAmount = receivedAmountForSummary - tdsAmountToShow;
   const hasPayment = (clientData.tag_received_amt === "received" || hasReceivedAmount || receivedAmountForSummary > 0);
   const totalForWords = hasPayment ? netBankAmount : (activeInvoiceTotal + visibleAdBudget);
-  const safeTotal = Math.floor(Number(totalForWords) || 0);
+  const safeTotal = Math.round(Number(totalForWords) || 0);
   const amountInWords = safeTotal > 0
-    ? numberToWords
-      .toWords(safeTotal)
-      .replace(/\b\w/g, c => c.toUpperCase()) + " Rupees Only"
+    ? inrToWords(safeTotal)
     : "Zero Rupees Only";
 
   if (loading) {
@@ -2171,10 +2221,10 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                             <thead style={ { background: "#e8edff", color: "#111827", fontSize: "11px" } }>
                               <tr>
                                 <th style={ { border: "1px solid #cfd8e3", padding: "6px 7px", textAlign: "left" } } className="w-[10rem]">
-                                  DM Service
+                                  Services
                                 </th>
                                 <th style={ { border: "1px solid #cfd8e3", padding: "6px 7px", textAlign: "left" } } className="w-[20rem]">
-                                  Service Name
+                                  Categories
                                 </th>
                                 <th style={ { border: "1px solid #cfd8e3", padding: "6px 7px", textAlign: "right" } }>
                                   Quantity
@@ -2190,8 +2240,20 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
                             <tbody>
                               {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */ }
-                              { graphicData.map((service, idx) =>
-                                service.editingTypes.map((edit, eidx) => {
+                              { graphicData.map((service, idx) => {
+                                const visibleEditingTypes = service.editingTypes.filter((edit) => {
+                                  if (service.service === "Service Charge") {
+                                    const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
+                                    const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
+                                    if (isGoogle && !showGoogleAd) return false;
+                                    if (isMeta && !showMetaAd) return false;
+                                  }
+                                  return true;
+                                });
+
+                                if (visibleEditingTypes.length === 0) return null;
+
+                                return visibleEditingTypes.map((edit, eidx) => {
                                   const qty = Number(edit.quantity || 1);
                                   const base = Number(edit.price || 0);
                                   const totalBase = base * qty;
@@ -2201,11 +2263,11 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                                       key={ `graphic-${idx}-${eidx}` }
                                       className="bg-white"
                                     >
-                                      {/* Show DM Service name only once using rowspan */ }
+                                      {/* Show Services name only once using rowspan */ }
                                       { eidx === 0 ? (
                                         <td
                                           className="border px-2 py-1 align-center"
-                                          rowSpan={ service.editingTypes.length }
+                                          rowSpan={ visibleEditingTypes.length }
                                         >
                                           { (service.service && service.service.toLowerCase() === "proposal item") ? edit.category || service.service : service.service }
                                         </td>
@@ -2213,10 +2275,14 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
                                       <td className="border px-2 py-1">
                                         { service.service === "Video Services"
-                                          ? ((edit.type && edit.type.toLowerCase() === "proposal item") ? edit.category : `${edit.category} With ${edit.type}`)
-                                          : service.service === "Service Charge" && edit.type && edit.type.startsWith("Management")
-                                            ? (`${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type}`.trim())
-                                            : (edit.type && edit.type.toLowerCase() === "proposal item") ? edit.category : edit.type }
+                                          ? ((edit.type && edit.type.toLowerCase() === "proposal item") || edit.type === "N/A" ? (edit.category || service.service) : `${edit.category || ""} With ${edit.type}`.trim())
+                                          : service.service === "Service Charge"
+                                            ? (edit.type && edit.type !== "N/A" && edit.type.toLowerCase().includes("management")
+                                                ? edit.type
+                                                : `${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type || "Management & Optimization"}`.trim())
+                                            : ((edit.type && edit.type.toLowerCase() === "proposal item") || edit.type === "N/A" || !edit.type)
+                                              ? (edit.category && edit.category !== "N/A" ? edit.category : service.service)
+                                              : (edit.category && edit.category !== "N/A" ? edit.category : edit.type) }
                                       </td>
                                       <td className="border px-2 py-1 text-right">
                                         { qty }
@@ -2229,8 +2295,8 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                                       </td>
                                     </tr>
                                   );
-                                })
-                              ) }
+                                });
+                              }) }
 
                               {/* ================= DM SERVICE TOTAL ================= */ }
                               { (() => {
@@ -2238,10 +2304,19 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                                   (sum, service) =>
                                     sum +
                                     service.editingTypes.reduce(
-                                      (s, edit) =>
-                                        s +
-                                        (Number(edit.price || 0) *
-                                          Number(edit.quantity || 1)),
+                                      (s, edit) => {
+                                        if (service.service === "Service Charge") {
+                                          const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
+                                          const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
+                                          if (isGoogle && !showGoogleAd) return s;
+                                          if (isMeta && !showMetaAd) return s;
+                                        }
+                                        return (
+                                          s +
+                                          (Number(edit.price || 0) *
+                                            Number(edit.quantity || 1))
+                                        );
+                                      },
                                       0
                                     ),
                                   0
@@ -2366,7 +2441,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                                         className="border px-2 py-1 text-right"
                                         colSpan={ 4 }
                                       >
-                                        DM Service Total
+                                        Services Total
                                       </td>
                                       <td className="border px-2 py-1 text-right">
                                         ₹
@@ -2561,40 +2636,52 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                         <div style={ { background: "#dcf7e8", color: "#047968", fontWeight: 900 } } className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100">
                           <span className="font-bold text-xs">Total Service Amount</span>
                           <span className="font-bold text-xs">
-                            ₹{ formatAmount(activeInvoiceTotal) }
+                            ₹{ formatAmountNoDecimals(activeInvoiceTotal) }
                           </span>
                         </div>
                       </div>
 
-                      {/* Payment Summary */ }
-                      { (hasReceivedAmount || receivedAmountForSummary > 0 || clientData?.invoice_source === "proposal" || isProforma) && (
+                      {/* Payment / Ad Budget Summary */ }
+                      { (hasReceivedAmount || receivedAmountForSummary > 0 || clientData?.invoice_source === "proposal" || isProforma || visibleAdBudget > 0) && (
                         <div className="flex flex-col border-b border-gray-100">
                           { visibleGoogleBudget > 0 && (
                             <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
                               <span className="text-gray-600">Google Ad Budget  (Reimbursable)</span>
-                              <span className="text-gray-900 font-medium">₹{ formatAmount(visibleGoogleBudget) }</span>
+                              <span className="text-gray-900 font-medium">₹{ formatAmountNoDecimals(visibleGoogleBudget) }</span>
                             </div>
                           ) }
                           { visibleMetaBudget > 0 && (
                             <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
                               <span className="text-gray-600">Meta Ad Budget  (Reimbursable)</span>
-                              <span className="text-gray-900 font-medium">₹{ formatAmount(visibleMetaBudget) }</span>
+                              <span className="text-gray-900 font-medium">₹{ formatAmountNoDecimals(visibleMetaBudget) }</span>
                             </div>
                           ) }
-                          <div style={ { background: "#dcf7e8", color: "#047968", fontWeight: 900 } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                            <span className="text-gray-600">Gross Payments Received (Now)</span>
-                            <span className="text-gray-900 font-medium">₹{ formatAmount(receivedAmountForSummary) }</span>
-                          </div>
-                          { tdsAmountToShow > 0 && (
-                            <div style={ { background: "#fef2f2", color: "#dc2626", fontWeight: 700 } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                              <span className="text-red-600">Less: TDS Deducted</span>
-                              <span className="text-red-600 font-medium">₹{ formatAmount(tdsAmountToShow) }</span>
+                          { visibleAdBudget > 0 && !hasPayment && (
+                            <div style={ { background: "#dcf7e8", color: "#047968", fontWeight: 900 } } className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100">
+                              <span className="font-bold text-xs">Grand Total</span>
+                              <span className="font-bold text-xs">
+                                ₹{ formatAmountNoDecimals(activeInvoiceTotal + visibleAdBudget) }
+                              </span>
                             </div>
                           ) }
-                          <div style={ { background: "#dcf7e8", color: "#047968", fontWeight: 900 } } className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100">
-                            <span className="font-bold text-yellow-700">Net Amount Credited to Bank</span>
-                            <span className="font-bold text-yellow-700">₹{ formatAmount(receivedAmountForSummary - tdsAmountToShow) }</span>
-                          </div>
+                          { hasPayment && (
+                            <>
+                              <div style={ { background: "#dcf7e8", color: "#047968", fontWeight: 900 } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                <span className="text-gray-600">Gross Payments Received (Now)</span>
+                                <span className="text-gray-900 font-medium">₹{ formatAmountNoDecimals(receivedAmountForSummary) }</span>
+                              </div>
+                              { tdsAmountToShow > 0 && (
+                                <div style={ { background: "#fef2f2", color: "#dc2626", fontWeight: 700 } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                  <span className="text-red-600">Less: TDS Deducted</span>
+                                  <span className="text-red-600 font-medium">₹{ formatAmountNoDecimals(tdsAmountToShow) }</span>
+                                </div>
+                              ) }
+                              <div style={ { background: "#dcf7e8", color: "#047968", fontWeight: 900 } } className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100">
+                                <span className="font-bold text-yellow-700">Net Amount Credited to Bank</span>
+                                <span className="font-bold text-yellow-700">₹{ formatAmountNoDecimals(receivedAmountForSummary - tdsAmountToShow) }</span>
+                              </div>
+                            </>
+                          ) }
                         </div>
                       ) }
                     </div>

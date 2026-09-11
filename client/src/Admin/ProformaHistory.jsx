@@ -59,7 +59,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
             uniqueTxnData.push(item);
           }
         }
-        const approvedProposals = uniqueTxnData.filter(p => p.status === "client_approved");
+        const approvedProposals = uniqueTxnData.filter(p => p.status === "client_approved" || p.status === "approved");
         setProposalsList(approvedProposals);
       }
     } catch (error) {
