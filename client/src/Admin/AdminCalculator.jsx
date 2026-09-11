@@ -695,6 +695,7 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
           action: editId ? "update" : "add",
           editId,
           item: payload,
+          snapshotType: 'services',
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -1324,11 +1325,8 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
 
       if (docTypeFromURL === "proforma") {
         const parsed = JSON.parse(data.data.pricing_snapshot || "[]");
-        // Only get Graphic/SEO services for this calculator
-        const filtered = parsed.filter(
-          item => item.source !== 'custom_complimentary' && item.service_name?.toLowerCase() !== 'complimentary' && item.service_type !== "Ads Campaign" && item.category !== "Ads Campaign" && !item.amount
-        );
-        setGetData(filtered);
+        // pricing_snapshot now contains only service items (ads are in ads_snapshot)
+        setGetData(parsed);
       } else {
         setGetData(data.data);
       }
@@ -1428,7 +1426,8 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
           {
             proformaId: proposalId,
             action: "delete",
-            entryId: entryId
+            entryId: entryId,
+            snapshotType: 'services',
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -1708,8 +1707,8 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
                 </div>
               ) }
 
-              {/* Notes Section */ }
-              { !hideNotes && (
+              {/* Notes Section */}
+              { !hideNotes && docTypeFromURL !== "proforma" && (
                 <>
                   <div className={ cardCls + " space-y-3" }>
                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><StickyNote className="w-4 h-4 text-orange-400" />Notes</h3>

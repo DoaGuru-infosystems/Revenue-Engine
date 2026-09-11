@@ -673,12 +673,18 @@ exports.createProforma = async (req, res) => {
     }
     const proposal = propResults[0];
 
+    // Split pricing_table_json into services and ads at generation time
+    let allPricingItems = [];
+    try { allPricingItems = JSON.parse(proposal.pricing_table_json || "[]"); } catch(e) { allPricingItems = []; }
+    const serviceItems = allPricingItems.filter(i => i.source !== 'custom_ads' && i.service_name !== 'Ads Campaign');
+    const adsItems = allPricingItems.filter(i => i.source === 'custom_ads' || i.service_name === 'Ads Campaign');
+
     const q = `
       INSERT INTO re_proposal_proforma 
       (proposal_id, client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
-       pricing_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
+       pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
        duration_start_date, duration_end_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
       proposal_id,
@@ -689,7 +695,8 @@ exports.createProforma = async (req, res) => {
       base_amount,
       gst_amount,
       total_amount,
-      proposal.pricing_table_json,
+      JSON.stringify(serviceItems),
+      JSON.stringify(adsItems),
       proposal.notes_json,
       proposal.terms_notes_json,
       proposal.additional_remarks,
@@ -2272,6 +2279,7 @@ exports.getRevenueHistory = async (req, res) => {
       "SELECT txn_id, proforma_id, bill_number, client_name, received_amt, current_amt, base_amount, gst_amount, tds_amount, created_at, bill_type FROM re_invoice ORDER BY created_at DESC",
       [],
     );
+
     let totalReceived = 0;
     let totalPending = 0;
     let totalTds = 0;
@@ -2282,23 +2290,41 @@ exports.getRevenueHistory = async (req, res) => {
       totalTds += Number(inv.tds_amount || 0);
 
       const pid = inv.proforma_id || inv.client_name;
+
       if (!seenProformas.has(pid)) {
         seenProformas.add(pid);
         totalPending += Number(inv.current_amt || 0);
       }
     });
+
     const totalInvoiced = totalReceived + totalPending;
+
     res.status(200).json({
       status: "Success",
-      totals: { totalInvoiced, totalReceived, totalPending, totalTds },
+      totals: {
+        totalInvoiced,
+        totalReceived,
+        totalPending,
+        totalTds,
+      },
       invoices,
     });
+
+  } catch (error) {
+    console.error("Error fetching revenue history:", error);
+
+    res.status(500).json({
+      status: "Error",
+      message: "Failed to fetch revenue history",
+      error: error.message,
+    });
+  }
 };
 
 exports.getProformaSnapshot = async (req, res) => {
   try {
     const { id } = req.params;
-    const results = await runQuery(`SELECT pricing_snapshot FROM re_proposal_proforma WHERE id = ?`, [id]);
+    const results = await runQuery(`SELECT pricing_snapshot, ads_snapshot FROM re_proposal_proforma WHERE id = ?`, [id]);
     if (results.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Proforma not found" });
     }
@@ -2311,13 +2337,16 @@ exports.getProformaSnapshot = async (req, res) => {
 
 exports.updateProformaSnapshot = async (req, res) => {
   try {
-    const { proformaId, action, item, editId, entryId } = req.body;
-    const results = await runQuery(`SELECT pricing_snapshot FROM re_proposal_proforma WHERE id = ?`, [proformaId]);
+    const { proformaId, action, item, editId, entryId, snapshotType } = req.body;
+    // snapshotType: 'ads' => ads_snapshot column, default => pricing_snapshot column
+    const column = snapshotType === 'ads' ? 'ads_snapshot' : 'pricing_snapshot';
+
+    const results = await runQuery(`SELECT ${column} FROM re_proposal_proforma WHERE id = ?`, [proformaId]);
     if (results.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Proforma not found" });
     }
 
-    let parsed = JSON.parse(results[0].pricing_snapshot || "[]");
+    let parsed = JSON.parse(results[0][column] || "[]");
 
     if (action === "add") {
       item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
@@ -2328,13 +2357,13 @@ exports.updateProformaSnapshot = async (req, res) => {
         parsed.push(i);
       });
     } else if (action === "update") {
-      parsed = parsed.map(p => String(p.id) === String(editId) ? { ...item, id: editId } : p);
+      parsed = parsed.map(p => String(p.id) === String(editId) ? { ...p, ...item, id: editId } : p);
     } else if (action === "delete") {
       parsed = parsed.filter(p => String(p.id) !== String(entryId));
     }
 
     const updatedSnapshot = JSON.stringify(parsed);
-    await runQuery(`UPDATE re_proposal_proforma SET pricing_snapshot = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
+    await runQuery(`UPDATE re_proposal_proforma SET ${column} = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
     
     res.status(200).json({ status: "Success", message: "Proforma updated" });
   } catch (error) {

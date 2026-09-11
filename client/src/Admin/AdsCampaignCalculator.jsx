@@ -22,6 +22,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [getData, setGetData] = useState([]);
+  const [editingId, setEditingId] = useState(null); // For proforma edit mode
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -164,10 +165,21 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   };
 
   const handleEdit = (item) => {
+    // Pre-fill the input form with existing values
     setEnteredAmount((prev) => ({
       ...prev,
       [item.category]: item.amount,
     }));
+    // In proforma mode, track which entry we are updating
+    if (docTypeFromURL === "proforma") {
+      setEditingId(item.id);
+    }
+  };
+
+  const resetEditingState = () => {
+    setEditingId(null);
+    setEnteredAmount({});
+    setError("");
   };
 
   const handleCalculateAndSave = async () => {
@@ -282,31 +294,51 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
             id: newRecord.id,
             service_name: 'Ads Campaign',
             category_name: newRecord.category,
+            category: newRecord.category,
             quantity: 1,
             unit_price: newRecord.total,
             total_price: newRecord.total,
             total_amount: newRecord.total,
+            total: newRecord.total,
             include_in_total: true,
             source: 'custom_ads',
             budget: newRecord.amount,
+            amount: newRecord.amount,
             percent: newRecord.percent,
             charge: newRecord.charge,
           }));
-          response = await fetch(
-            `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                proformaId: proposalId,
-                action: "addBulk",
-                item: proformaItems
-              }),
-            }
-          );
+
+          // If editingId set, use update action for first result; else addBulk
+          if (editingId && proformaItems.length === 1) {
+            response = await fetch(
+              `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                  proformaId: proposalId,
+                  action: "update",
+                  editId: editingId,
+                  item: proformaItems[0],
+                  snapshotType: 'ads',
+                }),
+              }
+            );
+          } else {
+            response = await fetch(
+              `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                  proformaId: proposalId,
+                  action: "addBulk",
+                  item: proformaItems,
+                  snapshotType: 'ads',
+                }),
+              }
+            );
+          }
         } else {
           response = await fetch(
             `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
@@ -327,12 +359,12 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           if (onSaveComplete) onSaveComplete();
           Swal.fire({
             icon: "success",
-            title: "Success!",
-            text: "Ads campaign saved successfully!",
+            title: editingId ? "Updated!" : "Saved!",
+            text: editingId ? "Ads campaign entry updated!" : "Ads campaign saved successfully!",
             showConfirmButton: false,
             timer: 1000,
           });
-          resetForm();
+          resetEditingState();
         } else {
           Swal.fire({
             icon: "error",
@@ -367,12 +399,15 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
       });
       if (res.data.status === "Success") {
         if (docTypeFromURL === "proforma") {
-          const parsed = JSON.parse(res.data.data.pricing_snapshot || "[]");
-          // Only get Ads Campaign services
-          const filtered = parsed.filter(
-            item => item.source === 'custom_ads' || item.service_type === "Ads Campaign" || item.category === "Ads Campaign"
-          );
-          setGetData(filtered);
+          // Ads data is now stored in the dedicated ads_snapshot column
+          const parsed = JSON.parse(res.data.data.ads_snapshot || "[]");
+          const normalized = parsed.map(item => ({
+            ...item,
+            category: item.category || item.category_name,
+            amount: item.amount || item.budget,
+            total: item.total || item.total_amount || item.total_price,
+          }));
+          setGetData(normalized);
         } else {
           setGetData(res.data.data);
         }
@@ -418,7 +453,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           {
             proformaId: proposalId,
             action: "delete",
-            entryId: entryId
+            entryId: entryId,
+            snapshotType: 'ads',
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -486,11 +522,20 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
 
           {!loading && adsData.length > 0 && (
             <div className="space-y-4">
-              <h4 className="text-xl font-semibold">Enter Budget Amounts</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-xl font-semibold">Enter Budget Amounts</h4>
+                {editingId && (
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 border border-yellow-400/40 text-yellow-300">
+                    ✏️ Editing existing entry
+                  </span>
+                )}
+              </div>
               {categories.map((category) => (
                 <div
                   key={category}
-                  className="bg-white/10 backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4"
+                  className={`backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4 ${
+                    editingId ? 'bg-yellow-500/10 border border-yellow-400/30' : 'bg-white/10'
+                  }`}
                 >
                   <label className="sm:w-48 font-medium">{category}</label>
                   <input
@@ -514,18 +559,30 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
               <button
                 onClick={handleCalculateAndSave}
                 disabled={loading || Object.keys(enteredAmount).length === 0}
-                className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition disabled:bg-gray-400"
+                className={`px-6 py-3 rounded-lg text-white font-semibold transition disabled:bg-gray-400 ${
+                  editingId ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700'
+                }`}
               >
-                {loading ? "Calculating..." : "Calculate & Save"}
+                {loading ? "Saving..." : editingId ? "Update Entry" : "Calculate & Save"}
               </button>
-              <button
-                onClick={clearAll}
-                className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
-              >
-                Clear All
-              </button>
+              {editingId ? (
+                <button
+                  onClick={resetEditingState}
+                  className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                >
+                  Cancel Edit
+                </button>
+              ) : (
+                <button
+                  onClick={clearAll}
+                  className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
           )}
+
 
           {adsItems.length > 0 && (
             <div className="space-y-4">
