@@ -67,6 +67,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
       // If it's a direct/manual proforma passed from history, skip fetching by proposal ID
       if (proposal.isDirectProforma) {
         setProformas([proposal]);
+        if (proposal.openRecordPaymentDirectly) {
+          openPaymentModal(proposal);
+        }
         return;
       }
 
@@ -287,6 +290,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         });
         fetchPayments();
         fetchProformas();
+        try { window.dispatchEvent(new CustomEvent("paymentRecorded")); } catch(e) {}
       } else {
         Swal.fire('Error', data.message, 'error');
       }
@@ -309,6 +313,34 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     
     if (Number(paymentForm.amount) > pendingAmount) {
       Swal.fire('Validation Error', `Amount cannot exceed the pending balance of ₹${pendingAmount.toLocaleString()}`, 'warning');
+      return;
+    }
+
+    const totalAdBudgetThisPayment = paymentForm.has_ad_budget
+      ? Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)
+      : 0;
+
+    if (paymentForm.has_ad_budget && totalAdBudgetThisPayment > Number(paymentForm.amount)) {
+      Swal.fire(
+        'Validation Error',
+        `Total Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString()}) cannot exceed the total received amount (₹${Number(paymentForm.amount).toLocaleString()})`,
+        'warning'
+      );
+      return;
+    }
+
+    if (paymentForm.has_ad_budget && totalAdBudgetThisPayment <= 0) {
+      Swal.fire('Validation Error', 'Please enter a valid Ad Budget amount or uncheck Ad Budget', 'warning');
+      return;
+    }
+
+    if (paymentForm.has_ad_budget && Number(paymentForm.realized_google_budget || 0) > remainingGoogleAdBudget) {
+      Swal.fire('Validation Error', `Google Ad Budget cannot exceed remaining ₹${remainingGoogleAdBudget.toLocaleString()}`, 'warning');
+      return;
+    }
+
+    if (paymentForm.has_ad_budget && Number(paymentForm.realized_meta_budget || 0) > remainingMetaAdBudget) {
+      Swal.fire('Validation Error', `Meta Ad Budget cannot exceed remaining ₹${remainingMetaAdBudget.toLocaleString()}`, 'warning');
       return;
     }
 
@@ -378,6 +410,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         });
         setShowPaymentModal(false);
         fetchPayments();
+        try { window.dispatchEvent(new CustomEvent("paymentRecorded")); } catch(e) {}
       }
     } catch (err) {
       console.error(err);
@@ -742,6 +775,11 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                           ) }
                         </div>
                       ) }
+                      { paymentForm.has_ad_budget && (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) > Number(paymentForm.amount || 0) && (
+                        <div className="col-span-2 text-red-400 text-xs font-semibold bg-red-900/30 p-2 rounded-lg border border-red-800">
+                          Total Ad Budget (₹{ (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)).toLocaleString() }) cannot exceed Total Received Amount (₹{ Number(paymentForm.amount || 0).toLocaleString() })
+                        </div>
+                      ) }
                     </div>
                   ) }
                 </div>
@@ -779,7 +817,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
                       <div className="flex gap-3">
                         <button type="button" onClick={ () => setShowPaymentModal(false) } className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 font-semibold transition">Cancel</button>
-                        <button type="submit" disabled={ savingPayment || (paymentForm.has_ad_budget && ((Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) <= 0 || Number(paymentForm.realized_google_budget || 0) > remainingGoogleAdBudget || Number(paymentForm.realized_meta_budget || 0) > remainingMetaAdBudget)) } className="px-6 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center gap-2 disabled:opacity-50">
+                        <button type="submit" disabled={ savingPayment || (paymentForm.has_ad_budget && ((Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) <= 0 || (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) > Number(paymentForm.amount || 0) || Number(paymentForm.realized_google_budget || 0) > remainingGoogleAdBudget || Number(paymentForm.realized_meta_budget || 0) > remainingMetaAdBudget)) } className="px-6 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center gap-2 disabled:opacity-50">
                           { savingPayment ? 'Saving...' : 'Save Payment' }
                         </button>
                       </div>

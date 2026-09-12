@@ -91,6 +91,8 @@ const {
   getRequirementsDetail,
   getNoteData,
   getByIDDiscountData,
+  getDiscountByDocument,
+  getLatestDiscountByClient,
   getInvoiceByIdData,
   getinInvoiceServiceHistory,
   getAllInvoiceServiceHistory,
@@ -483,6 +485,16 @@ router.get(
   "/getByIDDiscountData/:client_id/:txn_id",
   authenticateToken,
   getByIDDiscountData,
+);
+router.get(
+  "/getDiscountByDocument/:client_id/:txn_id",
+  authenticateToken,
+  getDiscountByDocument,
+);
+router.get(
+  "/getLatestDiscountByClient/:client_id",
+  authenticateToken,
+  getLatestDiscountByClient,
 );
 router.get(
   "/getInvoiceByIdData/:client_id/:txn_id",

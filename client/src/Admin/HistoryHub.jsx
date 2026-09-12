@@ -191,7 +191,7 @@ const HistoryHub = ({ setActiveTab }) => {
 
 
           { activeSubTab === "balance_proforma" && <BalanceProformaHistory /> }
-          { activeSubTab === "payment_history" && <PaymentHistory /> }
+          { activeSubTab === "payment_history" && <PaymentHistory openProformaManager={ openProformaManager } /> }
 
           { activeSubTab === "revenue" && <RevenueHistory /> }
         </Suspense>

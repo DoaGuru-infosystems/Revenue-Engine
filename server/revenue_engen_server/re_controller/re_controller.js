@@ -4045,7 +4045,7 @@ exports.saveDiscountSetting = (req, res) => {
   });
 };
 
-exports.saveDirectProforma = (req, res) => {
+exports.saveDirectProforma = async (req, res) => {
   const {
     txn_id,
     client_id,
@@ -4064,16 +4064,25 @@ exports.saveDirectProforma = (req, res) => {
 
   const proformaTxnId = txn_id || String(Date.now());
 
+  let proformaNumber = null;
+  try {
+    const { getNextProformaNumber } = require("./re_proposalController");
+    proformaNumber = await getNextProformaNumber(is_gst);
+  } catch (e) {
+    console.error("Error generating proforma number:", e);
+  }
+
   const query = `
     INSERT INTO re_proposal_proforma (
-      client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
+      client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
       created_at, pricing_snapshot, notes_snapshot, source_type, duration_start_date, duration_end_date
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
   `;
 
   const values = [
     client_id,
     proformaTxnId,
+    proformaNumber,
     is_gst,
     gst_rate,
     base_amount,

@@ -414,7 +414,7 @@ exports.getProposalById = async (req, res) => {
                       (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
                       (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
                       (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
-                      c.client_name, c.client_organization AS company_name, c.email, c.phone AS phone_no 
+                      c.client_name, c.client_organization AS company_name, c.client_organization, c.email, c.phone, c.phone AS phone_no, c.address 
                FROM re_proposals p
                LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
                WHERE p.id = ?`;
@@ -485,7 +485,7 @@ exports.getAllProposals = async (req, res) => {
                     (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
                     (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
                     (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
-                    c.client_name, c.client_organization AS company_name, c.email, c.phone AS phone_no 
+                    c.client_name, c.client_organization AS company_name, c.client_organization, c.email, c.phone, c.phone AS phone_no, c.address 
              FROM re_proposals p
              LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id`;
     const params = [];
@@ -654,7 +654,31 @@ exports.sendProposalToClient = async (req, res) => {
   }
 };
 
-// ─── PROFORMA & PAYMENT CRUD ─────────────────────────────────────────────────
+// Helper: Concurrency-safe sequential proforma number generator per GST type using dedicated counter table + mutex queue
+let counterLock = Promise.resolve();
+
+const getNextProformaNumber = async (isGst) => {
+  const isGstBool = Boolean(isGst && (Buffer.isBuffer(isGst) ? isGst[0] === 1 : Number(isGst) === 1));
+  const counterType = isGstBool ? "GST" : "NON_GST";
+  const prefix = isGstBool ? "GST-PROF-" : "NONGST-PROF-";
+
+  const nextVal = await (counterLock = counterLock.catch(() => {}).then(async () => {
+    const rows = await runQuery(
+      `SELECT current_number FROM re_proforma_counters WHERE counter_type = ?`,
+      [counterType]
+    );
+    const num = (rows && rows.length > 0 ? Number(rows[0].current_number) : 0) + 1;
+    await runQuery(
+      `INSERT INTO re_proforma_counters (counter_type, current_number) VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE current_number = ?`,
+      [counterType, num, num]
+    );
+    return num;
+  }));
+
+  return `${prefix}${nextVal}`;
+};
+exports.getNextProformaNumber = getNextProformaNumber;
 
 exports.createProforma = async (req, res) => {
   try {
@@ -752,17 +776,21 @@ exports.createProforma = async (req, res) => {
     // Generate a unique txn_id for this proforma so each proforma has its own distinct identity
     const proformaTxnId = String(Date.now());
 
+    // Generate concurrency-safe sequential proforma number
+    const proformaNumber = await getNextProformaNumber(is_gst);
+
     const q = `
       INSERT INTO re_proposal_proforma 
-      (proposal_id, client_id, txn_id, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
+      (proposal_id, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
        pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
        duration_start_date, duration_end_date, discount_snapshot)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
       proposal_id,
       client_id,
       proformaTxnId,
+      proformaNumber,
       is_gst ? 1 : 0,
       gst_rate,
       finalBaseAmount,
@@ -1040,6 +1068,15 @@ exports.recordProposalPayment = async (req, res) => {
       });
     }
 
+    // Validate that total ad budget realized does not exceed the payment amount received
+    const totalAdBudget = (Number(realized_google_budget) || 0) + (Number(realized_meta_budget) || 0);
+    if (totalAdBudget > Number(amount)) {
+      return res.status(400).json({
+        status: "Failure",
+        message: `Total realized ad budget (₹${totalAdBudget.toLocaleString()}) cannot exceed the payment amount received (₹${Number(amount).toLocaleString()})`
+      });
+    }
+
     const proposalRows = await runQuery(
       `SELECT * FROM re_proposals WHERE id = ?`,
       [proposal_id],
@@ -1241,7 +1278,13 @@ exports.getProposalPaymentSummary = async (req, res) => {
 exports.getPaymentRecordsByClient = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const q = `SELECT * FROM re_proposal_payment_records WHERE client_id = ? ORDER BY created_at DESC`;
+    const q = `
+      SELECT p.*, pf.proforma_number, pf.is_gst
+      FROM re_proposal_payment_records p
+      LEFT JOIN re_proposal_proforma pf ON p.proforma_id = pf.id
+      WHERE p.client_id = ?
+      ORDER BY p.created_at DESC
+    `;
     const results = await runQuery(q, [clientId]);
     res.status(200).json({ status: "Success", data: results });
   } catch (error) {
@@ -1253,9 +1296,10 @@ exports.getPaymentRecordsByClient = async (req, res) => {
 exports.getAllPaymentRecords = async (req, res) => {
   try {
     const q = `
-      SELECT p.*, c.client_name, c.client_organization
+      SELECT p.*, c.client_name, c.client_organization, pf.proforma_number, pf.is_gst
       FROM re_proposal_payment_records p
       LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
+      LEFT JOIN re_proposal_proforma pf ON p.proforma_id = pf.id
       ORDER BY p.created_at DESC
     `;
     const results = await runQuery(q, []);
@@ -1588,22 +1632,45 @@ exports.approvePayment = async (req, res) => {
         );
       }
 
-      const sections = JSON.parse(proposal.sections_json || "{}");
-      const pricingDiscount = sections.pricing_discount || {};
-      const discountVal = Number(pricingDiscount.value) || 0;
-      if (discountVal > 0) {
-        const isPercent = pricingDiscount.type === "Percentage";
-        await runQuery(
-          `INSERT INTO re_discount (txn_id, client_id, discount_type, discount_per, discount_amt, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            invoice_txn_id,
-            client_id,
-            pricingDiscount.type || "Amount",
-            isPercent ? discountVal : 0,
-            isPercent ? 0 : discountVal,
-            createdAt,
-          ],
+      // Idempotent re_discount resolution: check proforma.discount_snapshot first, then proposal.sections_json
+      let discountObj = null;
+      if (proforma.discount_snapshot) {
+        try {
+          discountObj = typeof proforma.discount_snapshot === "string"
+            ? JSON.parse(proforma.discount_snapshot)
+            : proforma.discount_snapshot;
+        } catch (e) {}
+      } else if (proposal.sections_json) {
+        try {
+          const sec = typeof proposal.sections_json === "string"
+            ? JSON.parse(proposal.sections_json)
+            : proposal.sections_json;
+          if (sec?.pricing_discount && Number(sec.pricing_discount.value) > 0) {
+            discountObj = sec.pricing_discount;
+          }
+        } catch (e) {}
+      }
+
+      if (discountObj && Number(discountObj.value) > 0) {
+        const isPercent = discountObj.type === "Percentage" || discountObj.type === "percent";
+        const discVal = Number(discountObj.value) || 0;
+        const existingDisc = await runQuery(
+          `SELECT id FROM re_discount WHERE client_id = ? AND txn_id = ? LIMIT 1`,
+          [client_id, invoice_txn_id]
         );
+        if (existingDisc.length === 0) {
+          await runQuery(
+            `INSERT INTO re_discount (txn_id, client_id, discount_type, discount_per, discount_amt, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              invoice_txn_id,
+              client_id,
+              discountObj.type || (isPercent ? "Percentage" : "Amount"),
+              isPercent ? discVal : 0,
+              isPercent ? 0 : discVal,
+              createdAt,
+            ],
+          );
+        }
       }
 
       // 8. UPDATE statuses
@@ -1922,6 +1989,48 @@ exports.generateInvoiceFromProforma = async (req, res) => {
 
     const result = await runQuery(insertQ, insertValues);
     const new_invoice_id = result.insertId;
+
+    // 9.1 Insert discount record into re_discount idempotently if proforma or proposal has discount
+    let discountObj = null;
+    if (proforma.discount_snapshot) {
+      try {
+        discountObj = typeof proforma.discount_snapshot === "string"
+          ? JSON.parse(proforma.discount_snapshot)
+          : proforma.discount_snapshot;
+      } catch (e) {}
+    } else if (proposal.sections_json) {
+      try {
+        const sec = typeof proposal.sections_json === "string"
+          ? JSON.parse(proposal.sections_json)
+          : proposal.sections_json;
+        if (sec?.pricing_discount && Number(sec.pricing_discount.value) > 0) {
+          discountObj = sec.pricing_discount;
+        }
+      } catch (e) {}
+    }
+
+    if (discountObj && Number(discountObj.value) > 0) {
+      const isPercent = discountObj.type === "Percentage" || discountObj.type === "percent";
+      const discVal = Number(discountObj.value) || 0;
+      const createdAt = new Date().toISOString().replace(/T/, " ").replace(/\..+/, "");
+      const existingDisc = await runQuery(
+        `SELECT id FROM re_discount WHERE client_id = ? AND txn_id = ? LIMIT 1`,
+        [proforma.client_id, txn_id]
+      );
+      if (existingDisc.length === 0) {
+        await runQuery(
+          `INSERT INTO re_discount (txn_id, client_id, discount_type, discount_per, discount_amt, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            txn_id,
+            proforma.client_id,
+            discountObj.type || "Amount",
+            isPercent ? discVal : 0,
+            isPercent ? 0 : discVal,
+            createdAt,
+          ]
+        );
+      }
+    }
 
     // 10. Update re_proposals.status = 'invoiced'
     if (proforma.proposal_id) {
@@ -2667,12 +2776,34 @@ exports.updateProformaSnapshot = async (req, res) => {
     let parsed = JSON.parse(results[0][column] || "[]");
 
     if (action === "add") {
+      // Duplicate check — same service_name + category_name + editing_type_name
+      const isDuplicate = parsed.some(
+        p =>
+          p.service_name === item.service_name &&
+          p.category_name === item.category_name &&
+          p.editing_type_name === item.editing_type_name
+      );
+      if (isDuplicate) {
+        return res.status(200).json({
+          status: "Alert",
+          message: "Yeh service already exist hai. Please existing entry ko update karein."
+        });
+      }
       item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
       parsed.push(item);
     } else if (action === "addBulk") {
+      // Upsert by category — same category hai toh update, nahi toh add
       item.forEach(i => {
-        i.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
-        parsed.push(i);
+        const existingIdx = parsed.findIndex(
+          p => (p.category || p.category_name) === (i.category || i.category_name)
+        );
+        if (existingIdx !== -1) {
+          // Existing entry update karo, ID preserve karo
+          parsed[existingIdx] = { ...parsed[existingIdx], ...i, id: parsed[existingIdx].id };
+        } else {
+          i.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+          parsed.push(i);
+        }
       });
     } else if (action === "update") {
       parsed = parsed.map(p => String(p.id) === String(editId) ? { ...p, ...item, id: editId } : p);

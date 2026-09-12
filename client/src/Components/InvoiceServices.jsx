@@ -254,6 +254,28 @@ function ProformaServices() {
     if (!selectedGraphicServiceObj || !selectedGraphicCategoryObj || !selectedGraphicEditingType) {
       Swal.fire({ icon: "warning", title: "Complete Graphic Selection", text: "Please select service, category and editing type." }); return;
     }
+
+    const currentSvc = (selectedGraphicServiceObj.service_name || "").trim().toLowerCase();
+    const currentCat = (selectedGraphicCategoryObj.category_name || "").trim().toLowerCase();
+    const currentEdit = (selectedGraphicEditingType.editing_type_name || "").trim().toLowerCase();
+
+    const isDuplicate = selectedItems.some((item) => {
+      if (item.source !== "graphic") return false;
+      const itemSvc = (item.service_name || "").trim().toLowerCase();
+      const itemCat = (item.category_name || "").trim().toLowerCase();
+      const itemEdit = (item.editing_type_name || "").trim().toLowerCase();
+      return itemSvc === currentSvc && itemCat === currentCat && itemEdit === currentEdit;
+    });
+
+    if (isDuplicate) {
+      Swal.fire({
+        icon: "error",
+        title: "Already Exists!",
+        text: "This service with the same category and editing type is already added. Please update the existing service quantity instead.",
+      });
+      return;
+    }
+
     const qty = Math.max(1, toNumber(graphicQuantity || 1));
     const unitPrice = toNumber(selectedGraphicEditingType.amount || selectedGraphicEditingType.editing_type_amount);
     let includeContentPosting = 0, includeThumbnailCreation = 0;
@@ -265,8 +287,11 @@ function ProformaServices() {
       if (addon.key === "thumbnail_creation") includeThumbnailCreation = addon.amount_num;
     });
     const rowTotal = (unitPrice + selectedGraphicAddonPerUnit) * qty;
-    setSelectedItems((prev) => [...prev, { row_id: generateRowId(), source: "graphic", client_id: clientContext.id || null, client_name: clientContext.name || "", service_name: selectedGraphicServiceObj.service_name || "", category_name: selectedGraphicCategoryObj.category_name || "", editing_type_id: selectedGraphicEditingType.editing_type_id || null, editing_type_name: selectedGraphicEditingType.editing_type_name || "", unit_price: unitPrice, quantity: qty, optional_total_per_unit: selectedGraphicAddonPerUnit, include_content_posting: includeContentPosting, include_thumbnail_creation: includeThumbnailCreation, addon_labels: selectedAddonLabels, total: Number(rowTotal.toFixed(2)) }]);
-    setSelectedGraphicEditId(""); setGraphicQuantity("1"); setGraphicAddons(createInitialAddonState(optionalServices));
+    setSelectedGraphicService("");
+    setSelectedGraphicCategory("");
+    setSelectedGraphicEditId("");
+    setGraphicQuantity("1");
+    setGraphicAddons(createInitialAddonState(optionalServices));
   };
 
   const addAdsServiceRow = () => {
@@ -278,7 +303,30 @@ function ProformaServices() {
     const percent = toNumber(matchedRange.percentage);
     const charge = Number(((budget * percent) / 100).toFixed(2));
     const total = Number((budget + charge).toFixed(2));
-    setSelectedItems((prev) => [...prev, { row_id: generateRowId(), source: "ads", client_id: clientContext.id || null, client_name: clientContext.name || "", ads_category: selectedAdsOption.category, budget, percent, charge, total }]);
+
+    const existingIndex = selectedItems.findIndex(
+      (item) => item.source === "ads" && (item.ads_category || "").trim().toLowerCase() === (selectedAdsOption.category || "").trim().toLowerCase()
+    );
+
+    if (existingIndex >= 0) {
+      setSelectedItems((prev) =>
+        prev.map((item, idx) =>
+          idx === existingIndex
+            ? { ...item, budget, percent, charge, total }
+            : item
+        )
+      );
+      Swal.fire({
+        icon: "success",
+        title: "Updated!",
+        text: `Updated existing ${selectedAdsOption.category} budget to ${formatRs(budget)}.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } else {
+      setSelectedItems((prev) => [...prev, { row_id: generateRowId(), source: "ads", client_id: clientContext.id || null, client_name: clientContext.name || "", ads_category: selectedAdsOption.category, budget, percent, charge, total }]);
+    }
+    setSelectedAdsCategory("");
     setAdsBudgetInput("");
   };
 

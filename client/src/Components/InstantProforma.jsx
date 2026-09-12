@@ -84,6 +84,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   const [clients, setClients] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(null);
+  const [step, setStep] = useState("client"); // "client" | "form"
   const [loadingClients, setLoadingClients] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [savingClient, setSavingClient] = useState(false);
@@ -227,7 +228,10 @@ function InstantProforma({ onBack, handleSessionExpired }) {
           (item.client_name || "").trim().toLowerCase() === (payload.client_name || "").trim().toLowerCase() &&
           String(item.phone || "").trim() === String(payload.phone || "").trim()
       );
-      if (matched) applyClient(matched);
+      if (matched) {
+        applyClient(matched);
+        setStep("form");
+      }
       closeAddClientModal();
       Swal.fire({ icon: "success", title: "Client Added", text: "Client saved and selected.", showConfirmButton: false, timer: 1200 });
     } catch (error) {
@@ -310,101 +314,147 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     <div className="animate-fade-in">
       {/* Top bar */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onClick={onBack} className={btnSecondary}>
-          <ArrowLeft size={15} /> Back to options
-        </button>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-          <CheckCircle2 size={12} /> Client Based Mode
-        </span>
+        {step === "client" ? (
+          <button type="button" onClick={onBack} className={btnSecondary}>
+            <ArrowLeft size={15} /> Back to options
+          </button>
+        ) : (
+          <button type="button" onClick={() => setStep("client")} className={btnSecondary}>
+            <ArrowLeft size={15} /> Change Client
+          </button>
+        )}
+        <div className="flex items-center gap-2">
+          {step === "form" && (selectedClient || proformaForm.client_name) && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-xs font-medium text-orange-600 dark:text-orange-400">
+              <User size={12} /> {proformaForm.client_organization || proformaForm.client_name} {selectedClientId ? `(#${selectedClientId})` : ""}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 size={12} /> {step === "client" ? "Step 1: Select Client" : "Step 2: Proforma Form"}
+          </span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        {/* ── Client List ── */}
-        <div className={`${cardClass} p-4 sm:p-5 xl:col-span-3`} style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white">Clients</h2>
-              {clients.length > 0 && (
-                <span className="mt-1 inline-flex items-center rounded-full bg-gray-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:text-gray-300">
-                  {filteredClients.length} of {clients.length}
-                </span>
+      {step === "client" ? (
+        /* ── Step 1: Client Selection Panel (Full width, spacious & responsive) ── */
+        <div className="mx-auto max-w-4xl">
+          <div className={`${cardClass} p-5 sm:p-7`} style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border-light)] pb-5">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <User className="text-orange-500" size={20} /> Select Client for Instant Proforma
+                </h2>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Select a client from the list below to create a proforma, or register a new one.
+                </p>
+              </div>
+              <button type="button" onClick={openAddClientModal} className={btnPrimary}>
+                <Plus size={15} /> Add New Client
+              </button>
+            </div>
+
+            <div className="relative mb-5 flex items-center text-gray-400 dark:text-gray-500 focus-within:text-orange-500">
+              <Search className="pointer-events-none absolute left-3.5 h-4 w-4" />
+              <input
+                type="search"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Search clients by name, organization, phone, or email..."
+                className={`${inputClass} pl-10 py-3 text-sm`}
+              />
+            </div>
+
+            <div className="max-h-[38rem] overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {loadingClients && (
+                <div className="py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                  <div className="mb-3 text-3xl text-orange-500/60 animate-spin inline-block">◌</div>
+                  <div>Loading clients...</div>
+                </div>
+              )}
+              {!loadingClients && filteredClients.length === 0 && (
+                <div className="py-16 text-center text-sm text-gray-400 dark:text-gray-500">
+                  No clients found matching your search.
+                </div>
+              )}
+              {!loadingClients && (
+                <div className="flex flex-col gap-2.5">
+                  {filteredClients.map((client) => {
+                    const active = String(selectedClientId) === String(client.id);
+                    return (
+                      <button
+                        type="button"
+                        key={client.id}
+                        onClick={() => {
+                          applyClient(client);
+                          setStep("form");
+                        }}
+                        className={`group w-full rounded-xl border p-3.5 text-left transition-all duration-150 ease-out hover:-translate-y-0.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          active
+                            ? "border-orange-500 bg-orange-500/10 shadow-md ring-1 ring-orange-500/30"
+                            : "border-[var(--border-light)] hover:border-orange-500/40 hover:bg-gray-50 dark:hover:bg-white/5"
+                        }`}
+                        style={{ backgroundColor: active ? undefined : 'var(--bg-secondary)' }}
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                          <div
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                              active
+                                ? "bg-orange-500 text-white shadow-md shadow-orange-500/30"
+                                : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 group-hover:bg-orange-500/20 group-hover:text-orange-500"
+                            }`}
+                          >
+                            <User size={18} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`truncate text-sm font-semibold ${
+                                  active ? "text-orange-600 dark:text-orange-400" : "text-gray-900 dark:text-white"
+                                }`}
+                              >
+                                {client.client_organization || client.client_name}
+                              </span>
+                              <span className="shrink-0 text-[10.5px] font-mono text-gray-400 dark:text-gray-500">
+                                #{client.id}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {client.client_organization && (
+                                <span className="truncate font-medium text-gray-700 dark:text-gray-300">
+                                  Contact: {client.client_name}
+                                </span>
+                              )}
+                              <span className="flex items-center gap-1">
+                                <Phone size={11} className="text-gray-400" /> {client.phone || "—"}
+                              </span>
+                              {client.email && (
+                                <span className="flex items-center gap-1 truncate">
+                                  <Mail size={11} className="text-gray-400" /> {client.email}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--border-light)]">
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            {client.dg_employee ? `Rep: ${client.dg_employee}` : "DOAGuru"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-500 group-hover:text-orange-400 px-3 py-1.5 rounded-lg bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors">
+                            Select Client →
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
-            <button type="button" onClick={openAddClientModal} className={btnPrimarySmall}>
-              <Plus size={13} /> Add Client
-            </button>
-          </div>
-
-          <div className="relative mb-3.5 flex items-center text-gray-400 dark:text-gray-500 focus-within:text-orange-500">
-            <Search className="pointer-events-none absolute left-3 h-4 w-4" />
-            <input
-              type="search"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Search clients..."
-              className={`${inputClass} pl-9`}
-            />
-          </div>
-
-          <div className="flex max-h-[31rem] flex-col gap-2 overflow-y-auto pr-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {loadingClients && (
-              <div className="py-12 text-center text-[13px] text-gray-400 dark:text-gray-500">
-                <div className="mb-2 text-2xl text-orange-500/50">◌</div>
-                Loading clients...
-              </div>
-            )}
-            {!loadingClients && filteredClients.length === 0 && (
-              <div className="py-12 text-center text-[13px] text-gray-400 dark:text-gray-500">No clients found.</div>
-            )}
-            {!loadingClients &&
-              filteredClients.map((client) => {
-                const active = String(selectedClientId) === String(client.id);
-                return (
-                  <button
-                    type="button"
-                    key={client.id}
-                    onClick={() => applyClient(client)}
-                    className={`w-full rounded-xl border p-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 ${
-                      active
-                        ? "border-orange-500/30 bg-orange-500/10"
-                        : "border-transparent hover:border-gray-200 dark:hover:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                          active
-                            ? "bg-orange-500/20 text-orange-600 dark:text-orange-400"
-                            : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400"
-                        }`}
-                      >
-                        <User size={15} />
-                      </div>
-                      <div className="min-w-0">
-                        <div
-                          className={`truncate text-[13px] font-semibold ${
-                            active ? "text-orange-600 dark:text-orange-400" : "text-gray-900 dark:text-white"
-                          }`}
-                        >
-                          {client.client_organization || client.client_name}
-                        </div>
-                        <div className="mt-0.5 truncate text-[11.5px] text-gray-500 dark:text-gray-400">
-                          {client.client_organization ? client.client_name : client.phone}
-                        </div>
-                        <div className="mt-0.5 truncate text-[10.5px] text-gray-400 dark:text-gray-500">
-                          {client.phone}
-                          {client.email ? ` · ${client.email}` : ""}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
           </div>
         </div>
-
-        {/* ── Form + Summary ── */}
-        <div className="flex flex-col gap-6 xl:col-span-9 lg:flex-row">
+      ) : (
+        /* ── Step 2: Form + Summary View (Spacious, unconstrained layout) ── */
+        <div className="flex flex-col gap-6 lg:flex-row w-full">
           {/* Proforma Form */}
           <form onSubmit={handleSubmitProforma} noValidate className={`${cardClass} flex-1 p-5 sm:p-7`} style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <div className="mb-6 flex items-center justify-between gap-3">
@@ -533,10 +583,10 @@ function InstantProforma({ onBack, handleSessionExpired }) {
                       name="bill_type"
                       value={proformaForm.bill_type}
                       onChange={handleProformaChange}
-                      className={`${inputClass} appearance-none pr-9`}
+                      className={`${inputClass} appearance-none pr-9 bg-white dark:bg-slate-900 text-gray-900 dark:text-white cursor-pointer`}
                     >
-                      <option value="NON_GST">Non-GST Bill</option>
-                      <option value="GST">GST Bill</option>
+                      <option value="NON_GST" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white">Non-GST Bill</option>
+                      <option value="GST" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white">GST Bill</option>
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                   </div>
@@ -552,12 +602,12 @@ function InstantProforma({ onBack, handleSessionExpired }) {
                       name="payment_mode"
                       value={proformaForm.payment_mode}
                       onChange={handleProformaChange}
-                      className={`${inputClass} appearance-none pl-9 pr-9`}
+                      className={`${inputClass} appearance-none pl-9 pr-9 bg-white dark:bg-slate-900 text-gray-900 dark:text-white cursor-pointer`}
                       required
                     >
-                      <option value="">Select mode</option>
+                      <option value="" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white">Select mode</option>
                       {paymentModes.map((m) => (
-                        <option key={m} value={m}>
+                        <option key={m} value={m} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white">
                           {m}
                         </option>
                       ))}
@@ -664,9 +714,9 @@ function InstantProforma({ onBack, handleSessionExpired }) {
                     });
                     setSelectedPredefinedNote("");
                   }}
-                  className={`${inputClass} appearance-none pr-9`}
+                  className={`${inputClass} appearance-none pr-9 bg-white dark:bg-slate-900 text-gray-900 dark:text-white cursor-pointer`}
                 >
-                  <option value="">-- Select Predefined Note --</option>
+                  <option value="" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white">-- Select Predefined Note --</option>
                   {predefinedNotes
                     .filter((note) => {
                       const noteText = note.note_text || note.note_name;
@@ -674,7 +724,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
                       return !arr.some((n) => n.note_name === noteText);
                     })
                     .map((note) => (
-                      <option key={note.id} value={note.note_text || note.note_name}>
+                      <option key={note.id} value={note.note_text || note.note_name} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white">
                         {note.note_text || note.note_name}
                       </option>
                     ))}
@@ -784,7 +834,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
             )}
           </aside>
         </div>
-      </div>
+      )}
 
       {/* ─── Add Client Modal ─── */}
       {showClientModal && (

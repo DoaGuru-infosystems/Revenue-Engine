@@ -298,6 +298,9 @@ const { id, txn_id } = useParams();
                bill_type: proforma.is_gst ? "GST" : "NON_GST",
                document_type: "proforma",
                created_at: proforma.created_at,
+               duration_start_date: proforma.duration_start_date || p.billing_start_date,
+               duration_end_date: proforma.duration_end_date || p.billing_end_date,
+               proforma_number: proforma.proforma_number,
              });
              
              try {
@@ -638,12 +641,6 @@ const { id, txn_id } = useParams();
       sum +
       service.editingTypes.reduce(
         (editSum, edit) => {
-          if (service.service === "Service Charge") {
-            const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
-            const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
-            if (isGoogle && !showGoogleAd) return editSum;
-            if (isMeta && !showMetaAd) return editSum;
-          }
           return editSum + (edit.total || edit.price * edit.quantity);
         },
         0
@@ -864,13 +861,23 @@ const { id, txn_id } = useParams();
                         <p className="break-words">
                           <strong>Address:</strong> {clientData?.address}
                         </p>
+                        <p className="break-words">
+                          <strong>Email:</strong> {clientData?.email || "N/A"}
+                        </p>
                       </div>
                       <div className="text-end text-xs">
                         <p className="font-bold">
                           {sourceFromURL === "proposal" || docTypeFromURL === "proforma" ? null : <span className="font-bold text-amber-600 border border-amber-600 px-1 py-0.5 rounded mr-1">Legacy</span>}
-                          {docTypeFromURL === "proforma" ? "Proforma Invoice: " : "Quotation: "} {txn_id}
+                          {docTypeFromURL === "proforma" ? "Proforma Invoice: " : "Quotation: "} {clientData?.proforma_number || txn_id}
                         </p>
                         <p>{moment().format("DD/MM/YYYY")}</p>
+                        {docTypeFromURL === "proforma" && clientData?.duration_start_date && (
+                          <p className="text-gray-700 mt-0.5 font-medium">
+                            <strong>Service From:</strong>{" "}
+                            {moment(clientData.duration_start_date).format("DD/MM/YYYY")} to{" "}
+                            {moment(clientData.duration_end_date).format("DD/MM/YYYY")}
+                          </p>
+                        )}
                       </div>
                       {/* <div className="text-right text-gray-600 break-words">
                     <p>1815, Wright Town, Jabalpur,</p>
@@ -906,15 +913,7 @@ const { id, txn_id } = useParams();
                           <tbody>
                             {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */}
                             {graphicData.map((service, idx) => {
-                              const visibleEditingTypes = service.editingTypes.filter((edit) => {
-                                if (service.service === "Service Charge") {
-                                  const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
-                                  const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
-                                  if (isGoogle && !showGoogleAd) return false;
-                                  if (isMeta && !showMetaAd) return false;
-                                }
-                                return true;
-                              });
+                              const visibleEditingTypes = service.editingTypes;
 
                               if (visibleEditingTypes.length === 0) return null;
 
@@ -1117,12 +1116,6 @@ const { id, txn_id } = useParams();
                                   sum +
                                   service.editingTypes.reduce(
                                     (s, edit) => {
-                                      if (service.service === "Service Charge") {
-                                        const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
-                                        const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
-                                        if (isGoogle && !showGoogleAd) return s;
-                                        if (isMeta && !showMetaAd) return s;
-                                      }
                                       return (
                                         s +
                                         Number(edit.price) *

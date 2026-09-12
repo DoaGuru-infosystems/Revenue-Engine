@@ -10,6 +10,8 @@ import Swal from "sweetalert2";
 import API_BASE_URL from "../config/apiBaseUrl";
 import GenerateProformaModal from "./components/GenerateProformaModal";
 
+const parseIsGst = (val) => Boolean(val && (typeof val === 'object' && val.data ? val.data[0] === 1 : Number(val) === 1));
+
 const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
   const { currentUser, token } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const [keyword, setKeyword] = useState("");
+  const [gstFilter, setGstFilter] = useState("all"); // "all" | "gst" | "nongst"
   const [currentPage, setCurrentPage] = useState(0);
   const clientPerPage = 10;
   
@@ -110,13 +113,24 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
     fetchAllProformas();
   }, []);
 
+  const gstCount = fetchServices.filter((row) => parseIsGst(row?.is_gst)).length;
+  const nonGstCount = fetchServices.filter((row) => !parseIsGst(row?.is_gst)).length;
+
   const filteredItems = fetchServices.filter((row) => {
+    const isGst = parseIsGst(row?.is_gst);
+
+    if (gstFilter === "gst" && !isGst) return false;
+    if (gstFilter === "nongst" && isGst) return false;
+
     if (!keyword.trim()) return true;
     const searchTerm = keyword.trim().toLowerCase();
     return (
+      (row?.proforma_number && row.proforma_number.toLowerCase().includes(searchTerm)) ||
       (row?.id && `PROF-${row.id}`.toLowerCase().includes(searchTerm)) ||
       (row?.proposal_id && String(row.proposal_id).toLowerCase().includes(searchTerm)) ||
-      (row?.client_name && row.client_name.toLowerCase().includes(searchTerm))
+      (row?.client_name && row.client_name.toLowerCase().includes(searchTerm)) ||
+      (searchTerm === "gst" && isGst) ||
+      (searchTerm.includes("non") && !isGst)
     );
   });
 
@@ -150,7 +164,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
 
   const handlePreview = (item) => {
     // Determine GST status based on is_gst field safely
-    const isGST = item.is_gst && typeof item.is_gst === 'object' && item.is_gst.data ? item.is_gst.data[0] === 1 : Number(item.is_gst) === 1;
+    const isGST = parseIsGst(item?.is_gst);
     navigate(`/admin/quotation/${item.client_id}/${item.id}?doc=proforma&source=proposal&gst=${isGST ? 1 : 0}`);
   };
 
@@ -234,22 +248,96 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
   return (
     <div className="space-y-6">
       {/* Search & Header */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96 group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400 group-focus-within:text-amber-400 transition-colors" />
+      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-3 items-center w-full lg:w-auto">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-80 md:w-96 group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400 group-focus-within:text-amber-400 transition-colors" />
+            </div>
+            <input
+              type="text"
+              className="w-full pl-11 pr-4 py-2.5 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none text-white placeholder-gray-400 transition-all shadow-inner text-sm"
+              placeholder="Search by Client, Proforma No, Proposal ID..."
+              value={keyword}
+              onChange={(e) => {
+                setKeyword(e.target.value);
+                setCurrentPage(0);
+              }}
+            />
           </div>
-          <input
-            type="text"
-            className="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-2xl focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none text-white placeholder-gray-400 transition-all shadow-inner"
-            placeholder="Search by Client, Proforma No, Proposal ID..."
-            value={keyword}
-            onChange={(e) => {
-              setKeyword(e.target.value);
-              setCurrentPage(0);
-            }}
-          />
+
+          {/* GST / Non-GST / All Filter Tabs */}
+          <div className="inline-flex items-center p-1 bg-gray-800/60 border border-gray-700/50 rounded-xl w-full sm:w-auto justify-center shadow-inner">
+            <button
+              onClick={() => {
+                setGstFilter("all");
+                setCurrentPage(0);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                gstFilter === "all"
+                  ? "bg-amber-500 text-gray-950 shadow-md shadow-amber-500/20"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/40"
+              }`}
+            >
+              All{" "}
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  gstFilter === "all"
+                    ? "bg-black/20 text-gray-950"
+                    : "bg-gray-700 text-gray-300"
+                }`}
+              >
+                {fetchServices.length}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setGstFilter("gst");
+                setCurrentPage(0);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                gstFilter === "gst"
+                  ? "bg-blue-500 text-white shadow-md shadow-blue-500/20"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/40"
+              }`}
+            >
+              GST{" "}
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  gstFilter === "gst"
+                    ? "bg-blue-700 text-white"
+                    : "bg-gray-700 text-gray-300"
+                }`}
+              >
+                {gstCount}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setGstFilter("nongst");
+                setCurrentPage(0);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                gstFilter === "nongst"
+                  ? "bg-slate-600 text-white shadow-md shadow-slate-600/20"
+                  : "text-gray-400 hover:text-white hover:bg-gray-700/40"
+              }`}
+            >
+              Non-GST{" "}
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                  gstFilter === "nongst"
+                    ? "bg-slate-800 text-white"
+                    : "bg-gray-700 text-gray-300"
+                }`}
+              >
+                {nonGstCount}
+              </span>
+            </button>
+          </div>
         </div>
+
         <div className="flex items-center gap-3">
           <div className="relative create-dropdown-container">
             <button
@@ -328,7 +416,18 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                 </div>
                 <div>
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Proforma No</p>
-                  <p className="text-amber-400 font-bold text-xs font-mono">{`PROF-${item.id}`}</p>
+                  <p className="text-amber-400 font-bold text-xs font-mono">{item.proforma_number || (item.is_gst ? `GST-PROF-${item.id}` : `NONGST-PROF-${item.id}`)}</p>
+                </div>
+                <div>
+                  <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Type</p>
+                  {(() => {
+                    const isGst = parseIsGst(item?.is_gst);
+                    return isGst ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">GST</span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-600/30 text-gray-300 border border-gray-600/30">Non-GST</span>
+                    );
+                  })()}
                 </div>
                 <div>
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Total Amount</p>
@@ -380,6 +479,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Client Name</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Proposal ID</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Proforma No</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Type</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs whitespace-nowrap">Total Amount</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Status</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Payment Status</th>
@@ -415,8 +515,22 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg w-fit border border-amber-500/20 whitespace-nowrap">
                           <Hash className="w-3.5 h-3.5" />
-                          <span className="font-bold text-xs font-mono">{`PROF-${item.id}`}</span>
+                          <span className="font-bold text-xs font-mono">{item.proforma_number || (item.is_gst ? `GST-PROF-${item.id}` : `NONGST-PROF-${item.id}`)}</span>
                         </div>
+                      </td>
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        {(() => {
+                          const isGst = parseIsGst(item?.is_gst);
+                          return isGst ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                              GST
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-600/30 text-gray-300 border border-gray-600/30">
+                              Non-GST
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
                         <span className="font-bold text-orange-400 text-sm">

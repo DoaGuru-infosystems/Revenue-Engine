@@ -295,27 +295,61 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
     }
   };
   const fetchDiscount = async () => {
-    try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${activeTxnId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+    const normalizeDiscount = (fetched) => {
+      if (fetched && fetched.discount_type) {
+        fetched.discount_type = fetched.discount_type.toLowerCase();
+        if (fetched.discount_type === "percentage") {
+          fetched.discount_type = "percent";
         }
+      }
+      return fetched;
+    };
+
+    // 1. Direct from clientData if already resolved by getInvoiceClientDetailsById
+    if (clientData?.discount_snapshot) {
+      try {
+        const dObj = typeof clientData.discount_snapshot === "string"
+          ? JSON.parse(clientData.discount_snapshot)
+          : clientData.discount_snapshot;
+        if (dObj && Number(dObj.value) > 0) {
+          const isPercent = dObj.type === "Percentage" || dObj.type === "percent";
+          const discVal = Number(dObj.value) || 0;
+          setSelecteddiscount({
+            client_id: Number(id),
+            txn_id: activeTxnId,
+            discount_type: isPercent ? "percent" : "amount",
+            discount_per: isPercent ? discVal : 0,
+            discount_amt: isPercent ? 0 : discVal,
+          });
+          return;
+        }
+      } catch (e) {}
+    }
+
+    try {
+      // 2. Scoped fetch: resolves discount for THIS invoice/document strictly
+      const { data } = await axios.get(
+        `${baseURL}/auth/api/re_calculator/getDiscountByDocument/${id}/${activeTxnId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (data.data && data.data.length > 0) {
-        let fetched = data.data[0];
-        if (fetched && fetched.discount_type) {
-          fetched.discount_type = fetched.discount_type.toLowerCase();
-          if (fetched.discount_type === "percentage") {
-            fetched.discount_type = "percent";
-          }
+        setSelecteddiscount(normalizeDiscount(data.data[0]));
+        return;
+      }
+
+      // 3. Direct lookup in re_discount table by txn_id
+      try {
+        const direct = await axios.get(
+          `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${activeTxnId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (direct.data?.data && direct.data.data.length > 0) {
+          setSelecteddiscount(normalizeDiscount(direct.data.data[0]));
+        } else {
+          setSelecteddiscount(null);
         }
-        setSelecteddiscount(fetched);
-      } else {
-        // console.log("âš ï¸  No discount found for this invoice");
+      } catch {
         setSelecteddiscount(null);
       }
     } catch (error) {
@@ -512,6 +546,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
               ),
               previous_amt: 0,
               created_at: proforma.created_at,
+              discount_snapshot: proforma.discount_snapshot || null,
             });
           }
 
@@ -532,6 +567,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
           setComplimentaryData([]);
           setAdditionalServiceData([]);
           setDiscountDataSet(null);
+          fetchDiscount();
           setLoading(false);
         } else {
           setProformaPayments([]);
@@ -1498,12 +1534,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       sum +
       service.editingTypes.reduce(
         (editSum, edit) => {
-          if (service.service === "Service Charge") {
-            const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
-            const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
-            if (isGoogle && !showGoogleAd) return editSum;
-            if (isMeta && !showMetaAd) return editSum;
-          }
+          // Service Charge (ads % charge) hamesha count hoga — hide/show sirf budget line pe apply hoti hai
           return editSum + (edit.total || edit.price * edit.quantity);
         },
         0
@@ -2165,6 +2196,9 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                         <p>
                           <strong>Contact:</strong> { clientData?.phone }
                         </p>
+                        <p>
+                          <strong>Email:</strong> { clientData?.email || "N/A" }
+                        </p>
                         { clientData.client_gst_no && (
                           <p>
                             <strong>GST No:</strong> { clientData.client_gst_no }
@@ -2241,15 +2275,9 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                             <tbody>
                               {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */ }
                               { graphicData.map((service, idx) => {
-                                const visibleEditingTypes = service.editingTypes.filter((edit) => {
-                                  if (service.service === "Service Charge") {
-                                    const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
-                                    const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
-                                    if (isGoogle && !showGoogleAd) return false;
-                                    if (isMeta && !showMetaAd) return false;
-                                  }
-                                  return true;
-                                });
+                                // Service Charge (ads % charge) hamesha visible rahega
+                                // Hide/Show checkboxes sirf Ads Budget amounts pe apply hoti hain
+                                const visibleEditingTypes = service.editingTypes;
 
                                 if (visibleEditingTypes.length === 0) return null;
 
@@ -2319,17 +2347,12 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
                               {/* ================= DM SERVICE TOTAL ================= */ }
                               { (() => {
+                                // Service Charge hamesha count hoga — hide/show sirf budget amounts pe apply hoti hai
                                 const graphicTotal = graphicData.reduce(
                                   (sum, service) =>
                                     sum +
                                     service.editingTypes.reduce(
                                       (s, edit) => {
-                                        if (service.service === "Service Charge") {
-                                          const isGoogle = (edit.category || "").toLowerCase().includes("google") || (edit.type || "").toLowerCase().includes("google");
-                                          const isMeta = (edit.category || "").toLowerCase().includes("meta") || (edit.type || "").toLowerCase().includes("meta");
-                                          if (isGoogle && !showGoogleAd) return s;
-                                          if (isMeta && !showMetaAd) return s;
-                                        }
                                         return (
                                           s +
                                           (Number(edit.price || 0) *
@@ -2598,10 +2621,27 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                       <div className="flex flex-col">
                         { isPartialPayment && currentBillGrossReceived > 0 ? (
                           <>
-                            <div style={ { background: "#f5f8fc", fontWeight: 800, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                              <span className="text-gray-600">Total Project  Base Value</span>
-                              <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterDiscount) }</span>
-                            </div>
+                            { discountAmount > 0 ? (
+                              <>
+                                <div style={ { background: "#f5f8fc", fontWeight: 700, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                  <span className="text-gray-600">Total Project Value</span>
+                                  <span className="text-gray-900 font-medium">₹{ formatAmount(grandTotal) }</span>
+                                </div>
+                                <div style={ { background: "#fef2f2", color: "#dc2626", fontWeight: 700 } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                  <span>Discount ({ selecteddiscount?.discount_type === "percent" ? `${selecteddiscount.discount_per}%` : `₹${formatAmountNoDecimals(discountAmount)}` })</span>
+                                  <span className="font-medium">-₹{ formatAmount(discountAmount) }</span>
+                                </div>
+                                <div style={ { background: "#f5f8fc", fontWeight: 800, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                  <span className="text-gray-600">Total Project Base Value</span>
+                                  <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterDiscount) }</span>
+                                </div>
+                              </>
+                            ) : (
+                              <div style={ { background: "#f5f8fc", fontWeight: 800, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                <span className="text-gray-600">Total Project Base Value</span>
+                                <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterDiscount) }</span>
+                              </div>
+                            ) }
                             { pastActiveTaxableSubtotal > 0 && (
                               <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
                                 <span className="text-gray-600">Less: Taxable Value Billed Earlier</span>

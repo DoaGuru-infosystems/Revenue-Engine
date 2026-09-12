@@ -699,9 +699,30 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
     const finalAmount = baseAmount + optionalTotal;
     setTotal(finalAmount);
 
-    // ── IN-MEMORY MODE (embedded inside ProposalBuilder) ──────────────────────
+    // ── IN-MEMORY MODE (embedded inside ProposalBuilder/Proforma) ──────────────────────
     // Jab onServiceAdded prop ho, DB call skip karo — sirf row return karo
     if (onServiceAdded) {
+      // Duplicate check in in-memory mode (edit mode mein skip karo)
+      if (!editId && embeddedData && embeddedData.length > 0) {
+        const dupRow = embeddedData.find(
+          (r) =>
+            r.service_name === selectedService &&
+            r.category_name === selectedCategory &&
+            r.editing_type_name === selectedEditingType.editing_type_name
+        );
+        if (dupRow) {
+          Swal.fire({
+            icon: "error",
+            title: "Already Exists!",
+            text: `"${selectedService} → ${selectedCategory} (${selectedEditingType.editing_type_name})" pehle se add hai. Please existing entry ko edit/update karein.`,
+            showConfirmButton: true,
+            confirmButtonText: "OK",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const row = {
         id: editId || Date.now(), // update existing id if editing
         service_name: selectedService,

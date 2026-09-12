@@ -1949,6 +1949,166 @@ exports.getByIDDiscountData = async (req, res) => {
     });
   }
 };
+
+// Scoped discount lookup: strictly resolves discount for THIS document/txn_id (never generic latest by client)
+exports.getDiscountByDocument = async (req, res) => {
+  const { client_id, txn_id } = req.params;
+  const util = require("util");
+  const query = util.promisify(db.query).bind(db);
+
+  try {
+    // 1. Direct match in re_discount by client_id + txn_id
+    const directResults = await query(
+      "SELECT * FROM re_discount WHERE client_id = ? AND txn_id = ?",
+      [client_id, txn_id]
+    );
+    if (directResults.length > 0) {
+      return res.status(200).json({ status: "Success", data: directResults });
+    }
+
+    // 2. Check if this txn_id belongs to a proposal-generated re_invoice
+    const invoiceRows = await query(
+      "SELECT proforma_id, proposal_id FROM re_invoice WHERE client_id = ? AND txn_id = ?",
+      [client_id, txn_id]
+    );
+
+    if (invoiceRows.length > 0) {
+      const inv = invoiceRows[0];
+
+      // 2a. Check proforma discount_snapshot
+      if (inv.proforma_id) {
+        const pfRows = await query(
+          "SELECT discount_snapshot, txn_id FROM re_proposal_proforma WHERE id = ?",
+          [inv.proforma_id]
+        );
+        if (pfRows.length > 0) {
+          if (pfRows[0].discount_snapshot) {
+            try {
+              const dObj = typeof pfRows[0].discount_snapshot === "string"
+                ? JSON.parse(pfRows[0].discount_snapshot)
+                : pfRows[0].discount_snapshot;
+              if (dObj && Number(dObj.value) > 0) {
+                const isPercent = dObj.type === "Percentage" || dObj.type === "percent";
+                const val = Number(dObj.value) || 0;
+                return res.status(200).json({
+                  status: "Success",
+                  data: [{
+                    client_id: Number(client_id),
+                    txn_id,
+                    discount_type: isPercent ? "percent" : "amount",
+                    discount_per: isPercent ? val : 0,
+                    discount_amt: isPercent ? 0 : val,
+                  }],
+                });
+              }
+            } catch (e) {}
+          }
+
+          // Check if proforma's txn_id has an entry in re_discount
+          if (pfRows[0].txn_id) {
+            const pfDisc = await query(
+              "SELECT * FROM re_discount WHERE client_id = ? AND txn_id = ?",
+              [client_id, pfRows[0].txn_id]
+            );
+            if (pfDisc.length > 0) {
+              return res.status(200).json({ status: "Success", data: pfDisc });
+            }
+          }
+        }
+      }
+
+      // 2b. Check parent proposal sections_json.pricing_discount
+      if (inv.proposal_id) {
+        const propRows = await query(
+          "SELECT sections_json, txn_id FROM re_proposals WHERE id = ?",
+          [inv.proposal_id]
+        );
+        if (propRows.length > 0) {
+          if (propRows[0].sections_json) {
+            try {
+              const sec = typeof propRows[0].sections_json === "string"
+                ? JSON.parse(propRows[0].sections_json)
+                : propRows[0].sections_json;
+              if (sec?.pricing_discount && Number(sec.pricing_discount.value) > 0) {
+                const isPercent = sec.pricing_discount.type === "Percentage" || sec.pricing_discount.type === "percent";
+                const val = Number(sec.pricing_discount.value) || 0;
+                return res.status(200).json({
+                  status: "Success",
+                  data: [{
+                    client_id: Number(client_id),
+                    txn_id,
+                    discount_type: isPercent ? "percent" : "amount",
+                    discount_per: isPercent ? val : 0,
+                    discount_amt: isPercent ? 0 : val,
+                  }],
+                });
+              }
+            } catch (e) {}
+          }
+
+          if (propRows[0].txn_id) {
+            const propDisc = await query(
+              "SELECT * FROM re_discount WHERE client_id = ? AND txn_id = ?",
+              [client_id, propRows[0].txn_id]
+            );
+            if (propDisc.length > 0) {
+              return res.status(200).json({ status: "Success", data: propDisc });
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Check if txn_id belongs directly to re_proposal_proforma (e.g. proforma view)
+    const directPf = await query(
+      "SELECT discount_snapshot FROM re_proposal_proforma WHERE client_id = ? AND txn_id = ?",
+      [client_id, txn_id]
+    );
+    if (directPf.length > 0 && directPf[0].discount_snapshot) {
+      try {
+        const dObj = typeof directPf[0].discount_snapshot === "string"
+          ? JSON.parse(directPf[0].discount_snapshot)
+          : directPf[0].discount_snapshot;
+        if (dObj && Number(dObj.value) > 0) {
+          const isPercent = dObj.type === "Percentage" || dObj.type === "percent";
+          const val = Number(dObj.value) || 0;
+          return res.status(200).json({
+            status: "Success",
+            data: [{
+              client_id: Number(client_id),
+              txn_id,
+              discount_type: isPercent ? "percent" : "amount",
+              discount_per: isPercent ? val : 0,
+              discount_amt: isPercent ? 0 : val,
+            }],
+          });
+        }
+      } catch (e) {}
+    }
+
+    return res.status(200).json({ status: "Success", data: [] });
+  } catch (error) {
+    console.error("getDiscountByDocument error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error", error });
+  }
+};
+
+// Safe standalone endpoint for backward compatibility (in case anything hits it without txn_id)
+exports.getLatestDiscountByClient = async (req, res) => {
+  const { client_id } = req.params;
+  const util = require("util");
+  const query = util.promisify(db.query).bind(db);
+  try {
+    const results = await query(
+      "SELECT * FROM re_discount WHERE client_id = ? ORDER BY id DESC LIMIT 1",
+      [client_id]
+    );
+    return res.status(200).json({ status: "Success", data: results });
+  } catch (error) {
+    console.error("getLatestDiscountByClient error:", error);
+    return res.status(500).json({ status: "Failure", message: "Server error", error });
+  }
+};
 exports.getInvoiceByIdData = async (req, res) => {
   const { txn_id, client_id } = req.params;
 
@@ -2207,6 +2367,28 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
 
     const invoice = results[0];
 
+    if (!invoice.email) {
+      try {
+        const clientDetails = await query("SELECT email, address, phone FROM re_revenue_engine_client_details WHERE id = ?", [invoice.client_id]);
+        if (clientDetails.length > 0) {
+          if (clientDetails[0].email) invoice.email = clientDetails[0].email;
+          if (!invoice.phone && clientDetails[0].phone) invoice.phone = clientDetails[0].phone;
+          if (!invoice.address && clientDetails[0].address) invoice.address = clientDetails[0].address;
+        }
+      } catch (e) {
+        console.error("Error populating client details for invoice:", e);
+      }
+    }
+
+    if (invoice.proforma_id && !invoice.discount_snapshot) {
+      try {
+        const pf = await query("SELECT discount_snapshot FROM re_proposal_proforma WHERE id = ?", [invoice.proforma_id]);
+        if (pf.length > 0 && pf[0].discount_snapshot) {
+          invoice.discount_snapshot = pf[0].discount_snapshot;
+        }
+      } catch (e) {}
+    }
+
     if (invoice.invoice_source === 'proposal' && invoice.proforma_id) {
        const prevInvoices = await query(
          "SELECT bill_number, created_at FROM re_invoice WHERE proforma_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
@@ -2225,7 +2407,7 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
        invoice.total_past_ad_budget = Number(pastPayments[0].total_past_ad || 0);
 
        const proformaRows = await query(
-         "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot FROM re_proposal_proforma WHERE id = ?",
+         "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot FROM re_proposal_proforma WHERE id = ?",
          [invoice.proforma_id]
        );
        if (proformaRows.length > 0) {
@@ -2237,6 +2419,27 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
          }
          if (!invoice.notes_snapshot && proformaRows[0].notes_snapshot) {
            invoice.notes_snapshot = proformaRows[0].notes_snapshot;
+         }
+         if (proformaRows[0].discount_snapshot) {
+           invoice.discount_snapshot = proformaRows[0].discount_snapshot;
+         }
+       }
+
+       // Fallback to parent proposal if proforma didn't have discount_snapshot
+       if (!invoice.discount_snapshot && invoice.proposal_id) {
+         const propRows = await query(
+           "SELECT sections_json FROM re_proposals WHERE id = ?",
+           [invoice.proposal_id]
+         );
+         if (propRows.length > 0 && propRows[0].sections_json) {
+           try {
+             const sec = typeof propRows[0].sections_json === "string"
+               ? JSON.parse(propRows[0].sections_json)
+               : propRows[0].sections_json;
+             if (sec?.pricing_discount && Number(sec.pricing_discount.value) > 0) {
+               invoice.discount_snapshot = JSON.stringify(sec.pricing_discount);
+             }
+           } catch (e) {}
          }
        }
     }

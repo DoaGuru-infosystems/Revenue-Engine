@@ -234,7 +234,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           const charge = roundCurrency((amount * percent) / 100);
           const total = roundCurrency(amount + charge);
 
-          const existingItem = adsItems.find(item => item.category === category);
+          const existingItem = adsItems.find(item => item.category === category)
+            || getData.find(item => (item.category || item.category_name) === category);
           
           results.push({
             txn_id: proposalId,
@@ -310,8 +311,12 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
             charge: newRecord.charge,
           }));
 
-          // If editingId set, use update action for first result; else addBulk
-          if (editingId && proformaItems.length === 1) {
+          // If editingId set OR agar category already DB mein hai → update action
+          const singleCategory = proformaItems[0]?.category_name || proformaItems[0]?.category;
+          const existingInDb = getData.find(d => (d.category || d.category_name) === singleCategory);
+          const updateTargetId = editingId || existingInDb?.id;
+
+          if (updateTargetId && proformaItems.length === 1) {
             response = await fetch(
               `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
               {
@@ -320,7 +325,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                 body: JSON.stringify({
                   proformaId: proposalId,
                   action: "update",
-                  editId: editingId,
+                  editId: String(updateTargetId),
                   item: proformaItems[0],
                   snapshotType: 'ads',
                 }),
