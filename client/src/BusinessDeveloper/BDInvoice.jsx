@@ -2336,8 +2336,8 @@ export default function BDInvoice() {
                                 const price = Number(svc.editing_type_amount || svc.amount || 0);
                                 return (
                                   <tr key={`comp-${idx}`} className="bg-white">
-                                    <td className="border px-2 py-1 font-medium">{(svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")}</td>
-                                    <td className="border px-2 py-1">{(svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A")}</td>
+                                    <td className="border px-2 py-1 font-medium">{String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()}</td>
+                                    <td className="border px-2 py-1">{String((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()}</td>
                                     <td className="border px-2 py-1 text-right">{qty}</td>
                                     <td className="border px-2 py-1 text-right">₹{price.toLocaleString("en-IN")}</td>
                                     <td className="border px-2 py-1 text-right">₹{(price * qty).toLocaleString("en-IN")}</td>

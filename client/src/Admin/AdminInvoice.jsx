@@ -2525,7 +2525,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
 
                     {/* ================= COMPLIMENTARY SERVICES TABLE ================= */ }
-                    {/* { complimentaryData.length > 0 && (
+                    { complimentaryData.length > 0 && (
                       <section className=" text-sm mt-2">
                         <table className="w-full border text-xs">
                           <thead className="bg-green-100">
@@ -2543,8 +2543,8 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                               const price = Number(svc.editing_type_amount || svc.amount || 0);
                               return (
                                 <tr key={ `comp-${idx}` } className="bg-white">
-                                  <td className="border px-2 py-1 font-medium">{ (svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A") }</td>
-                                  <td className="border px-2 py-1">{ (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : ((svc.editing_type_name && svc.editing_type_name !== "null") ? svc.editing_type_name : "-") }</td>
+                                  <td className="border px-2 py-1 font-medium">{ String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }</td>
+                                  <td className="border px-2 py-1">{ String((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : ((svc.editing_type_name && svc.editing_type_name !== "null") ? svc.editing_type_name : "-")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }</td>
                                   <td className="border px-2 py-1 text-right">{ qty }</td>
                                   <td className="border px-2 py-1 text-right">₹{ formatAmount(price) }</td>
                                   <td className="border px-2 py-1 text-right">₹{ formatAmount(price * qty) }</td>
@@ -2566,7 +2566,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                           </tfoot>
                         </table>
                       </section>
-                    ) } */}
+                    ) }
 
 
 

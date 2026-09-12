@@ -704,7 +704,17 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
     if (onServiceAdded) {
       // Duplicate check in in-memory mode (edit mode mein skip karo)
       if (!editId && embeddedData && embeddedData.length > 0) {
-        const dupRow = embeddedData.find(
+        const isComp = (r) => {
+          if (r.is_complimentary !== undefined && r.is_complimentary !== null) {
+            return Boolean(r.is_complimentary);
+          }
+          if (r.source === 'custom_complimentary' || r.source === 'complimentary') return true;
+          if (r.include_in_total === false) return true;
+          const s = String(r.service_name || r.service || "").toLowerCase();
+          return s.includes('(complimentary)') || s.includes('(complimntory)') || s === 'complimentary';
+        };
+        const paidItems = embeddedData.filter(r => !isComp(r));
+        const dupRow = paidItems.find(
           (r) =>
             r.service_name === selectedService &&
             r.category_name === selectedCategory &&
@@ -1865,7 +1875,14 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
 
             </div>
           ) : serviceType === "complimentary" ? (
-            <AdminComplimentaryData />
+            <AdminComplimentaryData 
+              hideNotes={ hideNotes }
+              onSaveComplete={ onSaveComplete }
+              proposalIdOverride={ proposalIdOverride }
+              onServiceAdded={ onServiceAdded }
+              onServiceDeleted={ onServiceDeleted }
+              embeddedData={ embeddedData ? embeddedData.filter(r => r.is_complimentary || r.source === 'custom_complimentary') : undefined }
+            />
           ) : null }
 
         </div>

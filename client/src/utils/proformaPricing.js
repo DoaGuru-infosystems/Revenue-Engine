@@ -30,7 +30,12 @@ export const classifyProformaServices = (services) => {
     // Skip complimentary items — they are handled separately by the caller
     const isComplimentary =
       item.source === "custom_complimentary" ||
-      (item.service_name && item.service_name.toLowerCase() === "complimentary");
+      item.source === "complimentary" ||
+      item.is_complimentary === true ||
+      item.include_in_total === false ||
+      (item.service_name && item.service_name.toLowerCase() === "complimentary") ||
+      (item.service_name && item.service_name.toLowerCase().includes("complimentary")) ||
+      (item.service_name && item.service_name.toLowerCase().includes("complimntory"));
 
     if (isComplimentary) {
       // Do not add to either dmServices or adsServices

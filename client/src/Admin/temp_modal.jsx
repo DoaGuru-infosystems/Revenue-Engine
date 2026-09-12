@@ -512,8 +512,8 @@
                                         const price = Number(svc.editing_type_amount || svc.amount || 0);
                                         return (
                                           <tr key={ `comp-${idx}` }>
-                                            <td style={ { ...tdL, color: "#60a5fa" } }>{ getServiceDisplayName((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")) }</td>
-                                            <td style={ tdL }>{ (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A") }</td>
+                                             <td style={ { ...tdL, color: "#60a5fa" } }>{ getServiceDisplayName(String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()) }</td>
+                                             <td style={ tdL }>{ String((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }</td>
                                             <td style={ tdR2 }>{ qty }</td>
                                             <td style={ tdR2 }>₹{ price.toLocaleString("en-IN") }</td>
                                             <td style={ tdR2 }>₹{ (price * qty).toLocaleString("en-IN") }</td>

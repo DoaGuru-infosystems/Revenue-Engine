@@ -268,40 +268,81 @@ const { id, txn_id } = useParams();
         const proformas = res.data.data;
         const proforma = proformas.find(p => p.id === parseInt(txn_id));
         if (proforma) {
-          const propRes = await axios.get(`${baseURL}/auth/api/re_calculator/proposal/${proforma.proposal_id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          if (propRes.data.status === "Success") {
-             let p = propRes.data.data;
-             try {
-               const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
-                 headers: { Authorization: `Bearer ${token}` }
-               });
-               if (clientRes.data.status === "Success") {
-                 const c = clientRes.data.data;
-                 p.phone = c.phone || p.phone;
-                 p.address = c.address || p.address;
-                 p.client_name = c.client_name || p.client_name;
-                 p.client_organization = c.client_organization || p.client_organization;
-                 p.email = c.email || p.email;
-               }
-             } catch (e) {
-               console.error("Error fetching live client data for proforma fallback", e);
-             }
-             setClientData({
-               client_name: p.client_name,
-               client_organization: p.company_name || p.client_organization,
-               email: p.email,
-               phone: p.phone,
-               address: p.address,
-               bill_type: proforma.is_gst ? "GST" : "NON_GST",
-               document_type: "proforma",
-               created_at: proforma.created_at,
-               duration_start_date: proforma.duration_start_date || p.billing_start_date,
-               duration_end_date: proforma.duration_end_date || p.billing_end_date,
-               proforma_number: proforma.proforma_number,
-             });
+          let clientSnap = null;
+          if (proforma.client_instructions_snapshot) {
+            try {
+              clientSnap = typeof proforma.client_instructions_snapshot === 'string'
+                ? JSON.parse(proforma.client_instructions_snapshot)
+                : proforma.client_instructions_snapshot;
+            } catch (e) {
+              clientSnap = null;
+            }
+          }
+
+          let p = null;
+          let propRes = null;
+          if (proforma.proposal_id) {
+            propRes = await axios.get(`${baseURL}/auth/api/re_calculator/proposal/${proforma.proposal_id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (propRes.data.status === "Success") {
+              p = propRes.data.data;
+              try {
+                const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (clientRes.data.status === "Success") {
+                  const c = clientRes.data.data;
+                  p.phone = clientSnap?.phone || c.phone || p.phone;
+                  p.address = clientSnap?.address || c.address || p.address;
+                  p.client_name = clientSnap?.client_name || c.client_name || p.client_name;
+                  p.client_organization = clientSnap?.client_organization || c.client_organization || p.client_organization;
+                  p.email = clientSnap?.email || c.email || p.email;
+                }
+              } catch (e) {
+                console.error("Error fetching live client data for proforma fallback", e);
+              }
+            }
+          } else {
+            try {
+              const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              const c = clientRes?.data?.status === "Success" && clientRes.data.data ? clientRes.data.data : {};
+              p = {
+                client_name: clientSnap?.client_name || c.client_name || "",
+                company_name: clientSnap?.client_organization || c.client_organization || c.company_name || "",
+                email: clientSnap?.email || c.email || "",
+                phone: clientSnap?.phone || c.phone || "",
+                address: clientSnap?.address || c.address || "",
+              };
+            } catch (e) {
+              if (clientSnap) {
+                p = {
+                  client_name: clientSnap.client_name || "",
+                  company_name: clientSnap.client_organization || "",
+                  email: clientSnap.email || "",
+                  phone: clientSnap.phone || "",
+                  address: clientSnap.address || "",
+                };
+              }
+            }
+          }
+
+          if (p) {
+            setClientData({
+              client_name: clientSnap?.client_name || p.client_name,
+              client_organization: clientSnap?.client_organization || p.company_name || p.client_organization,
+              email: clientSnap?.email || p.email,
+              phone: clientSnap?.phone || p.phone,
+              address: clientSnap?.address || p.address,
+              bill_type: proforma.is_gst ? "GST" : "NON_GST",
+              document_type: "proforma",
+              created_at: proforma.created_at,
+              duration_start_date: proforma.duration_start_date || p.billing_start_date,
+              duration_end_date: proforma.duration_end_date || p.billing_end_date,
+              proforma_number: proforma.proforma_number,
+            });
              
              try {
                const liveNotes = JSON.parse(p.terms_notes_json || proforma.notes_snapshot || "[]");
@@ -340,12 +381,20 @@ const { id, txn_id } = useParams();
             const combined = [...parsed, ...adsParsed];
             const { dmServices, adsServices } = classifyProformaServices(combined);
             
-            const compServices = parsed.filter(item => item.source === 'custom_complimentary' || item.service_name?.toLowerCase() === 'complimentary').map(item => ({
+            const compServices = parsed.filter(item => {
+              if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+                return Boolean(item.is_complimentary);
+              }
+              if (item.source === 'custom_complimentary' || item.source === 'complimentary') return true;
+              if (item.include_in_total === false) return true;
+              const sName = String(item.service_name || item.service || '').toLowerCase();
+              return sName.includes('(complimentary)') || sName.includes('(complimntory)') || sName === 'complimentary';
+            }).map(item => ({
               ...item,
               is_complimentary: true,
               service_type: item.service_type || "Complimentary",
-              editing_type_amount: item.unit_price || item.editing_type_amount || item.total_price,
-              total_amount: item.total_price || item.total_amount
+              editing_type_amount: item.unit_price ?? item.editing_type_amount ?? item.total_price ?? 0,
+              total_amount: item.total_amount ?? item.total_price ?? 0
             }));
             
             setServiceData([...dmServices, ...adsServices]);
@@ -596,7 +645,7 @@ const { id, txn_id } = useParams();
   };
 
   useEffect(() => {
-    if (serviceData.length === 0) return;
+    if (serviceData.length === 0 && (!complimentaryData || complimentaryData.length === 0)) return;
 
     const graphicRaw = serviceData.filter(
       (item) => item.service_type === "Graphic Service"
@@ -1233,6 +1282,7 @@ const { id, txn_id } = useParams();
                       </section>
                     )}
 
+                    {/* ================= COMPLIMENTARY SERVICES TABLE ================= */}
                     {complimentaryData.length > 0 && (
                       <section className="mb-2 mt-4 text-sm">
                         <table className="w-full border text-xs">
@@ -1263,17 +1313,26 @@ const { id, txn_id } = useParams();
                               const base = Number(edit.editing_type_amount);
                               const totalBase = base * qty;
 
-                              // For the first complimentary service, show "Complimentary Service" once
+                              const rawSName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
+                                ? edit.service_name
+                                : (edit.category_name || "Complimentary Service");
+                              const sName = String(rawSName || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+
+                              const rawDetailName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
+                                ? (edit.editing_type_name && edit.editing_type_name !== "null" ? `${edit.category_name} (${edit.editing_type_name})` : edit.category_name)
+                                : (edit.editing_type_name || edit.category_name || "-");
+                              const detailName = String(rawDetailName || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+
                               return (
                                 <tr
                                   key={`compl-${eidx}`}
                                   className="bg-gray-50"
                                 >
                                   <td className="border px-2 py-1">
-                                    {edit.category_name}
+                                    {sName}
                                   </td>
                                   <td className="border px-2 py-1">
-                                    {edit.editing_type_name}
+                                    {detailName}
                                   </td>
                                   <td className="border px-2 py-1 text-right">
                                     {qty}

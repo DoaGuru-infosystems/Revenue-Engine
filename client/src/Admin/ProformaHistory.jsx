@@ -434,12 +434,6 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                   <p className="text-orange-400 font-bold text-xs">₹{Number(item.total_amount).toLocaleString("en-IN")}</p>
                 </div>
                 <div>
-                  <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Status</p>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500/20 text-yellow-300">
-                    {getStatusLabel(item.status)}
-                  </span>
-                </div>
-                <div>
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Payment Status</p>
                   {(() => {
                     const payStatus = item.payment_status || 'pending';
@@ -481,7 +475,6 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Proforma No</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Type</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs whitespace-nowrap">Total Amount</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Status</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Payment Status</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Action</th>
                 </tr>
@@ -535,11 +528,6 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                       <td className="py-4 px-6 whitespace-nowrap">
                         <span className="font-bold text-orange-400 text-sm">
                           ₹{Number(item.total_amount).toLocaleString("en-IN")}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 whitespace-nowrap">
-                          {getStatusLabel(item.status)}
                         </span>
                       </td>
                       <td className="py-4 px-6">

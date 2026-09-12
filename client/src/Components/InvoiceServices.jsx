@@ -96,12 +96,18 @@ function ProformaServices() {
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
 
+  const [selectedCompService, setSelectedCompService] = useState("");
+  const [selectedCompCategory, setSelectedCompCategory] = useState("");
+  const [selectedCompEditId, setSelectedCompEditId] = useState("");
+  const [compQuantity, setCompQuantity] = useState("1");
+
   const clientContext = useMemo(() => ({
     id: selectedClientFromState?.id || draft?.client_id || "",
     name: draft?.client_name || selectedClientFromState?.client_name || "",
     organization: draft?.client_organization || selectedClientFromState?.client_organization || "",
     phone: draft?.phone || selectedClientFromState?.phone || "",
     email: draft?.email || selectedClientFromState?.email || "",
+    address: draft?.address || selectedClientFromState?.address || "",
     bill_type: draft?.bill_type || "",
     duration_start_date: draft?.duration_start_date || "",
     duration_end_date: draft?.duration_end_date || "",
@@ -250,6 +256,111 @@ function ProformaServices() {
     setSelectedGraphicEditId("");
   };
 
+  const selectedCompServiceObj = useMemo(() => graphicServices.find((s) => s.service_name === selectedCompService) || null, [graphicServices, selectedCompService]);
+  const selectedCompCategoryObj = useMemo(() => {
+    if (!selectedCompServiceObj) return null;
+    return (Array.isArray(selectedCompServiceObj.categories) ? selectedCompServiceObj.categories : [])
+      .find((c) => String(c.category_id) === selectedCompCategory) || null;
+  }, [selectedCompCategory, selectedCompServiceObj]);
+  const selectedCompEditingType = useMemo(() => {
+    if (!selectedCompCategoryObj) return null;
+    return (Array.isArray(selectedCompCategoryObj.editing_types) ? selectedCompCategoryObj.editing_types : [])
+      .find((e) => String(e.editing_type_id) === selectedCompEditId) || null;
+  }, [selectedCompCategoryObj, selectedCompEditId]);
+
+  const handleCompServiceChange = (val) => {
+    setSelectedCompService(val);
+    setSelectedCompCategory("");
+    setSelectedCompEditId("");
+    setCompQuantity("1");
+  };
+
+  const handleCompCategoryChange = (val) => {
+    setSelectedCompCategory(val);
+    if (selectedCompServiceObj && val) {
+      const category = (Array.isArray(selectedCompServiceObj.categories) ? selectedCompServiceObj.categories : []).find(
+        (c) => String(c.category_id) === val
+      );
+      if (category && category.editing_types && category.editing_types.length === 1) {
+        const singleEditingType = category.editing_types[0];
+        if (!singleEditingType.editing_type_name || singleEditingType.editing_type_name.trim() === "") {
+          setSelectedCompEditId(String(singleEditingType.editing_type_id));
+          return;
+        }
+      }
+    }
+    setSelectedCompEditId("");
+  };
+
+  const addCompServiceRow = () => {
+    if (!selectedCompServiceObj || !selectedCompCategoryObj || !selectedCompEditingType) {
+      Swal.fire({
+        icon: "warning",
+        title: "Complete Complimentary Selection",
+        text: "Please select service, category and editing type.",
+      });
+      return;
+    }
+
+    const currentSvc = (selectedCompServiceObj.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
+    const currentCat = (selectedCompCategoryObj.category_name || "").trim().toLowerCase();
+    const currentEdit = (selectedCompEditingType.editing_type_name || "").trim().toLowerCase();
+
+    // Duplicate check: ONLY compare against OTHER complimentary items (Addition #1 & #2)
+    const isDuplicate = selectedItems.some((item) => {
+      if (item.source !== "complimentary" && !item.is_complimentary) return false;
+      const itemSvc = (item.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
+      const itemCat = (item.category_name || "").trim().toLowerCase();
+      const itemEdit = (item.editing_type_name || "").trim().toLowerCase();
+      return itemSvc === currentSvc && itemCat === currentCat && itemEdit === currentEdit;
+    });
+
+    if (isDuplicate) {
+      Swal.fire({
+        icon: "error",
+        title: "Already Exists!",
+        text: "This complimentary service is already added.",
+      });
+      return;
+    }
+
+    const qty = Math.max(1, toNumber(compQuantity || 1));
+    const compServiceName = (selectedCompServiceObj.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+
+    const newRow = {
+      row_id: generateRowId(),
+      source: "complimentary",
+      client_id: clientContext.id || null,
+      client_name: clientContext.name || "",
+      service_name: compServiceName,
+      category_name: selectedCompCategoryObj.category_name,
+      editing_type_id: selectedCompEditingType.editing_type_id,
+      editing_type_name: selectedCompEditingType.editing_type_name,
+      unit_price: 0,
+      quantity: qty,
+      optional_total_per_unit: 0,
+      include_content_posting: 0,
+      include_thumbnail_creation: 0,
+      addon_labels: [],
+      total: 0,
+      is_complimentary: true,
+    };
+
+    setSelectedItems((prev) => [...prev, newRow]);
+    Swal.fire({
+      icon: "success",
+      title: "Added!",
+      text: "Complimentary service added successfully.",
+      timer: 1000,
+      showConfirmButton: false,
+    });
+
+    setSelectedCompService("");
+    setSelectedCompCategory("");
+    setSelectedCompEditId("");
+    setCompQuantity("1");
+  };
+
   const addGraphicServiceRow = () => {
     if (!selectedGraphicServiceObj || !selectedGraphicCategoryObj || !selectedGraphicEditingType) {
       Swal.fire({ icon: "warning", title: "Complete Graphic Selection", text: "Please select service, category and editing type." }); return;
@@ -287,6 +398,35 @@ function ProformaServices() {
       if (addon.key === "thumbnail_creation") includeThumbnailCreation = addon.amount_num;
     });
     const rowTotal = (unitPrice + selectedGraphicAddonPerUnit) * qty;
+
+    const newRow = {
+      row_id: generateRowId(),
+      source: "graphic",
+      client_id: clientContext.id || null,
+      client_name: clientContext.name || "",
+      service_name: selectedGraphicServiceObj.service_name,
+      category_name: selectedGraphicCategoryObj.category_name,
+      editing_type_id: selectedGraphicEditingType.editing_type_id,
+      editing_type_name: selectedGraphicEditingType.editing_type_name,
+      unit_price: unitPrice,
+      quantity: qty,
+      optional_total_per_unit: selectedGraphicAddonPerUnit,
+      include_content_posting: includeContentPosting,
+      include_thumbnail_creation: includeThumbnailCreation,
+      addon_labels: selectedAddonLabels,
+      total: rowTotal,
+      is_complimentary: false,
+    };
+
+    setSelectedItems((prev) => [...prev, newRow]);
+    Swal.fire({
+      icon: "success",
+      title: "Added!",
+      text: "Service added successfully.",
+      timer: 1000,
+      showConfirmButton: false,
+    });
+
     setSelectedGraphicService("");
     setSelectedGraphicCategory("");
     setSelectedGraphicEditId("");
@@ -539,7 +679,7 @@ function ProformaServices() {
         .filter((item) => item.source === "complimentary")
         .map((item) => ({
           source: "custom_complimentary",
-          service_name: item.service_name,
+          service_name: (item.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim(),
           category_name: item.category_name,
           editing_type_name: item.editing_type_name,
           editing_type_amount: 0,
@@ -549,6 +689,8 @@ function ProformaServices() {
           include_thumbnail_creation: 0,
           total_amount: 0,
           total_price: 0,
+          is_complimentary: true,
+          include_in_total: false,
           plan_name: "",
           employee: employeeName,
         }));
@@ -570,7 +712,7 @@ function ProformaServices() {
         client_organization: clientContext.organization,
         email: clientContext.email,
         phone: clientContext.phone,
-        address: draft?.address || "",
+        address: clientContext.address || draft?.address || "",
         dg_employee: employeeName,
         duration_start_date: clientContext.duration_start_date,
         duration_end_date: clientContext.duration_end_date,
@@ -1373,6 +1515,117 @@ function ProformaServices() {
                 </button>
               </div>
             </div>
+
+            {/* Complimentary Services Panel */}
+            <div className="is-card" style={{ padding: "1.4rem" }}>
+              <div className="is-panel-header">
+                <div className="is-panel-icon purple" style={{ color: "#a855f7", background: "rgba(168, 85, 247, 0.15)", border: "1px solid rgba(168, 85, 247, 0.25)" }}>
+                  <Sparkles size={17} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>Complimentary Services</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 1 }}>Select free add-on service (₹0)</div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div>
+                  <label className="is-label">Service</label>
+                  <select
+                    value={selectedCompService}
+                    onChange={(e) => handleCompServiceChange(e.target.value)}
+                    className="is-input"
+                    disabled={loading || !hasClientContext}
+                  >
+                    <option value="">Select service…</option>
+                    {graphicServices.map((s) => (
+                      <option key={s.service_id} value={s.service_name}>
+                        {s.service_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="is-label">Category</label>
+                  <select
+                    value={selectedCompCategory}
+                    onChange={(e) => handleCompCategoryChange(e.target.value)}
+                    className="is-input"
+                    disabled={!selectedCompServiceObj || !hasClientContext}
+                  >
+                    <option value="">Select category…</option>
+                    {(selectedCompServiceObj?.categories || []).map((c) => (
+                      <option key={c.category_id} value={String(c.category_id)}>
+                        {c.category_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {(() => {
+                  const hasOnlyEmptyEditingType =
+                    selectedCompCategoryObj?.editing_types?.length === 1 &&
+                    (!selectedCompCategoryObj.editing_types[0].editing_type_name ||
+                      selectedCompCategoryObj.editing_types[0].editing_type_name.trim() === "");
+                  if (hasOnlyEmptyEditingType) {
+                    return null;
+                  }
+                  return (
+                    <div>
+                      <label className="is-label">Editing Type</label>
+                      <select
+                        value={selectedCompEditId}
+                        onChange={(e) => setSelectedCompEditId(e.target.value)}
+                        className="is-input"
+                        disabled={!selectedCompCategoryObj || !hasClientContext}
+                      >
+                        <option value="">Select editing type…</option>
+                        {(selectedCompCategoryObj?.editing_types || []).map((e) => (
+                          <option key={e.editing_type_id} value={String(e.editing_type_id)}>
+                            {e.editing_type_name || "Standard"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })()}
+                <div>
+                  <label className="is-label">Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={compQuantity}
+                    onChange={(e) => setCompQuantity(e.target.value)}
+                    placeholder="1"
+                    className="is-input"
+                    disabled={!hasClientContext}
+                  />
+                </div>
+
+                <div className="is-preview">
+                  <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
+                    <Sparkles size={13} style={{ color: "#a855f7" }} /> Preview Total
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#a855f7" }}>
+                    Rs. 0.00 (Free)
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addCompServiceRow}
+                  disabled={loading || !hasClientContext}
+                  className="is-btn-primary"
+                  style={{
+                    background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 45%, #7c3aed 100%)",
+                    border: "1px solid rgba(168, 85, 247, 0.4)",
+                    color: "#fff",
+                    boxShadow: "0 4px 18px rgba(124, 58, 237, 0.25)",
+                  }}
+                >
+                  <Plus size={14} /> Add Complimentary Service
+                </button>
+              </div>
+            </div>
             </>
             )}
 
@@ -1450,7 +1703,7 @@ function ProformaServices() {
                         <td>
                           { item.source === "graphic" || item.source === "complimentary" ? (
                             <div>
-                              <div style={ { fontSize: 13, fontWeight: 600, color: "#e8e8f0" } }>{ item.service_name }</div>
+                              <div style={ { fontSize: 13, fontWeight: 600, color: "#e8e8f0" } }>{ (item.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }</div>
                               <div style={ { fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 } }>{ item.category_name } { item.editing_type_name ? `› ${item.editing_type_name}` : "" }</div>
                               { item.addon_labels?.length > 0 && (
                                 <div style={ { fontSize: 10.5, color: "rgba(184,150,46,0.65)", marginTop: 3 } }>{ item.addon_labels.join(" · ") }</div>

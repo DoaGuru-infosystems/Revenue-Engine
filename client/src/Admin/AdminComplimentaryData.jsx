@@ -27,7 +27,14 @@ import { clearUser } from "../redux/user/userSlice";
 import { useNavigate, useLocation } from "react-router-dom";
 import API_BASE_URL from "../config/apiBaseUrl";
 
-const AdminComplimentaryData = () => {
+const AdminComplimentaryData = ({
+  hideNotes = false,
+  onSaveComplete,
+  proposalIdOverride,
+  onServiceAdded,
+  onServiceDeleted,
+  embeddedData,
+}) => {
    const baseURL = API_BASE_URL;
 const dispatch = useDispatch();
   const { currentUser, token } = useSelector((state) => state.user);
@@ -36,6 +43,7 @@ const dispatch = useDispatch();
   const searchParams = new URLSearchParams(useLocation().search);
   const docTypeFromURL = searchParams.get("doc");
   const effectiveClientId = id || clientId;
+  const effectiveProposalId = proposalIdOverride || proposalId;
   const [data, setData] = useState([]);
 
   const [selectedService, setSelectedService] = useState("");
@@ -49,9 +57,6 @@ const dispatch = useDispatch();
   const [addons, setAddons] = useState({});
 
   const [loading, setLoading] = useState(false);
-
-  // console.log(data);
-
 
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
@@ -76,11 +81,11 @@ const dispatch = useDispatch();
     axios
       .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
-        // Keep only "Complimentary" service
-        const complimentaryService = res.data.data.filter(
-          (service) => service.service_name.toLowerCase() === "complimentary"
+        // Exclude dummy "complimentary" if any, show all normal services
+        const normalServices = (res.data.data || []).filter(
+          (service) => service.service_name.toLowerCase() !== "complimentary"
         );
-        setData(complimentaryService);
+        setData(normalServices);
       })
       .catch((err) => console.error(err));
   }, []);
@@ -142,14 +147,15 @@ const dispatch = useDispatch();
 
   const handleEdit = (entry) => {
     setEditId(entry.id);
-    setSelectedService(entry.service_name);
+    const cleanServiceName = (entry.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+    setSelectedService(cleanServiceName);
     setSelectedCategory(entry.category_name);
     setSelectedEditingType({
       editing_type_id: entry.editing_type_id,
       editing_type_name: entry.editing_type_name,
-      amount: parseFloat(entry.editing_type_amount),
+      amount: parseFloat(entry.editing_type_amount || 0),
     });
-    setQuantity(parseInt(entry.quantity));
+    setQuantity(parseInt(entry.quantity || 1));
 
     // Dynamically map optional services from entry
     const updatedAddons = {};
@@ -160,7 +166,7 @@ const dispatch = useDispatch();
     });
 
     setAddons(updatedAddons);
-    setTotal(parseFloat(entry.total_amount));
+    setTotal(0);
   };
 
   const getSelectedService = data.find(
@@ -197,9 +203,6 @@ const dispatch = useDispatch();
     }
     setLoading(true);
 
-    // Base amount
-    let baseAmount = selectedEditingType.amount * quantity;
-
     // Optional addon values
     let optionalTotal = 0;
     let include_content_posting = 0;
@@ -223,13 +226,83 @@ const dispatch = useDispatch();
       });
     }
 
-    const finalAmount = baseAmount + optionalTotal;
-    setTotal(finalAmount);
+    const cleanBase = selectedService.replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+    const finalServiceName = cleanBase;
 
+    // ── IN-MEMORY MODE (embedded inside ProposalBuilder) ──────────────────────
+    if (onServiceAdded) {
+      if (!editId && embeddedData && embeddedData.length > 0) {
+        // ONLY compare against OTHER complimentary items (Addition #1 & #2)
+        const isComp = (r) => {
+          if (r.is_complimentary !== undefined && r.is_complimentary !== null) {
+            return Boolean(r.is_complimentary);
+          }
+          if (r.source === 'custom_complimentary' || r.source === 'complimentary') return true;
+          if (r.include_in_total === false) return true;
+          const s = String(r.service_name || r.service || "").toLowerCase();
+          return s.includes('(complimentary)') || s.includes('(complimntory)') || s === 'complimentary';
+        };
+        const compRows = embeddedData.filter(r => isComp(r));
+        const dupRow = compRows.find(
+          (r) => {
+            const rClean = String(r.service_name || r.service || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
+            return (
+              rClean === cleanBase.toLowerCase() &&
+              String(r.category_name || "").trim().toLowerCase() === String(selectedCategory || "").trim().toLowerCase() &&
+              String(r.editing_type_name || "").trim().toLowerCase() === String(selectedEditingType.editing_type_name || "").trim().toLowerCase()
+            );
+          }
+        );
+        if (dupRow) {
+          Swal.fire({
+            icon: "warning",
+            title: "Already Exists",
+            text: "This complimentary service already exists.",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      const row = {
+        id: editId || Date.now(),
+        service_name: finalServiceName,
+        service: (selectedEditingType?.editing_type_name && selectedEditingType?.editing_type_name !== "null")
+          ? `${finalServiceName} - ${selectedCategory} (${selectedEditingType.editing_type_name})`
+          : `${finalServiceName} - ${selectedCategory}`,
+        category_name: selectedCategory,
+        editing_type_name: selectedEditingType?.editing_type_name,
+        editing_type_amount: selectedEditingType?.amount || 0,
+        quantity,
+        unit_price: 0,
+        total_price: 0,
+        total_amount: 0,
+        include_content_posting,
+        include_thumbnail_creation,
+        include_in_total: false,
+        is_complimentary: true,
+        source: 'custom_complimentary',
+      };
+      onServiceAdded(row);
+      Swal.fire({
+        icon: "success",
+        title: editId ? "Updated!" : "Added!",
+        text: editId ? "Complimentary service updated." : "Complimentary service added to proposal.",
+        showConfirmButton: false,
+        timer: 1200,
+      });
+      resetForm();
+      setLoading(false);
+      return;
+    }
+
+    // ── DB / SNAPSHOT MODE ───────────────────────────────────────────────────
     const payload = {
-      txn_id: proposalId,
+      txn_id: effectiveProposalId,
       client_id: effectiveClientId,
-      service_name: selectedService,
+      service_name: finalServiceName,
       category_name: selectedCategory,
       editing_type_id: selectedEditingType.editing_type_id,
       editing_type_name: selectedEditingType.editing_type_name,
@@ -237,7 +310,9 @@ const dispatch = useDispatch();
       quantity,
       include_content_posting,
       include_thumbnail_creation,
-      total_amount: finalAmount,
+      total_amount: 0,
+      unit_price: 0,
+      is_complimentary: true,
       employee: userName,
     };
 
@@ -247,7 +322,7 @@ const dispatch = useDispatch();
       quotationRequest = axios.put(
         `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
         {
-          proformaId: proposalId,
+          proformaId: effectiveProposalId,
           action: editId ? "update" : "add",
           editId,
           item: { ...payload, source: "custom_complimentary" },
@@ -530,11 +605,15 @@ const dispatch = useDispatch();
   };
 
   const fetchData = async () => {
-    if (!effectiveClientId || !proposalId) return;
+    if (embeddedData !== undefined) {
+      setGetData(embeddedData);
+      return;
+    }
+    if (!effectiveClientId || !effectiveProposalId) return;
     try {
-      let endpoint = `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${proposalId}/${effectiveClientId}`;
+      let endpoint = `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${effectiveProposalId}/${effectiveClientId}`;
       if (docTypeFromURL === "proforma") {
-        endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`;
+        endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`;
       }
       const { data } = await axios.get(endpoint, {
         headers: {
@@ -544,14 +623,18 @@ const dispatch = useDispatch();
       });
 
       if (docTypeFromURL === "proforma") {
-        const parsed = JSON.parse(data.data.pricing_snapshot || "[]");
+        const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
         // Only get complimentary services
         const filtered = parsed.filter(
-          item => item.source === 'custom_complimentary' || item.service_name?.toLowerCase() === 'complimentary'
+          item => item.source === 'custom_complimentary' || 
+                  item.is_complimentary === true ||
+                  item.service_name?.toLowerCase() === 'complimentary' ||
+                  item.service_name?.toLowerCase().includes('complimentary') ||
+                  item.service_name?.toLowerCase().includes('complimntory')
         );
         setGetData(filtered);
       } else {
-        setGetData(data.data);
+        setGetData(data.data || []);
       }
     } catch (error) {
       console.log(error);
@@ -573,10 +656,11 @@ const dispatch = useDispatch();
     }
   };
   const getAllPlanNotes = async () => {
-    if (!effectiveClientId || !proposalId) return;
+    if (hideNotes) return;
+    if (!effectiveClientId || !effectiveProposalId) return;
     try {
       const response = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${effectiveClientId}/${proposalId}`,
+        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${effectiveClientId}/${effectiveProposalId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -605,13 +689,21 @@ const dispatch = useDispatch();
     }
   };
   useEffect(() => {
+    if (embeddedData !== undefined) {
+      setGetData(embeddedData);
+      return;
+    }
     fetchData();
     getAllPlanNotes();
-  }, [effectiveClientId, proposalId]);
+  }, [effectiveClientId, effectiveProposalId, embeddedData]);
 
   console.log(getData);
 
   const handleDelete = async (entryId) => {
+    if (onServiceDeleted) {
+      onServiceDeleted(entryId);
+      return;
+    }
     const confirm = await Swal.fire({
       title: "Are you sure?",
       text: "Do you really want to delete this entry?",
@@ -630,7 +722,7 @@ const dispatch = useDispatch();
         res = await axios.put(
           `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
           {
-            proformaId: proposalId,
+            proformaId: effectiveProposalId,
             action: "delete",
             entryId: entryId
           },
@@ -978,213 +1070,217 @@ const dispatch = useDispatch();
           ))}
         </div>
 
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Package className="w-5 h-5" />
-          Notes Section
-        </h3>
+        {!hideNotes && (
+          <>
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Notes Section
+            </h3>
 
-        <div className="space-y-4">
-          <div className="relative w-full" ref={dropdownRef}>
-            {/* Button to open dropdown */}
-            <div
-              className="flex items-center justify-between w-full p-2 bg-white rounded-lg border border-gray-300 text-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              <span className="truncate">
-                {selectedNote
-                  ? selectedNote.note_text
-                  : "-- Select Predefined Note --"}
-              </span>
-              {isOpen ? (
-                <ChevronUp className="w-5 h-5 text-gray-500" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-500" />
-              )}
-            </div>
-            {/* Dropdown menu */}
-            {isOpen && (
-              <div className="absolute z-10 bg-white w-full mt-1 max-h-60 overflow-auto border rounded-lg text-black focus:ring-2 focus:ring-orange-500">
-                {uniquePredefinedNotes.map((note) => (
-                  <div
-                    key={note.id}
-                    onClick={() => handleSelect(note)}
-                    className="p-2 m-1 border rounded-lg bg-gray-100 hover:bg-orange-100 cursor-pointer break-words"
-                  >
-                    {note.note_text}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Manual Note Input */}
-          <div className="flex flex-wrap gap-2">
-            <textarea
-              type="text"
-              value={manualNote}
-              onChange={(e) => setManualNote(e.target.value)}
-              placeholder="Enter custom note"
-              rows={1}
-              className="flex-1 p-2 rounded-lg border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            <button
-              onClick={handleAddManualNote}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
-            >
-              + Add
-            </button>
-          </div>
-
-          {/* Selected Notes List */}
-          <div className="space-y-2">
-            {selectedNotes.map((note) => (
-              <div
-                key={note.id}
-                className="p-3 bg-gray-100 rounded-lg flex justify-between items-start gap-3 border border-gray-300"
-              >
-                <span className="text-gray-800 font-medium break-words whitespace-pre-wrap leading-relaxed flex-1">
-                  {note.note_name}
-                </span>
-                <div className="flex-shrink-0">
-                  <button
-                    onClick={() => handleRemoveNote(note.id)}
-                    className="bg-red-500 mx-2 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold transition"
-                    title="Remove"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Save Button */}
-          <button
-            onClick={handleSaveNotes}
-            className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
-          >
-            💾 Save Notes
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {allClientNote.map((notes) => (
-            <div
-              key={notes.id}
-              className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-white">
-                {/* Left Section: Info */}
-                <div className="space-y-1 flex-1 min-w-0">
-                  <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
-                    <span>→ {notes.note_name}</span>
-                  </div>
-                </div>
-
-                {/* Right Section: Amount + Delete */}
-                <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // prevent card onClick
-                      setSelectedNotesId(notes);
-                      setFormData({
-                        note_name: notes.note_name,
-                        plan: notes.plan,
-                      });
-                      setIsEditing(true);
-                      setShowModal(true);
-                    }}
-                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                    title="Edit"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClientNote(notes.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                    title="Delete"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
-              onClick={handleClose}
-            />
-
-            {/* Modal */}
-            <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl transform transition-all animate-in fade-in-0 zoom-in-95 duration-200">
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <StickyNote className="w-5 h-5 text-red-600" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {isEditing ? "Edit Note" : "Add New Note"}
-                  </h2>
-                </div>
-                <button
-                  onClick={handleClose}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            <div className="space-y-4">
+              <div className="relative w-full" ref={dropdownRef}>
+                {/* Button to open dropdown */}
+                <div
+                  className="flex items-center justify-between w-full p-2 bg-white rounded-lg border border-gray-300 text-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  onClick={() => setIsOpen(!isOpen)}
                 >
-                  <X className="w-5 h-5" />
+                  <span className="truncate">
+                    {selectedNote
+                      ? selectedNote.note_text
+                      : "-- Select Predefined Note --"}
+                  </span>
+                  {isOpen ? (
+                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                  )}
+                </div>
+                {/* Dropdown menu */}
+                {isOpen && (
+                  <div className="absolute z-10 bg-white w-full mt-1 max-h-60 overflow-auto border rounded-lg text-black focus:ring-2 focus:ring-orange-500">
+                    {uniquePredefinedNotes.map((note) => (
+                      <div
+                        key={note.id}
+                        onClick={() => handleSelect(note)}
+                        className="p-2 m-1 border rounded-lg bg-gray-100 hover:bg-orange-100 cursor-pointer break-words"
+                      >
+                        {note.note_text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Note Input */}
+              <div className="flex flex-wrap gap-2">
+                <textarea
+                  type="text"
+                  value={manualNote}
+                  onChange={(e) => setManualNote(e.target.value)}
+                  placeholder="Enter custom note"
+                  rows={1}
+                  className="flex-1 p-2 rounded-lg border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <button
+                  onClick={handleAddManualNote}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+                >
+                  + Add
                 </button>
               </div>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                {/* Note */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Notebook className="w-4 h-4 inline mr-2" />
-                    Note
-                  </label>
-                  <textarea
-                    name="note_name"
-                    value={formData.note_name}
-                    onChange={handleChange}
-                    className="w-full text-black px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors resize-none"
-                    placeholder="Enter note details"
-                    rows={4} // number of visible lines
-                    required
-                  ></textarea>
-                </div>
+              {/* Selected Notes List */}
+              <div className="space-y-2">
+                {selectedNotes.map((note) => (
+                  <div
+                    key={note.id}
+                    className="p-3 bg-gray-100 rounded-lg flex justify-between items-start gap-3 border border-gray-300"
+                  >
+                    <span className="text-gray-800 font-medium break-words whitespace-pre-wrap leading-relaxed flex-1">
+                      {note.note_name}
+                    </span>
+                    <div className="flex-shrink-0">
+                      <button
+                        onClick={() => handleRemoveNote(note.id)}
+                        className="bg-red-500 mx-2 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold transition"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-                {/* Buttons */}
-                <div className="flex justify-end gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
-                  >
-                    {loading
-                      ? isEditing
-                        ? "Updating..."
-                        : "Saving..."
-                      : isEditing
-                      ? "Update Note"
-                      : "Save Note"}
-                  </button>
-                </div>
-              </form>
+              {/* Save Button */}
+              <button
+                onClick={handleSaveNotes}
+                className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+              >
+                💾 Save Notes
+              </button>
             </div>
-          </div>
+
+            <div className="space-y-4">
+              {allClientNote.map((notes) => (
+                <div
+                  key={notes.id}
+                  className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-white">
+                    {/* Left Section: Info */}
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
+                        <span>→ {notes.note_name}</span>
+                      </div>
+                    </div>
+
+                    {/* Right Section: Amount + Delete */}
+                    <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent card onClick
+                          setSelectedNotesId(notes);
+                          setFormData({
+                            note_name: notes.note_name,
+                            plan: notes.plan,
+                          });
+                          setIsEditing(true);
+                          setShowModal(true);
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                        title="Edit"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClientNote(notes.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {showModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                {/* Backdrop */}
+                <div
+                  className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+                  onClick={handleClose}
+                />
+
+                {/* Modal */}
+                <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl transform transition-all animate-in fade-in-0 zoom-in-95 duration-200">
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <StickyNote className="w-5 h-5 text-red-600" />
+                      </div>
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {isEditing ? "Edit Note" : "Add New Note"}
+                      </h2>
+                    </div>
+                    <button
+                      onClick={handleClose}
+                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Form */}
+                  <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    {/* Note */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Notebook className="w-4 h-4 inline mr-2" />
+                        Note
+                      </label>
+                      <textarea
+                        name="note_name"
+                        value={formData.note_name}
+                        onChange={handleChange}
+                        className="w-full text-black px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors resize-none"
+                        placeholder="Enter note details"
+                        rows={4}
+                        required
+                      ></textarea>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex justify-end gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
+                      >
+                        {loading
+                          ? isEditing
+                            ? "Updating..."
+                            : "Saving..."
+                          : isEditing
+                          ? "Update Note"
+                          : "Save Note"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* <div className="space-y-3">

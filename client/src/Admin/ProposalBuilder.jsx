@@ -1024,12 +1024,18 @@ export default function ProposalBuilder() {
                             }));
                             const { dmServices, adsServices } = classifyProformaServices(tableWithIndex);
 
-                            const complimentaryItems = tableWithIndex.filter(item =>
-                              item.service_name?.toLowerCase() === "complimentary" || item.include_in_total === false
-                            );
-                            const dmItems = dmServices.filter(item =>
-                              item.service_name?.toLowerCase() !== "complimentary" && item.include_in_total !== false
-                            );
+                            const isItemComplimentary = (item) => {
+                              if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+                                return Boolean(item.is_complimentary);
+                              }
+                              if (item.source === "custom_complimentary" || item.source === "complimentary") return true;
+                              if (item.include_in_total === false) return true;
+                              const sName = String(item.service_name || item.service || "").toLowerCase();
+                              return sName.includes("(complimentary)") || sName.includes("(complimntory)") || sName === "complimentary";
+                            };
+
+                            const complimentaryItems = tableWithIndex.filter(isItemComplimentary);
+                            const dmItems = dmServices.filter(item => !isItemComplimentary(item));
 
                             const renderTable = (title, items, isAds = false) => {
                               if (items.length === 0) return null;
@@ -1064,19 +1070,20 @@ export default function ProposalBuilder() {
                                             </p>
                                             { row.source === 'plan' && <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full mt-1 inline-block">Plan Service</span> }
                                             { row.source === 'custom_graphic' && <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full mt-1 inline-block">Graphic & SEO</span> }
+                                            { (row.source === 'custom_complimentary' || row.is_complimentary) && <span className="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full mt-1 inline-block">Complimentary</span> }
                                             { row.source === 'custom_ads' && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full mt-1 inline-block">Ads Campaign</span> }
-                                            { !row.source && <span className="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full mt-1 inline-block">Manual</span> }
+                                            { !row.source && !row.is_complimentary && <span className="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full mt-1 inline-block">Manual</span> }
                                           </td>
                                           <td className="p-3">
                                             <p className="font-medium text-gray-200">
-                                              { row.service_name || row.service || '-' }
+                                              { String(row.service_name || row.service || '-').replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }
                                             </p>
                                           </td>
                                           <td className="p-3 text-center text-gray-300">{ isAds ? '-' : (row.quantity || 1) }</td>
                                           <td className="p-3 text-right text-yellow-400 font-semibold">₹{ Number(isAds ? row.budget : row.total_price).toLocaleString() }</td>
                                           <td className="p-3 flex justify-center gap-2">
                                             { row.source?.startsWith('custom') ? (
-                                              <button onClick={ () => setActiveCalculator(row.source === 'custom_graphic' ? 'graphic' : 'ads') } className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition opacity-0 group-hover:opacity-100"><PenTool className="w-3.5 h-3.5" /></button>
+                                              <button onClick={ () => setActiveCalculator(row.source === 'custom_ads' ? 'ads' : 'graphic') } className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition opacity-0 group-hover:opacity-100"><PenTool className="w-3.5 h-3.5" /></button>
                                             ) : (
                                               <button onClick={ () => removePricingRow(row.originalIndex) } className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition opacity-0 group-hover:opacity-100"><Trash2 className="w-3.5 h-3.5" /></button>
                                             ) }
@@ -1120,7 +1127,7 @@ export default function ProposalBuilder() {
                                   hideNotes={ true } 
                                   onServiceAdded={ handleServiceAdded } 
                                   onServiceDeleted={ handleServiceDeleted }
-                                  embeddedData={ pricingTable.filter(r => r.source === 'custom_graphic') }
+                                  embeddedData={ pricingTable.filter(r => r.source === 'custom_graphic' || r.source === 'custom_complimentary' || r.is_complimentary) }
                                 />
                               </div>
                             </div>

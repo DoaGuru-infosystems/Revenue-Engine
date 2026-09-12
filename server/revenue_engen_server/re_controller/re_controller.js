@@ -4049,6 +4049,15 @@ exports.saveDirectProforma = async (req, res) => {
   const {
     txn_id,
     client_id,
+    client_name,
+    client_organization,
+    email,
+    phone,
+    address,
+    dg_employee,
+    payment_mode,
+    client_gst_no,
+    client_pan_no,
     is_gst,
     gst_rate,
     base_amount,
@@ -4061,7 +4070,6 @@ exports.saveDirectProforma = async (req, res) => {
   } = req.body;
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
-
   const proformaTxnId = txn_id || String(Date.now());
 
   let proformaNumber = null;
@@ -4072,41 +4080,119 @@ exports.saveDirectProforma = async (req, res) => {
     console.error("Error generating proforma number:", e);
   }
 
-  const query = `
-    INSERT INTO re_proposal_proforma (
-      client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
-      created_at, pricing_snapshot, notes_snapshot, source_type, duration_start_date, duration_end_date
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
-  `;
-
-  const values = [
-    client_id,
-    proformaTxnId,
-    proformaNumber,
-    is_gst,
-    gst_rate,
-    base_amount,
-    gst_amount,
-    total_amount,
-    createdAt,
-    pricing_snapshot || "[]",
-    notes_snapshot || "[]",
-    duration_start_date || null,
-    duration_end_date || null,
-  ];
-
-  db.query(query, values, (err, result) => {
-    if (err) {
-      console.error("Insert Error:", err);
-      return res.status(500).json({ status: "Failure", message: "DB error" });
-    }
-
-    res.status(200).json({
-      status: "Success",
-      message: "Proforma generated successfully",
-      proformaId: result.insertId,
+  const insertProformaRecord = (effectiveClientId) => {
+    const clientSnapshot = JSON.stringify({
+      client_name: client_name || "",
+      client_organization: client_organization || "",
+      email: email || "",
+      phone: phone || "",
+      address: address || "",
+      dg_employee: dg_employee || "",
+      payment_mode: payment_mode || "",
+      client_gst_no: client_gst_no || "",
+      client_pan_no: client_pan_no || "",
     });
-  });
+
+    const query = `
+      INSERT INTO re_proposal_proforma (
+        client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
+        created_at, pricing_snapshot, notes_snapshot, source_type, duration_start_date, duration_end_date,
+        client_instructions_snapshot
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?)
+    `;
+
+    const values = [
+      effectiveClientId,
+      proformaTxnId,
+      proformaNumber,
+      is_gst,
+      gst_rate,
+      base_amount,
+      gst_amount,
+      total_amount,
+      createdAt,
+      pricing_snapshot || "[]",
+      notes_snapshot || "[]",
+      duration_start_date || null,
+      duration_end_date || null,
+      clientSnapshot,
+    ];
+
+    db.query(query, values, (err, result) => {
+      if (err) {
+        console.error("Insert Error:", err);
+        return res.status(500).json({ status: "Failure", message: "DB error" });
+      }
+
+      res.status(200).json({
+        status: "Success",
+        message: "Proforma generated successfully",
+        proformaId: result.insertId,
+      });
+    });
+  };
+
+  if (client_id) {
+    // Update existing client record if new details (e.g. email, address) provided
+    const updateClientQuery = `
+      UPDATE re_revenue_engine_client_details
+      SET 
+        client_name = COALESCE(NULLIF(?, ''), client_name),
+        client_organization = COALESCE(NULLIF(?, ''), client_organization),
+        email = COALESCE(NULLIF(?, ''), email),
+        phone = COALESCE(NULLIF(?, ''), phone),
+        address = COALESCE(NULLIF(?, ''), address),
+        dg_employee = COALESCE(NULLIF(?, ''), dg_employee)
+      WHERE id = ?
+    `;
+    db.query(
+      updateClientQuery,
+      [
+        client_name || "",
+        client_organization || "",
+        email || "",
+        phone || "",
+        address || "",
+        dg_employee || "",
+        client_id,
+      ],
+      (updateErr) => {
+        if (updateErr) {
+          console.error("Error updating client details in saveDirectProforma:", updateErr);
+        }
+        insertProformaRecord(client_id);
+      }
+    );
+  } else if (client_name || phone) {
+    // Insert new client if client_id was not provided
+    const insertClientQuery = `
+      INSERT INTO re_revenue_engine_client_details
+      (client_name, client_organization, email, phone, address, dg_employee, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    db.query(
+      insertClientQuery,
+      [
+        client_name || "",
+        client_organization || "",
+        email || "",
+        phone || "",
+        address || "",
+        dg_employee || "",
+        createdAt,
+      ],
+      (insertErr, clientRes) => {
+        if (insertErr) {
+          console.error("Error inserting client in saveDirectProforma:", insertErr);
+          insertProformaRecord(null);
+        } else {
+          insertProformaRecord(clientRes.insertId);
+        }
+      }
+    );
+  } else {
+    insertProformaRecord(null);
+  }
 };
 
 exports.sendRegisterAdminOtp = async (req, res) => {

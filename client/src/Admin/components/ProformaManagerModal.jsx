@@ -183,7 +183,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
       const totalGoogleBudget = googleAds.reduce((sum, ad) => sum + Number(ad.budget || ad.amount || ad.total_price || ad.unit_price || 0), 0);
       const totalMetaBudget = metaAds.reduce((sum, ad) => sum + Number(ad.budget || ad.amount || ad.total_price || ad.unit_price || 0), 0);
 
-      const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status !== 'rejected');
+      const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved');
       const alreadyPaidGoogle = proformaPayments.reduce((sum, p) => sum + Number(p.realized_google_budget || 0), 0);
       const alreadyPaidMeta = proformaPayments.reduce((sum, p) => sum + Number(p.realized_meta_budget || 0), 0);
 
@@ -236,6 +236,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
 
   const [approvingPaymentId, setApprovingPaymentId] = useState(null);
+  const [deletingPaymentId, setDeletingPaymentId] = useState(null);
 
   const handleApprovePayment = async (paymentId) => {
     try {
@@ -306,11 +307,54 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     }
   };
 
+  const handleDeletePayment = async (paymentId) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "This payment will be permanently deleted. Continue?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!"
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        setDeletingPaymentId(paymentId);
+        const { data } = await axios.delete(`${baseURL}/auth/api/re_calculator/proposal-payment/${paymentId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (data.status === "Success") {
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Payment record permanently deleted.",
+            timer: 1500,
+            showConfirmButton: false,
+            background: "#1f2937",
+            color: "#fff"
+          });
+          fetchPayments();
+          fetchProformas();
+          try { window.dispatchEvent(new CustomEvent("paymentRecorded")); } catch(e) {}
+        } else {
+          Swal.fire("Error", data.message || "Failed to delete payment record", "error");
+        }
+      } catch (err) {
+        console.error("Error deleting payment record:", err);
+        Swal.fire("Error", err.response?.data?.message || "Failed to delete payment record", "error");
+      } finally {
+        setDeletingPaymentId(null);
+      }
+    }
+  };
+
   const handleRecordPayment = async (e) => {
     e.preventDefault();
     if (!selectedProforma) return;
 
-    const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status !== 'rejected');
+    const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved');
     const totalReceived = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
     const pendingAmount = Number(selectedProforma.total_amount) - totalReceived;
     
@@ -497,7 +541,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               const isPartial = totalReceived > 0 && !isPaid;
 
               // 3 payment statuses: pending, partial, fully-paid
-              const paymentStatus = proforma.payment_status || (isPaid ? 'fully-paid' : (isPartial ? 'partial' : 'pending'));
+              const paymentStatus = isPaid ? 'fully-paid' : (isPartial ? 'partial' : (proforma.payment_status || 'pending'));
               const statusBadgeMap = {
                 'fully-paid': {
                   label: 'Fully Paid',
@@ -525,7 +569,13 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                         <FileText className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-white">Proforma #{ proforma.id }</h3>
+                        <div className="flex items-center gap-2.5">
+                          <h3 className="font-bold text-lg text-white">{ proforma.proforma_number || `Proforma #${ proforma.id }` }</h3>
+                          <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase border flex items-center gap-1.5 ${currentStatusConfig.badge}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${currentStatusConfig.dot}`}></span>
+                            { currentStatusConfig.label }
+                          </span>
+                        </div>
                         <p className="text-sm text-gray-400 mt-0.5">Created: { moment(proforma.created_at).format('DD MMM YYYY') }</p>
                       </div>
                     </div>
@@ -613,24 +663,30 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                                   { p.status === 'pending_approval' ? (
                                     <div className="flex flex-col items-center gap-2">
                                       <span className="px-2 py-1 bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500 dark:border-amber-500/30 rounded text-xs font-bold uppercase">Pending</span>
-                                      <button
-                                        onClick={ () => handleApprovePayment(p.id) }
-                                        disabled={ approvingPaymentId === p.id }
-                                        className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold shadow transition disabled:opacity-50"
-                                      >
-                                        { approvingPaymentId === p.id ? 'Approving...' : 'Approve' }
-                                      </button>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={ () => handleApprovePayment(p.id) }
+                                          disabled={ approvingPaymentId === p.id || deletingPaymentId === p.id }
+                                          className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold shadow transition disabled:opacity-50 cursor-pointer"
+                                        >
+                                          { approvingPaymentId === p.id ? 'Approving...' : 'Approve' }
+                                        </button>
+                                        <button
+                                          onClick={ () => handleDeletePayment(p.id) }
+                                          disabled={ deletingPaymentId === p.id || approvingPaymentId === p.id }
+                                          className="px-2.5 py-1 bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/40 rounded text-xs font-semibold transition flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                                          title="Mark as Failed / Reject"
+                                        >
+                                          <Trash className="w-3.5 h-3.5" />
+                                          { deletingPaymentId === p.id ? 'Deleting...' : 'Mark as Failed / Reject' }
+                                        </button>
+                                      </div>
                                     </div>
                                   ) : p.status === 'approved' ? (
                                     <div className="flex flex-col items-center gap-1.5">
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center">
-                                          <CheckCircle2 className="w-3 h-3" /> Approved
-                                        </span>
-                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${currentStatusConfig.badge}`}>
-                                          { currentStatusConfig.label }
-                                        </span>
-                                      </div>
+                                      <span className="px-2.5 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center">
+                                        <CheckCircle2 className="w-3.5 h-3.5" /> Approved
+                                      </span>
                                       <button 
                                         onClick={() => {
                                           const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
@@ -684,7 +740,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Amount Received</label>
-                  <input type="number" step="0.01" required value={ paymentForm.amount } max={ selectedProforma ? Number(selectedProforma.total_amount) - payments.filter(p => p.proforma_id === selectedProforma.id).reduce((sum, p) => sum + Number(p.amount), 0) : undefined } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                  <input type="number" step="0.01" required value={ paymentForm.amount } max={ selectedProforma ? Number(selectedProforma.total_amount) - payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved').reduce((sum, p) => sum + Number(p.amount), 0) : undefined } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Date</label>
@@ -812,7 +868,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
               <div className="pt-4 border-t border-gray-800 mt-4">
                 { (() => {
-                  const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status !== 'rejected');
+                  const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved');
                   const totalReceivedTillDate = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
                   const currentOutstanding = Number(selectedProforma.total_amount) - totalReceivedTillDate;
                   const finalSettleAmount = Number(paymentForm.amount) || 0;

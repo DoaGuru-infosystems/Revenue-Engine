@@ -952,8 +952,8 @@ const GenerateProformaModal = ({
                                   const price = Number(svc.editing_type_amount || svc.amount || 0);
                                   return (
                                     <tr key={ `comp-${idx}` }>
-                                      <td className="ci-td-cell" style={ { color: "#60a5fa" } }>{ getServiceDisplayName((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")) }</td>
-                                      <td className="ci-td-cell">{ (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A") }</td>
+                                      <td className="ci-td-cell" style={ { color: "#60a5fa" } }>{ getServiceDisplayName(String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()) }</td>
+                                      <td className="ci-td-cell">{ String((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }</td>
                                       <td className="ci-td-cell-right">{ qty }</td>
                                       <td className="ci-td-cell-right">₹{ price.toLocaleString("en-IN") }</td>
                                       <td className="ci-td-cell-right">₹{ (price * qty).toLocaleString("en-IN") }</td>

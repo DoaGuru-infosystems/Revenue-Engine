@@ -73,9 +73,9 @@ const dispatch = useDispatch();
     axios
       .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
       .then((res) => {
-        // Keep only "Complimentary" service
+        // Exclude dummy "Complimentary" category, load all normal services
         const complimentaryService = res.data.data.filter(
-          (service) => service.service_name.toLowerCase() === "complimentary"
+          (service) => service.service_name.toLowerCase() !== "complimentary"
         );
         setData(complimentaryService);
       })
@@ -140,7 +140,10 @@ const dispatch = useDispatch();
 
   const handleEdit = (entry) => {
     setEditId(entry.id);
-    setSelectedService(entry.service_name);
+    const cleanServiceName = (entry.service_name || "")
+      .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
+      .trim();
+    setSelectedService(cleanServiceName);
     setSelectedCategory(entry.category_name);
     setSelectedEditingType({
       editing_type_id: entry.editing_type_id,
@@ -209,10 +212,15 @@ const dispatch = useDispatch();
     const finalAmount = baseAmount + optionalTotal;
     setTotal(finalAmount);
 
+    const cleanBase = (selectedService || "")
+      .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
+      .trim();
+    const finalServiceName = cleanBase;
+
     const payload = {
       txn_id: proposalId,
       client_id: id,
-      service_name: selectedService,
+      service_name: finalServiceName,
       category_name: selectedCategory,
       editing_type_id: selectedEditingType.editing_type_id,
       editing_type_name: selectedEditingType.editing_type_name,
@@ -220,7 +228,9 @@ const dispatch = useDispatch();
       quantity,
       include_content_posting,
       include_thumbnail_creation,
-      total_amount: finalAmount,
+      total_amount: 0,
+      unit_price: 0,
+      is_complimentary: true,
       employee: userName,
     };
 

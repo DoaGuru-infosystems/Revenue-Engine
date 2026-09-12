@@ -223,6 +223,7 @@ const {
   getAllProformas,
   recordProposalPayment,
   approvePayment,
+  deleteProposalPayment,
   getPaymentRecordsByClient,
   getAllPaymentRecords,
   getProformasByProposal,
@@ -714,6 +715,7 @@ router.post("/generate-invoice", generateInvoicePdf);
 router.post("/proposal-payment", authenticateToken, recordProposalPayment);
 router.put("/proposal-payment/approve/:id", authenticateToken, approvePayment);
 router.put("/proposal-payment/:id/approve", authenticateToken, approvePayment);
+router.delete("/proposal-payment/:id", authenticateToken, deleteProposalPayment);
 router.get(
   "/proposal-payments/client/:clientId",
   authenticateToken,

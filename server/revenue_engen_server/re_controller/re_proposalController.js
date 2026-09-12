@@ -38,6 +38,17 @@ const {
 const { generatePublicAccessToken } = require("./re_publicController");
 const notificationService = require("../re_services/notificationService");
 
+const isComplimentaryItem = (item) => {
+  if (!item) return false;
+  if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+    return Boolean(item.is_complimentary);
+  }
+  if (item.source === 'custom_complimentary' || item.source === 'complimentary') return true;
+  if (item.include_in_total === false) return true;
+  const s = String(item.service_name || item.service || '').toLowerCase();
+  return s.includes('(complimentary)') || s.includes('(complimntory)') || s === 'complimentary';
+};
+
 // Helper to load assets as base64 for Puppeteer
 function getImageDataURI(filename) {
   try {
@@ -750,7 +761,7 @@ exports.createProforma = async (req, res) => {
 
     if (!finalBaseAmount || !finalTotalAmount) {
       const dmTotal = serviceItems.reduce((sum, item) => {
-        if (item.service_name?.toLowerCase() === "complimentary" || item.source === "custom_complimentary") return sum;
+        if (isComplimentaryItem(item)) return sum;
         return sum + Number(item.total_amount || item.total_price || 0);
       }, 0);
       const adsTotal = adsItems.reduce((sum, item) => sum + Number(item.amount || item.budget || item.total || 0), 0);
@@ -1054,7 +1065,7 @@ exports.recordProposalPayment = async (req, res) => {
 
     // Validate that the payment amount does not exceed the pending amount
     const existingPayments = await runQuery(
-      `SELECT SUM(amount) as totalReceived FROM re_proposal_payment_records WHERE proforma_id = ? AND status != 'rejected'`,
+      `SELECT SUM(amount) as totalReceived FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
       [proforma_id]
     );
     const totalReceived = Number(existingPayments[0]?.totalReceived) || 0;
@@ -1308,6 +1319,51 @@ exports.getAllPaymentRecords = async (req, res) => {
     res.status(200).json({ status: "Success", data: results });
   } catch (error) {
     console.error("getAllPaymentRecords error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.deleteProposalPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const paymentRows = await runQuery(
+      `SELECT * FROM re_proposal_payment_records WHERE id = ?`,
+      [id]
+    );
+    if (paymentRows.length === 0) {
+      return res
+        .status(404)
+        .json({ status: "Failure", message: "Payment record not found" });
+    }
+    const payment = paymentRows[0];
+
+    // Only allow deletion when status === 'pending_approval'
+    if (payment.status !== "pending_approval") {
+      return res.status(400).json({
+        status: "Failure",
+        message:
+          "Only pending payments can be deleted. Approved payments have generated invoices and cannot be deleted directly.",
+      });
+    }
+
+    // Delete linked workflow remarks if txn_id exists
+    if (payment.txn_id) {
+      await runQuery(`DELETE FROM re_workflow_remarks WHERE txn_id = ?`, [
+        payment.txn_id,
+      ]);
+    }
+
+    // Permanently delete payment record from database
+    await runQuery(`DELETE FROM re_proposal_payment_records WHERE id = ?`, [
+      id,
+    ]);
+
+    res.status(200).json({
+      status: "Success",
+      message: "Payment record permanently deleted",
+    });
+  } catch (error) {
+    console.error("deleteProposalPayment error:", error);
     res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };
@@ -2778,17 +2834,29 @@ exports.updateProformaSnapshot = async (req, res) => {
     let parsed = JSON.parse(results[0][column] || "[]");
 
     if (action === "add") {
-      // Duplicate check — same service_name + category_name + editing_type_name
+      const isNewComp = isComplimentaryItem(item);
+      const normalizeName = (name) => String(name || '').replace(/\s*\((complimentary|complimntory)\)\s*$/i, '').trim().toLowerCase();
+
+      // Duplicate check — only compare against items with the SAME complimentary status (Addition #1 & #2)
       const isDuplicate = parsed.some(
-        p =>
-          p.service_name === item.service_name &&
-          p.category_name === item.category_name &&
-          p.editing_type_name === item.editing_type_name
+        p => {
+          const pComp = isComplimentaryItem(p);
+          if (pComp !== isNewComp) {
+            return false; // Paid and complimentary can coexist for the same service+category+editing type
+          }
+          return (
+            normalizeName(p.service_name || p.service) === normalizeName(item.service_name || item.service) &&
+            String(p.category_name || '').trim().toLowerCase() === String(item.category_name || '').trim().toLowerCase() &&
+            String(p.editing_type_name || '').trim().toLowerCase() === String(item.editing_type_name || '').trim().toLowerCase()
+          );
+        }
       );
       if (isDuplicate) {
         return res.status(200).json({
           status: "Alert",
-          message: "Yeh service already exist hai. Please existing entry ko update karein."
+          message: isNewComp
+            ? "Yeh complimentary service already exist hai. Please existing entry ko update karein."
+            : "Yeh service already exist hai. Please existing entry ko update karein."
         });
       }
       item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
@@ -2858,7 +2926,7 @@ exports.updateProformaDiscount = async (req, res) => {
     const ads = JSON.parse(prof.ads_snapshot || "[]");
 
     const dmTotal = pricing.reduce((sum, item) => {
-      if (item.service_name?.toLowerCase() === "complimentary" || item.source === "custom_complimentary") return sum;
+      if (isComplimentaryItem(item)) return sum;
       return sum + Number(item.total_amount || item.total_price || 0);
     }, 0);
 
