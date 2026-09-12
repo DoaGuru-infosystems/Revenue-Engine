@@ -2973,3 +2973,252 @@ exports.updateProformaDiscount = async (req, res) => {
     res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };
+
+// Concurrency-safe sequential balance proforma number generator using dedicated counter in re_proforma_counters + mutex queue
+let balanceCounterLock = Promise.resolve();
+
+const getNextBalanceProformaNumber = async () => {
+  const counterType = "BAL_PROF";
+  const prefix = "BAL-PROF-";
+
+  const nextVal = await (balanceCounterLock = balanceCounterLock.catch(() => {}).then(async () => {
+    const rows = await runQuery(
+      `SELECT current_number FROM re_proforma_counters WHERE counter_type = ?`,
+      [counterType]
+    );
+    const num = (rows && rows.length > 0 ? Number(rows[0].current_number) : 0) + 1;
+    await runQuery(
+      `INSERT INTO re_proforma_counters (counter_type, current_number) VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE current_number = ?`,
+      [counterType, num, num]
+    );
+    return num;
+  }));
+
+  return {
+    balance_number: nextVal,
+    balance_proforma_number: `${prefix}${nextVal}`,
+  };
+};
+exports.getNextBalanceProformaNumber = getNextBalanceProformaNumber;
+
+exports.createBalanceProforma = async (req, res) => {
+  try {
+    const {
+      proforma_id,
+      show_google_ad = 1,
+      show_meta_ad = 1,
+      total_amount: requestedTotalAmount,
+      created_by,
+    } = req.body;
+
+    if (!proforma_id) {
+      return res.status(400).json({ status: "Failure", message: "proforma_id is required" });
+    }
+
+    // 1. Fetch source proforma
+    const proformaRows = await runQuery(
+      `SELECT * FROM re_proposal_proforma WHERE id = ?`,
+      [proforma_id]
+    );
+    if (!proformaRows || proformaRows.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Source proforma not found" });
+    }
+    const source = proformaRows[0];
+
+    // 2. Calculate received_amount: SUM of amount from ALL approved payments to date
+    const paymentRows = await runQuery(
+      `SELECT amount FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+      [proforma_id]
+    );
+    const received_amount = paymentRows.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+    // 3. Determine total_amount
+    let finalTotal = requestedTotalAmount !== undefined && requestedTotalAmount !== null && !isNaN(requestedTotalAmount)
+      ? Number(requestedTotalAmount)
+      : Number(source.total_amount || 0);
+
+    // 4. Compute current_balance
+    const current_balance = Math.max(0, finalTotal - received_amount);
+
+    // 5. Concurrency-safe sequential balance proforma number
+    const { balance_number, balance_proforma_number } = await getNextBalanceProformaNumber();
+
+    // 6. Insert frozen snapshot row into re_balance_proforma
+    const isGstVal = source.is_gst && (Buffer.isBuffer(source.is_gst) ? source.is_gst[0] === 1 : Number(source.is_gst) === 1) ? 1 : 0;
+
+    const insertQuery = `
+      INSERT INTO re_balance_proforma (
+        balance_number,
+        balance_proforma_number,
+        source_proforma_id,
+        client_id,
+        is_gst,
+        pricing_snapshot,
+        ads_snapshot,
+        discount_snapshot,
+        notes_snapshot,
+        terms_snapshot,
+        remarks_snapshot,
+        client_instructions_snapshot,
+        duration_start_date,
+        duration_end_date,
+        show_google_ad,
+        show_meta_ad,
+        total_amount,
+        received_amount,
+        current_balance,
+        created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const result = await runQuery(insertQuery, [
+      balance_number,
+      balance_proforma_number,
+      source.id,
+      source.client_id,
+      isGstVal,
+      source.pricing_snapshot,
+      source.ads_snapshot,
+      source.discount_snapshot,
+      source.notes_snapshot,
+      source.terms_snapshot,
+      source.remarks_snapshot,
+      source.client_instructions_snapshot,
+      source.duration_start_date || null,
+      source.duration_end_date || null,
+      show_google_ad ? 1 : 0,
+      show_meta_ad ? 1 : 0,
+      finalTotal,
+      received_amount,
+      current_balance,
+      created_by || req.user?.name || "System"
+    ]);
+
+    const createdId = result.insertId;
+
+    res.status(201).json({
+      status: "Success",
+      message: "Balance Proforma created successfully",
+      data: {
+        id: createdId,
+        balance_number,
+        balance_proforma_number,
+        source_proforma_id: source.id,
+        source_proforma_number: source.proforma_number,
+        client_id: source.client_id,
+        total_amount: finalTotal,
+        received_amount,
+        current_balance,
+      }
+    });
+  } catch (error) {
+    console.error("createBalanceProforma error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error while creating balance proforma" });
+  }
+};
+
+exports.getBalanceProformaById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const rows = await runQuery(
+      `SELECT 
+         bp.*,
+         pp.proforma_number AS source_proforma_number,
+         pp.proposal_id,
+         c.client_name,
+         c.client_organization,
+         c.email,
+         c.phone,
+         c.address
+       FROM re_balance_proforma bp
+       LEFT JOIN re_proposal_proforma pp ON bp.source_proforma_id = pp.id
+       LEFT JOIN re_revenue_engine_client_details c ON bp.client_id = c.id
+       WHERE bp.id = ?`,
+      [id]
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Balance Proforma not found" });
+    }
+
+    res.status(200).json({
+      status: "Success",
+      data: rows[0]
+    });
+  } catch (error) {
+    console.error("getBalanceProformaById error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.getAllBalanceProformas = async (req, res) => {
+  try {
+    const rows = await runQuery(
+      `SELECT 
+         bp.*,
+         pp.proforma_number AS source_proforma_number,
+         c.client_name,
+         c.client_organization,
+         c.email,
+         c.phone
+       FROM re_balance_proforma bp
+       LEFT JOIN re_proposal_proforma pp ON bp.source_proforma_id = pp.id
+       LEFT JOIN re_revenue_engine_client_details c ON bp.client_id = c.id
+       ORDER BY bp.id DESC`
+    );
+
+    res.status(200).json({
+      status: "Success",
+      data: rows || []
+    });
+  } catch (error) {
+    console.error("getAllBalanceProformas error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.getBalanceProformasBySourceId = async (req, res) => {
+  try {
+    const { source_proforma_id } = req.params;
+    const rows = await runQuery(
+      `SELECT 
+         bp.*,
+         pp.proforma_number AS source_proforma_number
+       FROM re_balance_proforma bp
+       LEFT JOIN re_proposal_proforma pp ON bp.source_proforma_id = pp.id
+       WHERE bp.source_proforma_id = ?
+       ORDER BY bp.id DESC`,
+      [source_proforma_id]
+    );
+
+    res.status(200).json({
+      status: "Success",
+      data: rows || []
+    });
+  } catch (error) {
+    console.error("getBalanceProformasBySourceId error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.deleteBalanceProforma = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await runQuery("SELECT id, balance_proforma_number FROM re_balance_proforma WHERE id = ?", [id]);
+    if (!existing || existing.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Balance Proforma not found" });
+    }
+
+    await runQuery("DELETE FROM re_balance_proforma WHERE id = ?", [id]);
+
+    res.status(200).json({
+      status: "Success",
+      message: `Balance Proforma ${existing[0].balance_proforma_number || id} deleted successfully.`
+    });
+  } catch (error) {
+    console.error("deleteBalanceProforma error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error while deleting balance proforma" });
+  }
+};
+

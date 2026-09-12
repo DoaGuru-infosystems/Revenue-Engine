@@ -503,6 +503,59 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     window.open(url, "_blank");
   };
 
+  const handleCreateBalanceProforma = async (proforma) => {
+    Swal.fire({
+      title: "Create Balance Proforma?",
+      text: `Generate a new frozen balance snapshot for ${proforma.proforma_number || `Proforma #${proforma.id}`}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#f59e0b",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Create Snapshot"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await axios.post(
+            `${baseURL}/auth/api/re_calculator/balance-proforma/create`,
+            {
+              proforma_id: proforma.id,
+              created_by: currentUser?.name || "Admin",
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              }
+            }
+          );
+          if (res.data.status === "Success") {
+            const newBal = res.data.data;
+            const isGST = proforma.is_gst && typeof proforma.is_gst === 'object' && proforma.is_gst.data ? proforma.is_gst.data[0] === 1 : Number(proforma.is_gst) === 1;
+            Swal.fire({
+              title: "Balance Proforma Created!",
+              text: `${newBal.balance_proforma_number} generated with ₹${Number(newBal.current_balance || 0).toLocaleString("en-IN")} pending balance.`,
+              icon: "success",
+              showCancelButton: true,
+              confirmButtonText: "View Now",
+              cancelButtonText: "Close",
+              confirmButtonColor: "#f59e0b"
+            }).then((viewResult) => {
+              if (viewResult.isConfirmed) {
+                window.open(
+                  `#/admin/quotation/${proposal.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGST ? 1 : 0}`,
+                  "_blank"
+                );
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Failed to create balance proforma:", error);
+          Swal.fire({ icon: "error", title: "Error", text: error.response?.data?.message || "Failed to create balance proforma." });
+        }
+      }
+    });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -594,13 +647,21 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                           </p>
                         ) }
                       </div>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={ () => handleViewProforma(proforma) }
                           className="px-4 py-2 bg-green-600/20 text-green-700 dark:text-green-300 border border-green-500 dark:border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold whitespace-nowrap"
                         >
                           View Proforma
                         </button>
+                        { totalReceived > 0 && (
+                          <button
+                            onClick={ () => handleCreateBalanceProforma(proforma) }
+                            className="px-4 py-2 bg-amber-600/20 text-amber-400 border border-amber-500/30 rounded-xl hover:bg-amber-600/30 transition text-sm font-semibold whitespace-nowrap flex items-center gap-1.5"
+                          >
+                            <FileText className="w-4 h-4" /> Balance Proforma
+                          </button>
+                        ) }
                       </div>
                     </div>
                   </div>

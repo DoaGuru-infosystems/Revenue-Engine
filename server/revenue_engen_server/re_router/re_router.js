@@ -237,6 +237,11 @@ const {
   getProformaSnapshot,
   updateProformaSnapshot,
   updateProformaDiscount,
+  createBalanceProforma,
+  getBalanceProformaById,
+  getAllBalanceProformas,
+  getBalanceProformasBySourceId,
+  deleteBalanceProforma,
 } = require("../re_controller/re_proposalController");
 const {
   uploadAndConvert: genratecoatetion,
@@ -706,6 +711,13 @@ router.get(
 );
 router.get("/proforma/all", authenticateToken, getAllProformas);
 router.delete("/proforma/:id", authenticateToken, deleteProforma);
+
+// ---- Balance Proforma Routes ----
+router.post("/balance-proforma/create", authenticateToken, createBalanceProforma);
+router.get("/balance-proforma/all", authenticateToken, getAllBalanceProformas);
+router.get("/balance-proforma/source/:source_proforma_id", authenticateToken, getBalanceProformasBySourceId);
+router.get("/balance-proforma/:id", authenticateToken, getBalanceProformaById);
+router.delete("/balance-proforma/:id", authenticateToken, deleteBalanceProforma);
 
 // ---- Proposal Invoices ----
 router.get("/proposal-invoices", authenticateToken, getProposalInvoices);

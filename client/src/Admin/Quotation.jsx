@@ -28,7 +28,9 @@ export default function Quotation() {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const isGST = query.get("gst") === "1";
-  const docTypeFromURL = query.get("doc") === "proforma" ? "proforma" : "quotation";
+  const rawDocParam = query.get("doc");
+  const isBalanceProforma = rawDocParam === "balance-proforma-view" || rawDocParam === "balance-proforma";
+  const docTypeFromURL = isBalanceProforma ? "balance-proforma" : (rawDocParam === "proforma" ? "proforma" : "quotation");
   const sourceFromURL = query.get("source");
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.user);
@@ -519,8 +521,133 @@ export default function Quotation() {
     }
   };
 
+  const fetchBalanceProformaData = async () => {
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/balance-proforma/${txn_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.status === "Success") {
+        const bp = res.data.data;
+        const isGstVal = (bp.is_gst && typeof bp.is_gst === 'object' && bp.is_gst.data ? bp.is_gst.data[0] === 1 : Number(bp.is_gst) === 1);
+
+        setProformaMeta({
+          is_balance_proforma: true,
+          balance_number: bp.balance_number,
+          balance_proforma_number: bp.balance_proforma_number,
+          source_proforma_id: bp.source_proforma_id,
+          source_proforma_number: bp.source_proforma_number,
+          duration_start_date: bp.duration_start_date,
+          duration_end_date: bp.duration_end_date,
+          total_amount: Number(bp.total_amount || 0),
+          received_amount: Number(bp.received_amount || 0),
+          current_balance: Number(bp.current_balance || 0),
+        });
+
+        setShowGoogleAd(Boolean(bp.show_google_ad));
+        setShowMetaAd(Boolean(bp.show_meta_ad));
+
+        setClientData({
+          client_name: bp.client_name || "",
+          client_organization: bp.client_organization || "",
+          email: bp.email || "",
+          phone: bp.phone || "",
+          address: bp.address || "",
+          bill_type: isGstVal ? "GST" : "NON_GST",
+          document_type: "balance-proforma",
+          created_at: bp.created_at,
+          duration_start_date: bp.duration_start_date,
+          duration_end_date: bp.duration_end_date,
+          proforma_number: bp.balance_proforma_number || `BAL-PROF-${bp.balance_number}`,
+          source_proforma_number: bp.source_proforma_number,
+        });
+
+        try {
+          const liveNotes = JSON.parse(bp.notes_snapshot || "[]");
+          const formattedNotes = liveNotes.map((note, idx) => ({ 
+            id: idx + 1, 
+            note_name: typeof note === 'string' ? note : note.note_name || "" 
+          }));
+          setNotesData(formattedNotes);
+        } catch (e) {
+          setNotesData([]);
+        }
+
+        try {
+          let pricingDiscount = null;
+          if (bp.discount_snapshot) {
+            pricingDiscount = typeof bp.discount_snapshot === 'string'
+              ? JSON.parse(bp.discount_snapshot)
+              : bp.discount_snapshot;
+          }
+          if (pricingDiscount) {
+            const isPercent = pricingDiscount.type === 'Percentage' || pricingDiscount.discount_type === 'percent';
+            const discVal = Number(pricingDiscount.value ?? (isPercent ? pricingDiscount.discount_per : pricingDiscount.discount_amt) ?? 0);
+            if (discVal > 0) {
+              setSelecteddiscount({
+                id: bp.id,
+                discount_type: isPercent ? 'percent' : 'amount',
+                discount_amt: isPercent ? 0 : discVal,
+                discount_per: isPercent ? discVal : 0,
+                value: discVal,
+                type: isPercent ? 'Percentage' : 'Amount',
+              });
+            } else {
+              setSelecteddiscount(null);
+            }
+          } else {
+            setSelecteddiscount(null);
+          }
+        } catch (e) {
+          setSelecteddiscount(null);
+        }
+
+        try {
+          const parsed = JSON.parse(bp.pricing_snapshot || "[]");
+          let adsParsed = [];
+          if (bp.ads_snapshot) {
+            try { adsParsed = JSON.parse(bp.ads_snapshot || "[]"); } catch (adsErr) {}
+          }
+          const combined = [...parsed, ...adsParsed];
+          const { dmServices, adsServices } = classifyProformaServices(combined);
+          const compServices = parsed.filter(item => {
+            if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+              return Boolean(item.is_complimentary);
+            }
+            if (item.source === 'custom_complimentary' || item.source === 'complimentary') return true;
+            if (item.include_in_total === false) return true;
+            const sName = String(item.service_name || item.service || '').toLowerCase();
+            return sName.includes('(complimentary)') || sName.includes('(complimntory)') || sName === 'complimentary';
+          }).map(item => ({
+            ...item,
+            is_complimentary: true,
+            service_type: item.service_type || "Complimentary",
+            editing_type_amount: item.unit_price ?? item.editing_type_amount ?? item.total_price ?? 0,
+            total_amount: item.total_amount ?? item.total_price ?? 0
+          }));
+
+          setServiceData([...dmServices, ...adsServices]);
+          setComplimentaryData(compServices);
+          setAdsData(adsServices);
+        } catch (e) {
+          setServiceData([]);
+          setComplimentaryData([]);
+          setAdsData([]);
+        }
+
+        setLoading(false);
+      }
+    } catch (e) {
+      console.error("fetchBalanceProformaData error:", e);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
+    if (isBalanceProforma) {
+      fetchBalanceProformaData();
+      fetchPredefinedNotes();
+      fetchDiscountSetting();
+    } else if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
       fetchProformaData();
       fetchPredefinedNotes();
       fetchDiscountSetting();
@@ -534,7 +661,7 @@ export default function Quotation() {
       fetchClientReceived();
       fetchPredefinedNotes();
     }
-  }, [id, txn_id, docTypeFromURL, sourceFromURL]);
+  }, [id, txn_id, docTypeFromURL, sourceFromURL, isBalanceProforma]);
 
   const handleClose = () => {
     setShowModal(false);
@@ -842,6 +969,54 @@ export default function Quotation() {
 
   const grandTotal = dmSubtotalWithGst + adsTotalWithGst;
 
+  // Ads budgets for Google and Meta
+  const googleAdItem = adsData.find(ad => (ad.category_name || "").toLowerCase().includes("google"));
+  const googleAdAmount = Number(googleAdItem?.amount || googleAdItem?.budget || 0);
+
+  const metaAdItem = adsData.find(ad => (ad.category_name || "").toLowerCase().includes("meta"));
+  const metaAdAmount = Number(metaAdItem?.amount || metaAdItem?.budget || 0);
+
+  const activeAdsBudget = (showGoogleAd ? googleAdAmount : 0) + (showMetaAd ? metaAdAmount : 0);
+
+  // For Balance Proforma:
+  let displayedSubtotal = dmSubtotalWithGst;
+  if (isBalanceProforma && proformaMeta?.total_amount !== undefined) {
+    const fullAdBudgets = googleAdAmount + metaAdAmount;
+    if (fullAdBudgets > 0 && Number(proformaMeta.total_amount) > fullAdBudgets) {
+      displayedSubtotal = Math.max(0, Number(proformaMeta.total_amount) - fullAdBudgets);
+    }
+  }
+
+  // Displayed Grand Total = Subtotal + Active (toggled) Ads Budgets
+  const displayedGrandTotal = isBalanceProforma && proformaMeta?.total_amount !== undefined
+    ? displayedSubtotal + activeAdsBudget
+    : grandTotal;
+
+  // Breakdown for Taxable & GST
+  let displayedTaxable = dmTotalAfterDiscount;
+  let displayedCgst = dmGstAmount / 2;
+  let displayedSgst = dmGstAmount / 2;
+
+  if (isBalanceProforma && Math.abs(dmSubtotalWithGst - displayedSubtotal) > 1) {
+    if (isGST) {
+      displayedTaxable = Math.round((displayedSubtotal / 1.18) * 100) / 100;
+      const gstTotal = displayedSubtotal - displayedTaxable;
+      displayedCgst = gstTotal / 2;
+      displayedSgst = gstTotal / 2;
+    } else {
+      displayedTaxable = displayedSubtotal;
+      displayedCgst = 0;
+      displayedSgst = 0;
+    }
+  }
+
+  // Received and Current Balance for Balance Proforma
+  // Toggling a budget off removes that component consistently from BOTH Grand Total and Received
+  const removedAdsBudget = (!showGoogleAd ? googleAdAmount : 0) + (!showMetaAd ? metaAdAmount : 0);
+  const baseReceived = Number(proformaMeta?.received_amount || 0);
+  const displayedReceived = Math.max(0, baseReceived - removedAdsBudget);
+  const displayedCurrentBalance = Math.max(0, displayedGrandTotal - displayedReceived);
+
   // if (loading) {
   //   return (
   //     <div className="text-center p-10 font-semibold text-gray-700">
@@ -896,7 +1071,9 @@ export default function Quotation() {
   const clientOrganization = clientData?.client_organization;
 
   const handlePrintPage = () => {
-    const docName = docTypeFromURL === "proforma" ? "Proforma Invoice" : "Quotation";
+    const docName = isBalanceProforma 
+      ? "Balance Proforma Invoice" 
+      : (docTypeFromURL === "proforma" ? "Proforma Invoice" : "Quotation");
     document.title = clientOrganization
       ? `${clientOrganization} ${docName}`
       : `${clientName} ${docName}`;
@@ -1348,6 +1525,20 @@ export default function Quotation() {
               <td className="p-0 m-0 align-top">
                 <div className="flex flex-col justify-between h-full px-6 py-1 print:px-4 ">
                   <div className="flex-grow">
+                    { isBalanceProforma && (
+                      <div className="mb-2 text-center">
+                        <p className="text-sm font-bold tracking-wide text-gray-800 uppercase">
+                          BALANCE PROFORMA INVOICE
+                        </p>
+                      </div>
+                    ) }
+                    { docTypeFromURL === "proforma" && !isBalanceProforma && (
+                      <div className="mb-2 text-center">
+                        <p className="text-sm font-bold tracking-wide text-gray-800 uppercase">
+                          PROFORMA INVOICE
+                        </p>
+                      </div>
+                    ) }
                     {/* Client Details */ }
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 print:grid-cols-2">
                       <div className="break-words text-xs">
@@ -1371,11 +1562,16 @@ export default function Quotation() {
                       </div>
                       <div className="text-end text-xs">
                         <p className="font-bold">
-                          { sourceFromURL === "proposal" || docTypeFromURL === "proforma" ? null : <span className="font-bold text-amber-600 border border-amber-600 px-1 py-0.5 rounded mr-1">Legacy</span> }
-                          { docTypeFromURL === "proforma" ? "Proforma Invoice: " : "Quotation: " } { proformaMeta?.proforma_number || clientData?.proforma_number || txn_id }
+                          { sourceFromURL === "proposal" || docTypeFromURL === "proforma" || isBalanceProforma ? null : <span className="font-bold text-amber-600 border border-amber-600 px-1 py-0.5 rounded mr-1">Legacy</span> }
+                          { isBalanceProforma ? "Proforma Invoice No: " : (docTypeFromURL === "proforma" ? "Proforma Invoice: " : "Quotation: ") } { isBalanceProforma ? (proformaMeta?.balance_proforma_number || clientData?.proforma_number) : (proformaMeta?.proforma_number || clientData?.proforma_number || txn_id) }
                         </p>
+                        { isBalanceProforma && (proformaMeta?.source_proforma_number || clientData?.source_proforma_number) && (
+                          <p className="text-gray-600 font-semibold mt-0.5 text-xs">
+                            Ref: { proformaMeta?.source_proforma_number || clientData?.source_proforma_number }
+                          </p>
+                        ) }
                         <p>{ moment().format("DD/MM/YYYY") }</p>
-                        { docTypeFromURL === "proforma" && (clientData?.duration_start_date || proformaMeta?.duration_start_date) && (
+                        { (docTypeFromURL === "proforma" || isBalanceProforma) && (clientData?.duration_start_date || proformaMeta?.duration_start_date) && (
                           <p className="text-gray-700 mt-0.5 font-medium">
                             <strong>Service From:</strong>{" "}
                             { moment(clientData?.duration_start_date || proformaMeta?.duration_start_date).format("DD/MM/YYYY") } to{" "}
@@ -1920,7 +2116,7 @@ export default function Quotation() {
                   {/* Action row below service table: Discount on left, Ads toggles on right */}
                   <div className="print:hidden flex items-center justify-between gap-3 mt-3 mb-2 px-1">
                     <div>
-                      { clientDataReceived.tag_received_amt === "received" || (docTypeFromURL === "proforma" && proformaMeta?.has_invoice) ? null : (
+                      { isBalanceProforma || clientDataReceived.tag_received_amt === "received" || (docTypeFromURL === "proforma" && proformaMeta?.has_invoice) ? null : (
                         <button
                           type="button"
                           onClick={ handleShowDiscount }
@@ -1936,25 +2132,31 @@ export default function Quotation() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      { docTypeFromURL === "proforma" && adsData.some(ad => (ad.category_name || "").toLowerCase().includes("meta") && Number(ad.amount || ad.budget || 0) > 0) && (
-                        <label className="inline-flex items-center gap-1 text-xs cursor-pointer font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-300">
+                      { (docTypeFromURL === "proforma" || isBalanceProforma) && adsData.some(ad => {
+                        const name = (ad.category_name || ad.category || ad.service_name || ad.service || "").toLowerCase();
+                        return (name.includes("meta") || name.includes("facebook") || name.includes("fb") || name.includes("insta")) && Number(ad.amount || ad.budget || 0) > 0;
+                      }) && (
+                        <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
                           <input
                             type="checkbox"
                             checked={ showMetaAd }
                             onChange={ (e) => setShowMetaAd(e.target.checked) }
-                            className="w-4 h-4 accent-red-600"
+                            className="w-4 h-4 accent-red-600 rounded cursor-pointer"
                           />
                           Show Meta Ads Budget
                         </label>
                       ) }
 
-                      { docTypeFromURL === "proforma" && adsData.some(ad => (ad.category_name || "").toLowerCase().includes("google") && Number(ad.amount || ad.budget || 0) > 0) && (
-                        <label className="inline-flex items-center gap-1 text-xs cursor-pointer font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-300">
+                      { (docTypeFromURL === "proforma" || isBalanceProforma) && adsData.some(ad => {
+                        const name = (ad.category_name || ad.category || ad.service_name || ad.service || "").toLowerCase();
+                        return name.includes("google") && Number(ad.amount || ad.budget || 0) > 0;
+                      }) && (
+                        <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
                           <input
                             type="checkbox"
                             checked={ showGoogleAd }
                             onChange={ (e) => setShowGoogleAd(e.target.checked) }
-                            className="w-4 h-4 accent-red-600"
+                            className="w-4 h-4 accent-red-600 rounded cursor-pointer"
                           />
                           Show Google Ads Budget
                         </label>
@@ -1996,50 +2198,104 @@ export default function Quotation() {
                       </div>
 
                       {/* RIGHT SIDE: Totals */ }
-                      <div className="w-1/2 pl-3 text-right border-l border-gray-200">
-                        <div className="space-y-0.5 text-gray-700">
+                      <div className="w-1/2 pl-5 border-l border-gray-200">
+                        <div className="space-y-1 text-xs text-gray-700">
                           { discountAmount > 0 && (
                             <>
-                              <p>Subtotal ₹{ graphicTotal.toLocaleString("en-IN") }</p>
-                              <p className="text-red-600 font-bold mt-1">
-                                Discount (
-                                { selecteddiscount?.discount_type === "percent"
-                                  ? `${selecteddiscount?.discount_per}%`
-                                  : `₹${selecteddiscount?.discount_amt}` }
-                                ): -₹{ discountAmount.toLocaleString("en-IN") }
-                              </p>
+                              <div className="flex justify-between items-center text-gray-600 py-0.5">
+                                <span>Subtotal</span>
+                                <span className="font-semibold text-gray-900">₹{ graphicTotal.toLocaleString("en-IN") }</span>
+                              </div>
+                              <div className="flex justify-between items-center text-red-600 font-semibold py-0.5">
+                                <span>
+                                  Discount ({ selecteddiscount?.discount_type === "percent"
+                                    ? `${selecteddiscount?.discount_per}%`
+                                    : `₹${selecteddiscount?.discount_amt}` })
+                                </span>
+                                <span>-₹{ discountAmount.toLocaleString("en-IN") }</span>
+                              </div>
                             </>
                           ) }
 
-                          <p className="mt-1">Taxable Amount ₹{ dmTotalAfterDiscount.toLocaleString("en-IN") }</p>
+                          <div className="flex justify-between items-center text-gray-600 py-0.5">
+                            <span>Taxable Amount</span>
+                            <span className="font-semibold text-gray-900">
+                              ₹{ displayedTaxable.toLocaleString("en-IN", { minimumFractionDigits: displayedTaxable % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 }) }
+                            </span>
+                          </div>
 
                           { isGST && (
                             <>
-                              <p>CGST @9% ₹{ (dmGstAmount / 2).toLocaleString("en-IN") }</p>
-                              <p>SGST @9% ₹{ (dmGstAmount / 2).toLocaleString("en-IN") }</p>
+                              <div className="flex justify-between items-center text-gray-600 py-0.5">
+                                <span>CGST @9%</span>
+                                <span className="font-semibold text-gray-900">
+                                  ₹{ displayedCgst.toLocaleString("en-IN", { minimumFractionDigits: displayedCgst % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 }) }
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-gray-600 py-0.5">
+                                <span>SGST @9%</span>
+                                <span className="font-semibold text-gray-900">
+                                  ₹{ displayedSgst.toLocaleString("en-IN", { minimumFractionDigits: displayedSgst % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 }) }
+                                </span>
+                              </div>
                             </>
                           ) }
 
-                          <p className="font-bold mt-1">Subtotal ₹{ dmSubtotalWithGst.toLocaleString("en-IN") }</p>
+                          <div className="flex justify-between items-center font-bold text-gray-800 py-1 border-t border-gray-200">
+                            <span>Subtotal</span>
+                            <span>₹{ Math.round(displayedSubtotal).toLocaleString("en-IN") }</span>
+                          </div>
 
                           { adsData && adsData.length > 0 && adsData.map((ad, idx) => {
                             const amount = Number(ad.amount || ad.budget || 0);
                             const cat = (ad.category_name || "").toLowerCase();
                             if (cat.includes("meta") && !showMetaAd) return null;
                             if (cat.includes("google") && !showGoogleAd) return null;
-                            const adsCategoryName = ad.category_name || ad.service_name || "Ads";
+                            let adsCategoryName = ad.category_name || ad.service_name || "Ads";
+                            adsCategoryName = adsCategoryName.replace(/\badd\b/gi, "Ad");
                             return (
-                              <p key={ idx }>{ adsCategoryName } Budget ₹{ amount.toLocaleString("en-IN") }</p>
+                              <div key={ idx } className="flex justify-between items-center text-gray-600 py-0.5">
+                                <span>{ adsCategoryName } Budget</span>
+                                <span className="font-semibold text-gray-900">₹{ amount.toLocaleString("en-IN") }</span>
+                              </div>
                             );
                           }) }
 
-                          <p className="text-lg font-bold text-green-700 mt-2">
-                            Grand Total ₹{ Math.round(grandTotal).toLocaleString("en-IN") }
-                          </p>
+                          <div className="flex justify-between items-center py-1 px-2.5 bg-gray-50/80 rounded border border-gray-200 mt-1">
+                            <span className="text-sm font-bold text-gray-900">Grand Total</span>
+                            <span className="text-base font-bold text-green-700">
+                              ₹{ Math.round(displayedGrandTotal).toLocaleString("en-IN") }
+                            </span>
+                          </div>
 
-                          <div className="mt-1 pt-2 border-t text-right">
-                            <p className="text-xs text-gray-500">Total Amount (in words):</p>
-                            <p className="font-semibold text-gray-800 leading-snug">{ inrToWords(grandTotal) }</p>
+                          { isBalanceProforma && (
+                            <div className="pt-2 border-t border-gray-300 space-y-1">
+                              <div className="flex justify-between items-center px-2 py-0.5 text-gray-700">
+                                <span className="font-medium text-xs">Received</span>
+                                <span className="font-semibold text-gray-900 text-xs">
+                                  ₹{ Math.round(displayedReceived).toLocaleString("en-IN") }
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center px-2.5 py-1 bg-green-50/70 rounded border border-green-200">
+                                <span className="text-xs font-bold text-green-900">Current Balance</span>
+                                { displayedCurrentBalance <= 0 ? (
+                                  <span className="bg-green-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                                    Fully Paid
+                                  </span>
+                                ) : (
+                                  <span className="text-sm font-bold text-green-700">
+                                    ₹{ Math.round(displayedCurrentBalance).toLocaleString("en-IN") }
+                                  </span>
+                                ) }
+                              </div>
+                            </div>
+                          ) }
+
+                          <div className="mt-2 pt-2 border-t border-gray-200 text-right">
+                            <p className="text-[10px] text-gray-500 italic block leading-tight">Total Amount (in words):</p>
+                            <p className="font-semibold text-gray-800 text-xs capitalize leading-tight">
+                              { inrToWords(displayedGrandTotal) }
+                            </p>
                           </div>
                         </div>
                       </div>

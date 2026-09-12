@@ -193,6 +193,59 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
     });
   };
 
+  const handleCreateBalanceProforma = async (item) => {
+    Swal.fire({
+      title: "Create Balance Proforma?",
+      text: `Generate a new frozen balance snapshot for ${item.proforma_number || `PROF-${item.id}`}?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#f59e0b",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Create Snapshot"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await axios.post(
+            `${baseURL}/auth/api/re_calculator/balance-proforma/create`,
+            {
+              proforma_id: item.id,
+              created_by: currentUser?.name || "Admin",
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              }
+            }
+          );
+          if (res.data.status === "Success") {
+            const newBal = res.data.data;
+            const isGst = parseIsGst(item?.is_gst);
+            Swal.fire({
+              title: "Balance Proforma Created!",
+              text: `${newBal.balance_proforma_number} generated with ₹${Number(newBal.current_balance || 0).toLocaleString("en-IN")} pending balance.`,
+              icon: "success",
+              showCancelButton: true,
+              confirmButtonText: "View Now",
+              cancelButtonText: "Close",
+              confirmButtonColor: "#f59e0b"
+            }).then((viewResult) => {
+              if (viewResult.isConfirmed) {
+                window.open(
+                  `#/admin/quotation/${item.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGst ? 1 : 0}`,
+                  "_blank"
+                );
+              }
+            });
+          }
+        } catch (error) {
+          console.error("Failed to create balance proforma:", error);
+          Swal.fire("Error", error.response?.data?.message || "Failed to create balance proforma.", "error");
+        }
+      }
+    });
+  };
+
   // Dropdown for Actions
   const ActionDropdown = ({ item }) => (
     <div className="relative action-dropdown-container">
@@ -204,7 +257,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
       </button>
 
       {openDropdownId === item.id && (
-        <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-xl shadow-xl shadow-black/50 border border-gray-700/50 overflow-hidden z-[50]">
+        <div className="absolute right-0 mt-2 w-52 bg-gray-800 rounded-xl shadow-xl shadow-black/50 border border-gray-700/50 overflow-hidden z-[50]">
           <button
             onClick={() => {
               setOpenDropdownId(null);
@@ -230,6 +283,18 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
           >
             <IndianRupee size={15} className="text-yellow-400" /> Record Payment
           </button>
+
+          { (item.payment_status === 'partial' || Number(item.total_paid_amount || 0) > 0) && (
+            <button
+              onClick={() => {
+                setOpenDropdownId(null);
+                handleCreateBalanceProforma(item);
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-amber-300 hover:bg-gray-700/50 transition-colors"
+            >
+              <FileText size={15} className="text-amber-400" /> Balance Proforma
+            </button>
+          ) }
 
           <button
             onClick={() => {

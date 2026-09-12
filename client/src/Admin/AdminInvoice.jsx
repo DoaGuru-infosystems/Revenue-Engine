@@ -42,7 +42,9 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   const { id, txn_id } = useParams();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const docTypeFromURL = query.get("doc") === "proforma" ? "proforma" : "final";
+  const rawDocParam = query.get("doc");
+  const isBalanceProforma = rawDocParam === "balance-proforma-view" || rawDocParam === "balance-proforma";
+  const docTypeFromURL = isBalanceProforma ? "balance-proforma" : (rawDocParam === "proforma" ? "proforma" : "final");
   const sourceFromURL = query.get("source");
   const txnIdFromURL = query.get("txnId");
   const activeTxnId = txnIdFromURL || txn_id;
@@ -73,6 +75,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
     ? clientData.bill_type === "GST"
     : isGSTFromURL;
   const isProforma =
+    isBalanceProforma ||
     String(clientData?.document_type || clientData?.invoice_type || docTypeFromURL)
       .toLowerCase() === "proforma";
   const [imagesLoaded, setImagesLoaded] = useState({
@@ -580,6 +583,98 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
     }
   };
 
+  const fetchBalanceProformaData = async () => {
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/balance-proforma/${txn_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.status === "Success") {
+        const bp = res.data.data;
+        const isGstVal = (bp.is_gst && typeof bp.is_gst === 'object' && bp.is_gst.data ? bp.is_gst.data[0] === 1 : Number(bp.is_gst) === 1);
+
+        setClientData({
+          id: bp.id,
+          client_name: bp.client_name || "",
+          client_organization: bp.client_organization || "",
+          email: bp.email || "",
+          phone: bp.phone || "",
+          address: bp.address || "",
+          bill_type: isGstVal ? "GST" : "NON_GST",
+          document_type: "balance-proforma",
+          bill_number: bp.balance_proforma_number || `BAL-PROF-${bp.balance_number}`,
+          source_proforma_number: bp.source_proforma_number,
+          duration_start_date: bp.duration_start_date || bp.created_at,
+          duration_end_date: bp.duration_end_date || bp.created_at,
+          payment_mode: "",
+          tag_received_amt: Number(bp.current_balance || 0) <= 0 ? "received" : (Number(bp.received_amount || 0) > 0 ? "partial" : "pending"),
+          received_amt: Number(bp.received_amount || 0),
+          current_amt: Number(bp.current_balance || 0),
+          total_amt: Number(bp.total_amount || 0),
+          previous_amt: 0,
+          created_at: bp.created_at,
+          discount_snapshot: bp.discount_snapshot || null,
+        });
+
+        setShowGoogleAd(Boolean(bp.show_google_ad));
+        setShowMetaAd(Boolean(bp.show_meta_ad));
+
+        try {
+          const parsed = JSON.parse(bp.pricing_snapshot || "[]");
+          let adsParsed = [];
+          if (bp.ads_snapshot) {
+            try { adsParsed = JSON.parse(bp.ads_snapshot || "[]"); } catch(e) {}
+          }
+          const combined = [...parsed, ...adsParsed];
+          const { dmServices, adsServices } = classifyProformaServices(combined);
+          setServiceData([...dmServices, ...adsServices]);
+
+          const complimentary = parsed.filter(item =>
+            item.source === "custom_complimentary" ||
+            (item.service_name && item.service_name.toLowerCase() === "complimentary") ||
+            Boolean(item.is_complimentary)
+          ).map(item => ({
+            service_type: "Complimentary",
+            service_name: item.service_name || "Complimentary",
+            category_name: item.category_name,
+            editing_type_name: item.editing_type_name,
+            quantity: item.quantity || 1,
+            editing_type_amount: item.unit_price ?? item.editing_type_amount ?? item.total_price ?? 0,
+            total_amount: item.total_amount ?? item.total_price ?? 0
+          }));
+          setComplimentaryData(complimentary);
+        } catch (e) {
+          console.error("Failed to parse bp.pricing_snapshot", e);
+          setServiceData([]);
+          setComplimentaryData([]);
+        }
+
+        try {
+          if (bp.notes_snapshot) {
+            const parsedNotes = JSON.parse(bp.notes_snapshot || "[]");
+            const formattedNotes = parsedNotes.map((note, idx) => ({
+              id: note.id || idx + 1,
+              note_name: typeof note === 'string' ? note : note.note_name || ""
+            }));
+            setNotesData(formattedNotes);
+          } else {
+            setNotesData([]);
+          }
+        } catch (e) {
+          setNotesData([]);
+        }
+
+        setAdditionalServiceData([]);
+        setDiscountDataSet(null);
+        fetchDiscount();
+        setProformaPayments([]);
+        setLoading(false);
+      }
+    } catch (e) {
+      console.error("fetchBalanceProformaData error:", e);
+      setLoading(false);
+    }
+  };
+
   const fetchProposalInvoiceData = async () => {
     try {
       const res = await axios.get(
@@ -707,7 +802,10 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       return;
     }
 
-    if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
+    if (isBalanceProforma) {
+      fetchBalanceProformaData();
+      fetchPredefinedNotes();
+    } else if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
       fetchProformaData();
       fetchPredefinedNotes();
     } else if (sourceFromURL === "proposal_invoice") {
@@ -725,11 +823,12 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       fetchComplimentaryData();
       fetchDiscount();
       fetchDiscountSetting();
-      fetchAdditionservice();
-      fetchRemainingAmount();
+      fetchClientReceived();
       fetchPredefinedNotes();
+      fetchRemainingAmount();
+      fetchAdditionalServiceData();
     }
-  }, [id, txn_id, txnIdFromURL, sourceFromURL, publicMode, publicData]);
+  }, [id, txn_id, docTypeFromURL, sourceFromURL, txnIdFromURL, isBalanceProforma, publicMode, publicData]);
 
   const handleEdit = (entry) => {
     setIsEditingAddition(entry.id);
@@ -1906,9 +2005,12 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
   };
 
   const handlePrintPage = () => {
+    const docName = isBalanceProforma 
+      ? "Balance Proforma Invoice" 
+      : (isProforma ? "Proforma Invoice" : "Invoice");
     document.title = clientOrganization
-      ? `${clientOrganization} ${isProforma ? "Proforma Invoice" : "Invoice"}`
-      : `${clientName} ${isProforma ? "Proforma Invoice" : "Invoice"}`;
+      ? `${clientOrganization} ${docName}`
+      : `${clientName} ${docName}`;
     window.print();
   };
 
@@ -2133,7 +2235,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                     { isProforma && (
                       <div className="mb-1 text-center">
                         <p className="text-sm font-bold tracking-wide">
-                          PROFORMA INVOICE
+                          { isBalanceProforma ? "BALANCE PROFORMA INVOICE" : "PROFORMA INVOICE" }
                         </p>
                       </div>
                     ) }
@@ -2162,6 +2264,11 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                             <>
                               <strong>Proforma Invoice No: </strong>{ " " }
                               { clientData?.bill_number }
+                              { isBalanceProforma && clientData?.source_proforma_number && (
+                                <div className="text-gray-500 font-semibold text-[11px] mt-0.5">
+                                  Ref: { clientData.source_proforma_number }
+                                </div>
+                              ) }
                             </>
                           ) : isGST > 0 ? (
                             <>
@@ -2741,10 +2848,33 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                               </div>
                             </>
                           ) }
+                      { isBalanceProforma && (
+                        <div className="flex flex-col border-t border-gray-200 mt-1 pt-1 bg-white">
+                          <div style={ { background: "#f8fafc", color: "#334155" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                            <span className="font-semibold text-xs text-gray-700">Received Amount</span>
+                            <span className="font-bold text-xs text-gray-900">
+                              ₹{ formatAmountNoDecimals(clientData?.received_amt || 0) }
+                            </span>
+                          </div>
+                          <div style={ { background: "#ecfdf5", color: "#065f46" } } className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100">
+                            <span className="font-bold text-xs text-green-800">Current Balance</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-extrabold text-sm text-green-700">
+                                ₹{ formatAmountNoDecimals(clientData?.current_amt || 0) }
+                              </span>
+                              { Number(clientData?.current_amt || 0) <= 0 && (
+                                <span className="bg-green-200 text-green-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-green-400">
+                                  Fully Paid
+                                </span>
+                              ) }
+                            </div>
+                          </div>
                         </div>
                       ) }
                     </div>
-                  </div>
+                  ) }
+                </div>
+              </div>
 
                   {/* Total in words right-aligned below */ }
                   <div className="flex justify-end mt-1 px-1 mb-2 amount-in-words-section">
@@ -2754,7 +2884,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                     </div>
                   </div>
 
-                  { isProforma && proformaPayments.length > 0 && (
+                  { isProforma && !isBalanceProforma && proformaPayments.length > 0 && (
                     <div className="payment-history-section w-full text-left pt-2 border-t border-gray-300">
                       <h2 className="font-bold mb-1 text-gray-800">
                         Payment History
