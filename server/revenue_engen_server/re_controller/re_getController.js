@@ -2594,7 +2594,21 @@ exports.getInvoiceClientNotesbyId = async (req, res) => {
 
 exports.getAllInvoice = async (req, res) => {
   try {
-    db.query("SELECT * FROM re_invoice", (err, results) => {
+    const q = `
+      SELECT 
+        i.*, 
+        COALESCE(
+          pf.proforma_number, 
+          (SELECT pf_pay.proforma_number 
+           FROM re_proposal_payment_records pay 
+           JOIN re_proposal_proforma pf_pay ON pay.proforma_id = pf_pay.id 
+           WHERE pay.txn_id = i.txn_id LIMIT 1)
+        ) AS proforma_number
+      FROM re_invoice i
+      LEFT JOIN re_proposal_proforma pf ON i.proforma_id = pf.id
+      ORDER BY i.id DESC
+    `;
+    db.query(q, (err, results) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",

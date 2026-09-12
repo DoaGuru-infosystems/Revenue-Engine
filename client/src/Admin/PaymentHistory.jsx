@@ -140,10 +140,7 @@ const PaymentHistory = ({ openProformaManager }) => {
   ).filter((item) => {
     if (!modalSearch.trim()) return true;
     const q = modalSearch.trim().toLowerCase();
-    const isGst = parseIsGst(item.is_gst);
-    const pfNo =
-      item.proforma_number ||
-      (isGst ? `GST-PROF-${item.id}` : `NONGST-PROF-${item.id}`);
+    const pfNo = item.proforma_number || `PROF-${item.id}`;
     return (
       pfNo.toLowerCase().includes(q) ||
       `prof-${item.id}`.toLowerCase().includes(q) ||
@@ -157,14 +154,9 @@ const PaymentHistory = ({ openProformaManager }) => {
   const filteredPayments = payments.filter((p) => {
     if (!keyword.trim()) return true;
     const q = keyword.trim().toLowerCase();
-    const isGst = parseIsGst(p.is_gst);
     const pfNo =
       p.proforma_number ||
-      (p.proforma_id
-        ? isGst
-          ? `GST-PROF-${p.proforma_id}`
-          : `NONGST-PROF-${p.proforma_id}`
-        : "");
+      (p.proforma_id ? `PROF-${p.proforma_id}` : "");
     return (
       (p.client_name && p.client_name.toLowerCase().includes(q)) ||
       (p.client_organization &&
@@ -274,7 +266,7 @@ const PaymentHistory = ({ openProformaManager }) => {
                             <div className="flex items-center gap-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg w-fit border border-amber-500/20">
                               <Hash className="w-3.5 h-3.5" />
                               <span className="font-bold text-xs font-mono">
-                                {p.proforma_number || (parseIsGst(p.is_gst) ? `GST-PROF-${p.proforma_id}` : `NONGST-PROF-${p.proforma_id}`)}
+                                {p.proforma_number || (p.proforma_id ? `PROF-${p.proforma_id}` : "")}
                               </span>
                             </div>
                           ) : (
@@ -453,8 +445,7 @@ const PaymentHistory = ({ openProformaManager }) => {
                   const paid = Number(item.total_paid_amount) || 0;
                   const balance = Math.max(0, total - paid);
                   const pfNumber =
-                    item.proforma_number ||
-                    (isGst ? `GST-PROF-${item.id}` : `NONGST-PROF-${item.id}`);
+                    item.proforma_number || `PROF-${item.id}`;
 
                   return (
                     <div

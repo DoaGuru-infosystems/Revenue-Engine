@@ -654,13 +654,12 @@ exports.sendProposalToClient = async (req, res) => {
   }
 };
 
-// Helper: Concurrency-safe sequential proforma number generator per GST type using dedicated counter table + mutex queue
+// Helper: Concurrency-safe sequential proforma number generator using dedicated counter table + mutex queue
 let counterLock = Promise.resolve();
 
-const getNextProformaNumber = async (isGst) => {
-  const isGstBool = Boolean(isGst && (Buffer.isBuffer(isGst) ? isGst[0] === 1 : Number(isGst) === 1));
-  const counterType = isGstBool ? "GST" : "NON_GST";
-  const prefix = isGstBool ? "GST-PROF-" : "NONGST-PROF-";
+const getNextProformaNumber = async () => {
+  const counterType = "PROF";
+  const prefix = "PROF-";
 
   const nextVal = await (counterLock = counterLock.catch(() => {}).then(async () => {
     const rows = await runQuery(
@@ -1068,13 +1067,16 @@ exports.recordProposalPayment = async (req, res) => {
       });
     }
 
-    // Validate that total ad budget realized does not exceed the payment amount received
+    // Validate that total ad budget realized leaves at least 1 rupee for service amount
     const totalAdBudget = (Number(realized_google_budget) || 0) + (Number(realized_meta_budget) || 0);
-    if (totalAdBudget > Number(amount)) {
-      return res.status(400).json({
-        status: "Failure",
-        message: `Total realized ad budget (₹${totalAdBudget.toLocaleString()}) cannot exceed the payment amount received (₹${Number(amount).toLocaleString()})`
-      });
+    if (totalAdBudget > 0) {
+      const maxAllowedAdBudget = Math.max(0, Number(amount) - 1);
+      if (totalAdBudget > maxAllowedAdBudget) {
+        return res.status(400).json({
+          status: "Failure",
+          message: `Total realized ad budget (₹${totalAdBudget.toLocaleString()}) cannot exceed ₹${maxAllowedAdBudget.toLocaleString()}. Minimum ₹1 must be reserved for service amount.`
+        });
+      }
     }
 
     const proposalRows = await runQuery(

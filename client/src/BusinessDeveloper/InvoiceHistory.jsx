@@ -8,6 +8,7 @@ import {
   EyeClosed,
   EyeIcon,
   Copy,
+  Hash,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
@@ -106,6 +107,8 @@ const navigate = useNavigate();
 
     const searchTerm = keyword.trim().toLowerCase();
     return (
+      (row?.proforma_number && row.proforma_number.toLowerCase().includes(searchTerm)) ||
+      (row?.proforma_id && `prof-${row.proforma_id}`.toLowerCase().includes(searchTerm)) ||
       (row?.txn_id && row.txn_id.toLowerCase().includes(searchTerm)) ||
       (row?.client_name &&
         row.client_name.toLowerCase().includes(searchTerm)) ||
@@ -327,7 +330,7 @@ const navigate = useNavigate();
                       Client
                     </th>
                     <th className="text-left py-4 px-6 font-semibold text-gray-200 uppercase tracking-wider text-sm">
-                      TXN ID
+                      Proforma No
                     </th>
                     <th className="text-left py-4  font-semibold text-gray-200 uppercase tracking-wider text-sm">
                       Bill Number
@@ -366,10 +369,17 @@ const navigate = useNavigate();
                             {item.client_name}
                           </div>
                         </td>
-                        <td className="py-5 px-6">
-                          <div className="font-bold text-xl bg-gradient-to-r from-green-400 to-yellow-400 bg-clip-text text-transparent">
-                            {item.txn_id ? item.txn_id : "N/A"}
-                          </div>
+                        <td className="py-5 px-6 whitespace-nowrap">
+                          { item.proforma_number || item.proforma_id ? (
+                            <div className="flex items-center gap-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg w-fit border border-amber-500/20">
+                              <Hash className="w-3.5 h-3.5" />
+                              <span className="font-bold text-xs font-mono">
+                                { item.proforma_number || `PROF-${item.proforma_id}` }
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-500 italic text-xs">-</span>
+                          ) }
                         </td>
 
                         <td className="py-5 ">

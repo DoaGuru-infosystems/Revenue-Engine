@@ -9,6 +9,7 @@ import {
   FileText,
   X,
   Plus,
+  Hash,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
@@ -87,6 +88,8 @@ const InvoiceHistory = ({ setActiveTab }) => {
       if (!keyword.trim()) return true;
       const searchTerm = keyword.trim().toLowerCase();
       return (
+        (row?.proforma_number && row.proforma_number.toLowerCase().includes(searchTerm)) ||
+        (row?.proforma_id && `prof-${row.proforma_id}`.toLowerCase().includes(searchTerm)) ||
         (row?.txn_id && row.txn_id.toLowerCase().includes(searchTerm)) ||
         (row?.client_name && row.client_name.toLowerCase().includes(searchTerm)) ||
         (row?.client_organization &&
@@ -247,7 +250,7 @@ const InvoiceHistory = ({ setActiveTab }) => {
                     <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-200 uppercase tracking-wider text-xs lg:text-sm whitespace-nowrap">Date</th>
                     <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-200 uppercase tracking-wider text-xs lg:text-sm whitespace-nowrap">Client</th>
                     <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-200 uppercase tracking-wider text-xs lg:text-sm whitespace-nowrap">
-                      { "TXN ID" }
+                      Proforma No
                     </th>
                     <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-200 uppercase tracking-wider text-xs lg:text-sm whitespace-nowrap">
                       { "Bill Number" }
@@ -274,8 +277,17 @@ const InvoiceHistory = ({ setActiveTab }) => {
                           <td className="py-5 px-4 lg:px-6 font-semibold text-white group-hover:text-orange-300 max-w-[140px] truncate">
                             { item.client_name }
                           </td>
-                          <td className="py-5 px-4 lg:px-6 font-bold text-sm bg-gradient-to-r from-green-400 to-yellow-400 bg-clip-text text-transparent">
-                            { item.txn_id || "N/A" }
+                          <td className="py-5 px-4 lg:px-6 whitespace-nowrap">
+                            { item.proforma_number || item.proforma_id ? (
+                              <div className="flex items-center gap-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg w-fit border border-amber-500/20">
+                                <Hash className="w-3.5 h-3.5" />
+                                <span className="font-bold text-xs font-mono">
+                                  { item.proforma_number || `PROF-${item.proforma_id}` }
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 italic text-xs">-</span>
+                            ) }
                           </td>
                           <td className="py-5 px-4 lg:px-6">
                             <span className={ `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${item.bill_type === "GST" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-300"}` }>
@@ -331,8 +343,15 @@ const InvoiceHistory = ({ setActiveTab }) => {
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     <div className="bg-gray-900/40 rounded-xl p-2.5">
-                      <p className="text-xs text-gray-500 mb-0.5">TXN ID</p>
-                      <p className="text-sm font-bold text-green-400 truncate">{ item.txn_id || "N/A" }</p>
+                      <p className="text-xs text-gray-500 mb-0.5">Proforma No</p>
+                      { item.proforma_number || item.proforma_id ? (
+                        <div className="flex items-center gap-1 text-amber-400 font-mono font-bold text-xs">
+                          <Hash className="w-3 h-3" />
+                          <span>{ item.proforma_number || `PROF-${item.proforma_id}` }</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 italic text-xs">-</span>
+                      ) }
                     </div>
                     <div className="bg-gray-900/40 rounded-xl p-2.5">
                       <p className="text-xs text-gray-500 mb-0.5">Bill</p>

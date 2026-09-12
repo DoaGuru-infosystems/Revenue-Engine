@@ -416,7 +416,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                 </div>
                 <div>
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Proforma No</p>
-                  <p className="text-amber-400 font-bold text-xs font-mono">{item.proforma_number || (item.is_gst ? `GST-PROF-${item.id}` : `NONGST-PROF-${item.id}`)}</p>
+                  <p className="text-amber-400 font-bold text-xs font-mono">{item.proforma_number || `PROF-${item.id}`}</p>
                 </div>
                 <div>
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Type</p>
@@ -515,7 +515,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg w-fit border border-amber-500/20 whitespace-nowrap">
                           <Hash className="w-3.5 h-3.5" />
-                          <span className="font-bold text-xs font-mono">{item.proforma_number || (item.is_gst ? `GST-PROF-${item.id}` : `NONGST-PROF-${item.id}`)}</span>
+                          <span className="font-bold text-xs font-mono">{item.proforma_number || `PROF-${item.id}`}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">

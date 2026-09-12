@@ -180,9 +180,6 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         return cat.includes("meta") || cat.includes("facebook") || cat.includes("fb") || cat.includes("instagram");
       });
 
-      hasGoogleAd = googleAds.length > 0;
-      hasMetaAd = metaAds.length > 0;
-
       const totalGoogleBudget = googleAds.reduce((sum, ad) => sum + Number(ad.budget || ad.amount || ad.total_price || ad.unit_price || 0), 0);
       const totalMetaBudget = metaAds.reduce((sum, ad) => sum + Number(ad.budget || ad.amount || ad.total_price || ad.unit_price || 0), 0);
 
@@ -192,6 +189,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
       remainingGoogleAdBudget = Math.max(0, totalGoogleBudget - alreadyPaidGoogle);
       remainingMetaAdBudget = Math.max(0, totalMetaBudget - alreadyPaidMeta);
+
+      hasGoogleAd = googleAds.length > 0 && remainingGoogleAdBudget > 0;
+      hasMetaAd = metaAds.length > 0 && remainingMetaAdBudget > 0;
 
     } catch (e) {
       console.error("Error calculating ad budget for Record Payment:", e);
@@ -204,7 +204,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
       let tdsAmount = 0;
 
       if (paymentForm.tds_applicable) {
-        const adBudgetAmount = paymentForm.has_ad_budget ? (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) : 0;
+        const adBudgetAmount = paymentForm.has_ad_budget
+          ? ((hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0) + (hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0))
+          : 0;
         const serviceAmount = Math.max(0, amount - adBudgetAmount);
         const baseForTds = paymentForm.is_gst ? (serviceAmount / (1 + (selectedProforma.gst_rate / 100))) : serviceAmount;
         tdsAmount = (baseForTds * Number(paymentForm.tds_percentage)) / 100;
@@ -227,7 +229,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     paymentForm.realized_google_budget,
     paymentForm.realized_meta_budget,
     selectedProforma,
-    showPaymentModal
+    showPaymentModal,
+    hasGoogleAd,
+    hasMetaAd
   ]);
 
 
@@ -306,8 +310,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     e.preventDefault();
     if (!selectedProforma) return;
 
-    // Validate that the payment amount does not exceed pending amount
-    const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id);
+    const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status !== 'rejected');
     const totalReceived = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
     const pendingAmount = Number(selectedProforma.total_amount) - totalReceived;
     
@@ -316,14 +319,17 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
       return;
     }
 
+    const activeGoogleBudget = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
+    const activeMetaBudget = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
     const totalAdBudgetThisPayment = paymentForm.has_ad_budget
-      ? Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)
+      ? activeGoogleBudget + activeMetaBudget
       : 0;
+    const maxAllowedAdBudget = Math.max(0, Number(paymentForm.amount || 0) - 1);
 
-    if (paymentForm.has_ad_budget && totalAdBudgetThisPayment > Number(paymentForm.amount)) {
+    if (paymentForm.has_ad_budget && totalAdBudgetThisPayment > maxAllowedAdBudget) {
       Swal.fire(
         'Validation Error',
-        `Total Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString()}) cannot exceed the total received amount (₹${Number(paymentForm.amount).toLocaleString()})`,
+        `Total Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString()}) cannot exceed ₹${maxAllowedAdBudget.toLocaleString()}. Minimum ₹1 must be reserved for service amount.`,
         'warning'
       );
       return;
@@ -334,12 +340,12 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
       return;
     }
 
-    if (paymentForm.has_ad_budget && Number(paymentForm.realized_google_budget || 0) > remainingGoogleAdBudget) {
+    if (paymentForm.has_ad_budget && hasGoogleAd && activeGoogleBudget > remainingGoogleAdBudget) {
       Swal.fire('Validation Error', `Google Ad Budget cannot exceed remaining ₹${remainingGoogleAdBudget.toLocaleString()}`, 'warning');
       return;
     }
 
-    if (paymentForm.has_ad_budget && Number(paymentForm.realized_meta_budget || 0) > remainingMetaAdBudget) {
+    if (paymentForm.has_ad_budget && hasMetaAd && activeMetaBudget > remainingMetaAdBudget) {
       Swal.fire('Validation Error', `Meta Ad Budget cannot exceed remaining ₹${remainingMetaAdBudget.toLocaleString()}`, 'warning');
       return;
     }
@@ -352,9 +358,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         proposal_id: selectedProforma.proposal_id,
         client_id: proposal.client_id,
         ...paymentForm,
-        realized_ad_budget: paymentForm.has_ad_budget ? (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) : 0,
-        realized_google_budget: paymentForm.has_ad_budget ? Number(paymentForm.realized_google_budget || 0) : 0,
-        realized_meta_budget: paymentForm.has_ad_budget ? Number(paymentForm.realized_meta_budget || 0) : 0,
+        realized_ad_budget: paymentForm.has_ad_budget ? totalAdBudgetThisPayment : 0,
+        realized_google_budget: paymentForm.has_ad_budget && hasGoogleAd ? activeGoogleBudget : 0,
+        realized_meta_budget: paymentForm.has_ad_budget && hasMetaAd ? activeMetaBudget : 0,
         created_by: currentUser?.name || "System"
       };
 
@@ -733,55 +739,69 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               { (hasGoogleAd || hasMetaAd) && (
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-300">Ad Budget (This Payment)?</span>
+                    <div>
+                      <span className="text-sm font-semibold text-gray-300">Ad Budget (This Payment)?</span>
+                      { Number(paymentForm.amount) > 0 && (
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          Max allowable ad budget: <span className="text-yellow-400 font-semibold">₹{ Math.max(0, Number(paymentForm.amount) - 1).toLocaleString() }</span> (Min ₹1 reserved for service)
+                        </p>
+                      ) }
+                    </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={ paymentForm.has_ad_budget } onChange={ e => {
                         setPaymentForm({
                           ...paymentForm,
                           has_ad_budget: e.target.checked,
-                          realized_google_budget: e.target.checked ? paymentForm.realized_google_budget : "",
-                          realized_meta_budget: e.target.checked ? paymentForm.realized_meta_budget : ""
+                          realized_google_budget: e.target.checked && hasGoogleAd ? paymentForm.realized_google_budget : "",
+                          realized_meta_budget: e.target.checked && hasMetaAd ? paymentForm.realized_meta_budget : ""
                         })
                       } } className="w-4 h-4 accent-yellow-500" />
                       <span className="text-sm text-gray-400">Yes</span>
                     </label>
                   </div>
 
-                  { paymentForm.has_ad_budget && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-700 mt-2">
-                      { hasGoogleAd && (
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                            GOOGLE BUDGET (REMAINING: ₹{ remainingGoogleAdBudget })
-                          </label>
-                          <input type="number" step="0.01" value={ paymentForm.realized_google_budget } onChange={ e => {
-                            setPaymentForm({ ...paymentForm, realized_google_budget: e.target.value });
-                          } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
-                          { Number(paymentForm.realized_google_budget) > remainingGoogleAdBudget && (
-                            <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Google budget ₹{ remainingGoogleAdBudget }</p>
-                          ) }
-                        </div>
-                      ) }
-                      { hasMetaAd && (
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                            META BUDGET (REMAINING: ₹{ remainingMetaAdBudget })
-                          </label>
-                          <input type="number" step="0.01" value={ paymentForm.realized_meta_budget } onChange={ e => {
-                            setPaymentForm({ ...paymentForm, realized_meta_budget: e.target.value });
-                          } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
-                          { Number(paymentForm.realized_meta_budget) > remainingMetaAdBudget && (
-                            <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Meta budget ₹{ remainingMetaAdBudget }</p>
-                          ) }
-                        </div>
-                      ) }
-                      { paymentForm.has_ad_budget && (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) > Number(paymentForm.amount || 0) && (
-                        <div className="col-span-2 text-red-400 text-xs font-semibold bg-red-900/30 p-2 rounded-lg border border-red-800">
-                          Total Ad Budget (₹{ (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)).toLocaleString() }) cannot exceed Total Received Amount (₹{ Number(paymentForm.amount || 0).toLocaleString() })
-                        </div>
-                      ) }
-                    </div>
-                  ) }
+                  { paymentForm.has_ad_budget && (() => {
+                    const activeGoogle = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
+                    const activeMeta = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
+                    const currentTotalAd = activeGoogle + activeMeta;
+                    const maxAllowed = Math.max(0, Number(paymentForm.amount || 0) - 1);
+
+                    return (
+                      <div className={ `grid grid-cols-1 ${hasGoogleAd && hasMetaAd ? 'md:grid-cols-2' : ''} gap-4 pt-2 border-t border-gray-700 mt-2` }>
+                        { hasGoogleAd && (
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                              GOOGLE BUDGET (REMAINING: ₹{ remainingGoogleAdBudget })
+                            </label>
+                            <input type="number" step="0.01" value={ paymentForm.realized_google_budget } onChange={ e => {
+                              setPaymentForm({ ...paymentForm, realized_google_budget: e.target.value });
+                            } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                            { Number(paymentForm.realized_google_budget) > remainingGoogleAdBudget && (
+                              <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Google budget ₹{ remainingGoogleAdBudget }</p>
+                            ) }
+                          </div>
+                        ) }
+                        { hasMetaAd && (
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                              META BUDGET (REMAINING: ₹{ remainingMetaAdBudget })
+                            </label>
+                            <input type="number" step="0.01" value={ paymentForm.realized_meta_budget } onChange={ e => {
+                              setPaymentForm({ ...paymentForm, realized_meta_budget: e.target.value });
+                            } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                            { Number(paymentForm.realized_meta_budget) > remainingMetaAdBudget && (
+                              <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Meta budget ₹{ remainingMetaAdBudget }</p>
+                            ) }
+                          </div>
+                        ) }
+                        { currentTotalAd > maxAllowed && (
+                          <div className="col-span-full text-red-400 text-xs font-semibold bg-red-900/30 p-2.5 rounded-lg border border-red-800">
+                            Total Ad Budget (₹{ currentTotalAd.toLocaleString() }) cannot exceed ₹{ maxAllowed.toLocaleString() }. Minimum ₹1 must be reserved for service amount.
+                          </div>
+                        ) }
+                      </div>
+                    );
+                  })() }
                 </div>
               ) }
 
@@ -792,11 +812,23 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
               <div className="pt-4 border-t border-gray-800 mt-4">
                 { (() => {
-                  const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id);
+                  const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status !== 'rejected');
                   const totalReceivedTillDate = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
                   const currentOutstanding = Number(selectedProforma.total_amount) - totalReceivedTillDate;
                   const finalSettleAmount = Number(paymentForm.amount) || 0;
                   const pendingAfterPayment = currentOutstanding - finalSettleAmount;
+
+                  const activeGoogle = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
+                  const activeMeta = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
+                  const currentTotalAd = activeGoogle + activeMeta;
+                  const maxAllowed = Math.max(0, Number(paymentForm.amount || 0) - 1);
+
+                  const isAdBudgetInvalid = paymentForm.has_ad_budget && (
+                    currentTotalAd <= 0 ||
+                    currentTotalAd > maxAllowed ||
+                    (hasGoogleAd && activeGoogle > remainingGoogleAdBudget) ||
+                    (hasMetaAd && activeMeta > remainingMetaAdBudget)
+                  );
 
                   return (
                     <div className="flex justify-between items-end">
@@ -817,7 +849,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
                       <div className="flex gap-3">
                         <button type="button" onClick={ () => setShowPaymentModal(false) } className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 font-semibold transition">Cancel</button>
-                        <button type="submit" disabled={ savingPayment || (paymentForm.has_ad_budget && ((Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) <= 0 || (Number(paymentForm.realized_google_budget || 0) + Number(paymentForm.realized_meta_budget || 0)) > Number(paymentForm.amount || 0) || Number(paymentForm.realized_google_budget || 0) > remainingGoogleAdBudget || Number(paymentForm.realized_meta_budget || 0) > remainingMetaAdBudget)) } className="px-6 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center gap-2 disabled:opacity-50">
+                        <button type="submit" disabled={ savingPayment || isAdBudgetInvalid } className="px-6 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed">
                           { savingPayment ? 'Saving...' : 'Save Payment' }
                         </button>
                       </div>
