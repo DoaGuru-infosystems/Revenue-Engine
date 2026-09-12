@@ -397,6 +397,20 @@ exports.getProposalById = async (req, res) => {
   try {
     const { id } = req.params;
     const q = `SELECT p.*, 
+                      CASE
+                        WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE proposal_id = p.id) > 0 
+                         AND (SELECT COUNT(*) FROM re_proposal_proforma pf 
+                              WHERE pf.proposal_id = p.id 
+                                AND pf.status NOT IN ('paid', 'invoiced')
+                                AND pf.payment_status != 'fully-paid'
+                                AND COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = pf.id AND status = 'approved'), 0) < (pf.total_amount - 0.05)
+                             ) = 0 
+                        THEN 'invoiced'
+                        WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id IN (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id) AND status = 'approved'), 0) > 0
+                          OR (SELECT COUNT(*) FROM re_proposal_proforma WHERE proposal_id = p.id AND (status IN ('paid', 'partially_paid', 'payment_received', 'invoiced') OR payment_status IN ('partial', 'fully-paid'))) > 0
+                        THEN 'partially_paid'
+                        ELSE p.status
+                      END AS status,
                       (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
                       (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
                       (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
@@ -422,11 +436,25 @@ exports.getProposalById = async (req, res) => {
 exports.getProposalsByClient = async (req, res) => {
   try {
     const { clientId } = req.params;
-    const q = `SELECT *, 
-                      (SELECT id FROM re_proposal_proforma WHERE proposal_id = re_proposals.id ORDER BY id DESC LIMIT 1) AS proforma_id,
-                      (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = re_proposals.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst,
-                      (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = re_proposals.id AND status = 'approved') AS realized_ad_budget
-               FROM re_proposals WHERE client_id = ? ORDER BY created_at DESC`;
+    const q = `SELECT p.*, 
+                      CASE
+                        WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE proposal_id = p.id) > 0 
+                         AND (SELECT COUNT(*) FROM re_proposal_proforma pf 
+                              WHERE pf.proposal_id = p.id 
+                                AND pf.status NOT IN ('paid', 'invoiced')
+                                AND pf.payment_status != 'fully-paid'
+                                AND COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = pf.id AND status = 'approved'), 0) < (pf.total_amount - 0.05)
+                             ) = 0 
+                        THEN 'invoiced'
+                        WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id IN (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id) AND status = 'approved'), 0) > 0
+                          OR (SELECT COUNT(*) FROM re_proposal_proforma WHERE proposal_id = p.id AND (status IN ('paid', 'partially_paid', 'payment_received', 'invoiced') OR payment_status IN ('partial', 'fully-paid'))) > 0
+                        THEN 'partially_paid'
+                        ELSE p.status
+                      END AS status,
+                      (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id,
+                      (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst,
+                      (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget
+               FROM re_proposals p WHERE p.client_id = ? ORDER BY p.created_at DESC`;
     const results = await runQuery(q, [clientId]);
 
     res.status(200).json({ status: "Success", data: results });
@@ -440,6 +468,20 @@ exports.getAllProposals = async (req, res) => {
   try {
     const { status } = req.query;
     let q = `SELECT p.*, 
+                    CASE
+                      WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE proposal_id = p.id) > 0 
+                       AND (SELECT COUNT(*) FROM re_proposal_proforma pf 
+                            WHERE pf.proposal_id = p.id 
+                              AND pf.status NOT IN ('paid', 'invoiced')
+                              AND pf.payment_status != 'fully-paid'
+                              AND COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = pf.id AND status = 'approved'), 0) < (pf.total_amount - 0.05)
+                           ) = 0 
+                      THEN 'invoiced'
+                      WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id IN (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id) AND status = 'approved'), 0) > 0
+                        OR (SELECT COUNT(*) FROM re_proposal_proforma WHERE proposal_id = p.id AND (status IN ('paid', 'partially_paid', 'payment_received', 'invoiced') OR payment_status IN ('partial', 'fully-paid'))) > 0
+                      THEN 'partially_paid'
+                      ELSE p.status
+                    END AS status,
                     (SELECT id FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_id, 
                     (SELECT is_gst FROM re_proposal_proforma WHERE proposal_id = p.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst, 
                     (SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proposal_id = p.id AND status = 'approved') AS realized_ad_budget,
@@ -772,6 +814,14 @@ exports.getProformasByClient = async (req, res) => {
     const { clientId } = req.params;
     const q = `
       SELECT p.*,
+             COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
+             CASE
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (p.total_amount - 0.05) AND p.total_amount > 0
+               THEN 'fully-paid'
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) > 0
+               THEN 'partial'
+               ELSE 'pending'
+             END AS payment_status,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       WHERE p.client_id = ?
@@ -789,6 +839,14 @@ exports.getAllProformas = async (req, res) => {
   try {
     const q = `
       SELECT p.*, c.client_name, c.client_organization,
+             COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
+             CASE
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (p.total_amount - 0.05) AND p.total_amount > 0
+               THEN 'fully-paid'
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) > 0
+               THEN 'partial'
+               ELSE 'pending'
+             END AS payment_status,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
@@ -824,6 +882,14 @@ exports.getProformasByProposal = async (req, res) => {
     const { proposalId } = req.params;
     const q = `
       SELECT p.*,
+             COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
+             CASE
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (p.total_amount - 0.05) AND p.total_amount > 0
+               THEN 'fully-paid'
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) > 0
+               THEN 'partial'
+               ELSE 'pending'
+             END AS payment_status,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       WHERE p.proposal_id = ?
@@ -854,10 +920,59 @@ exports.deleteProforma = async (req, res) => {
     if (proforma.length > 0) {
       const proposalId = proforma[0].proposal_id;
       await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
-      await runQuery(
-        `UPDATE re_proposals SET status = 'client_approved' WHERE id = ?`,
+      
+      const remainingProformas = await runQuery(
+        `SELECT id, total_amount, status, payment_status FROM re_proposal_proforma WHERE proposal_id = ?`,
         [proposalId],
       );
+
+      if (remainingProformas.length === 0) {
+        await runQuery(
+          `UPDATE re_proposals SET status = 'client_approved' WHERE id = ?`,
+          [proposalId],
+        );
+      } else {
+        let allPaid = true;
+        let anyPaymentReceived = false;
+
+        for (const pf of remainingProformas) {
+          const pfPayments = await runQuery(
+            `SELECT SUM(amount) as paid FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+            [pf.id],
+          );
+          const paid = Number(pfPayments[0]?.paid || 0);
+          const pfTot = Number(pf.total_amount || 0);
+          const isPfPaid =
+            pf.status === "paid" ||
+            pf.payment_status === "fully-paid" ||
+            (paid >= pfTot - 0.05 && pfTot > 0);
+
+          if (
+            paid > 0 ||
+            ["paid", "partially_paid", "payment_received", "invoiced"].includes(
+              pf.status,
+            ) ||
+            pf.payment_status === "partial" ||
+            pf.payment_status === "fully-paid"
+          ) {
+            anyPaymentReceived = true;
+          }
+          if (!isPfPaid) {
+            allPaid = false;
+          }
+        }
+
+        let nextStatus = "proforma_generated";
+        if (allPaid) {
+          nextStatus = "invoiced";
+        } else if (anyPaymentReceived) {
+          nextStatus = "partially_paid";
+        }
+        await runQuery(
+          `UPDATE re_proposals SET status = ? WHERE id = ?`,
+          [nextStatus, proposalId],
+        );
+      }
     } else {
       await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
     }
@@ -1492,15 +1607,64 @@ exports.approvePayment = async (req, res) => {
       }
 
       // 8. UPDATE statuses
+      const paymentStatusForProforma = isFullyPaid ? "fully-paid" : "partial";
       await runQuery(
-        `UPDATE re_proposal_proforma SET status = ? WHERE id = ?`,
-        [newStatus, payment.proforma_id],
+        `UPDATE re_proposal_proforma SET status = ?, payment_status = ? WHERE id = ?`,
+        [newStatus, paymentStatusForProforma, payment.proforma_id],
       );
-      if (isFullyPaid) {
-        await runQuery(
-          `UPDATE re_proposals SET status = 'invoiced' WHERE id = ?`,
-          [payment.proposal_id],
+
+      const targetProposalId = payment.proposal_id || proforma.proposal_id;
+      if (targetProposalId) {
+        const proformaStatuses = await runQuery(
+          `SELECT id, total_amount, status, payment_status FROM re_proposal_proforma WHERE proposal_id = ?`,
+          [targetProposalId],
         );
+
+        let targetProposalStatus = proposal.status || "client_approved";
+        if (proformaStatuses.length > 0) {
+          let allFullyPaid = true;
+          let anyPaymentReceived = false;
+
+          for (const pf of proformaStatuses) {
+            const pfPayments = await runQuery(
+              `SELECT SUM(amount) as paid FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+              [pf.id],
+            );
+            const paid = Number(pfPayments[0]?.paid || 0);
+            const pfTot = Number(pf.total_amount || 0);
+            const isPfPaid =
+              pf.status === "paid" ||
+              pf.payment_status === "fully-paid" ||
+              (paid >= pfTot - 0.05 && pfTot > 0);
+
+            if (
+              paid > 0 ||
+              ["paid", "partially_paid", "payment_received", "invoiced"].includes(
+                pf.status,
+              ) ||
+              pf.payment_status === "partial" ||
+              pf.payment_status === "fully-paid"
+            ) {
+              anyPaymentReceived = true;
+            }
+            if (!isPfPaid) {
+              allFullyPaid = false;
+            }
+          }
+
+          if (allFullyPaid) {
+            targetProposalStatus = "invoiced";
+          } else if (anyPaymentReceived) {
+            targetProposalStatus = "partially_paid";
+          }
+        }
+
+        if (targetProposalStatus !== proposal.status) {
+          await runQuery(
+            `UPDATE re_proposals SET status = ? WHERE id = ?`,
+            [targetProposalStatus, targetProposalId],
+          );
+        }
       }
 
       // Timeline Remark

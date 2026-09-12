@@ -340,6 +340,23 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                     {getStatusLabel(item.status)}
                   </span>
                 </div>
+                <div>
+                  <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Payment Status</p>
+                  {(() => {
+                    const payStatus = item.payment_status || 'pending';
+                    const payBadgeMap = {
+                      'fully-paid': { label: 'Fully Paid', cls: 'bg-emerald-500/20 text-emerald-300' },
+                      'partial': { label: 'Partial', cls: 'bg-amber-500/20 text-amber-300' },
+                      'pending': { label: 'Pending', cls: 'bg-slate-700/50 text-slate-300' }
+                    };
+                    const conf = payBadgeMap[payStatus] || payBadgeMap['pending'];
+                    return (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${conf.cls}`}>
+                        {conf.label}
+                      </span>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
           ))
@@ -365,6 +382,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Proforma No</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs whitespace-nowrap">Total Amount</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Status</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Payment Status</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Action</th>
                 </tr>
               </thead>
@@ -411,13 +429,29 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
                         </span>
                       </td>
                       <td className="py-4 px-6">
+                        {(() => {
+                          const payStatus = item.payment_status || 'pending';
+                          const payBadgeMap = {
+                            'fully-paid': { label: 'Fully Paid', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+                            'partial': { label: 'Partial', cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+                            'pending': { label: 'Pending', cls: 'bg-slate-700/50 text-slate-300 border-slate-600/40' }
+                          };
+                          const conf = payBadgeMap[payStatus] || payBadgeMap['pending'];
+                          return (
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border whitespace-nowrap ${conf.cls}`}>
+                              {conf.label}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="py-4 px-6">
                         <ActionDropdown item={item} />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="py-16 text-center text-gray-500">
+                    <td colSpan="9" className="py-16 text-center text-gray-500">
                       <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
                       <p>No proforma history found.</p>
                     </td>

@@ -101,23 +101,6 @@ const ProposalTable = ({ proposals, keyword, setKeyword, fetchProposals, handleC
                     >
                       {statusInfo.label}
                     </span>
-                    {proposal.proforma_id && (
-                      <div className="flex justify-center gap-2 mt-2">
-                        <button
-                          onClick={() => {
-                            if (openProformaManager) {
-                              openProformaManager(proposal);
-                            } else {
-                              const basePath = window.location.pathname.includes('/BD') ? '/BD' : '/admin';
-                              navigate(`${basePath}/quotation/${proposal.client_id}/${proposal.proforma_id}?doc=proforma&source=proposal&gst=${proposal.proforma_is_gst ? 1 : 0}`);
-                            }
-                          }}
-                          className="px-2.5 py-1 text-[11px] font-medium bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-600/30 transition-all w-full"
-                        >
-                          View Proformas
-                        </button>
-                      </div>
-                    )}
                   </div>
                   <div className="lg:text-right flex justify-start lg:justify-end">
                     <ProposalActions proposal={proposal} fetchProposals={fetchProposals} handleCreateProformaFromProposal={handleCreateProformaFromProposal} openProformaManager={openProformaManager} />

@@ -450,9 +450,33 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
             </div>
           ) : (
             proformas.map(proforma => {
-              const proformaPayments = payments.filter(p => p.proforma_id === proforma.id);
-              const totalReceived = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-              const isPaid = totalReceived >= Number(proforma.total_amount);
+              const proformaPayments = payments.filter(p => p.proforma_id === proforma.id && p.status !== 'rejected');
+              const approvedPayments = proformaPayments.filter(p => p.status === 'approved');
+              const totalReceived = approvedPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+              const totalAmount = Number(proforma.total_amount || 0);
+              const isPaid = totalReceived >= totalAmount - 0.05 && totalAmount > 0;
+              const isPartial = totalReceived > 0 && !isPaid;
+
+              // 3 payment statuses: pending, partial, fully-paid
+              const paymentStatus = proforma.payment_status || (isPaid ? 'fully-paid' : (isPartial ? 'partial' : 'pending'));
+              const statusBadgeMap = {
+                'fully-paid': {
+                  label: 'Fully Paid',
+                  badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                  dot: 'bg-emerald-400',
+                },
+                'partial': {
+                  label: 'Partial',
+                  badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                  dot: 'bg-amber-400',
+                },
+                'pending': {
+                  label: 'Pending',
+                  badge: 'bg-slate-700/60 text-slate-300 border-slate-600/50',
+                  dot: 'bg-slate-400',
+                }
+              };
+              const currentStatusConfig = statusBadgeMap[paymentStatus] || statusBadgeMap['pending'];
 
               return (
                 <div key={ proforma.id } className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden">
@@ -463,13 +487,23 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       </div>
                       <div>
                         <h3 className="font-bold text-lg text-white">Proforma #{ proforma.id }</h3>
-                        <p className="text-sm text-gray-400">Created: { moment(proforma.created_at).format('DD MMM YYYY') }</p>
+                        <p className="text-sm text-gray-400 mt-0.5">Created: { moment(proforma.created_at).format('DD MMM YYYY') }</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="text-right">
                         <p className="text-sm text-gray-400 uppercase tracking-wider mb-1">Invoice Total</p>
-                        <p className="text-2xl font-bold text-white">₹{ Number(proforma.total_amount).toLocaleString() }</p>
+                        <p className="text-2xl font-bold text-white">₹{ totalAmount.toLocaleString() }</p>
+                        { totalReceived > 0 && (
+                          <p className="text-xs text-emerald-400 font-medium mt-0.5">
+                            Received: ₹{ totalReceived.toLocaleString() }
+                            { !isPaid && (
+                              <span className="text-amber-400 ml-1">
+                                (Bal: ₹{ Math.max(0, totalAmount - totalReceived).toLocaleString() })
+                              </span>
+                            ) }
+                          </p>
+                        ) }
                       </div>
                       <div className="flex flex-col gap-2">
                         <button
@@ -500,16 +534,16 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                             <CreditCard className="w-4 h-4" /> Record Payment
                           </button>
                         ) }
-                        { isPaid && (
-                          <span className="px-3 py-1 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-500/30 rounded-full text-xs font-bold uppercase flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Fully Paid
-                          </span>
-                        ) }
                       </div>
                     </div>
 
                     { proformaPayments.length === 0 ? (
-                      <p className="text-sm text-gray-500 italic">No payments recorded yet.</p>
+                      <div className="p-4 rounded-xl bg-gray-900/40 border border-gray-700/40 flex items-center justify-between">
+                        <p className="text-sm text-gray-400 italic">No payments recorded yet.</p>
+                        <span className="px-2.5 py-1 bg-slate-700/60 text-slate-300 border border-slate-600/50 rounded-lg text-xs font-semibold">
+                          Payment: Pending
+                        </span>
+                      </div>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
@@ -549,8 +583,15 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                                       </button>
                                     </div>
                                   ) : p.status === 'approved' ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                      <span className="px-2 py-1 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center"><CheckCircle2 className="w-3 h-3" /> Approved</span>
+                                    <div className="flex flex-col items-center gap-1.5">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center">
+                                          <CheckCircle2 className="w-3 h-3" /> Approved
+                                        </span>
+                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${currentStatusConfig.badge}`}>
+                                          { currentStatusConfig.label }
+                                        </span>
+                                      </div>
                                       <button 
                                         onClick={() => {
                                           const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;

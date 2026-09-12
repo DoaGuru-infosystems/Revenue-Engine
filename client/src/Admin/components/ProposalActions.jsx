@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Eye, Send, FilePlus, CreditCard, CheckCircle, Trash } from "lucide-react";
+import { ChevronDown, Eye, Send, FilePlus, CreditCard, CheckCircle, Trash, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -196,6 +196,12 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
             fetchProposals();
           }
         }
+      } else if (actionType === "view_proformas") {
+        if (openProformaManager) {
+          openProformaManager(proposal);
+        } else {
+          navigate(`${basePath}/quotation/${proposal.client_id}/${proposal.proforma_id}?doc=proforma&source=proposal&gst=${proposal.proforma_is_gst ? 1 : 0}`);
+        }
       } else if (actionType === "record_payment") {
         if (openProformaManager) {
           openProformaManager(proposal);
@@ -312,6 +318,14 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
                 <li>
                   <button onClick={() => handleAction("generate_proforma")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
                     <FilePlus size={14} /> Generate Proforma
+                  </button>
+                </li>
+              )}
+
+              {proposal.proforma_id && (
+                <li>
+                  <button onClick={() => handleAction("view_proformas")} className="w-full text-left px-4 py-2 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-all flex items-center gap-2">
+                    <FileText size={14} /> View Proformas
                   </button>
                 </li>
               )}

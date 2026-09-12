@@ -5,6 +5,11 @@ export const PROPOSAL_STATUS_MAP = {
     color: "#3b82f6",
     bg: "rgba(59,130,246,0.12)",
   },
+  client_approved: {
+    label: "Client Approved",
+    color: "#10b981",
+    bg: "rgba(16,185,129,0.12)",
+  },
   sent: { label: "Sent", color: "#6366f1", bg: "rgba(99,102,241,0.12)" },
   proforma_generated: {
     label: "Proforma Generated",
@@ -25,6 +30,11 @@ export const PROPOSAL_STATUS_MAP = {
     label: "Payment Received",
     color: "#10b981",
     bg: "rgba(16,185,129,0.12)",
+  },
+  partially_paid: {
+    label: "Partially Paid",
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,0.12)",
   },
   invoiced: { label: "Invoiced", color: "#22c55e", bg: "rgba(34,197,94,0.12)" },
   changes: {

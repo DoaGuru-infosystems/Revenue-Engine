@@ -26,6 +26,7 @@ import API_BASE_URL from "../config/apiBaseUrl";
 import LegacyQuotationTableBD from "./components/LegacyQuotationTableBD";
 import ProposalTable from "../Admin/components/ProposalTable"; // Reusing the same ProposalTable component
 import PaymentModal from "../Admin/components/PaymentModal";
+import ProformaManagerModal from "../Admin/components/ProformaManagerModal";
 
 const HistoryBD = () => {
    const baseURL = API_BASE_URL;
@@ -50,6 +51,13 @@ const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('proposals');
   const [proposals, setProposals] = useState([]);
   const [proposalKeyword, setProposalKeyword] = useState('');
+  const [showProformaManager, setShowProformaManager] = useState(false);
+  const [selectedProposalForManager, setSelectedProposalForManager] = useState(null);
+
+  const openProformaManager = (proposal) => {
+    setSelectedProposalForManager(proposal);
+    setShowProformaManager(true);
+  };
   const [showModal, setShowModal] = useState(false);
   const [showModalInvoice, setShowModalInvoice] = useState(false);
   const [showModalInvoiceClient, setShowModalInvoiceClient] = useState(false);
@@ -772,6 +780,7 @@ const navigate = useNavigate();
               keyword={proposalKeyword} 
               setKeyword={setProposalKeyword} 
               fetchProposals={fetchProposals}
+              openProformaManager={openProformaManager}
             />
           ) : (
             <LegacyQuotationTableBD
@@ -1074,6 +1083,14 @@ const navigate = useNavigate();
           </div>
         </div> */}
         <PaymentModal fetchProposals={fetchProposals} />
+        <ProformaManagerModal
+          isOpen={showProformaManager}
+          onClose={() => {
+            setShowProformaManager(false);
+            fetchProposals();
+          }}
+          proposal={selectedProposalForManager}
+        />
       </div>
     </div>
   );
