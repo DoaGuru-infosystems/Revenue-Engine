@@ -243,7 +243,7 @@ FROM re_revenue_engine_client_details cd
         if (!client) {
           return res.status(404).json({
             success: false,
-            message: "Client details nahi mili",
+            message: "Client details not found",
           });
         }
 
@@ -361,7 +361,7 @@ exports.sendQuotationToClient = async (req, res) => {
       if (!results.length) {
         return res.status(404).json({
           success: false,
-          message: "Client nahi mila",
+          message: "Client not found",
         });
       }
 
@@ -611,7 +611,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
     if (!invoiceExists.length) {
       return res.status(404).json({
         success: false,
-        message: "Invoice record nahi mila, pehle invoice generate karo",
+        message: "Invoice record not found, please generate an invoice first",
       });
     }
 
@@ -725,7 +725,7 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
 //     if (!rows.length) {
 //       return res
 //         .status(404)
-//         .json({ success: false, message: "Client nahi mila" });
+//         .json({ success: false, message: "Client not found" });
 //     }
 
 //     const c = rows[0];
@@ -975,7 +975,7 @@ exports.sendStrategyToClient = async (req, res) => {
       if (err || !results.length) {
         return res
           .status(500)
-          .json({ success: false, message: "Client nahi mila" });
+          .json({ success: false, message: "Client not found" });
       }
 
       const c = results[0];

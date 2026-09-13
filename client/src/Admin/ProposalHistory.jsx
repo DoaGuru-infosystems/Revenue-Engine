@@ -37,7 +37,7 @@ const ProposalHistory = () => {
       Swal.fire({
         icon: "warning",
         title: "Cannot Delete",
-        text: "Is proposal ka proforma ban chuka hai. Pehle aapko proforma delete karna hoga, uske baad hi proposal delete ho payega."
+        text: "A proforma has already been created for this proposal. You must delete the proforma first before you can delete this proposal."
       });
       return;
     }

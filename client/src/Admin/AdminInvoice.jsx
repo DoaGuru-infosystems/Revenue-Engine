@@ -2019,7 +2019,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       const invoiceElement = document.getElementById("invoice-content");
 
       if (!invoiceElement) {
-        alert("Invoice element nahi mila!");
+        alert("Invoice element not found!");
         return;
       }
 
@@ -2142,7 +2142,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("PDF generate karne mein dikkat aayi. Kripya console logs check karein.");
+      alert("Error generating PDF. Please check console logs.");
     }
   };
   const handleSelect = (note) => {

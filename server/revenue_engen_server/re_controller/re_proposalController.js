@@ -2667,10 +2667,10 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
             padding: 0;
           }
           .page-content { padding: 0 40px; }
-          .print-header-space { height: 130px; }
-          .print-footer-space { height: 100px; }
-          .print-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; height: 130px; z-index: 1000; text-align: center; background: white; display: flex; pointer-events: none; }
-          .print-footer { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; height: 100px; z-index: 1000; text-align: center; background: white; display: flex; pointer-events: none; }
+          .print-header-space { height: 115px; }
+          .print-footer-space { height: 75px; }
+          .print-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; height: 110px; z-index: 1000; text-align: center; background: white; display: flex; pointer-events: none; }
+          .print-footer { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; height: 75px; z-index: 1000; text-align: center; background: white; display: flex; pointer-events: none; }
           /* Ensure table rows do not break */
           tr { page-break-inside: avoid; }
         }
@@ -2678,10 +2678,10 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
           body { background: #525659; margin: 0; padding: 20px; display: flex; justify-content: center; }
           .document-wrapper { background: white; width: 210mm; min-height: 297mm; box-shadow: 0 0 10px rgba(0,0,0,0.5); position: relative; }
           .page-content { padding: 0 40px; }
-          .print-header-space { height: 130px; }
-          .print-footer-space { height: 100px; }
-          .print-header { position: absolute; top: 0; left: 0; right: 0; width: 100%; height: 130px; z-index: 1000; text-align: center; display: flex; pointer-events: none; }
-          .print-footer { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; height: 100px; z-index: 1000; text-align: center; display: flex; pointer-events: none; }
+          .print-header-space { height: 115px; }
+          .print-footer-space { height: 75px; }
+          .print-header { position: absolute; top: 0; left: 0; right: 0; width: 100%; height: 110px; z-index: 1000; text-align: center; display: flex; pointer-events: none; }
+          .print-footer { position: absolute; bottom: 0; left: 0; right: 0; width: 100%; height: 75px; z-index: 1000; text-align: center; display: flex; pointer-events: none; }
         }
       </style>
     </head>`,

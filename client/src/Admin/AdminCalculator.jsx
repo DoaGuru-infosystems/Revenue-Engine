@@ -724,7 +724,7 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
           Swal.fire({
             icon: "error",
             title: "Already Exists!",
-            text: `"${selectedService} → ${selectedCategory} (${selectedEditingType.editing_type_name})" pehle se add hai. Please existing entry ko edit/update karein.`,
+            text: `"${selectedService} → ${selectedCategory} (${selectedEditingType.editing_type_name})" already exists. Please edit/update the existing entry.`,
             showConfirmButton: true,
             confirmButtonText: "OK",
           });
@@ -1622,9 +1622,6 @@ const AdminCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServ
 
           {/* Header */ }
           <div className="flex items-center gap-3">
-            <button onClick={ () => navigate(-1) } className="w-9 h-9 rounded-lg border border-gray-600 bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition flex-shrink-0">
-              <ArrowLeft className="w-4 h-4 text-gray-300" />
-            </button>
             <div>
               <h1 className="text-xl font-bold text-white">Service Calculator</h1>
               <p className="text-xs text-gray-500">Build &amp; save service quotations</p>

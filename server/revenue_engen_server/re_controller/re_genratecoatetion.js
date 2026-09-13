@@ -35,7 +35,7 @@ const ILOVEPDF_SECRET_KEY =
 try {
   if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
 } catch (error) {
-  console.error("[INIT] Temp folder create nahi ho saka:", error.message);
+  console.error("[INIT] Could not create temp folder:", error.message);
 }
 
 // --- Multer Configuration ---
@@ -80,7 +80,7 @@ function deleteFile(filePath) {
  */
 function validatePdfFile(filePath) {
   if (!fs.existsSync(filePath)) {
-    throw new Error("PDF file convert hone ke baad bhi exist nahi karti.");
+    throw new Error("PDF file does not exist even after conversion.");
   }
 
   const stats = fs.statSync(filePath);
@@ -98,7 +98,7 @@ function validatePdfFile(filePath) {
 
   if (buffer.toString("ascii") !== "%PDF-") {
     throw new Error(
-      "File PDF format mein nahi hai — conversion se galat output aaya.",
+      "File is not in PDF format — incorrect output from conversion.",
     );
   }
 
@@ -281,7 +281,7 @@ exports.uploadAndConvert = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({
       status: "Failure",
-      message: "Koi Word file nahi bheji gayi.",
+      message: "No Word file was uploaded.",
     });
   }
 
@@ -334,7 +334,7 @@ exports.uploadAndConvert = async (req, res) => {
         status: "Failure",
         message:
           error.message ||
-          "PDF generate nahi ho saki. Kripya baad mein try karein.",
+          "Failed to generate PDF. Please try again later.",
       });
     }
   } finally {

@@ -138,6 +138,37 @@ CREATE TABLE `re_assign_quotation` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `re_balance_proforma`
+--
+
+CREATE TABLE `re_balance_proforma` (
+  `id` int(11) NOT NULL,
+  `balance_number` int(11) NOT NULL,
+  `balance_proforma_number` varchar(50) NOT NULL,
+  `source_proforma_id` int(11) NOT NULL,
+  `client_id` int(11) NOT NULL,
+  `is_gst` tinyint(1) DEFAULT 0,
+  `pricing_snapshot` longtext DEFAULT NULL,
+  `ads_snapshot` longtext DEFAULT NULL,
+  `discount_snapshot` text DEFAULT NULL,
+  `notes_snapshot` longtext DEFAULT NULL,
+  `terms_snapshot` longtext DEFAULT NULL,
+  `remarks_snapshot` text DEFAULT NULL,
+  `client_instructions_snapshot` text DEFAULT NULL,
+  `duration_start_date` date DEFAULT NULL,
+  `duration_end_date` date DEFAULT NULL,
+  `show_google_ad` tinyint(1) DEFAULT 1,
+  `show_meta_ad` tinyint(1) DEFAULT 1,
+  `total_amount` decimal(12,2) DEFAULT 0.00,
+  `received_amount` decimal(12,2) DEFAULT 0.00,
+  `current_balance` decimal(12,2) DEFAULT 0.00,
+  `created_by` varchar(200) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `re_calculator_transactions`
 --
 
@@ -634,6 +665,7 @@ CREATE TABLE `re_proposal_proforma` (
   `proposal_id` int(11) DEFAULT NULL,
   `client_id` int(11) NOT NULL,
   `txn_id` varchar(255) DEFAULT NULL,
+  `proforma_number` varchar(50) DEFAULT NULL,
   `is_gst` tinyint(1) DEFAULT 0,
   `gst_rate` decimal(5,2) DEFAULT 18.00,
   `base_amount` decimal(12,2) DEFAULT 0.00,
@@ -664,8 +696,27 @@ CREATE TABLE `re_proposal_proforma` (
 -- Dumping data for table `re_proposal_proforma`
 --
 
-INSERT INTO `re_proposal_proforma` (`id`, `proposal_id`, `client_id`, `txn_id`, `is_gst`, `gst_rate`, `base_amount`, `gst_amount`, `total_amount`, `status`, `pdf_path`, `created_by`, `created_at`, `updated_at`, `pricing_snapshot`, `ads_snapshot`, `notes_snapshot`, `terms_snapshot`, `remarks_snapshot`, `client_instructions_snapshot`, `source_type`, `source_id`, `public_token_hash`, `public_token_expires`, `duration_start_date`, `duration_end_date`, `discount_snapshot`) VALUES
-(4, 2, 266, '1789132741976', 0, 18.00, 74500.00, 0.00, 74500.00, 'partially_paid', NULL, 'System', '2026-09-11 13:19:01', '2026-09-11 13:25:53', '[{\"id\":1789130839536,\"service_name\":\"website developmet\",\"category_name\":\"developmet\",\"editing_type_name\":null,\"editing_type_amount\":\"50000\",\"quantity\":1,\"unit_price\":\"50000\",\"total_price\":50000,\"total_amount\":50000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"website developmet - developmet\"},{\"id\":1789130844390,\"service_name\":\"gmb\",\"category_name\":\"smo\",\"editing_type_name\":null,\"editing_type_amount\":\"5000\",\"quantity\":5,\"unit_price\":\"5000\",\"total_price\":25000,\"total_amount\":25000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"gmb - smo\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":4,\"editing_type_name\":\"Tablet editing\",\"editing_type_amount\":\"500\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":500,\"employee\":\"Ad Dubay\",\"id\":\"1789132784008s2e\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":3,\"editing_type_name\":\"mobile\",\"editing_type_amount\":\"1000\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":1000,\"employee\":\"Ad Dubay\",\"id\":\"1789132795512ffl\"}]', '[{\"id\":\"178913277197992v\",\"service_name\":\"Ads Campaign\",\"category_name\":\"Google Add\",\"category\":\"Google Add\",\"quantity\":1,\"unit_price\":6000,\"total_price\":6000,\"total_amount\":6000,\"total\":6000,\"include_in_total\":true,\"source\":\"custom_ads\",\"budget\":5000,\"amount\":5000,\"percent\":20,\"charge\":1000},{\"id\":\"1789132771979sv2\",\"service_name\":\"Ads Campaign\",\"category_name\":\"Meta add\",\"category\":\"Meta add\",\"quantity\":1,\"unit_price\":5600,\"total_price\":5600,\"total_amount\":5600,\"total\":5600,\"include_in_total\":true,\"source\":\"custom_ads\",\"budget\":5000,\"amount\":5000,\"percent\":12,\"charge\":600}]', '[]', '[]', '', '', 'proposal', NULL, NULL, NULL, '2026-09-26', '2026-10-10', '{\"type\":\"Amount\",\"value\":500,\"discount_type\":\"amount\",\"discount_amt\":500,\"discount_per\":0}');
+INSERT INTO `re_proposal_proforma` (`id`, `proposal_id`, `client_id`, `txn_id`, `proforma_number`, `is_gst`, `gst_rate`, `base_amount`, `gst_amount`, `total_amount`, `status`, `payment_status`, `pdf_path`, `created_by`, `created_at`, `updated_at`, `pricing_snapshot`, `ads_snapshot`, `notes_snapshot`, `terms_snapshot`, `remarks_snapshot`, `client_instructions_snapshot`, `source_type`, `source_id`, `public_token_hash`, `public_token_expires`, `duration_start_date`, `duration_end_date`, `discount_snapshot`) VALUES
+(4, 2, 266, '1789132741976', 'PROF-4', 0, 18.00, 74500.00, 0.00, 74500.00, 'partially_paid', 'partial', NULL, 'System', '2026-09-11 13:19:01', '2026-09-11 13:25:53', '[{\"id\":1789130839536,\"service_name\":\"website developmet\",\"category_name\":\"developmet\",\"editing_type_name\":null,\"editing_type_amount\":\"50000\",\"quantity\":1,\"unit_price\":\"50000\",\"total_price\":50000,\"total_amount\":50000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"website developmet - developmet\"},{\"id\":1789130844390,\"service_name\":\"gmb\",\"category_name\":\"smo\",\"editing_type_name\":null,\"editing_type_amount\":\"5000\",\"quantity\":5,\"unit_price\":\"5000\",\"total_price\":25000,\"total_amount\":25000,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"include_in_total\":true,\"source\":\"custom_graphic\",\"service\":\"gmb - smo\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":4,\"editing_type_name\":\"Tablet editing\",\"editing_type_amount\":\"500\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":500,\"employee\":\"Ad Dubay\",\"id\":\"1789132784008s2e\"},{\"txn_id\":\"4\",\"client_id\":\"266\",\"service_name\":\"video editing\",\"category_name\":\"standard editing\",\"editing_type_id\":3,\"editing_type_name\":\"mobile\",\"editing_type_amount\":\"1000\",\"quantity\":1,\"include_content_posting\":0,\"include_thumbnail_creation\":0,\"include_youtube_video_posting\":0,\"total_amount\":1000,\"employee\":\"Ad Dubay\",\"id\":\"1789132795512ffl\"}]', '[{\"id\":\"178913277197992v\",\"service_name\":\"Ads Campaign\",\"category_name\":\"Google Add\",\"category\":\"Google Add\",\"quantity\":1,\"unit_price\":6000,\"total_price\":6000,\"total_amount\":6000,\"total\":6000,\"include_in_total\":true,\"source\":\"custom_ads\",\"budget\":5000,\"amount\":5000,\"percent\":20,\"charge\":1000},{\"id\":\"1789132771979sv2\",\"service_name\":\"Ads Campaign\",\"category_name\":\"Meta add\",\"category\":\"Meta add\",\"quantity\":1,\"unit_price\":5600,\"total_price\":5600,\"total_amount\":5600,\"total\":5600,\"include_in_total\":true,\"source\":\"custom_ads\",\"budget\":5000,\"amount\":5000,\"percent\":12,\"charge\":600}]', '[]', '[]', '', '', 'proposal', NULL, NULL, NULL, '2026-09-26', '2026-10-10', '{\"type\":\"Amount\",\"value\":500,\"discount_type\":\"amount\",\"discount_amt\":500,\"discount_per\":0}');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `re_proforma_counters`
+--
+
+CREATE TABLE `re_proforma_counters` (
+  `counter_type` varchar(50) NOT NULL,
+  `current_number` int(11) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `re_proforma_counters`
+--
+
+INSERT INTO `re_proforma_counters` (`counter_type`, `current_number`) VALUES
+('BAL_PROF', 0),
+('PROF', 4);
 
 -- --------------------------------------------------------
 
@@ -1209,6 +1260,15 @@ ALTER TABLE `re_assign_quotation`
   ADD KEY `re_fk_aq_client` (`client_id`);
 
 --
+-- Indexes for table `re_balance_proforma`
+--
+ALTER TABLE `re_balance_proforma`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_source_proforma` (`source_proforma_id`),
+  ADD KEY `idx_client` (`client_id`),
+  ADD KEY `idx_balance_number` (`balance_number`);
+
+--
 -- Indexes for table `re_calculator_transactions`
 --
 ALTER TABLE `re_calculator_transactions`
@@ -1355,7 +1415,14 @@ ALTER TABLE `re_proposal_payment_records`
 ALTER TABLE `re_proposal_proforma`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_proposal` (`proposal_id`),
-  ADD KEY `idx_client` (`client_id`);
+  ADD KEY `idx_client` (`client_id`),
+  ADD KEY `idx_proforma_number` (`proforma_number`);
+
+--
+-- Indexes for table `re_proforma_counters`
+--
+ALTER TABLE `re_proforma_counters`
+  ADD PRIMARY KEY (`counter_type`);
 
 --
 -- Indexes for table `re_public_access_logs`
@@ -1504,6 +1571,12 @@ ALTER TABLE `re_amount_remaining`
 -- AUTO_INCREMENT for table `re_assign_quotation`
 --
 ALTER TABLE `re_assign_quotation`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `re_balance_proforma`
+--
+ALTER TABLE `re_balance_proforma`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
