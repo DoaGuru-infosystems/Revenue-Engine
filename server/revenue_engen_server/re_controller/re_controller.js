@@ -3350,20 +3350,23 @@ exports.saveDiscountData = async (req, res) => {
     createdAt,
   ];
 
-  db.query(query, values, (err, result) => {
+  db.query(query, values, async (err, result) => {
     if (err) {
       console.error("Insert Error:", err);
       return res.status(500).json({ status: "Failure", message: "DB error" });
     }
 
     const discountObj = {
-      type: "pricing_discount",
+      type: discount_type === "amount" ? "Amount" : "Percentage",
       discountType: discount_type === "amount" ? "amount" : "percentage",
-      value: discount_type === "amount" ? discount_amt : discount_per
+      value: discount_type === "amount" ? Number(discount_amt) : Number(discount_per),
     };
-    db.query("UPDATE re_proposal_proforma SET discount_snapshot = ? WHERE txn_id = ?", [JSON.stringify(discountObj), txn_id], (err2) => {
-      if (err2) console.error("Error updating proforma discount_snapshot:", err2);
-    });
+    try {
+      const { syncProformaDiscount } = require("./re_proformaSyncHelper");
+      await syncProformaDiscount(txn_id, client_id, discountObj);
+    } catch (syncErr) {
+      console.error("Error updating proforma discount_snapshot on save:", syncErr);
+    }
 
     res
       .status(200)
@@ -3947,12 +3950,19 @@ exports.saveAdditionalData = async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-      db.query(insertQuery, values, (err2) => {
+      db.query(insertQuery, values, async (err2, insertResult) => {
         if (err2) {
           console.error("Insert Error (Additional Quotation):", err2);
           return res
             .status(500)
             .json({ status: "Failure", message: "DB error" });
+        }
+
+        try {
+          const { syncProformaAdditionalService } = require("./re_proformaSyncHelper");
+          await syncProformaAdditionalService(txn_id, client_id, "add", insertResult ? insertResult.insertId : null, req.body);
+        } catch (syncErr) {
+          console.error("Error syncing additional service to proforma:", syncErr);
         }
 
         return res.status(200).json({

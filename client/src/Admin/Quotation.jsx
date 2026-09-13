@@ -18,6 +18,8 @@ import {
   ChevronUp,
   ChevronDown,
   IndianRupeeIcon,
+  User,
+  RefreshCcw,
 } from "lucide-react";
 import { classifyProformaServices } from "../utils/proformaPricing";
 import { inrToWords } from "../utils/inrToWords";
@@ -33,7 +35,8 @@ export default function Quotation() {
   const docTypeFromURL = isBalanceProforma ? "balance-proforma" : (rawDocParam === "proforma" ? "proforma" : "quotation");
   const sourceFromURL = query.get("source");
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.user);
+  const { currentUser, token } = useSelector((state) => state.user);
+  const userName = currentUser?.name;
   const dispatch = useDispatch();
 
   const [serviceData, setServiceData] = useState([]);

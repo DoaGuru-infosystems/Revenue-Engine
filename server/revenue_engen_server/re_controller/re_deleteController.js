@@ -1019,14 +1019,14 @@ exports.deleteDiscountById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    db.query("SELECT txn_id FROM re_discount WHERE id = ?", [id], async (err, rows) => {
+    db.query("SELECT txn_id, client_id FROM re_discount WHERE id = ?", [id], async (err, rows) => {
       if (err) {
         return res.status(500).json({ status: "Failure", message: "Database error", error: err });
       }
       if (rows.length === 0) {
         return res.status(404).json({ status: "Failure", message: "Discount entry not found" });
       }
-      const txn_id = rows[0].txn_id;
+      const { txn_id, client_id } = rows[0];
 
       // Inject Invoice Check
       try {
@@ -1040,8 +1040,7 @@ exports.deleteDiscountById = async (req, res) => {
         return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
       }
 
-
-      db.query("DELETE FROM re_discount WHERE id = ?", [id], (err, result) => {
+      db.query("DELETE FROM re_discount WHERE id = ?", [id], async (err, result) => {
         if (err) {
           return res.status(500).json({
             status: "Failure",
@@ -1050,9 +1049,12 @@ exports.deleteDiscountById = async (req, res) => {
           });
         }
 
-        db.query("UPDATE re_proposal_proforma SET discount_snapshot = 'NONE' WHERE txn_id = ?", [txn_id], (err2) => {
-          if (err2) console.error("Error updating proforma discount_snapshot:", err2);
-        });
+        try {
+          const { syncProformaDiscount } = require("./re_proformaSyncHelper");
+          await syncProformaDiscount(txn_id, client_id, null);
+        } catch (syncErr) {
+          console.error("Error updating proforma discount_snapshot on delete:", syncErr);
+        }
 
         res.status(200).json({
           status: "Success",
@@ -1466,11 +1468,11 @@ exports.deleteAdditionalById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Find txn_id for this entry
-    db.query("SELECT txn_id FROM re_addtional_service WHERE id = ?", [id], async (findErr, findRows) => {
+    // Find txn_id and client_id for this entry
+    db.query("SELECT txn_id, client_id FROM re_addtional_service WHERE id = ?", [id], async (findErr, findRows) => {
       if (findErr) return res.status(500).json({ status: "Failure", message: "Database error" });
       if (findRows.length === 0) return res.status(404).json({ status: "Failure", message: "Not found" });
-      const txn_id = findRows[0].txn_id;
+      const { txn_id, client_id } = findRows[0];
 
       try {
         const { checkInvoiceGenerated } = require("./re_invoiceHelper");
@@ -1486,7 +1488,7 @@ exports.deleteAdditionalById = async (req, res) => {
       db.query(
         "DELETE FROM re_addtional_service WHERE id = ?",
         [id],
-        (err, result) => {
+        async (err, result) => {
           if (err) {
             return res.status(500).json({
               status: "Failure",
@@ -1500,6 +1502,13 @@ exports.deleteAdditionalById = async (req, res) => {
               status: "Failure",
               message: "No Additional entry found to delete",
             });
+          }
+
+          try {
+            const { syncProformaAdditionalService } = require("./re_proformaSyncHelper");
+            await syncProformaAdditionalService(txn_id, client_id, "delete", id, null);
+          } catch (syncErr) {
+            console.error("Error syncing proforma additional service on delete:", syncErr);
           }
 
           res.status(200).json({

@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-binary-expression, no-constant-condition */
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -308,29 +309,8 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       return fetched;
     };
 
-    // 1. Direct from clientData if already resolved by getInvoiceClientDetailsById
-    if (clientData?.discount_snapshot) {
-      try {
-        const dObj = typeof clientData.discount_snapshot === "string"
-          ? JSON.parse(clientData.discount_snapshot)
-          : clientData.discount_snapshot;
-        if (dObj && Number(dObj.value) > 0) {
-          const isPercent = dObj.type === "Percentage" || dObj.type === "percent";
-          const discVal = Number(dObj.value) || 0;
-          setSelecteddiscount({
-            client_id: Number(id),
-            txn_id: activeTxnId,
-            discount_type: isPercent ? "percent" : "amount",
-            discount_per: isPercent ? discVal : 0,
-            discount_amt: isPercent ? 0 : discVal,
-          });
-          return;
-        }
-      } catch (e) {}
-    }
-
     try {
-      // 2. Scoped fetch: resolves discount for THIS invoice/document strictly
+      // 1. Scoped fetch: resolves discount for THIS invoice/document strictly
       const { data } = await axios.get(
         `${baseURL}/auth/api/re_calculator/getDiscountByDocument/${id}/${activeTxnId}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -341,7 +321,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
         return;
       }
 
-      // 3. Direct lookup in re_discount table by txn_id
+      // 2. Direct lookup in re_discount table by txn_id
       try {
         const direct = await axios.get(
           `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${activeTxnId}`,
@@ -1088,18 +1068,28 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
             // timerProgressBar: true,
           });
           fetchAdditionservice();
+          if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
+            fetchProformaData();
+          } else if (sourceFromURL === "proposal_invoice") {
+            fetchProposalInvoiceData();
+          }
           setShowModalAddition(false);
         } else if (res.data.status === "Alert") {
           Swal.fire({
             icon: "warning",
             title: "Already Exists",
-            text: res.data.message || "This Additoinal service already exists",
+            text: res.data.message || "This Additional service already exists",
             showConfirmButton: false,
             timer: 1000,
             // timerProgressBar: true,
           });
           resetForm();
           fetchAdditionservice();
+          if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
+            fetchProformaData();
+          } else if (sourceFromURL === "proposal_invoice") {
+            fetchProposalInvoiceData();
+          }
           setShowModalAddition(false);
         }
       })
@@ -1298,6 +1288,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSelecteddiscount(null);
+      setClientData((prev) => (prev ? { ...prev, discount_snapshot: null } : prev));
       setShowModalDiscount(false);
       setFormDataDiscount({
         discount_type: "amount",
@@ -1890,6 +1881,11 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
         setAdditionalServiceData((prev) =>
           prev.filter((item) => item.id !== entryId)
         );
+        if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
+          fetchProformaData();
+        } else if (sourceFromURL === "proposal_invoice") {
+          fetchProposalInvoiceData();
+        }
 
         Swal.fire({
           icon: "success",
@@ -2231,13 +2227,13 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                 <div className="print:block flex flex-col px-6 py-1 print:px-4 print:py-4 print:pt-6 pt-4">
 
                   <div className="w-full">
-                    { isProforma && (
                       <div className="mb-1 text-center">
-                        <p className="text-sm font-bold tracking-wide">
-                          { isBalanceProforma ? "BALANCE PROFORMA INVOICE" : "PROFORMA INVOICE" }
+                        <p className="text-sm font-bold tracking-wide uppercase">
+                          { isProforma 
+                              ? (isBalanceProforma ? "BALANCE PROFORMA INVOICE" : "PROFORMA INVOICE") 
+                              : "INVOICE" }
                         </p>
                       </div>
-                    ) }
                     {/* Client Details */ }
                     <div className="flex justify-between text-xs mb-1">
                       <div className="space-y-1">
@@ -2379,6 +2375,26 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                             </thead>
 
                             <tbody>
+                              {/* ================= ADDITIONAL SERVICES ================= */ }
+                              { false && additionalServiceData.map((edit, eidx) => {
+                                const qty = Number(edit.quantity || 1);
+                                const base = Number(edit.editing_type_amount || edit.price || 0);
+                                const totalBase = base * qty;
+                                return (
+                                  <tr key={ `additional-${eidx}` } className="bg-white">
+                                    <td className="border px-2 py-1">
+                                      { edit.service_name || edit.category_name || "Additional Service" }
+                                    </td>
+                                    <td className="border px-2 py-1">
+                                      { edit.editing_type_name || edit.category_name || "-" }
+                                    </td>
+                                    <td className="border px-2 py-1 text-right">{ qty }</td>
+                                    <td className="border px-2 py-1 text-right">₹{ formatAmountNoDecimals(base) }</td>
+                                    <td className="border px-2 py-1 text-right">₹{ formatAmountNoDecimals(totalBase) }</td>
+                                  </tr>
+                                );
+                              }) }
+
                               {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */ }
                               { graphicData.map((service, idx) => {
                                 // Service Charge (ads % charge) hamesha visible rahega
@@ -2612,6 +2628,28 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                           </tbody>
                         </table>
                       </section>
+                    ) }
+
+                    { clientData.tag_received_amt !== "received" && !publicMode && (
+                      <div className="print:hidden my-2 flex items-center gap-2">
+{ false && (
+                        <button
+                          onClick={ handleShow }
+                          className="px-2.5 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors"
+                          title="Add Additional Service"
+                        >
+                          + Additional Service
+                        </button>
+) }
+
+                        <button
+                          onClick={ handleShowDiscount }
+                          className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors"
+                          title="Add/Edit Discount"
+                        >
+                          { selecteddiscount ? "Edit Discount" : "+ Discount" }
+                        </button>
+                      </div>
                     ) }
 
 
@@ -2989,7 +3027,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
         </div>
 
 
-        { showModalAddition && (
+        { false && showModalAddition && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */ }
             <div

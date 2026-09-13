@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-binary-expression, no-constant-condition */
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -57,6 +58,7 @@ export default function BDInvoice() {
   const [remainingAmountData, setRemainingAmountData] = useState([]);
   const [graphicData, setGraphicData] = useState([]);
   const [adsData, setAdsData] = useState([]);
+  const [serviceType, setServiceType] = useState("");
   const [complimentaryData, setComplimentaryData] = useState([]);
   const [selecteddiscount, setSelecteddiscount] = useState("");
   const [selectedBudget, setSelectedBudgest] = useState(0);
@@ -1802,7 +1804,7 @@ export default function BDInvoice() {
                               })() }
 
                               {/* ================= ADDITIONAL SERVICES ================= */ }
-                              { additionalServiceData.map((edit, eidx) => {
+                              { false && additionalServiceData.map((edit, eidx) => {
                                 const qty = Number(edit.quantity || 1);
                                 const base = Number(edit.editing_type_amount || edit.price || 0);
                                 const totalBase = base * qty;
@@ -2363,12 +2365,14 @@ export default function BDInvoice() {
 
                     { clientData.tag_received_amt === "pending" && (
                       <div className="print:hidden">
+{ false && (
                         <button
                           onClick={ handleShow }
                           className="px-2 py-1 print:hidden mb-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs"
                         >
                           + Additional Service
                         </button>
+) }
 
                         <button
                           onClick={ handleShowDiscount }
@@ -2736,7 +2740,7 @@ export default function BDInvoice() {
         </div>
 
 
-        { showModalAddition && (
+        { false && showModalAddition && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */ }
             <div

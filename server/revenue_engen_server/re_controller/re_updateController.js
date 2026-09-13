@@ -648,19 +648,7 @@ exports.updateDiscountDataById = async (req, res) => {
 
   const updatedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  try {
-    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
-    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
-    if (isInvoiceGenerated) {
-      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
-    }
-  } catch (err) {
-    console.error("Invoice check error:", err);
-    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
-  }
-
-
-  db.query("SELECT txn_id FROM re_discount WHERE id = ?", [id], (err, rows) => {
+  db.query("SELECT txn_id, client_id FROM re_discount WHERE id = ?", [id], async (err, rows) => {
     if (err) {
       console.error("Select Error:", err);
       return res.status(500).json({ status: "Failure", message: "DB error" });
@@ -669,7 +657,18 @@ exports.updateDiscountDataById = async (req, res) => {
       return res.status(404).json({ status: "Failure", message: "Discount not found" });
     }
     
-    const txn_id = rows[0].txn_id;
+    const { txn_id, client_id } = rows[0];
+
+    try {
+      const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+      const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+      if (isInvoiceGenerated) {
+        return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+      }
+    } catch (checkErr) {
+      console.error("Invoice check error:", checkErr);
+      return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+    }
 
     const query = `
       UPDATE re_discount
@@ -681,20 +680,23 @@ exports.updateDiscountDataById = async (req, res) => {
 
     const values = [discount_type, discount_per, discount_amt, updatedAt, id];
 
-    db.query(query, values, (err, result) => {
+    db.query(query, values, async (err, result) => {
       if (err) {
         console.error("Update Error:", err);
         return res.status(500).json({ status: "Failure", message: "DB error" });
       }
 
       const discountObj = {
-        type: "pricing_discount",
+        type: discount_type === "amount" ? "Amount" : "Percentage",
         discountType: discount_type === "amount" ? "amount" : "percentage",
-        value: discount_type === "amount" ? discount_amt : discount_per
+        value: discount_type === "amount" ? Number(discount_amt) : Number(discount_per),
       };
-      db.query("UPDATE re_proposal_proforma SET discount_snapshot = ? WHERE txn_id = ?", [JSON.stringify(discountObj), txn_id], (err2) => {
-        if (err2) console.error("Error updating proforma discount_snapshot:", err2);
-      });
+      try {
+        const { syncProformaDiscount } = require("./re_proformaSyncHelper");
+        await syncProformaDiscount(txn_id, client_id, discountObj);
+      } catch (syncErr) {
+        console.error("Error updating proforma discount_snapshot on update:", syncErr);
+      }
 
       res.status(200).json({
         status: "Success",
@@ -1085,10 +1087,17 @@ exports.updateAdditionalDataById = async (req, res) => {
     editing_type_amount,
   ];
 
-  db.query(query, values, (err, result) => {
+  db.query(query, values, async (err, result) => {
     if (err) {
       console.error("Update Error:", err);
       return res.status(500).json({ status: "Failure", message: "DB error" });
+    }
+
+    try {
+      const { syncProformaAdditionalService } = require("./re_proformaSyncHelper");
+      await syncProformaAdditionalService(txn_id, client_id, "update", id, req.body);
+    } catch (syncErr) {
+      console.error("Error syncing proforma additional service on update:", syncErr);
     }
 
     res.status(200).json({

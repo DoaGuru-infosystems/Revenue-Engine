@@ -2017,8 +2017,8 @@ exports.getDiscountByDocument = async (req, res) => {
         }
       }
 
-      // 2b. Check parent proposal sections_json.pricing_discount
-      if (inv.proposal_id) {
+      // 2b. Check parent proposal sections_json.pricing_discount (ONLY if invoice was NOT generated from a proforma)
+      if (!inv.proforma_id && inv.proposal_id) {
         const propRows = await query(
           "SELECT sections_json, txn_id FROM re_proposals WHERE id = ?",
           [inv.proposal_id]

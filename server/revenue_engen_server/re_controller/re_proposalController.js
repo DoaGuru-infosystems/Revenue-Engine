@@ -1690,15 +1690,18 @@ exports.approvePayment = async (req, res) => {
         );
       }
 
-      // Idempotent re_discount resolution: check proforma.discount_snapshot first, then proposal.sections_json
+      // Idempotent re_discount resolution:
+      // If proforma exists, strictly use proforma.discount_snapshot (NULL means no discount; do NOT fall back to proposal).
       let discountObj = null;
-      if (proforma.discount_snapshot) {
-        try {
-          discountObj = typeof proforma.discount_snapshot === "string"
-            ? JSON.parse(proforma.discount_snapshot)
-            : proforma.discount_snapshot;
-        } catch (e) {}
-      } else if (proposal.sections_json) {
+      if (proforma) {
+        if (proforma.discount_snapshot) {
+          try {
+            discountObj = typeof proforma.discount_snapshot === "string"
+              ? JSON.parse(proforma.discount_snapshot)
+              : proforma.discount_snapshot;
+          } catch (e) {}
+        }
+      } else if (proposal && proposal.sections_json) {
         try {
           const sec = typeof proposal.sections_json === "string"
             ? JSON.parse(proposal.sections_json)
@@ -2048,15 +2051,18 @@ exports.generateInvoiceFromProforma = async (req, res) => {
     const result = await runQuery(insertQ, insertValues);
     const new_invoice_id = result.insertId;
 
-    // 9.1 Insert discount record into re_discount idempotently if proforma or proposal has discount
+    // 9.1 Insert discount record into re_discount idempotently:
+    // If proforma exists, strictly use proforma.discount_snapshot (NULL means no discount; do NOT fall back to proposal).
     let discountObj = null;
-    if (proforma.discount_snapshot) {
-      try {
-        discountObj = typeof proforma.discount_snapshot === "string"
-          ? JSON.parse(proforma.discount_snapshot)
-          : proforma.discount_snapshot;
-      } catch (e) {}
-    } else if (proposal.sections_json) {
+    if (proforma) {
+      if (proforma.discount_snapshot) {
+        try {
+          discountObj = typeof proforma.discount_snapshot === "string"
+            ? JSON.parse(proforma.discount_snapshot)
+            : proforma.discount_snapshot;
+        } catch (e) {}
+      }
+    } else if (proposal && proposal.sections_json) {
       try {
         const sec = typeof proposal.sections_json === "string"
           ? JSON.parse(proposal.sections_json)

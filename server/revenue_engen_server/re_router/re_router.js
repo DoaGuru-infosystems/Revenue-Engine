@@ -595,7 +595,7 @@ router.delete(
   "/deleteInvoiceComplimenatryById/:id",
   deleteInvoiceComplimenatryById,
 );
-router.delete("/deleteAdditionalById/:id", deleteAdditionalById);
+// router.delete("/deleteAdditionalById/:id", deleteAdditionalById);
 router.delete("/deleteRemainingAmountById/:id", deleteRemainingAmountById);
 router.delete("/deleteDiscountSettingById/:id", deleteDiscountSettingById);
 
