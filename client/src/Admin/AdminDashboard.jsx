@@ -29,6 +29,8 @@ import NavTabs from "../Components/NavTabs";
 import SeoServicesA from "./SeoServicesA";
 import ConvertLetterhead from "../Components/ConvertLetterhead";
 import AdmindashBoardSettings from "./AdmindashBoardSettings";
+import ThemeToggle from "../Components/ThemeToggle";
+
 const AssignQuotation = lazy(() => import("./AssignQuotation"));
 const HistoryHub = lazy(() => import("./HistoryHub"));
 const RegisterBD = lazy(() => import("./RegisterBD"));
@@ -195,6 +197,9 @@ const AdminDashboard = () => {
                 <LogOut className="w-4 h-4" />
                 <span className="hidden lg:inline">Logout</span>
               </button>
+
+              {/* Theme Toggle - Only in Dashboard */}
+              <ThemeToggle />
 
               {/* Mobile Menu Button */}
               <button

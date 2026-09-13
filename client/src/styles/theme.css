@@ -433,8 +433,99 @@
 
 /* Custom Action Button Texts */
 [data-theme="light"] .text-amber-300 {
-  color: #0cc292 !important;
+  color: #b45309 !important;
 }
+
+/* ================================================================
+   LIGHT MODE — Yellow & Amber Text (invisible on white bg → fix)
+   Convert all yellow/amber to deep amber-orange for visibility
+   ================================================================ */
+
+/* Yellow text classes → deep amber/brown for light mode */
+[data-theme="light"] .text-yellow-100 { color: #78350f !important; }
+[data-theme="light"] .text-yellow-200 { color: #78350f !important; }
+[data-theme="light"] .text-yellow-300 { color: #92400e !important; }
+[data-theme="light"] .text-yellow-400 { color: #b45309 !important; }
+[data-theme="light"] .text-yellow-500 { color: #b45309 !important; }
+[data-theme="light"] .text-yellow-600 { color: #92400e !important; }
+[data-theme="light"] .text-yellow-700 { color: #78350f !important; }
+[data-theme="light"] .text-yellow-800 { color: #78350f !important; }
+[data-theme="light"] .text-yellow-900 { color: #451a03 !important; }
+
+/* Yellow opacity variants */
+[data-theme="light"] .text-yellow-300\/70 { color: rgba(146, 64, 14, 0.85) !important; }
+[data-theme="light"] .text-yellow-300\/80 { color: rgba(146, 64, 14, 0.9) !important; }
+[data-theme="light"] .text-yellow-400\/70 { color: rgba(180, 83, 9, 0.85) !important; }
+[data-theme="light"] .text-yellow-400\/80 { color: rgba(180, 83, 9, 0.9) !important; }
+
+/* Amber text classes → deep amber for light mode */
+[data-theme="light"] .text-amber-100 { color: #78350f !important; }
+[data-theme="light"] .text-amber-200 { color: #78350f !important; }
+[data-theme="light"] .text-amber-400 { color: #b45309 !important; }
+[data-theme="light"] .text-amber-500 { color: #92400e !important; }
+[data-theme="light"] .text-amber-600 { color: #92400e !important; }
+[data-theme="light"] .text-amber-700 { color: #78350f !important; }
+
+/* Amber opacity variants */
+[data-theme="light"] .text-amber-300\/60 { color: rgba(180, 83, 9, 0.75) !important; }
+[data-theme="light"] .text-amber-400\/70 { color: rgba(180, 83, 9, 0.85) !important; }
+[data-theme="light"] .text-amber-400\/80 { color: rgba(180, 83, 9, 0.9) !important; }
+
+/* Yellow/Amber backgrounds in light mode → visible warm tint */
+[data-theme="light"] .bg-yellow-400\/10,
+[data-theme="light"] .bg-yellow-400\/15 {
+  background-color: rgba(180, 83, 9, 0.08) !important;
+}
+[data-theme="light"] .bg-yellow-500\/10,
+[data-theme="light"] .bg-yellow-500\/20 {
+  background-color: rgba(180, 83, 9, 0.1) !important;
+}
+[data-theme="light"] .bg-yellow-600\/20,
+[data-theme="light"] .bg-yellow-600\/30 {
+  background-color: rgba(146, 64, 14, 0.1) !important;
+}
+[data-theme="light"] .bg-amber-400\/10,
+[data-theme="light"] .bg-amber-500\/10,
+[data-theme="light"] .bg-amber-500\/20 {
+  background-color: rgba(180, 83, 9, 0.08) !important;
+}
+
+/* Yellow/Amber borders in light mode */
+[data-theme="light"] .border-yellow-400\/25,
+[data-theme="light"] .border-yellow-400\/30,
+[data-theme="light"] .border-yellow-400\/40 {
+  border-color: rgba(180, 83, 9, 0.3) !important;
+}
+[data-theme="light"] .border-yellow-500\/30 {
+  border-color: rgba(146, 64, 14, 0.25) !important;
+}
+[data-theme="light"] .border-amber-400\/40,
+[data-theme="light"] .border-amber-500\/20,
+[data-theme="light"] .border-amber-500\/30 {
+  border-color: rgba(180, 83, 9, 0.25) !important;
+}
+[data-theme="light"] .border-amber-500\/50,
+[data-theme="light"] .border-amber-600 {
+  border-color: rgba(146, 64, 14, 0.35) !important;
+}
+
+/* Hover amber in light mode */
+[data-theme="light"] .hover\:text-amber-300:hover { color: #b45309 !important; }
+[data-theme="light"] .hover\:text-amber-400:hover { color: #92400e !important; }
+[data-theme="light"] .group-hover\:text-amber-300 { color: #b45309 !important; }
+[data-theme="light"] .group-hover\:text-amber-400 { color: #92400e !important; }
+[data-theme="light"] .group-hover\:text-yellow-400 { color: #b45309 !important; }
+[data-theme="light"] .group-focus-within\:text-amber-400 { color: #b45309 !important; }
+
+/* Hover amber backgrounds in light mode */
+[data-theme="light"] .hover\:bg-amber-500\/40:hover { background-color: rgba(180, 83, 9, 0.15) !important; }
+[data-theme="light"] .hover\:bg-yellow-500:hover { background-color: rgba(146, 64, 14, 0.15) !important; color: #78350f !important; }
+
+/* Active link amber in light mode */
+[data-theme="light"] .\!bg-amber-500\/20 { background-color: rgba(180, 83, 9, 0.08) !important; }
+[data-theme="light"] .\!border-amber-500\/50 { border-color: rgba(180, 83, 9, 0.3) !important; }
+[data-theme="light"] .\!text-amber-400 { color: #b45309 !important; }
+
 
 [data-theme="light"] .text-red-300 {
   color: #b91c1c !important;
@@ -1077,3 +1168,228 @@
 
 /* ── Orange/red/amber accent items — keep as-is ─────────── */
 /* These look great on both themes — no overrides needed */
+
+/* ================================================================
+   MODAL / POPUP / DIALOG — Dark & Light Mode Fixes
+   ================================================================ */
+
+/* ── Modal Overlays (backdrop) ─────────────────────────────── */
+[data-theme="light"] .fixed.inset-0.bg-black\/50,
+[data-theme="light"] .fixed.inset-0.bg-black\/60,
+[data-theme="light"] .fixed.inset-0.bg-black\/70,
+[data-theme="light"] .fixed.inset-0.bg-black\/80,
+[data-theme="light"] .fixed.inset-0.bg-black\/40,
+[data-theme="light"] .fixed.inset-0.bg-black\/30 {
+  background-color: rgba(26, 26, 46, 0.45) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* ── Modal Containers ────────────────────────────────────────── */
+[data-theme="light"] .fixed.inset-0 > div,
+[data-theme="light"] [role="dialog"],
+[data-theme="light"] .modal-content {
+  background-color: #ffffff !important;
+  color: #1a1a2e !important;
+}
+
+/* Dark modal boxes that use gradient backgrounds */
+[data-theme="light"] .bg-gradient-to-br.from-gray-900.to-gray-950,
+[data-theme="light"] .bg-gradient-to-b.from-gray-900.to-gray-950,
+[data-theme="light"] .bg-gradient-to-br.from-slate-900.to-slate-950 {
+  background: linear-gradient(135deg, #ffffff, #fff8f0) !important;
+  border-color: rgba(234, 88, 12, 0.15) !important;
+  box-shadow: 0 20px 60px rgba(234, 88, 12, 0.12), 0 4px 16px rgba(0,0,0,0.06) !important;
+}
+
+/* ── Modal Header / Title bars ─────────────────────────────── */
+[data-theme="light"] .border-b.border-gray-700\/50,
+[data-theme="light"] .border-b.border-gray-800\/50,
+[data-theme="light"] .border-b.border-white\/10 {
+  border-color: rgba(234, 88, 12, 0.15) !important;
+}
+
+[data-theme="light"] .border-t.border-gray-700\/50,
+[data-theme="light"] .border-t.border-gray-800\/50,
+[data-theme="light"] .border-t.border-white\/10 {
+  border-color: rgba(234, 88, 12, 0.15) !important;
+}
+
+/* ── Modal Inner Cards / Sections ─────────────────────────── */
+[data-theme="light"] .rounded-2xl.bg-gray-800\/50,
+[data-theme="light"] .rounded-xl.bg-gray-800\/50,
+[data-theme="light"] .rounded-2xl.bg-gray-800\/30,
+[data-theme="light"] .rounded-xl.bg-gray-800\/30,
+[data-theme="light"] .rounded-lg.bg-gray-800\/30,
+[data-theme="light"] .rounded-lg.bg-gray-800\/50 {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(234, 88, 12, 0.12) !important;
+  box-shadow: 0 2px 12px rgba(234, 88, 12, 0.06) !important;
+}
+
+[data-theme="light"] .rounded-2xl.bg-gray-900\/50,
+[data-theme="light"] .rounded-xl.bg-gray-900\/50,
+[data-theme="light"] .rounded-lg.bg-gray-900\/50 {
+  background: rgba(255, 255, 255, 0.88) !important;
+}
+
+/* ── Buttons inside modals ─────────────────────────────────── */
+
+/* Secondary / Ghost buttons */
+[data-theme="light"] button.bg-gray-700\/50,
+[data-theme="light"] button.bg-gray-700,
+[data-theme="light"] button.bg-gray-600\/50 {
+  background-color: rgba(234, 88, 12, 0.08) !important;
+  color: #374151 !important;
+  border: 1px solid rgba(234, 88, 12, 0.2) !important;
+}
+
+[data-theme="light"] button.bg-gray-700\/50:hover,
+[data-theme="light"] button.bg-gray-700:hover,
+[data-theme="light"] button.bg-gray-600\/50:hover {
+  background-color: rgba(234, 88, 12, 0.14) !important;
+}
+
+/* Close / Cancel buttons (X icon buttons) */
+[data-theme="light"] button.text-gray-400,
+[data-theme="light"] button.text-gray-500 {
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] button.text-gray-400:hover,
+[data-theme="light"] button.text-gray-500:hover {
+  color: #374151 !important;
+  background-color: rgba(234, 88, 12, 0.08) !important;
+}
+
+/* ── Form fields inside modals ─────────────────────────────── */
+[data-theme="light"] .rounded-xl input,
+[data-theme="light"] .rounded-2xl input,
+[data-theme="light"] .rounded-xl select,
+[data-theme="light"] .rounded-2xl select,
+[data-theme="light"] .rounded-xl textarea,
+[data-theme="light"] .rounded-2xl textarea {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  color: #1a1a2e !important;
+  border-color: rgba(234, 88, 12, 0.2) !important;
+}
+
+/* ── Labels inside modals ──────────────────────────────────── */
+[data-theme="light"] label,
+[data-theme="light"] .label {
+  color: #374151 !important;
+}
+
+/* ── Scrollable modal body ─────────────────────────────────── */
+[data-theme="light"] .overflow-y-auto.max-h-\[80vh\],
+[data-theme="light"] .overflow-y-auto.max-h-\[90vh\],
+[data-theme="light"] .overflow-y-auto.max-h-\[70vh\] {
+  background-color: transparent !important;
+}
+
+/* ================================================================
+   BUTTON FIXES — Global dark & light
+   ================================================================ */
+
+/* Primary action buttons stay as-is (orange/green/red gradient) */
+
+/* ── Light mode: general button text fixes ─────────────────── */
+[data-theme="light"] button.text-white:not(.bg-orange-600):not(.bg-orange-500):not(.bg-green-600):not(.bg-green-500):not(.bg-red-600):not(.bg-red-500):not(.bg-blue-600):not([class*="gradient"]) {
+  color: #1a1a2e !important;
+}
+
+/* ── Light mode: icon-only round buttons ───────────────────── */
+[data-theme="light"] button.rounded-full.bg-gray-700\/50,
+[data-theme="light"] button.rounded-full.bg-gray-800\/50,
+[data-theme="light"] button.rounded-full.text-gray-400 {
+  background-color: rgba(234, 88, 12, 0.08) !important;
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] button.rounded-full.bg-gray-700\/50:hover,
+[data-theme="light"] button.rounded-full.bg-gray-800\/50:hover {
+  background-color: rgba(234, 88, 12, 0.15) !important;
+  color: #374151 !important;
+}
+
+/* ── Light mode: disabled buttons ─────────────────────────── */
+[data-theme="light"] button:disabled,
+[data-theme="light"] button[disabled] {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* ── Light mode: tab / filter buttons ─────────────────────── */
+[data-theme="light"] .flex.gap-2 > button:not(.bg-orange-500):not(.bg-orange-600):not([class*="orange"]):not([class*="gradient"]) {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  color: #374151 !important;
+  border: 1px solid rgba(234, 88, 12, 0.15) !important;
+}
+
+/* ── Dark mode: ensure buttons readable in dark ────────────── */
+[data-theme="dark"] button.bg-white {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+/* ================================================================
+   SWAL / SWEETALERT2 — Dark & Light Theme Integration
+   ================================================================ */
+
+[data-theme="light"] .swal2-popup {
+  background: #ffffff !important;
+  color: #1a1a2e !important;
+  border: 1px solid rgba(234, 88, 12, 0.15) !important;
+  box-shadow: 0 20px 60px rgba(234, 88, 12, 0.12) !important;
+}
+
+[data-theme="light"] .swal2-title {
+  color: #1a1a2e !important;
+}
+
+[data-theme="light"] .swal2-html-container,
+[data-theme="light"] .swal2-content {
+  color: #374151 !important;
+}
+
+[data-theme="dark"] .swal2-popup {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(55, 65, 81, 0.5) !important;
+}
+
+[data-theme="dark"] .swal2-title {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .swal2-html-container,
+[data-theme="dark"] .swal2-content {
+  color: #d1d5db !important;
+}
+
+/* ── SweetAlert input field ────────────────────────────────── */
+[data-theme="light"] .swal2-input,
+[data-theme="light"] .swal2-textarea,
+[data-theme="light"] .swal2-select {
+  background: #ffffff !important;
+  color: #1a1a2e !important;
+  border: 1px solid rgba(234, 88, 12, 0.25) !important;
+}
+
+[data-theme="dark"] .swal2-input,
+[data-theme="dark"] .swal2-textarea,
+[data-theme="dark"] .swal2-select {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(55, 65, 81, 0.5) !important;
+}
+
+/* ================================================================
+   Z-INDEX STACKING — Modal overlay fixes
+   ================================================================ */
+
+/* Ensure modal backdrops render above theme toggle */
+.fixed.inset-0[style*="z-index: 50"],
+.fixed.inset-0.z-50,
+.fixed.inset-0.z-\[9999\] {
+  isolation: isolate;
+}

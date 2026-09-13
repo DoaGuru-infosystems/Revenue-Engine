@@ -1,4 +1,5 @@
 import React, { lazy, useEffect, useState } from "react";
+import ThemeToggle from "../Components/ThemeToggle";
 import { useTheme } from "../context/ThemeContext";
 import {
   User,
@@ -102,15 +103,18 @@ const BusinessDeveloperDashboard = () => {
         <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-full flex justify-between items-center">
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              <h1
+                className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent"
+                style={{ backgroundImage: `linear-gradient(to right, var(--text-heading-gradient-from), var(--text-heading-gradient-to))` }}
+              >
                 Developer Panel
               </h1>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="hidden sm:block text-right">
-                <div className="text-xs sm:text-sm text-gray-400">Welcome back,</div>
-                <div className="font-semibold text-white text-sm sm:text-base">
+                <div className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>Welcome back,</div>
+                <div className="font-semibold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>
                   {currentUser?.name}
                 </div>
               </div>
@@ -121,15 +125,22 @@ const BusinessDeveloperDashboard = () => {
 
               <button
                 onClick={handleLogout}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-700/50 hover:bg-gray-600/50 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-800 backdrop-blur-sm"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 backdrop-blur-sm"
+                style={{ color: 'var(--text-primary)', backgroundColor: 'var(--btn-secondary-bg)' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-secondary-hover)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--btn-secondary-bg)'}
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden lg:inline">Logout</span>
               </button>
 
+              {/* Theme Toggle - Only in Dashboard */}
+              <ThemeToggle />
+
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-xl transition-colors"
+                className="lg:hidden p-2 rounded-xl transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 {mobileMenuOpen ? (
                   <X className="w-5 h-5" />
@@ -151,26 +162,28 @@ const BusinessDeveloperDashboard = () => {
       />
 
       <div className={`lg:hidden relative z-20 ${mobileMenuOpen ? "block" : "hidden"}`}>
-        <div className="bg-gray-800/95 backdrop-blur-xl border-b border-gray-700/50">
+        <div className="backdrop-blur-xl" style={{ backgroundColor: 'var(--bg-nav-mobile)', borderBottom: '1px solid var(--border-color)' }}>
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2 max-h-[75vh] overflow-auto">
             <div className="sm:block mb-2">
-              <div className="text-xs sm:text-sm text-gray-400">Welcome back,</div>
-              <div className="font-semibold text-white text-sm sm:text-base">
+              <div className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>Welcome back,</div>
+              <div className="font-semibold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>
                 {currentUser?.name || "User"}
               </div>
             </div>
 
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`w-full flex items-center gap-3 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
-                      : "text-gray-300 hover:text-white hover:bg-gray-700/50"
-                  }`}
+                  className="w-full flex items-center gap-3 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300"
+                  style={{
+                    color: isActive ? 'var(--mobile-tab-active-text)' : 'var(--mobile-tab-inactive-text)',
+                    backgroundColor: isActive ? 'var(--mobile-tab-active-bg)' : 'transparent',
+                    border: isActive ? '1px solid var(--mobile-tab-active-border)' : '1px solid transparent',
+                  }}
                 >
                   <Icon className="w-5 h-5" />
                   {tab.label}
@@ -180,7 +193,8 @@ const BusinessDeveloperDashboard = () => {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 py-3 px-4 rounded-xl font-medium text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 border-t border-gray-700/50 mt-4 pt-4"
+              className="w-full flex items-center gap-3 py-3 px-4 rounded-xl font-medium text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 mt-4 pt-4"
+              style={{ borderTop: '1px solid var(--border-color)' }}
             >
               <LogOut className="w-5 h-5" />
               Logout
@@ -204,19 +218,23 @@ const BusinessDeveloperDashboard = () => {
         </div>
       </main>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-gray-800/95 backdrop-blur-xl border-t border-gray-700/50 h-14">
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl h-14"
+        style={{ backgroundColor: 'var(--bg-bottom-nav)', borderTop: '1px solid var(--border-color)' }}
+      >
         <div className="h-full flex justify-around items-center">
           {tabs.slice(0, 4).map((tab) => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex flex-col items-center gap-1 py-2 px-3 rounded-lg transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? "text-orange-400 bg-orange-500/20"
-                    : "text-gray-400 hover:text-white"
-                }`}
+                className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg transition-all duration-300"
+                style={{
+                  color: isActive ? 'var(--bottom-tab-active-text)' : 'var(--bottom-tab-inactive-text)',
+                  backgroundColor: isActive ? 'var(--bottom-tab-active-bg)' : 'transparent',
+                }}
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-xs font-medium">{tab.label.split(" ")[0]}</span>

@@ -1,7 +1,7 @@
 // import { useEffect } from "react";
 import { Suspense, lazy } from "react";
 import { useSelector } from "react-redux";
-import ThemeToggle from "./Components/ThemeToggle";
+
 import {
   Navigate,
   Route,
@@ -46,17 +46,7 @@ function App() {
     <>
       <GlobalStyle />
 
-      {/* Global Theme Toggle — fixed top-right on every page */ }
-      <div
-        style={ {
-          position: "fixed",
-          top: "12px",
-          right: "16px",
-          zIndex: 99999,
-        } }
-      >
-        <ThemeToggle />
-      </div>
+
 
       <Wrapper>
         <Suspense
