@@ -57,7 +57,7 @@ exports.updateEditingType = async (req, res) => {
   );
 };
 
-exports.updateCalculatorDataById = (req, res) => {
+exports.updateCalculatorDataById = async (req, res) => {
   const { id } = req.params;
   const {
     txn_id,
@@ -75,6 +75,18 @@ exports.updateCalculatorDataById = (req, res) => {
   } = req.body;
 
   const updatedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
 
   // --- First Update Quotation (re_calculator_transactions) ---
   const updateQuotationQuery = `
@@ -630,35 +642,68 @@ exports.updateClientNoteDataById = (req, res) => {
     });
   });
 };
-exports.updateDiscountDataById = (req, res) => {
+exports.updateDiscountDataById = async (req, res) => {
   const { id } = req.params;
   const { discount_type, discount_per, discount_amt } = req.body;
 
   const updatedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  const query = `
-    UPDATE re_discount
-    SET
-      discount_type = ?,discount_per = ?,discount_amt= ?,
-      created_at = ?
-    WHERE id = ?
-  `;
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
 
-  const values = [discount_type, discount_per, discount_amt, updatedAt, id];
 
-  db.query(query, values, (err, result) => {
+  db.query("SELECT txn_id FROM re_discount WHERE id = ?", [id], (err, rows) => {
     if (err) {
-      console.error("Update Error:", err);
+      console.error("Select Error:", err);
       return res.status(500).json({ status: "Failure", message: "DB error" });
     }
+    if (rows.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Discount not found" });
+    }
+    
+    const txn_id = rows[0].txn_id;
 
-    res.status(200).json({
-      status: "Success",
-      message: "Entry updated of re_discount successfully",
+    const query = `
+      UPDATE re_discount
+      SET
+        discount_type = ?,discount_per = ?,discount_amt= ?,
+        created_at = ?
+      WHERE id = ?
+    `;
+
+    const values = [discount_type, discount_per, discount_amt, updatedAt, id];
+
+    db.query(query, values, (err, result) => {
+      if (err) {
+        console.error("Update Error:", err);
+        return res.status(500).json({ status: "Failure", message: "DB error" });
+      }
+
+      const discountObj = {
+        type: "pricing_discount",
+        discountType: discount_type === "amount" ? "amount" : "percentage",
+        value: discount_type === "amount" ? discount_amt : discount_per
+      };
+      db.query("UPDATE re_proposal_proforma SET discount_snapshot = ? WHERE txn_id = ?", [JSON.stringify(discountObj), txn_id], (err2) => {
+        if (err2) console.error("Error updating proforma discount_snapshot:", err2);
+      });
+
+      res.status(200).json({
+        status: "Success",
+        message: "Entry updated of re_discount successfully",
+      });
     });
   });
 };
-exports.updateComplimenatryDataById = (req, res) => {
+exports.updateComplimenatryDataById = async (req, res) => {
   const { id } = req.params;
   const {
     txn_id,
@@ -675,6 +720,18 @@ exports.updateComplimenatryDataById = (req, res) => {
   } = req.body;
 
   const updatedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
 
   // --- First Update Quotation (re_complimentary) ---
   const updateQuotationQuery = `
@@ -970,7 +1027,7 @@ exports.updateInvoiceComplimenatryDataById = (req, res) => {
   });
 };
 
-exports.updateAdditionalDataById = (req, res) => {
+exports.updateAdditionalDataById = async (req, res) => {
   const { id } = req.params;
   const {
     txn_id,
@@ -987,6 +1044,18 @@ exports.updateAdditionalDataById = (req, res) => {
   } = req.body;
 
   const updatedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
 
   const query = `
     UPDATE re_addtional_service

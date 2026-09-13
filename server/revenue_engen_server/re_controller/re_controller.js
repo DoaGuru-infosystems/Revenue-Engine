@@ -27,6 +27,18 @@ exports.register = async (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
+
   if (
     !employee_name ||
     !employee_role ||
@@ -923,7 +935,7 @@ exports.addEditingTypes = async (req, res) => {
   }
 };
 
-exports.saveCalculatorData = (req, res) => {
+exports.saveCalculatorData = async (req, res) => {
   const {
     txn_id,
     client_id,
@@ -1074,6 +1086,19 @@ exports.saveCalculatorData = (req, res) => {
 
 exports.saveAdsCampaign = async (req, res) => {
   const adsItems = req.body.adsItems;
+  const txn_id_ads = adsItems && adsItems.length > 0 ? adsItems[0].txn_id : null;
+
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id_ads);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
@@ -2760,7 +2785,7 @@ exports.addMembersToTeam = async (req, res) => {
   }
 };
 
-exports.saveComplimentaryData = (req, res) => {
+exports.saveComplimentaryData = async (req, res) => {
   const {
     txn_id,
     client_id,
@@ -2777,6 +2802,18 @@ exports.saveComplimentaryData = (req, res) => {
   } = req.body;
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
 
   // ? Step 0: Check if service already exists for this txn_id + editing_type_id
   const checkDuplicate = `
@@ -3279,11 +3316,23 @@ exports.saveNotesbydefault = (req, res) => {
     });
   });
 };
-exports.saveDiscountData = (req, res) => {
+exports.saveDiscountData = async (req, res) => {
   const { client_id, txn_id, discount_type, discount_per, discount_amt } =
     req.body;
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
 
   const query = `
     INSERT INTO re_discount (
@@ -3306,6 +3355,15 @@ exports.saveDiscountData = (req, res) => {
       console.error("Insert Error:", err);
       return res.status(500).json({ status: "Failure", message: "DB error" });
     }
+
+    const discountObj = {
+      type: "pricing_discount",
+      discountType: discount_type === "amount" ? "amount" : "percentage",
+      value: discount_type === "amount" ? discount_amt : discount_per
+    };
+    db.query("UPDATE re_proposal_proforma SET discount_snapshot = ? WHERE txn_id = ?", [JSON.stringify(discountObj), txn_id], (err2) => {
+      if (err2) console.error("Error updating proforma discount_snapshot:", err2);
+    });
 
     res
       .status(200)
@@ -3801,7 +3859,7 @@ exports.saveInvoiceClientIdwiseNotes = (req, res) => {
   });
 };
 
-exports.saveAdditionalData = (req, res) => {
+exports.saveAdditionalData = async (req, res) => {
   const {
     txn_id,
     client_id,
@@ -3818,6 +3876,18 @@ exports.saveAdditionalData = (req, res) => {
   } = req.body;
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  try {
+    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+    if (isInvoiceGenerated) {
+      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+    }
+  } catch (err) {
+    console.error("Invoice check error:", err);
+    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+  }
+
 
   const values = [
     txn_id,

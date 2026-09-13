@@ -1492,9 +1492,36 @@ exports.approvePayment = async (req, res) => {
       `;
       // 4.1 Prepare pricing snapshot ensuring Service Charge items are included
       let items = [];
-      try { items = JSON.parse(proforma.pricing_snapshot || "[]"); } catch(e) { items = []; }
+      // -------------- START NEW LIVE FETCH LOGIC --------------
       let adsFromSnapshot = [];
-      try { adsFromSnapshot = JSON.parse(proforma.ads_snapshot || "[]"); } catch(e) { adsFromSnapshot = []; }
+      let liveDiscountObj = null;
+
+      try {
+        const pTxnId = proforma.txn_id;
+        const [calcRows, addRows, compRows, adsRows, discRows] = await Promise.all([
+          runQuery('SELECT * FROM re_calculator_transactions WHERE txn_id = ?', [pTxnId]),
+          runQuery('SELECT * FROM re_addtional_service WHERE txn_id = ?', [pTxnId]),
+          runQuery('SELECT * FROM re_complimentary WHERE txn_id = ?', [pTxnId]),
+          runQuery('SELECT * FROM re_ads_campaign_details WHERE txn_id = ?', [pTxnId]),
+          runQuery('SELECT * FROM re_discount WHERE txn_id = ? ORDER BY id DESC LIMIT 1', [pTxnId])
+        ]);
+        
+        calcRows.forEach(r => items.push({ ...r, source: 're_calculator_transactions' }));
+        addRows.forEach(r => items.push({ ...r, source: 're_addtional_service' }));
+        compRows.forEach(r => items.push({ ...r, source: 're_complimentary' }));
+        
+        adsFromSnapshot = adsRows;
+
+        if (discRows.length > 0) {
+           liveDiscountObj = {
+             type: discRows[0].discount_type,
+             value: discRows[0].discount_per || discRows[0].discount_amt
+           };
+        }
+      } catch (e) {
+        console.error("Error fetching live data for invoice generation", e);
+      }
+      // -------------- END NEW LIVE FETCH LOGIC --------------
 
       adsFromSnapshot.forEach(ad => {
         const charge = Number(ad.charge || ad.ad_charge || 0);
@@ -1690,14 +1717,25 @@ exports.approvePayment = async (req, res) => {
         );
       }
 
-      // Idempotent re_discount resolution: check proforma.discount_snapshot first, then proposal.sections_json
-      let discountObj = null;
-      if (proforma.discount_snapshot) {
-        try {
-          discountObj = typeof proforma.discount_snapshot === "string"
-            ? JSON.parse(proforma.discount_snapshot)
-            : proforma.discount_snapshot;
-        } catch (e) {}
+      // Idempotent re_discount resolution: check live discount first, then proforma.discount_snapshot, then proposal.sections_json
+      let discountObj = liveDiscountObj; // FROM LIVE FETCH
+      if (!discountObj) {
+        if (proforma.discount_snapshot) {
+          try {
+            discountObj = typeof proforma.discount_snapshot === "string"
+              ? JSON.parse(proforma.discount_snapshot)
+              : proforma.discount_snapshot;
+          } catch (e) {}
+        } else if (proposal.sections_json) {
+          try {
+            const sec = typeof proposal.sections_json === "string"
+              ? JSON.parse(proposal.sections_json)
+              : proposal.sections_json;
+            if (sec?.pricing_discount && Number(sec.pricing_discount.value) > 0) {
+              discountObj = sec.pricing_discount;
+            }
+          } catch (e) {}
+        }
       } else if (proposal.sections_json) {
         try {
           const sec = typeof proposal.sections_json === "string"

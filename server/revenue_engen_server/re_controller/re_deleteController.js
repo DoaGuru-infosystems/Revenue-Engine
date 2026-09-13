@@ -145,7 +145,7 @@ exports.deleteAdsCampaignEntryById = async (req, res) => {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
       "SELECT txn_id, client_id, category, amount FROM re_ads_campaign_details WHERE id = ?";
-    db.query(findTxn, [id], (err, rows) => {
+    db.query(findTxn, [id], async (err, rows) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -162,6 +162,19 @@ exports.deleteAdsCampaignEntryById = async (req, res) => {
       }
 
       const { txn_id, client_id, category, amount } = rows[0];
+
+      // Inject Invoice Check
+      try {
+        const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+        const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+        if (isInvoiceGenerated) {
+          return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+        }
+      } catch (checkErr) {
+        console.error("Invoice check error:", checkErr);
+        return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+      }
+
 
       // Step 2: Delete Ads row
       const deleteQuotation =
@@ -230,7 +243,7 @@ exports.deleteGraphicEntryById = async (req, res) => {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
       "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM re_calculator_transactions WHERE id = ?";
-    db.query(findTxn, [id], (err, rows) => {
+    db.query(findTxn, [id], async (err, rows) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -253,6 +266,19 @@ exports.deleteGraphicEntryById = async (req, res) => {
         category_name,
         editing_type_name,
       } = rows[0];
+
+      // Inject Invoice Check
+      try {
+        const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+        const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+        if (isInvoiceGenerated) {
+          return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+        }
+      } catch (checkErr) {
+        console.error("Invoice check error:", checkErr);
+        return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+      }
+
 
       // Step 2: Delete quotation row
       const deleteQuotation =
@@ -860,7 +886,7 @@ exports.deleteComplimenatryById = async (req, res) => {
     // Step 1: Find txn_id, client_id, and details for this quotation entry
     const findTxn =
       "SELECT txn_id, client_id, service_name, category_name, editing_type_name FROM re_complimentary WHERE id = ?";
-    db.query(findTxn, [id], (err, rows) => {
+    db.query(findTxn, [id], async (err, rows) => {
       if (err) {
         return res.status(500).json({
           status: "Failure",
@@ -883,6 +909,19 @@ exports.deleteComplimenatryById = async (req, res) => {
         category_name,
         editing_type_name,
       } = rows[0];
+
+      // Inject Invoice Check
+      try {
+        const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+        const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+        if (isInvoiceGenerated) {
+          return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+        }
+      } catch (checkErr) {
+        console.error("Invoice check error:", checkErr);
+        return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+      }
+
 
       // Step 2: Delete quotation row
       const deleteQuotation = "DELETE FROM re_complimentary WHERE id = ?";
@@ -980,25 +1019,45 @@ exports.deleteDiscountById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    db.query("DELETE FROM re_discount WHERE id = ?", [id], (err, result) => {
+    db.query("SELECT txn_id FROM re_discount WHERE id = ?", [id], async (err, rows) => {
       if (err) {
-        return res.status(500).json({
-          status: "Failure",
-          message: "Database error while deleting entry",
-          error: err,
-        });
+        return res.status(500).json({ status: "Failure", message: "Database error", error: err });
+      }
+      if (rows.length === 0) {
+        return res.status(404).json({ status: "Failure", message: "Discount entry not found" });
+      }
+      const txn_id = rows[0].txn_id;
+
+      // Inject Invoice Check
+      try {
+        const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+        const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+        if (isInvoiceGenerated) {
+          return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+        }
+      } catch (checkErr) {
+        console.error("Invoice check error:", checkErr);
+        return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
       }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          status: "Failure",
-          message: "No Note entry found to delete",
-        });
-      }
 
-      res.status(200).json({
-        status: "Success",
-        message: "Note entry deleted successfully",
+      db.query("DELETE FROM re_discount WHERE id = ?", [id], (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            status: "Failure",
+            message: "Database error while deleting entry",
+            error: err,
+          });
+        }
+
+        db.query("UPDATE re_proposal_proforma SET discount_snapshot = 'NONE' WHERE txn_id = ?", [txn_id], (err2) => {
+          if (err2) console.error("Error updating proforma discount_snapshot:", err2);
+        });
+
+        res.status(200).json({
+          status: "Success",
+          message: "Note entry deleted successfully",
+        });
       });
     });
   } catch (error) {
@@ -1407,31 +1466,49 @@ exports.deleteAdditionalById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    db.query(
-      "DELETE FROM re_addtional_service WHERE id = ?",
-      [id],
-      (err, result) => {
-        if (err) {
-          return res.status(500).json({
-            status: "Failure",
-            message: "Database error while deleting entry",
-            error: err,
+    // Find txn_id for this entry
+    db.query("SELECT txn_id FROM re_addtional_service WHERE id = ?", [id], async (findErr, findRows) => {
+      if (findErr) return res.status(500).json({ status: "Failure", message: "Database error" });
+      if (findRows.length === 0) return res.status(404).json({ status: "Failure", message: "Not found" });
+      const txn_id = findRows[0].txn_id;
+
+      try {
+        const { checkInvoiceGenerated } = require("./re_invoiceHelper");
+        const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
+        if (isInvoiceGenerated) {
+          return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
+        }
+      } catch (checkErr) {
+        console.error("Invoice check error:", checkErr);
+        return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
+      }
+
+      db.query(
+        "DELETE FROM re_addtional_service WHERE id = ?",
+        [id],
+        (err, result) => {
+          if (err) {
+            return res.status(500).json({
+              status: "Failure",
+              message: "Database error while deleting entry",
+              error: err,
+            });
+          }
+
+          if (result.affectedRows === 0) {
+            return res.status(404).json({
+              status: "Failure",
+              message: "No Additional entry found to delete",
+            });
+          }
+
+          res.status(200).json({
+            status: "Success",
+            message: "Additional entry deleted successfully",
           });
         }
-
-        if (result.affectedRows === 0) {
-          return res.status(404).json({
-            status: "Failure",
-            message: "No Additional entry found to delete",
-          });
-        }
-
-        res.status(200).json({
-          status: "Success",
-          message: "Additional entry deleted successfully",
-        });
-      },
-    );
+      );
+    });
   } catch (error) {
     res.status(500).json({
       status: "Failure",

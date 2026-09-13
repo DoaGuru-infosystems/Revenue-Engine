@@ -823,10 +823,9 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
       fetchComplimentaryData();
       fetchDiscount();
       fetchDiscountSetting();
-      fetchClientReceived();
       fetchPredefinedNotes();
       fetchRemainingAmount();
-      fetchAdditionalServiceData();
+      fetchAdditionservice();
     }
   }, [id, txn_id, docTypeFromURL, sourceFromURL, txnIdFromURL, isBalanceProforma, publicMode, publicData]);
 
@@ -2452,176 +2451,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                                 });
                               }) }
 
-                              {/* ================= DM SERVICE TOTAL ================= */ }
-                              { (() => {
-                                // Service Charge hamesha count hoga — hide/show sirf budget amounts pe apply hoti hai
-                                const graphicTotal = graphicData.reduce(
-                                  (sum, service) =>
-                                    sum +
-                                    service.editingTypes.reduce(
-                                      (s, edit) => {
-                                        return (
-                                          s +
-                                          (Number(edit.price || 0) *
-                                            Number(edit.quantity || 1))
-                                        );
-                                      },
-                                      0
-                                    ),
-                                  0
-                                );
-                                const thumbTotal = graphicData
-                                  .flatMap((s) =>
-                                    s.editingTypes.filter(
-                                      (e) =>
-                                        Number(e.include_thumbnail_creation) > 0
-                                    )
-                                  )
-                                  .reduce(
-                                    (sum, e) =>
-                                      sum +
-                                      Number(e.include_thumbnail_creation) *
-                                      Number(e.quantity),
-                                    0
-                                  );
-                                const postTotal = graphicData
-                                  .flatMap((s) =>
-                                    s.editingTypes.filter(
-                                      (e) => Number(e.include_content_posting) > 0
-                                    )
-                                  )
-                                  .reduce(
-                                    (sum, e) =>
-                                      sum +
-                                      Number(e.include_content_posting) *
-                                      Number(e.quantity),
-                                    0
-                                  );
-                                const addTotal = additionalServiceData.reduce(
-                                  (sum, e) => {
-                                    const amount =
-                                      e.total_amount !== null &&
-                                        e.total_amount !== undefined
-                                        ? Number(e.total_amount || 0)
-                                        : Number(e.editing_type_amount || e.price || 0) *
-                                        Number(e.quantity || 1);
-                                    return sum + (Number(amount || 0));
-                                  },
-                                  0
-                                );
 
-                                const ytTotal = graphicData
-                                  .flatMap((s) =>
-                                    s.editingTypes.filter(
-                                      (e) => Number(e.include_youtube_video_posting) > 0
-                                    )
-                                  )
-                                  .reduce(
-                                    (sum, e) =>
-                                      sum +
-                                      Number(e.include_youtube_video_posting) *
-                                      Number(e.quantity),
-                                    0
-                                  );
-
-                                const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
-
-                                return (
-                                  <>
-
-                                    {/* ================= COMPLIMENTARY ITEMS ================= */ }
-                                    { complimentaryData.length > 0 &&
-                                      complimentaryData.map((svc, idx) => {
-                                        const qty = Number(svc.quantity || 1);
-                                        const price = Number(
-                                          svc.editing_type_amount ||
-                                          svc.amount ||
-                                          svc.price || 0
-                                        );
-                                        const svcName = (svc.editing_type_name && svc.editing_type_name !== "null") 
-                                          ? svc.editing_type_name 
-                                          : (svc.service_name || "-");
-
-                                        return (
-                                          <tr key={ `comp-main-${idx}` }
-                                            style={ { backgroundColor: "#dcf7e8" } }>
-                                            <td className="border px-2 py-1 text-center">
-                                              <span style={ {
-                                                background: "#fef2f2",
-                                                color: "#dc2626",
-                                                fontWeight: "bold",
-                                                fontSize: "10px",
-                                                padding: "1px 5px",
-                                                borderRadius: "4px"
-                                              } }>FREE</span>
-                                            </td>
-                                            <td className="border px-2 py-1">
-                                              <span style={ { color: "#047968", fontWeight: "600" } }>
-                                                { svcName }
-                                              </span>
-                                              <span style={ {
-                                                color: "#6b7280",
-                                                fontStyle: "italic",
-                                                fontSize: "10px"
-                                              } }> (Complementary)</span>
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              { qty }
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              <span style={ {
-                                                textDecoration: "line-through",
-                                                color: "#9ca3af"
-                                              } }>
-                                                ₹{ formatAmountNoDecimals(price) }
-                                              </span>
-                                            </td>
-                                            <td className="border px-2 py-1 text-right"
-                                              style={ { fontWeight: "bold", color: "#047968" } }>
-                                              ₹0
-                                            </td>
-                                          </tr>
-                                        );
-                                      })
-                                    }
-
-                                    <tr style={ { background: "#f5f8fc", fontWeight: 800, border: "1px solid #cfd8e3" } }>
-                                      <td
-                                        className="border px-2 py-1 text-right"
-                                        colSpan={ 4 }
-                                      >
-                                        Services Total
-                                      </td>
-                                      <td className="border px-2 py-1 text-right">
-                                        ₹
-                                        { formatAmountNoDecimals(dmServiceTotal) }
-                                      </td>
-                                    </tr>
-                                  </>
-                                );
-                              })() }
-
-
-                              {/* ================= DISCOUNT + SUBTOTAL ================= */ }
-
-                              { selecteddiscount && discountAmount > 0 && (
-                                <tr style={ { color: "#dc2626", background: "#fef2f2", fontWeight: 700 } }>
-                                  <td className="border px-2 py-1 text-right" colSpan={ 4 }>
-                                    Discount
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    -₹{ formatAmountNoDecimals(discountAmount) }
-                                  </td>
-                                </tr>
-                              ) }
-                              <tr className="bg-orange-50 font-semibold">
-                                <td className="border px-2 py-1 text-right" colSpan={ 4 }>
-                                  Subtotal
-                                </td>
-                                <td className="border px-2 py-1 text-right">
-                                  ₹{ formatAmountNoDecimals(invoiceSubtotal) }
-                                </td>
-                              </tr>
 
 
                             </tbody>
@@ -2671,6 +2501,115 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                               <td className="border px-2 py-1 text-right text-green-900">₹0</td>
                             </tr>
                           </tfoot>
+                        </table>
+                      </section>
+                    ) }
+
+
+                    {/* ================= TOTALS SUMMARY ================= */ }
+                    { (graphicData.length > 0 || additionalServiceData.length > 0 || adsData.length > 0 || complimentaryData.length > 0) && (
+                      <section className="mb-2 text-sm mt-2">
+                        <table className="w-full border text-xs">
+                          <tbody>
+                            { (() => {
+                              // Service Charge hamesha count hoga — hide/show sirf budget amounts pe apply hoti hai
+                              const graphicTotal = graphicData.reduce(
+                                (sum, service) =>
+                                  sum +
+                                  service.editingTypes.reduce(
+                                    (s, edit) => {
+                                      return (
+                                        s +
+                                        (Number(edit.price || 0) *
+                                          Number(edit.quantity || 1))
+                                      );
+                                    },
+                                    0
+                                  ),
+                                0
+                              );
+                              const thumbTotal = graphicData
+                                .flatMap((s) =>
+                                  s.editingTypes.filter(
+                                    (e) =>
+                                      Number(e.include_thumbnail_creation) > 0
+                                  )
+                                )
+                                .reduce(
+                                  (sum, e) =>
+                                    sum +
+                                    Number(e.include_thumbnail_creation) *
+                                    Number(e.quantity),
+                                  0
+                                );
+                              const postTotal = graphicData
+                                .flatMap((s) =>
+                                  s.editingTypes.filter(
+                                    (e) => Number(e.include_content_posting) > 0
+                                  )
+                                )
+                                .reduce(
+                                  (sum, e) =>
+                                    sum +
+                                    Number(e.include_content_posting) *
+                                    Number(e.quantity),
+                                  0
+                                );
+                              const addTotal = additionalServiceData.reduce(
+                                (sum, e) => {
+                                  const amount =
+                                    e.total_amount !== null &&
+                                      e.total_amount !== undefined
+                                      ? Number(e.total_amount || 0)
+                                      : Number(e.editing_type_amount || e.price || 0) *
+                                      Number(e.quantity || 1);
+                                  return sum + (Number(amount || 0));
+                                },
+                                0
+                              );
+
+                              const ytTotal = graphicData
+                                .flatMap((s) =>
+                                  s.editingTypes.filter(
+                                    (e) => Number(e.include_youtube_video_posting) > 0
+                                  )
+                                )
+                                .reduce(
+                                  (sum, e) =>
+                                    sum +
+                                    Number(e.include_youtube_video_posting) *
+                                    Number(e.quantity),
+                                  0
+                                );
+
+                              const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
+
+                              return (
+                                <>
+                                  <tr style={ { background: "#f5f8fc", fontWeight: 800, border: "1px solid #cfd8e3" } }>
+                                    <td className="border px-2 py-1 text-right" colSpan={ 4 }>Services Total</td>
+                                    <td className="border px-2 py-1 text-right w-[15%]">
+                                      ₹{ formatAmountNoDecimals(dmServiceTotal) }
+                                    </td>
+                                  </tr>
+                                  { selecteddiscount && discountAmount > 0 && (
+                                    <tr style={ { color: "#dc2626", background: "#fef2f2", fontWeight: 700 } }>
+                                      <td className="border px-2 py-1 text-right" colSpan={ 4 }>Discount</td>
+                                      <td className="border px-2 py-1 text-right w-[15%]">
+                                        -₹{ formatAmountNoDecimals(discountAmount) }
+                                      </td>
+                                    </tr>
+                                  ) }
+                                  <tr className="bg-orange-50 font-semibold">
+                                    <td className="border px-2 py-1 text-right" colSpan={ 4 }>Subtotal</td>
+                                    <td className="border px-2 py-1 text-right w-[15%]">
+                                      ₹{ formatAmountNoDecimals(invoiceSubtotal) }
+                                    </td>
+                                  </tr>
+                                </>
+                              );
+                            })() }
+                          </tbody>
                         </table>
                       </section>
                     ) }
@@ -2728,27 +2667,10 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                       <div className="flex flex-col">
                         { isPartialPayment && currentBillGrossReceived > 0 ? (
                           <>
-                            { discountAmount > 0 ? (
-                              <>
-                                <div style={ { background: "#f5f8fc", fontWeight: 700, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                                  <span className="text-gray-600">Total Project Value</span>
-                                  <span className="text-gray-900 font-medium">₹{ formatAmount(grandTotal) }</span>
-                                </div>
-                                <div style={ { background: "#fef2f2", color: "#dc2626", fontWeight: 700 } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                                  <span>Discount ({ selecteddiscount?.discount_type === "percent" ? `${selecteddiscount.discount_per}%` : `₹${formatAmountNoDecimals(discountAmount)}` })</span>
-                                  <span className="font-medium">-₹{ formatAmount(discountAmount) }</span>
-                                </div>
-                                <div style={ { background: "#f5f8fc", fontWeight: 800, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                                  <span className="text-gray-600">Total Project Base Value</span>
-                                  <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterDiscount) }</span>
-                                </div>
-                              </>
-                            ) : (
-                              <div style={ { background: "#f5f8fc", fontWeight: 800, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                                <span className="text-gray-600">Total Project Base Value</span>
-                                <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterDiscount) }</span>
-                              </div>
-                            ) }
+                            <div style={ { background: "#f5f8fc", fontWeight: 800, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                              <span className="text-gray-600">Total Project Base Value</span>
+                              <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterDiscount) }</span>
+                            </div>
                             { pastActiveTaxableSubtotal > 0 && (
                               <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
                                 <span className="text-gray-600">Less: Taxable Value Billed Earlier</span>

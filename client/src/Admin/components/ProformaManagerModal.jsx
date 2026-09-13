@@ -786,9 +786,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
       {/* Dark Themed Record Payment Modal (renders on top of the manager) */ }
       { showPaymentModal && selectedProforma && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="p-5 border-b border-gray-800 flex items-center justify-between bg-yellow-500/10">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/30">
+          <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden shadow-2xl max-h-[95vh] flex flex-col">
+            <div className="p-5 border-b border-gray-800 flex items-center justify-between bg-yellow-500/10 shrink-0">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <IndianRupee className="w-5 h-5 text-yellow-400" /> Record Payment
               </h3>
@@ -797,137 +797,139 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               </button>
             </div>
 
-            <form onSubmit={ handleRecordPayment } className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Amount Received</label>
-                  <input type="number" step="0.01" required value={ paymentForm.amount } max={ selectedProforma ? Number(selectedProforma.total_amount) - payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved').reduce((sum, p) => sum + Number(p.amount), 0) : undefined } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Date</label>
-                  <input type="date" required value={ paymentForm.payment_date } onChange={ e => setPaymentForm({ ...paymentForm, payment_date: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Mode</label>
-                  <select value={ paymentForm.payment_mode } onChange={ e => setPaymentForm({ ...paymentForm, payment_mode: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none">
-                    <option value="UPI">UPI</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Cash">Cash</option>
-                    <option value="Cheque">Cheque</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Transaction Ref</label>
-                  <input type="text" value={ paymentForm.transaction_reference } onChange={ e => setPaymentForm({ ...paymentForm, transaction_reference: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="Txn ID / UTR" />
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-300">TDS Applicable?</span>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={ paymentForm.tds_applicable } onChange={ e => setPaymentForm({ ...paymentForm, tds_applicable: e.target.checked }) } className="w-4 h-4 accent-yellow-500" />
-                    <span className="text-sm text-gray-400">Yes</span>
-                  </label>
-                </div>
-
-                { paymentForm.tds_applicable && (
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-700">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">TDS Percentage</label>
-                      <select value={ paymentForm.tds_percentage } onChange={ e => setPaymentForm({ ...paymentForm, tds_percentage: e.target.value }) } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white">
-                        <option value={ 1 }>1%</option>
-                        <option value={ 2 }>2%</option>
-                        <option value={ 5 }>5%</option>
-                        <option value={ 10 }>10%</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Calculated TDS Amount</label>
-                      <input type="text" readOnly value={ `₹${paymentForm.tds_amount}` } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-orange-400 font-bold" />
-                    </div>
+            <form onSubmit={ handleRecordPayment } className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Amount Received</label>
+                    <input type="number" step="0.01" required value={ paymentForm.amount } max={ selectedProforma ? Number(selectedProforma.total_amount) - payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved').reduce((sum, p) => sum + Number(p.amount), 0) : undefined } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
                   </div>
-                ) }
-              </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Date</label>
+                    <input type="date" required value={ paymentForm.payment_date } onChange={ e => setPaymentForm({ ...paymentForm, payment_date: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" />
+                  </div>
+                </div>
 
-              { (hasGoogleAd || hasMetaAd) && (
-                <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Mode</label>
+                    <select value={ paymentForm.payment_mode } onChange={ e => setPaymentForm({ ...paymentForm, payment_mode: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none">
+                      <option value="UPI">UPI</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Cheque">Cheque</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Transaction Ref</label>
+                    <input type="text" value={ paymentForm.transaction_reference } onChange={ e => setPaymentForm({ ...paymentForm, transaction_reference: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="Txn ID / UTR" />
+                  </div>
+                </div>
+
+                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-semibold text-gray-300">Ad Budget (This Payment)?</span>
-                      { Number(paymentForm.amount) > 0 && (
-                        <p className="text-[11px] text-gray-400 mt-0.5">
-                          Max allowable ad budget: <span className="text-yellow-400 font-semibold">₹{ Math.max(0, Number(paymentForm.amount) - 1).toLocaleString() }</span> (Min ₹1 reserved for service)
-                        </p>
-                      ) }
-                    </div>
+                    <span className="text-sm font-semibold text-gray-300">TDS Applicable?</span>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={ paymentForm.has_ad_budget } onChange={ e => {
-                        setPaymentForm({
-                          ...paymentForm,
-                          has_ad_budget: e.target.checked,
-                          realized_google_budget: e.target.checked && hasGoogleAd ? paymentForm.realized_google_budget : "",
-                          realized_meta_budget: e.target.checked && hasMetaAd ? paymentForm.realized_meta_budget : ""
-                        })
-                      } } className="w-4 h-4 accent-yellow-500" />
+                      <input type="checkbox" checked={ paymentForm.tds_applicable } onChange={ e => setPaymentForm({ ...paymentForm, tds_applicable: e.target.checked }) } className="w-4 h-4 accent-yellow-500" />
                       <span className="text-sm text-gray-400">Yes</span>
                     </label>
                   </div>
 
-                  { paymentForm.has_ad_budget && (() => {
-                    const activeGoogle = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
-                    const activeMeta = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
-                    const currentTotalAd = activeGoogle + activeMeta;
-                    const maxAllowed = Math.max(0, Number(paymentForm.amount || 0) - 1);
+                  { paymentForm.tds_applicable && (
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-700">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">TDS Percentage</label>
+                        <select value={ paymentForm.tds_percentage } onChange={ e => setPaymentForm({ ...paymentForm, tds_percentage: e.target.value }) } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white">
+                          <option value={ 1 }>1%</option>
+                          <option value={ 2 }>2%</option>
+                          <option value={ 5 }>5%</option>
+                          <option value={ 10 }>10%</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Calculated TDS Amount</label>
+                        <input type="text" readOnly value={ `₹${paymentForm.tds_amount}` } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-orange-400 font-bold" />
+                      </div>
+                    </div>
+                  ) }
+                </div>
 
-                    return (
-                      <div className={ `grid grid-cols-1 ${hasGoogleAd && hasMetaAd ? 'md:grid-cols-2' : ''} gap-4 pt-2 border-t border-gray-700 mt-2` }>
-                        { hasGoogleAd && (
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                              GOOGLE BUDGET (REMAINING: ₹{ remainingGoogleAdBudget })
-                            </label>
-                            <input type="number" step="0.01" value={ paymentForm.realized_google_budget } onChange={ e => {
-                              setPaymentForm({ ...paymentForm, realized_google_budget: e.target.value });
-                            } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
-                            { Number(paymentForm.realized_google_budget) > remainingGoogleAdBudget && (
-                              <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Google budget ₹{ remainingGoogleAdBudget }</p>
-                            ) }
-                          </div>
-                        ) }
-                        { hasMetaAd && (
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                              META BUDGET (REMAINING: ₹{ remainingMetaAdBudget })
-                            </label>
-                            <input type="number" step="0.01" value={ paymentForm.realized_meta_budget } onChange={ e => {
-                              setPaymentForm({ ...paymentForm, realized_meta_budget: e.target.value });
-                            } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
-                            { Number(paymentForm.realized_meta_budget) > remainingMetaAdBudget && (
-                              <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Meta budget ₹{ remainingMetaAdBudget }</p>
-                            ) }
-                          </div>
-                        ) }
-                        { currentTotalAd > maxAllowed && (
-                          <div className="col-span-full text-red-400 text-xs font-semibold bg-red-900/30 p-2.5 rounded-lg border border-red-800">
-                            Total Ad Budget (₹{ currentTotalAd.toLocaleString() }) cannot exceed ₹{ maxAllowed.toLocaleString() }. Minimum ₹1 must be reserved for service amount.
-                          </div>
+                { (hasGoogleAd || hasMetaAd) && (
+                  <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-semibold text-gray-300">Ad Budget (This Payment)?</span>
+                        { Number(paymentForm.amount) > 0 && (
+                          <p className="text-[11px] text-gray-400 mt-0.5">
+                            Max allowable ad budget: <span className="text-yellow-400 font-semibold">₹{ Math.max(0, Number(paymentForm.amount) - 1).toLocaleString() }</span> (Min ₹1 reserved for service)
+                          </p>
                         ) }
                       </div>
-                    );
-                  })() }
-                </div>
-              ) }
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={ paymentForm.has_ad_budget } onChange={ e => {
+                          setPaymentForm({
+                            ...paymentForm,
+                            has_ad_budget: e.target.checked,
+                            realized_google_budget: e.target.checked && hasGoogleAd ? paymentForm.realized_google_budget : "",
+                            realized_meta_budget: e.target.checked && hasMetaAd ? paymentForm.realized_meta_budget : ""
+                          })
+                        } } className="w-4 h-4 accent-yellow-500" />
+                        <span className="text-sm text-gray-400">Yes</span>
+                      </label>
+                    </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Remark</label>
-                <textarea rows="2" value={ paymentForm.remark } onChange={ e => setPaymentForm({ ...paymentForm, remark: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="Any notes..."></textarea>
+                    { paymentForm.has_ad_budget && (() => {
+                      const activeGoogle = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
+                      const activeMeta = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
+                      const currentTotalAd = activeGoogle + activeMeta;
+                      const maxAllowed = Math.max(0, Number(paymentForm.amount || 0) - 1);
+
+                      return (
+                        <div className={ `grid grid-cols-1 ${hasGoogleAd && hasMetaAd ? 'md:grid-cols-2' : ''} gap-4 pt-2 border-t border-gray-700 mt-2` }>
+                          { hasGoogleAd && (
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                                GOOGLE BUDGET (REMAINING: ₹{ remainingGoogleAdBudget })
+                              </label>
+                              <input type="number" step="0.01" value={ paymentForm.realized_google_budget } onChange={ e => {
+                                setPaymentForm({ ...paymentForm, realized_google_budget: e.target.value });
+                              } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                              { Number(paymentForm.realized_google_budget) > remainingGoogleAdBudget && (
+                                <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Google budget ₹{ remainingGoogleAdBudget }</p>
+                              ) }
+                            </div>
+                          ) }
+                          { hasMetaAd && (
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                                META BUDGET (REMAINING: ₹{ remainingMetaAdBudget })
+                              </label>
+                              <input type="number" step="0.01" value={ paymentForm.realized_meta_budget } onChange={ e => {
+                                setPaymentForm({ ...paymentForm, realized_meta_budget: e.target.value });
+                              } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                              { Number(paymentForm.realized_meta_budget) > remainingMetaAdBudget && (
+                                <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Meta budget ₹{ remainingMetaAdBudget }</p>
+                              ) }
+                            </div>
+                          ) }
+                          { currentTotalAd > maxAllowed && (
+                            <div className="col-span-full text-red-400 text-xs font-semibold bg-red-900/30 p-2.5 rounded-lg border border-red-800">
+                              Total Ad Budget (₹{ currentTotalAd.toLocaleString() }) cannot exceed ₹{ maxAllowed.toLocaleString() }. Minimum ₹1 must be reserved for service amount.
+                            </div>
+                          ) }
+                        </div>
+                      );
+                    })() }
+                  </div>
+                ) }
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Remark</label>
+                  <textarea rows="2" value={ paymentForm.remark } onChange={ e => setPaymentForm({ ...paymentForm, remark: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="Any notes..."></textarea>
+                </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-800 mt-4">
+              <div className="p-5 border-t border-gray-800 bg-gray-900 shrink-0">
                 { (() => {
                   const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved');
                   const totalReceivedTillDate = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
@@ -948,25 +950,25 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                   );
 
                   return (
-                    <div className="flex justify-between items-end">
-                      <div className="flex gap-6">
-                        <div className="text-left">
+                    <div className="flex flex-col gap-6">
+                      <div className="flex justify-between items-center px-2">
+                        <div className="text-center">
                           <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Outstanding</p>
                           <p className="text-lg font-bold text-gray-300">₹{ currentOutstanding.toLocaleString("en-IN") }</p>
                         </div>
-                        <div className="text-left">
+                        <div className="text-center">
                           <p className="text-[10px] text-yellow-500/70 uppercase tracking-wider mb-1">Settle Amount</p>
                           <p className="text-xl font-bold text-yellow-400">₹{ finalSettleAmount.toLocaleString("en-IN") }</p>
                         </div>
-                        <div className="text-left">
+                        <div className="text-center">
                           <p className="text-[10px] text-orange-500/70 uppercase tracking-wider mb-1">Pending Balance</p>
                           <p className="text-lg font-bold text-orange-400">₹{ pendingAfterPayment > 0 ? pendingAfterPayment.toLocaleString("en-IN") : 0 }</p>
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
-                        <button type="button" onClick={ () => setShowPaymentModal(false) } className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 font-semibold transition">Cancel</button>
-                        <button type="submit" disabled={ savingPayment || isAdBudgetInvalid } className="px-6 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed">
+                      <div className="flex justify-center gap-4">
+                        <button type="button" onClick={ () => setShowPaymentModal(false) } className="px-8 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 font-semibold transition">Cancel</button>
+                        <button type="submit" disabled={ savingPayment || isAdBudgetInvalid } className="px-8 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed">
                           { savingPayment ? 'Saving...' : 'Save Payment' }
                         </button>
                       </div>
