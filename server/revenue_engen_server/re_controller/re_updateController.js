@@ -609,6 +609,35 @@ exports.updateNoteDataById = (req, res) => {
 
     res.status(200).json({
       status: "Success",
+      message: "Updated successfully",
+    });
+  });
+};
+
+exports.updateNotesbydefaultById = (req, res) => {
+  const { id } = req.params;
+  const { note_text } = req.body;
+
+  const updatedAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  const query = `
+    UPDATE re_notes_bydefault
+    SET
+      note_text = ?,
+      created_at = ?
+    WHERE id = ?
+  `;
+
+  const values = [note_text, updatedAt, id];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error("Update Error:", err);
+      return res.status(500).json({ status: "Failure", message: "DB error" });
+    }
+
+    res.status(200).json({
+      status: "Success",
       message: "Entry updated of Note successfully",
     });
   });

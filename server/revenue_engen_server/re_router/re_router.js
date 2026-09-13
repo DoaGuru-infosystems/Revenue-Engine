@@ -108,6 +108,7 @@ const {
   getRemainingAmountByIdData,
   getSeoClientsWithKeywords,
   getDiscountSetting,
+  getNotesbydefault,
 } = require("../re_controller/re_getController");
 const {
   deleteService,
@@ -142,6 +143,7 @@ const {
   deleteSeoClient,
   deleteSeoKeyword,
   deleteDiscountSettingById,
+  deleteNotesbydefaultById,
 } = require("../re_controller/re_deleteController");
 const {
   updateService,
@@ -168,6 +170,7 @@ const {
   updateSeoKeyword,
   updateDiscountSettingDataById,
   updateQuotationApprovalStatus,
+  updateNotesbydefaultById,
   // reassignQuotation,
 } = require("../re_controller/re_updateController");
 
@@ -242,6 +245,7 @@ const {
   getAllBalanceProformas,
   getBalanceProformasBySourceId,
   deleteBalanceProforma,
+  updateBalanceProformaNotes,
 } = require("../re_controller/re_proposalController");
 const {
   uploadAndConvert: genratecoatetion,
@@ -523,6 +527,7 @@ router.get(
   getInvoiceAdsCampaign,
 );
 router.get("/getInvoiceNoteData", authenticateToken, getInvoiceNoteData);
+router.get("/getNotesbydefault", authenticateToken, getNotesbydefault);
 router.get(
   "/getInvoiceClientNotesbyId/:client_id/:txn_id",
   getInvoiceClientNotesbyId,
@@ -579,6 +584,7 @@ router.delete("/deleteTeam/:id", deleteTeam);
 
 router.delete("/deleteComplimenatryById/:id", deleteComplimenatryById);
 router.delete("/deleteNoteById/:id", deleteNoteById);
+router.delete("/deleteNotesbydefaultById/:id", deleteNotesbydefaultById);
 router.delete("/deleteDiscountById/:id", deleteDiscountById);
 router.delete("/deleteInvoiceById/:id", deleteInvoiceById);
 router.delete(
@@ -618,6 +624,7 @@ router.put("/updateServiceData/:editing_type_id", updateServiceData);
 router.put("/reassignQuotation", reassignQuotation);
 router.put("/updateComplimenatryDataById/:id", updateComplimenatryDataById);
 router.put("/updateNoteDataById/:id", updateNoteDataById);
+router.put("/updateNotesbydefaultById/:id", updateNotesbydefaultById);
 router.put("/updateClientNoteDataById/:id", updateClientNoteDataById);
 router.put("/updateDiscountDataById/:id", updateDiscountDataById);
 router.put("/updateInvoiceDataById/:id", updateInvoiceDataById);
@@ -717,6 +724,7 @@ router.post("/balance-proforma/create", authenticateToken, createBalanceProforma
 router.get("/balance-proforma/all", authenticateToken, getAllBalanceProformas);
 router.get("/balance-proforma/source/:source_proforma_id", authenticateToken, getBalanceProformasBySourceId);
 router.get("/balance-proforma/:id", authenticateToken, getBalanceProformaById);
+router.put("/balance-proforma/:id/notes", authenticateToken, updateBalanceProformaNotes);
 router.delete("/balance-proforma/:id", authenticateToken, deleteBalanceProforma);
 
 // ---- Proposal Invoices ----

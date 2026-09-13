@@ -357,8 +357,11 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
   const fetchPredefinedNotes = async () => {
     try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`,
+      const endpoint = isBalanceProforma 
+        ? `${baseURL}/auth/api/re_calculator/getNotesbydefault` 
+        : `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`;
+
+      const { data } = await axios.get(endpoint,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -2630,7 +2633,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                       </section>
                     ) }
 
-                    { clientData.tag_received_amt !== "received" && !publicMode && (
+                    { clientData.tag_received_amt !== "received" && !publicMode && isProforma && (
                       <div className="print:hidden my-2 flex items-center gap-2">
 { false && (
                         <button

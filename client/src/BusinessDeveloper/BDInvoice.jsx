@@ -296,8 +296,11 @@ export default function BDInvoice() {
 
   const fetchPredefinedNotes = async () => {
     try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`,
+      const endpoint = isBalanceProforma 
+        ? `${baseURL}/auth/api/re_calculator/getNotesbydefault` 
+        : `${baseURL}/auth/api/re_calculator/getInvoiceNoteData`;
+
+      const { data } = await axios.get(endpoint,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -2363,7 +2366,7 @@ export default function BDInvoice() {
                         </section>
                       )}
 
-                    { clientData.tag_received_amt === "pending" && (
+                    { clientData.tag_received_amt === "pending" && isProforma && (
                       <div className="print:hidden">
 { false && (
                         <button

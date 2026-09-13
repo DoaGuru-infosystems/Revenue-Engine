@@ -3228,3 +3228,33 @@ exports.deleteBalanceProforma = async (req, res) => {
   }
 };
 
+exports.updateBalanceProformaNotes = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+
+    const existing = await runQuery("SELECT id FROM re_balance_proforma WHERE id = ?", [id]);
+    if (!existing || existing.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Balance Proforma not found" });
+    }
+
+    const cleanNotes = Array.isArray(notes)
+      ? notes.map((n) => (typeof n === "string" ? { note_name: n } : { note_name: n.note_name || "" }))
+      : [];
+
+    const notesSnapshot = JSON.stringify(cleanNotes);
+
+    await runQuery("UPDATE re_balance_proforma SET notes_snapshot = ? WHERE id = ?", [notesSnapshot, id]);
+
+    res.status(200).json({
+      status: "Success",
+      message: "Notes updated successfully",
+      data: cleanNotes,
+    });
+  } catch (error) {
+    console.error("updateBalanceProformaNotes error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error updating balance proforma notes" });
+  }
+};
+
+
