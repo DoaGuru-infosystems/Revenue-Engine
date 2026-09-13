@@ -1,3 +1,5 @@
+// local code 
+
 const { db } = require("../../connect");
 const dotenv = require("dotenv");
 const moment = require("moment-timezone");
@@ -685,7 +687,7 @@ exports.updateDiscountDataById = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Discount not found" });
     }
-    
+
     const { txn_id, client_id } = rows[0];
 
     try {
@@ -905,7 +907,7 @@ exports.updateInvoiceDataById = (req, res) => {
   const query = `
     UPDATE re_invoice_graphic
     SET
-      
+      editing_type_amount = ?,
       quantity = ?,
 
       total_amount = ?,
@@ -919,6 +921,7 @@ exports.updateInvoiceDataById = (req, res) => {
   `;
 
   const values = [
+    editing_type_amount,
     quantity,
     total_amount,
     employee,
@@ -928,7 +931,6 @@ exports.updateInvoiceDataById = (req, res) => {
     service_name,
     category_name,
     editing_type_name,
-    editing_type_amount,
   ];
 
   db.query(query, values, (err, result) => {
@@ -1020,7 +1022,8 @@ exports.updateInvoiceComplimenatryDataById = (req, res) => {
   const query = `
     UPDATE re_complimentary_invoice
     SET
-        quantity = ?,
+      editing_type_amount = ?,
+      quantity = ?,
 
       total_amount = ?,
       employee = ?,
@@ -1033,6 +1036,7 @@ exports.updateInvoiceComplimenatryDataById = (req, res) => {
   `;
 
   const values = [
+    editing_type_amount,
     quantity,
     total_amount,
     employee,
@@ -1042,7 +1046,6 @@ exports.updateInvoiceComplimenatryDataById = (req, res) => {
     service_name,
     category_name,
     editing_type_name,
-    editing_type_amount,
   ];
 
   db.query(query, values, (err, result) => {
@@ -1091,7 +1094,8 @@ exports.updateAdditionalDataById = async (req, res) => {
   const query = `
     UPDATE re_addtional_service
     SET
-        quantity = ?,
+      editing_type_amount = ?,
+      quantity = ?,
 
       total_amount = ?,
       employee = ?,
@@ -1104,6 +1108,7 @@ exports.updateAdditionalDataById = async (req, res) => {
   `;
 
   const values = [
+    editing_type_amount,
     quantity,
     total_amount,
     employee,
@@ -1113,7 +1118,6 @@ exports.updateAdditionalDataById = async (req, res) => {
     service_name,
     category_name,
     editing_type_name,
-    editing_type_amount,
   ];
 
   db.query(query, values, async (err, result) => {

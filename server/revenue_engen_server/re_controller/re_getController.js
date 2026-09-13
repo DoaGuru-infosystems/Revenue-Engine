@@ -1,3 +1,5 @@
+// local code
+
 const { db } = require("../../connect");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -63,7 +65,7 @@ exports.getAddCategories = async (req, res) => {
         });
       }
     );
-    
+
   } catch (error) {
     res.status(500).json({
       status: "Failure",
@@ -1632,8 +1634,8 @@ exports.getAssignmentsSummary = (req, res) => {
     const mode = isSingle
       ? "single"
       : allTeamMode && hasTeam
-      ? "team"
-      : "mixed";
+        ? "team"
+        : "mixed";
 
     return res.status(200).json({
       status: "Success",
@@ -2033,7 +2035,7 @@ exports.getDiscountByDocument = async (req, res) => {
                   }],
                 });
               }
-            } catch (e) {}
+            } catch (e) { }
           }
 
           // Check if proforma's txn_id has an entry in re_discount
@@ -2075,7 +2077,7 @@ exports.getDiscountByDocument = async (req, res) => {
                   }],
                 });
               }
-            } catch (e) {}
+            } catch (e) { }
           }
 
           if (propRows[0].txn_id) {
@@ -2115,7 +2117,7 @@ exports.getDiscountByDocument = async (req, res) => {
             }],
           });
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return res.status(200).json({ status: "Success", data: [] });
@@ -2392,7 +2394,7 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
 
   try {
     const results = await query("SELECT * FROM re_invoice WHERE client_id = ? AND txn_id = ?", [client_id, txn_id]);
-    
+
     if (results.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Client not found" });
     }
@@ -2418,62 +2420,44 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
         if (pf.length > 0 && pf[0].discount_snapshot) {
           invoice.discount_snapshot = pf[0].discount_snapshot;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     if (invoice.invoice_source === 'proposal' && invoice.proforma_id) {
-       const prevInvoices = await query(
-         "SELECT bill_number, created_at FROM re_invoice WHERE proforma_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
-         [invoice.proforma_id, invoice.id]
-       );
-       if (prevInvoices.length > 0) {
-         invoice.previous_invoice_no = prevInvoices[0].bill_number;
-         invoice.previous_invoice_date = prevInvoices[0].created_at;
-       }
-       
-       const pastPayments = await query(
-         "SELECT SUM(amount) as total_past, SUM(realized_ad_budget) as total_past_ad FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved' AND id < (SELECT id FROM (SELECT id FROM re_proposal_payment_records WHERE txn_id = ? LIMIT 1) as t)",
-         [invoice.proforma_id, invoice.txn_id]
-       );
-       invoice.total_past_received = Number(pastPayments[0].total_past || 0);
-       invoice.total_past_ad_budget = Number(pastPayments[0].total_past_ad || 0);
+      const prevInvoices = await query(
+        "SELECT bill_number, created_at FROM re_invoice WHERE proforma_id = ? AND id < ? ORDER BY id DESC LIMIT 1",
+        [invoice.proforma_id, invoice.id]
+      );
+      if (prevInvoices.length > 0) {
+        invoice.previous_invoice_no = prevInvoices[0].bill_number;
+        invoice.previous_invoice_date = prevInvoices[0].created_at;
+      }
 
-       const proformaRows = await query(
-         "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot FROM re_proposal_proforma WHERE id = ?",
-         [invoice.proforma_id]
-       );
-       if (proformaRows.length > 0) {
-         if (!invoice.pricing_snapshot && proformaRows[0].pricing_snapshot) {
-           invoice.pricing_snapshot = proformaRows[0].pricing_snapshot;
-         }
-         if (!invoice.ads_snapshot && proformaRows[0].ads_snapshot) {
-           invoice.ads_snapshot = proformaRows[0].ads_snapshot;
-         }
-         if (!invoice.notes_snapshot && proformaRows[0].notes_snapshot) {
-           invoice.notes_snapshot = proformaRows[0].notes_snapshot;
-         }
-         if (proformaRows[0].discount_snapshot) {
-           invoice.discount_snapshot = proformaRows[0].discount_snapshot;
-         }
-       }
+      const pastPayments = await query(
+        "SELECT SUM(amount) as total_past, SUM(realized_ad_budget) as total_past_ad FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved' AND id < (SELECT id FROM (SELECT id FROM re_proposal_payment_records WHERE txn_id = ? LIMIT 1) as t)",
+        [invoice.proforma_id, invoice.txn_id]
+      );
+      invoice.total_past_received = Number(pastPayments[0].total_past || 0);
+      invoice.total_past_ad_budget = Number(pastPayments[0].total_past_ad || 0);
 
-       // Fallback to parent proposal if proforma didn't have discount_snapshot
-       if (!invoice.discount_snapshot && invoice.proposal_id) {
-         const propRows = await query(
-           "SELECT sections_json FROM re_proposals WHERE id = ?",
-           [invoice.proposal_id]
-         );
-         if (propRows.length > 0 && propRows[0].sections_json) {
-           try {
-             const sec = typeof propRows[0].sections_json === "string"
-               ? JSON.parse(propRows[0].sections_json)
-               : propRows[0].sections_json;
-             if (sec?.pricing_discount && Number(sec.pricing_discount.value) > 0) {
-               invoice.discount_snapshot = JSON.stringify(sec.pricing_discount);
-             }
-           } catch (e) {}
-         }
-       }
+      const proformaRows = await query(
+        "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot FROM re_proposal_proforma WHERE id = ?",
+        [invoice.proforma_id]
+      );
+      if (proformaRows.length > 0) {
+        if (!invoice.pricing_snapshot && proformaRows[0].pricing_snapshot) {
+          invoice.pricing_snapshot = proformaRows[0].pricing_snapshot;
+        }
+        if (!invoice.ads_snapshot && proformaRows[0].ads_snapshot) {
+          invoice.ads_snapshot = proformaRows[0].ads_snapshot;
+        }
+        if (!invoice.notes_snapshot && proformaRows[0].notes_snapshot) {
+          invoice.notes_snapshot = proformaRows[0].notes_snapshot;
+        }
+        if (proformaRows[0].discount_snapshot) {
+          invoice.discount_snapshot = proformaRows[0].discount_snapshot;
+        }
+      }
     }
 
     res.status(200).json({ status: "Success", data: invoice });

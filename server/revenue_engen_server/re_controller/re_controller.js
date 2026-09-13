@@ -1,3 +1,5 @@
+// local code 
+
 const { db } = require("../../connect");
 const moment = require("moment-timezone");
 const dotenv = require("dotenv");
@@ -27,16 +29,6 @@ exports.register = async (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  try {
-    const { checkInvoiceGenerated } = require("./re_invoiceHelper");
-    const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
-    if (isInvoiceGenerated) {
-      return res.status(403).json({ status: "Alert", message: "Invoice already generated. Edits are not allowed." });
-    }
-  } catch (err) {
-    console.error("Invoice check error:", err);
-    return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
-  }
 
 
   if (
@@ -3123,7 +3115,7 @@ exports.submitRequirement = (req, res) => {
     try {
       const parsed = JSON.parse(items_json);
       if (Array.isArray(parsed)) items = parsed;
-    } catch {}
+    } catch { }
   }
   const hasAnyItem = items.length > 0;
   if (!hasAnyItem && !String(requirement).trim()) {

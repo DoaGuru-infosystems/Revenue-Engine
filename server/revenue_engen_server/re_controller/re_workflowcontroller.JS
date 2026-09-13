@@ -1,3 +1,6 @@
+// local code 
+
+
 const { db } = require("../../connect");
 const moment = require("moment-timezone");
 const dotenv = require("dotenv");
@@ -103,7 +106,7 @@ function updateQuotationStatus(
       updated_at = NOW()
   `;
 
-  db.query(q, [txn_id, client_id, status, approved_by], cb || (() => {}));
+  db.query(q, [txn_id, client_id, status, approved_by], cb || (() => { }));
 }
 
 // Ye dhundho:
@@ -646,18 +649,19 @@ exports.recordPaymentAndGenerateFinalInvoice = async (req, res) => {
     );
 
     const client_name = await getClientNameById(client_id);
-    await sf
-      .pushPaymentInvoiceReadyToSF({
-        txn_id,
-        client_name,
-        amount_received: paymentAmount,
-        total_received_till_date,
-        pending_payment_amount,
-        payment_mode,
-        payment_date,
-        transaction_reference,
-      })
-      .catch((e) => console.error("[SF] payment invoice ready:", e.message));
+    // SF push removed — sf module no longer used
+    // await sf
+    //   .pushPaymentInvoiceReadyToSF({
+    //     txn_id,
+    //     client_name,
+    //     amount_received: paymentAmount,
+    //     total_received_till_date,
+    //     pending_payment_amount,
+    //     payment_mode,
+    //     payment_date,
+    //     transaction_reference,
+    //   })
+    //   .catch((e) => console.error("[SF] payment invoice ready:", e.message));
 
     // Need to get invoice date and number for the notification
     const invoiceDetails = await runQuery(
@@ -791,11 +795,12 @@ exports.invoiceSentNotify = async (req, res) => {
     await updateQuotationStatusAsync(txn_id, client_id, "invoice_sent");
     await saveRemark(txn_id, "invoice_sent", req.user?.employee_name, remark);
     const client_name = await getClientNameById(client_id);
-    await sf
-      .pushInvoiceSentToSF({ txn_id, client_name, invoice_amount })
-      .catch((e) => {
-        console.error("[SF] invoice sent (legacy):", e.message);
-      });
+    // SF push removed — sf module no longer used
+    // await sf
+    //   .pushInvoiceSentToSF({ txn_id, client_name, invoice_amount })
+    //   .catch((e) => {
+    //     console.error("[SF] invoice sent (legacy):", e.message);
+    //   });
     return res
       .status(200)
       .json({ success: true, message: "Invoice sent - SF notify ho gaya" });
