@@ -2252,7 +2252,7 @@ export default function Quotation() {
                             onClick={ handleShowDiscount }
                             className={ `inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm ${selecteddiscount
                               ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20"
-                              : "bg-white hover:bg-gray-100 text-gray-700 border-gray-300 hover:border-gray-400"
+                              : "bg-white hover:bg-gray-100 !text-black dark:bg-gray-700 dark:!text-white dark:border-gray-600 dark:hover:bg-gray-600 border-gray-300 hover:border-gray-400"
                               }` }
                           >
                             🏷️ { selecteddiscount ? "Edit Discount" : "Set Discount" }
@@ -2265,7 +2265,7 @@ export default function Quotation() {
                           const name = (ad.category_name || ad.category || ad.service_name || ad.service || "").toLowerCase();
                           return (name.includes("meta") || name.includes("facebook") || name.includes("fb") || name.includes("insta")) && Number(ad.amount || ad.budget || 0) > 0;
                         }) && (
-                            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
+                            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 !text-black bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
                               <input
                                 type="checkbox"
                                 checked={ showMetaAd }
@@ -2280,7 +2280,7 @@ export default function Quotation() {
                           const name = (ad.category_name || ad.category || ad.service_name || ad.service || "").toLowerCase();
                           return name.includes("google") && Number(ad.amount || ad.budget || 0) > 0;
                         }) && (
-                            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
+                            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 !text-black bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
                               <input
                                 type="checkbox"
                                 checked={ showGoogleAd }
