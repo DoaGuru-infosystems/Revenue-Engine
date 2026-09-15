@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 // import { useSelector } from "react-redux";
 import styled from "styled-components";
 import Quotation from "../Admin/Quotation";
+import BalanceProforma from "../Admin/BalanceProforma";
 import AdminAddPlan from "../Admin/AdminAddPlan";
 import AdminPlanHistory from "../Admin/AdminPlanHistory";
 import AdminComplimentaryData from "../Admin/AdminComplimentaryData";
@@ -64,6 +65,7 @@ const AdminRouter = () => {
             <Route path="proposal-builder/:clientId/:proposalId" element={<ProposalBuilder />} />
             
             <Route path="quotation/:id/:txn_id" element={<Quotation />} />
+            <Route path="balance-proforma/:id/:txn_id" element={<BalanceProforma />} />
 
             <Route path="plan-details/:id" element={<AdminPlanHistory />} />
             <Route

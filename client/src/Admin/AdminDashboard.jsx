@@ -69,7 +69,7 @@ const AdminDashboard = () => {
     { id: "exploreplan", label: "Explore Plans", icon: List }, // moved to admin setting component
     // { id: "registerbd", label: "Register BD", icon: ShieldPlus },// moved to admin setting component
     ...(currentUser?.role === "Owner" ? [{ id: "history", label: "Account", icon: Clock }] : []), // unified history hub
-    { id: "createinvoice", label: "Instant Proforma", icon: Plus },
+    // { id: "createinvoice", label: "Instant Proforma", icon: Plus },
     { id: "assign", label: "Assign", icon: UserPlus }, // home tab
     // { id: "createteam", label: "Team", icon: Users }, // moved to admin setting component
     { id: "generatelink", label: "Generate Link", icon: Link }, // home tab

@@ -61,7 +61,7 @@ const BalanceProformaHistory = () => {
 
   const handlePreviewPdf = (item) => {
     window.open(
-      `#/admin/quotation/${item.client_id}/${item.id}?doc=balance-proforma-view&gst=${item.is_gst ? 1 : 0}`,
+      `#/admin/balance-proforma/${item.client_id}/${item.id}?doc=balance-proforma-view&gst=${item.is_gst ? 1 : 0}`,
       "_blank"
     );
   };

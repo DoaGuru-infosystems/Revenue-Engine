@@ -542,7 +542,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
             }).then((viewResult) => {
               if (viewResult.isConfirmed) {
                 window.open(
-                  `#/admin/quotation/${proposal.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGST ? 1 : 0}`,
+                  `#/admin/balance-proforma/${proposal.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGST ? 1 : 0}`,
                   "_blank"
                 );
               }

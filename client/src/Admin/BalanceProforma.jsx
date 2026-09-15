@@ -24,15 +24,15 @@ import {
 import { classifyProformaServices } from "../utils/proformaPricing";
 import { inrToWords } from "../utils/inrToWords";
 import API_BASE_URL from "../config/apiBaseUrl";
-export default function Quotation() {
+export default function BalanceProforma() {
   const baseURL = API_BASE_URL;
   const { id, txn_id } = useParams();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const isGST = query.get("gst") === "1";
   const rawDocParam = query.get("doc");
-  const isBalanceProforma = false;
-  const docTypeFromURL = rawDocParam === "proforma" ? "proforma" : "quotation";
+  const isBalanceProforma = true;
+  const docTypeFromURL = "balance-proforma";
   const sourceFromURL = query.get("source");
   const navigate = useNavigate();
   const { currentUser, token } = useSelector((state) => state.user);

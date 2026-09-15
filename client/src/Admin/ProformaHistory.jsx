@@ -232,7 +232,7 @@ const ProformaHistory = ({ openProformaManager, setActiveTab }) => {
             }).then((viewResult) => {
               if (viewResult.isConfirmed) {
                 window.open(
-                  `#/admin/quotation/${item.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGst ? 1 : 0}`,
+                  `#/admin/balance-proforma/${item.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGst ? 1 : 0}`,
                   "_blank"
                 );
               }
