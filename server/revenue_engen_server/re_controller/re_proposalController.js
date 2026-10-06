@@ -1589,7 +1589,7 @@ exports.approvePayment = async (req, res) => {
             item.category_name || "",
             null,
             item.editing_type_name || "",
-            item.unit_price || 0,
+            item.editing_type_amount || item.price || item.amount || item.unit_price || 0,
             item.quantity || 1,
             "0",
             "0",

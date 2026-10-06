@@ -621,8 +621,16 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
             category_name: item.category_name,
             editing_type_name: item.editing_type_name,
             quantity: item.quantity || 1,
-            editing_type_amount: item.unit_price ?? item.editing_type_amount ?? item.total_price ?? 0,
-            total_amount: item.total_amount ?? item.total_price ?? 0
+            editing_type_amount: (item.editing_type_amount && Number(item.editing_type_amount) > 0)
+              ? Number(item.editing_type_amount)
+              : (item.price && Number(item.price) > 0
+                ? Number(item.price)
+                : (item.amount && Number(item.amount) > 0
+                  ? Number(item.amount)
+                  : (item.unit_price && Number(item.unit_price) > 0
+                    ? Number(item.unit_price)
+                    : 0))),
+            total_amount: 0
           }));
           setComplimentaryData(complimentary);
         } catch (e) {
@@ -704,8 +712,16 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
             category_name: item.category_name,
             editing_type_name: item.editing_type_name,
             quantity: item.quantity,
-            editing_type_amount: item.unit_price,
-            total_amount: item.total_price
+            editing_type_amount: (item.editing_type_amount && Number(item.editing_type_amount) > 0)
+              ? Number(item.editing_type_amount)
+              : (item.price && Number(item.price) > 0
+                ? Number(item.price)
+                : (item.amount && Number(item.amount) > 0
+                  ? Number(item.amount)
+                  : (item.unit_price && Number(item.unit_price) > 0
+                    ? Number(item.unit_price)
+                    : 0))),
+            total_amount: 0
           }));
           setComplimentaryData(complimentary);
 
@@ -1668,6 +1684,23 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
   const grandTotal = graphicTotal + additionalTotal;
 
+  const thumbTotal = graphicData
+    .flatMap((s) => s.editingTypes.filter((e) => Number(e.include_thumbnail_creation) > 0))
+    .reduce((sum, e) => sum + Number(e.include_thumbnail_creation) * Number(e.quantity), 0);
+  const postTotal = graphicData
+    .flatMap((s) => s.editingTypes.filter((e) => Number(e.include_content_posting) > 0))
+    .reduce((sum, e) => sum + Number(e.include_content_posting) * Number(e.quantity), 0);
+  const ytTotal = graphicData
+    .flatMap((s) => s.editingTypes.filter((e) => Number(e.include_youtube_video_posting) > 0))
+    .reduce((sum, e) => sum + Number(e.include_youtube_video_posting) * Number(e.quantity), 0);
+  const addTotal = additionalServiceData.reduce((sum, e) => {
+    const amount = e.total_amount !== null && e.total_amount !== undefined
+      ? Number(e.total_amount || 0)
+      : Number(e.editing_type_amount || e.price || 0) * Number(e.quantity || 1);
+    return sum + Number(amount || 0);
+  }, 0);
+  const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
+
   // Apply discount percentage only for display
   // Compute discounted amount based on type
   const discountAmount = selecteddiscount
@@ -2474,6 +2507,14 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
 
 
                             </tbody>
+                            <tfoot style={ { background: "#f5f8fc", fontWeight: 800, border: "1px solid #cfd8e3" } }>
+                              <tr>
+                                <td className="border px-2 py-1 text-right font-bold" colSpan={ 4 }>Services Total</td>
+                                <td className="border px-2 py-1 text-right font-bold w-[15%]">
+                                  ₹{ formatAmountNoDecimals(dmServiceTotal) }
+                                </td>
+                              </tr>
+                            </tfoot>
                           </table>
                         </section>
                       ) }
@@ -2496,7 +2537,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                           <tbody>
                             { complimentaryData.map((svc, idx) => {
                               const qty = Number(svc.quantity || 1);
-                              const price = Number(svc.editing_type_amount || svc.amount || 0);
+                              const price = Number(svc.editing_type_amount || svc.price || svc.amount || 0);
                               return (
                                 <tr key={ `comp-${idx}` } className="bg-white">
                                   <td className="border px-2 py-1 font-medium">{ String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }</td>
@@ -2512,8 +2553,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                             <tr className="bg-green-50">
                               <td colSpan={ 4 } className="border px-2 py-1 text-right font-semibold">Total</td>
                               <td className="border px-2 py-1 text-right font-semibold">
-                                ₹{ formatAmount(complimentaryData.reduce((sum, svc) => sum + (Number(svc.editing_type_amount || svc.amount || 0) * Number(svc.quantity || 1)), 0)) }
-                              </td>
+                                ₹{ formatAmount(complimentaryData.reduce((sum, svc) => sum + (Number(svc.editing_type_amount || svc.price || svc.amount || 0) * Number(svc.quantity || 1)), 0)) }</td>
                             </tr>
                             <tr className="bg-green-100 font-bold">
                               <td colSpan={ 4 } className="border px-2 py-1 text-right text-green-900">Complimentary Total (Free)</td>
@@ -2530,88 +2570,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                       <section className="mb-2 text-sm mt-2">
                         <table className="w-full border text-xs">
                           <tbody>
-                            { (() => {
-                              // Service Charge hamesha count hoga — hide/show sirf budget amounts pe apply hoti hai
-                              const graphicTotal = graphicData.reduce(
-                                (sum, service) =>
-                                  sum +
-                                  service.editingTypes.reduce(
-                                    (s, edit) => {
-                                      return (
-                                        s +
-                                        (Number(edit.price || 0) *
-                                          Number(edit.quantity || 1))
-                                      );
-                                    },
-                                    0
-                                  ),
-                                0
-                              );
-                              const thumbTotal = graphicData
-                                .flatMap((s) =>
-                                  s.editingTypes.filter(
-                                    (e) =>
-                                      Number(e.include_thumbnail_creation) > 0
-                                  )
-                                )
-                                .reduce(
-                                  (sum, e) =>
-                                    sum +
-                                    Number(e.include_thumbnail_creation) *
-                                    Number(e.quantity),
-                                  0
-                                );
-                              const postTotal = graphicData
-                                .flatMap((s) =>
-                                  s.editingTypes.filter(
-                                    (e) => Number(e.include_content_posting) > 0
-                                  )
-                                )
-                                .reduce(
-                                  (sum, e) =>
-                                    sum +
-                                    Number(e.include_content_posting) *
-                                    Number(e.quantity),
-                                  0
-                                );
-                              const addTotal = additionalServiceData.reduce(
-                                (sum, e) => {
-                                  const amount =
-                                    e.total_amount !== null &&
-                                      e.total_amount !== undefined
-                                      ? Number(e.total_amount || 0)
-                                      : Number(e.editing_type_amount || e.price || 0) *
-                                      Number(e.quantity || 1);
-                                  return sum + (Number(amount || 0));
-                                },
-                                0
-                              );
-
-                              const ytTotal = graphicData
-                                .flatMap((s) =>
-                                  s.editingTypes.filter(
-                                    (e) => Number(e.include_youtube_video_posting) > 0
-                                  )
-                                )
-                                .reduce(
-                                  (sum, e) =>
-                                    sum +
-                                    Number(e.include_youtube_video_posting) *
-                                    Number(e.quantity),
-                                  0
-                                );
-
-                              const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
-
-                              return (
-                                <>
-                                  <tr style={ { background: "#f5f8fc", fontWeight: 800, border: "1px solid #cfd8e3" } }>
-                                    <td className="border px-2 py-1 text-right" colSpan={ 4 }>Services Total</td>
-                                    <td className="border px-2 py-1 text-right w-[15%]">
-                                      ₹{ formatAmountNoDecimals(dmServiceTotal) }
-                                    </td>
-                                  </tr>
-                                  { selecteddiscount && discountAmount > 0 && (
+                            { selecteddiscount && discountAmount > 0 && (
                                     <tr style={ { color: "#dc2626", background: "#fef2f2", fontWeight: 700 } }>
                                       <td className="border px-2 py-1 text-right" colSpan={ 4 }>Discount</td>
                                       <td className="border px-2 py-1 text-right w-[15%]">
@@ -2625,9 +2584,6 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
                                       ₹{ formatAmountNoDecimals(invoiceSubtotal) }
                                     </td>
                                   </tr>
-                                </>
-                              );
-                            })() }
                           </tbody>
                         </table>
                       </section>

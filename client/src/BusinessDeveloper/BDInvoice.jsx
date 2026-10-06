@@ -1716,7 +1716,7 @@ export default function BDInvoice() {
                                       ₹{ pricePerThumb }
                                     </td>
                                     <td className="border px-2 py-1 text-right">
-                                      ₹{ totalThumbAmount }
+                                      ₹0
                                     </td>
                                   </tr>
                                 );
@@ -1758,7 +1758,7 @@ export default function BDInvoice() {
                                       ₹{ pricePerPost }
                                     </td>
                                     <td className="border px-2 py-1 text-right">
-                                      ₹{ totalPostAmount }
+                                      ₹0
                                     </td>
                                   </tr>
                                 );
@@ -1800,7 +1800,7 @@ export default function BDInvoice() {
                                       ₹{ pricePerYt }
                                     </td>
                                     <td className="border px-2 py-1 text-right">
-                                      ₹{ totalYtAmount }
+                                      ₹0
                                     </td>
                                   </tr>
                                 );
@@ -1950,369 +1950,16 @@ export default function BDInvoice() {
                                 const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
 
                                 return (
-                                  <>
-
-                              {/* ================= COMPLIMENTARY ITEMS ================= */}
-                              {complimentaryData.length > 0 &&
-                                complimentaryData.map((svc, idx) => {
-                                  const qty = Number(svc.quantity || 1);
-                                  const price = Number(
-                                    svc.editing_type_amount ||
-                                    svc.amount ||
-                                    svc.price || 0
-                                  );
-                                  const svcName = svc.editing_type_name ||
-                                                  svc.service_name || "N/A";
-
-                                  return (
-                                    <tr key={`comp-main-${idx}`}
-                                        style={{backgroundColor: "#dcf7e8"}}>
-                                      <td className="border px-2 py-1 text-center">
-                                        <span style={{
-                                          background: "#fef2f2",
-                                          color: "#dc2626",
-                                          fontWeight: "bold",
-                                          fontSize: "10px",
-                                          padding: "1px 5px",
-                                          borderRadius: "4px"
-                                        }}>FREE</span>
-                                      </td>
-                                      <td className="border px-2 py-1">
-                                        <span style={{color: "#047968", fontWeight: "600"}}>
-                                          {svcName}
-                                        </span>
-                                        <span style={{
-                                          color: "#6b7280",
-                                          fontStyle: "italic",
-                                          fontSize: "10px"
-                                        }}> (Complementary)</span>
-                                      </td>
-                                      <td className="border px-2 py-1 text-right">
-                                        {qty}
-                                      </td>
-                                      <td className="border px-2 py-1 text-right">
-                                        <span style={{
-                                          textDecoration: "line-through",
-                                          color: "#9ca3af"
-                                        }}>
-                                          ₹{Number(price || 0).toLocaleString()}
-                                        </span>
-                                      </td>
-                                      <td className="border px-2 py-1 text-right"
-                                          style={{fontWeight: "bold", color: "#047968"}}>
-                                        ₹0
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              }
-
                                   <tr style={{ background: "#f5f8fc", fontWeight: 800, border: "1px solid #cfd8e3" }}>
                                     <td
-                                      className="border px-2 py-1 text-right"
+                                      className="border px-2 py-1 text-right font-bold"
                                       colSpan={ 4 }
                                     >
                                       Services Total
                                     </td>
-                                    <td className="border px-2 py-1 text-right">
+                                    <td className="border px-2 py-1 text-right font-bold">
                                       ₹
                                       { dmServiceTotal.toFixed(0).toLocaleString() }
-                                    </td>
-                                  </tr>
-                                  </>
-                                );
-                              })() }
-                              {/* ================= COMPLIMENTARY SERVICES ================= */ }
-                              { false && complimentaryData.length > 0 && (
-                                <>
-                                  {/* Complimentary Services + Totals */ }
-                                  { (() => {
-                                    // ✅ Totals inside Complimentary Service
-                                    const thumbEdits = complimentaryData.filter(
-                                      (item) =>
-                                        Number(item.include_thumbnail_creation) >
-                                        0
-                                    );
-                                    const postEdits = complimentaryData.filter(
-                                      (item) =>
-                                        Number(item.include_content_posting) > 0
-                                    );
-
-                                    const totalThumbQty = thumbEdits.reduce(
-                                      (sum, item) => sum + Number(item.quantity),
-                                      0
-                                    );
-                                    const pricePerThumb =
-                                      thumbEdits[0]?.include_thumbnail_creation ||
-                                      0;
-                                    const totalThumbAmount = thumbEdits.reduce(
-                                      (sum, item) =>
-                                        sum +
-                                        Number(item.include_thumbnail_creation) *
-                                        Number(item.quantity),
-                                      0
-                                    );
-
-                                    const totalPostQty = postEdits.reduce(
-                                      (sum, item) => sum + Number(item.quantity),
-                                      0
-                                    );
-                                    const pricePerPost =
-                                      postEdits[0]?.include_content_posting || 0;
-                                    const totalPostAmount = postEdits.reduce(
-                                      (sum, item) =>
-                                        sum +
-                                        Number(item.include_content_posting) *
-                                        Number(item.quantity),
-                                      0
-                                    );
-
-                                    return (
-                                      <>
-                                        { complimentaryData.map((edit, eidx) => {
-                                          const qty = Number(edit.quantity);
-                                          const base = Number(
-                                            edit.editing_type_amount
-                                          );
-                                          const totalBase = base * qty;
-
-                                          return (
-                                            <tr
-                                              key={ `compl-${eidx}` }
-                                              className="bg-gray-50"
-                                            >
-                                              { eidx === 0 && (
-                                                <td
-                                                  className="border px-2 py-1 align-center"
-                                                  rowSpan={
-                                                    complimentaryData.length +
-                                                    (thumbEdits.length > 0
-                                                      ? 1
-                                                      : 0) +
-                                                    (postEdits.length > 0 ? 1 : 0) +
-                                                    (complimentaryData.some(item => Number(item.include_youtube_video_posting) > 0) ? 1 : 0)
-                                                  }
-                                                >
-                                                  Complimentary Service
-                                                </td>
-                                              ) }
-                                              <td className="border px-2 py-1">
-                                                { edit.editing_type_name }
-                                              </td>
-                                              <td className="border px-2 py-1 text-right">
-                                                { qty }
-                                              </td>
-                                              <td className="border px-2 py-1 text-right">
-                                                ₹{ base }
-                                              </td>
-                                              <td className="border px-2 py-1 text-right">
-                                                ₹{ totalBase }
-                                              </td>
-                                            </tr>
-                                          );
-                                        }) }
-
-                                        {/* ✅ Thumbnail Creation Total inside Complimentary Service */ }
-                                        { thumbEdits.length > 0 && (
-                                          <tr className="bg-gray-50">
-                                            <td
-                                              className="border px-2 py-1"
-                                              colSpan={ 0 }
-                                            >
-                                              Thumbnail Creation Total
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              { totalThumbQty }
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              ₹{ pricePerThumb.toLocaleString() }
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              ₹{ totalThumbAmount.toLocaleString() }
-                                            </td>
-                                          </tr>
-                                        ) }
-
-                                        {/* ✅ Content Posting Total inside Complimentary Service */ }
-                                        { postEdits.length > 0 && (
-                                          <tr className="bg-gray-50">
-                                            <td
-                                              className="border px-2 py-1"
-                                              colSpan={ 0 }
-                                            >
-                                              Meta Growth & Content Management Total
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              { totalPostQty }
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              ₹{ pricePerPost.toLocaleString() }
-                                            </td>
-                                            <td className="border px-2 py-1 text-right">
-                                              ₹{ totalPostAmount.toLocaleString() }
-                                            </td>
-                                          </tr>
-                                        ) }
-
-                                        {/* ✅ YouTube Video Posting Total inside Complimentary Service */ }
-                                        { (() => {
-                                          const ytEdits = complimentaryData.filter(
-                                            (item) =>
-                                              Number(item.include_youtube_video_posting) > 0
-                                          );
-                                          if (ytEdits.length === 0) return null;
-
-                                          const totalYtQty = ytEdits.reduce(
-                                            (sum, item) => sum + Number(item.quantity),
-                                            0
-                                          );
-                                          const pricePerYt =
-                                            Number(ytEdits[0].include_youtube_video_posting) || 0;
-                                          const totalYtAmount = ytEdits.reduce(
-                                            (sum, item) =>
-                                              sum +
-                                              Number(item.include_youtube_video_posting) *
-                                              Number(item.quantity),
-                                            0
-                                          );
-
-                                          return (
-                                            <tr className="bg-gray-50">
-                                              <td
-                                                className="border px-2 py-1"
-                                                colSpan={ 0 }
-                                              >
-                                                YouTube Channel Growth & Optimization Total
-                                              </td>
-                                              <td className="border px-2 py-1 text-right">
-                                                { totalYtQty }
-                                              </td>
-                                              <td className="border px-2 py-1 text-right">
-                                                ₹{ pricePerYt.toLocaleString() }
-                                              </td>
-                                              <td className="border px-2 py-1 text-right">
-                                                ₹{ totalYtAmount.toLocaleString() }
-                                              </td>
-                                            </tr>
-                                          );
-                                        })() }
-                                      </>
-                                    );
-                                  })() }
-                                </>
-                              ) }
-
-                              { false && complimentaryData.length > 0 ? (
-                                <>
-                                  <tr className=" font-semibold">
-                                    <td
-                                      className="border px-2 py-1 text-right"
-                                      colSpan={ 4 }
-                                    >
-                                      Total
-                                    </td>
-                                    <td className="border px-2 py-1 text-right">
-                                      ₹{ complimentaryTotal }
-                                    </td>
-                                  </tr>
-
-                                  { (() => {
-                                    const complimentaryTotal =
-                                      complimentaryData.reduce(
-                                        (sum, e) =>
-                                          sum +
-                                          Number(e.editing_type_amount) *
-                                          Number(e.quantity),
-                                        0
-                                      );
-
-                                    return (
-                                      <tr className=" font-semibold">
-                                        <td
-                                          className="border px-2 py-1 text-right"
-                                          colSpan={ 4 }
-                                        >
-                                          Complimentary Total
-                                        </td>
-                                        <td className="border px-2 py-1 text-right">
-                                          ₹0
-                                        </td>
-                                      </tr>
-                                    );
-                                  })() }
-                                </>
-                              ) : null }
-
-                              {/* ================= DM SERVICE TOTAL ================= */ }
-                              { (() => {
-                                const graphicTotal = graphicData.reduce(
-                                  (sum, service) => {
-                                    return (
-                                      sum +
-                                      service.editingTypes.reduce(
-                                        (s, edit) =>
-                                          s +
-                                          Number(edit.price) *
-                                          Number(edit.quantity),
-                                        0
-                                      )
-                                    );
-                                  },
-                                  0
-                                );
-
-                                const thumbTotal = graphicData
-                                  .flatMap((s) =>
-                                    s.editingTypes.filter(
-                                      (e) =>
-                                        Number(e.include_thumbnail_creation) > 0
-                                    )
-                                  )
-                                  .reduce(
-                                    (sum, e) =>
-                                      sum +
-                                      Number(e.include_thumbnail_creation) *
-                                      Number(e.quantity),
-                                    0
-                                  );
-
-                                const postTotal = graphicData
-                                  .flatMap((s) =>
-                                    s.editingTypes.filter(
-                                      (e) => Number(e.include_content_posting) > 0
-                                    )
-                                  )
-                                  .reduce(
-                                    (sum, e) =>
-                                      sum +
-                                      Number(e.include_content_posting) *
-                                      Number(e.quantity),
-                                    0
-                                  );
-
-                                const addTotal = additionalServiceData.reduce(
-                                  (sum, e) =>
-                                    sum +
-                                    Number(e.editing_type_amount) *
-                                    Number(e.quantity),
-                                  0
-                                );
-
-                                const dmServiceTotal = graphicTotal + thumbTotal + postTotal + addTotal;
-
-                                return (
-                                  <tr className="bg-orange-50 font-semibold">
-                                    <td
-                                      className="border px-2 py-1 text-right"
-                                      colSpan={ 4 }
-                                    >
-                                      Subtotal
-                                    </td>
-                                    <td className="border px-2 py-1 text-right">
-                                      ₹
-                                      { invoiceSubtotal.toLocaleString("en-IN", {
-                                        maximumFractionDigits: 0,
-                                      }) }
                                     </td>
                                   </tr>
                                 );
@@ -2338,7 +1985,7 @@ export default function BDInvoice() {
                             <tbody>
                               { complimentaryData.map((svc, idx) => {
                                 const qty = Number(svc.quantity || 1);
-                                const price = Number(svc.editing_type_amount || svc.amount || 0);
+                                const price = Number(svc.editing_type_amount || svc.price || svc.amount || 0);
                                 return (
                                   <tr key={`comp-${idx}`} className="bg-white">
                                     <td className="border px-2 py-1 font-medium">{String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()}</td>
@@ -2354,8 +2001,7 @@ export default function BDInvoice() {
                               <tr className="bg-green-50">
                                 <td colSpan={4} className="border px-2 py-1 text-right font-semibold">Total</td>
                                 <td className="border px-2 py-1 text-right font-semibold">
-                                  ₹{complimentaryData.reduce((sum, svc) => sum + (Number(svc.editing_type_amount || svc.amount || 0) * Number(svc.quantity || 1)), 0).toLocaleString("en-IN")}
-                                </td>
+                                  ₹{complimentaryData.reduce((sum, svc) => sum + (Number(svc.editing_type_amount || svc.price || svc.amount || 0) * Number(svc.quantity || 1)), 0).toLocaleString("en-IN")}</td>
                               </tr>
                               <tr className="bg-green-100 font-bold">
                                 <td colSpan={4} className="border px-2 py-1 text-right text-green-900">Complimentary Total (Free)</td>

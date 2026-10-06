@@ -507,8 +507,16 @@ export default function Quotation() {
               ...item,
               is_complimentary: true,
               service_type: item.service_type || "Complimentary",
-              editing_type_amount: item.unit_price ?? item.editing_type_amount ?? item.total_price ?? 0,
-              total_amount: item.total_amount ?? item.total_price ?? 0
+              editing_type_amount: (item.editing_type_amount && Number(item.editing_type_amount) > 0)
+                ? Number(item.editing_type_amount)
+                : (item.price && Number(item.price) > 0
+                  ? Number(item.price)
+                  : (item.amount && Number(item.amount) > 0
+                    ? Number(item.amount)
+                    : (item.unit_price && Number(item.unit_price) > 0
+                      ? Number(item.unit_price)
+                      : 0))),
+              total_amount: 0
             }));
 
             setServiceData([...dmServices, ...adsServices]);
@@ -627,8 +635,16 @@ export default function Quotation() {
             ...item,
             is_complimentary: true,
             service_type: item.service_type || "Complimentary",
-            editing_type_amount: item.unit_price ?? item.editing_type_amount ?? item.total_price ?? 0,
-            total_amount: item.total_amount ?? item.total_price ?? 0
+            editing_type_amount: (item.editing_type_amount && Number(item.editing_type_amount) > 0)
+              ? Number(item.editing_type_amount)
+              : (item.price && Number(item.price) > 0
+                ? Number(item.price)
+                : (item.amount && Number(item.amount) > 0
+                  ? Number(item.amount)
+                  : (item.unit_price && Number(item.unit_price) > 0
+                    ? Number(item.unit_price)
+                    : 0))),
+            total_amount: 0
           }));
 
           setServiceData([...dmServices, ...adsServices]);
@@ -1849,7 +1865,7 @@ export default function Quotation() {
                                     ₹{ pricePerThumb }
                                   </td>
                                   <td className="border px-2 py-1 text-right">
-                                    ₹{ totalThumbAmount }
+                                    ₹0
                                   </td>
                                 </tr>
                               );
@@ -1891,7 +1907,7 @@ export default function Quotation() {
                                     ₹{ pricePerPost }
                                   </td>
                                   <td className="border px-2 py-1 text-right">
-                                    ₹{ totalPostAmount }
+                                    ₹0
                                   </td>
                                 </tr>
                               );
@@ -1933,7 +1949,7 @@ export default function Quotation() {
                                     ₹{ pricePerYt }
                                   </td>
                                   <td className="border px-2 py-1 text-right">
-                                    ₹{ totalYtAmount }
+                                    ₹0
                                   </td>
                                 </tr>
                               );
@@ -2052,7 +2068,7 @@ export default function Quotation() {
                             {/* ================= COMPLIMENTARY SERVICES ================= */ }
                             { complimentaryData.map((edit, eidx) => {
                               const qty = Number(edit.quantity);
-                              const base = Number(edit.editing_type_amount);
+                              const base = Number(edit.editing_type_amount || edit.price || edit.amount || 0);
                               const totalBase = base * qty;
 
                               const rawSName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
@@ -2211,17 +2227,29 @@ export default function Quotation() {
                                 </tr>
                               );
                             })() }
-                            <tr className=" font-semibold">
-                              <td
-                                className="border px-2 py-1 text-right"
-                                colSpan={ 4 }
-                              >
-                                Total
-                              </td>
-                              <td className="border px-2 py-1 text-right">
-                                ₹{ complimentaryTotal }
-                              </td>
-                            </tr>
+                            { (() => {
+                              const compTableTotal = complimentaryData.reduce((sum, item) => {
+                                const qty = Number(item.quantity || 1);
+                                const base = Number(item.editing_type_amount || item.price || item.amount || 0);
+                                const thumb = (Number(item.include_thumbnail_creation) || 0) * qty;
+                                const post = (Number(item.include_content_posting) || 0) * qty;
+                                const yt = (Number(item.include_youtube_video_posting) || 0) * qty;
+                                return sum + (base * qty) + thumb + post + yt;
+                              }, 0);
+                              return (
+                                <tr className=" font-semibold">
+                                  <td
+                                    className="border px-2 py-1 text-right"
+                                    colSpan={ 4 }
+                                  >
+                                    Total
+                                  </td>
+                                  <td className="border px-2 py-1 text-right">
+                                    ₹{ compTableTotal }
+                                  </td>
+                                </tr>
+                              );
+                            })() }
                             {/* ================= COMPLIMENTARY TOTAL ================= */ }
                             { (() => {
                               return (

@@ -130,7 +130,13 @@ const GenerateProformaModal = ({
         ...item,
         is_complimentary: true,
         service_type: item.service_type || "Complimentary",
-        editing_type_amount: item.unit_price || item.editing_type_amount || item.total_price,
+        editing_type_amount: (item.editing_type_amount && Number(item.editing_type_amount) > 0)
+          ? Number(item.editing_type_amount)
+          : (item.price && Number(item.price) > 0
+            ? Number(item.price)
+            : (item.amount && Number(item.amount) > 0
+              ? Number(item.amount)
+              : (item.unit_price || 0))),
         total_amount: item.total_price || item.total_amount
       }));
       previewData = [...dmServices, ...adsServices, ...compServices];
@@ -949,7 +955,7 @@ const GenerateProformaModal = ({
                               <tbody>
                                 { complimentaryServices.map((svc, idx) => {
                                   const qty = Number(svc.quantity || 1);
-                                  const price = Number(svc.editing_type_amount || svc.amount || 0);
+                                  const price = Number(svc.editing_type_amount || svc.price || svc.amount || 0);
                                   return (
                                     <tr key={ `comp-${idx}` }>
                                       <td className="ci-td-cell" style={ { color: "#60a5fa" } }>{ getServiceDisplayName(String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()) }</td>

@@ -1506,7 +1506,7 @@ const { id, txn_id } = useParams();
                             {/* ================= COMPLIMENTARY SERVICES ================= */}
                             {complimentaryData.map((edit, eidx) => {
                               const qty = Number(edit.quantity);
-                              const base = Number(edit.editing_type_amount);
+                              const base = Number(edit.editing_type_amount || edit.price || edit.amount || 0);
                               const totalBase = base * qty;
 
                               const rawSName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
@@ -1665,6 +1665,40 @@ const { id, txn_id } = useParams();
                                 </tr>
                               );
                             })()}
+                            {(() => {
+                              const compTableTotal = complimentaryData.reduce((sum, item) => {
+                                const qty = Number(item.quantity || 1);
+                                const base = Number(item.editing_type_amount || item.price || item.amount || 0);
+                                const thumb = (Number(item.include_thumbnail_creation) || 0) * qty;
+                                const post = (Number(item.include_content_posting) || 0) * qty;
+                                const yt = (Number(item.include_youtube_video_posting) || 0) * qty;
+                                return sum + (base * qty) + thumb + post + yt;
+                              }, 0);
+                              return (
+                                <tr className="font-semibold">
+                                  <td
+                                    className="border px-2 py-1 text-right"
+                                    colSpan={4}
+                                  >
+                                    Total
+                                  </td>
+                                  <td className="border px-2 py-1 text-right">
+                                    ₹{compTableTotal.toLocaleString("en-IN")}
+                                  </td>
+                                </tr>
+                              );
+                            })()}
+                            <tr className="font-semibold">
+                              <td
+                                className="border px-2 py-1 text-right"
+                                colSpan={4}
+                              >
+                                Complimentary Total
+                              </td>
+                              <td className="border px-2 py-1 text-right">
+                                ₹0
+                              </td>
+                            </tr>
                           </tbody>
                         </table>
                       </section>
