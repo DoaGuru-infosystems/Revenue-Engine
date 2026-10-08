@@ -62,16 +62,11 @@ const Calculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAd
   const [optionalServices, setOptionalServices] = useState([]);
 
   const [addons, setAddons] = useState({});
-
-  const [optionalAmounts, setOptionalAmounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
 
   // console.log(data);
-
-
-  const [total, setTotal] = useState(0);
   const navigate = useNavigate();
   console.log(id, proposalId);
   const [editId, setEditId] = useState(null);
@@ -164,7 +159,6 @@ const Calculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAd
             initialAddons[key] = false;
           });
           setAddons(initialAddons);
-          setOptionalAmounts(services); // already done in your code
         }
       })
       .catch((err) => console.error(err));
@@ -239,15 +233,6 @@ const Calculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAd
     fetchDiscountSetting();
   }, [id, proposalId]);
 
-  const getOptionalAddonAmount = (serviceName, editingTypeName) => {
-    const match = optionalAmounts.find(
-      (item) =>
-        item.service_name === serviceName &&
-        item.editing_type_name === editingTypeName
-    );
-    return match ? parseFloat(match.amount) : 0;
-  };
-
   const handleEdit = (entry) => {
     console.log(entry);
 
@@ -272,32 +257,6 @@ const Calculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAd
     });
 
     setAddons(updatedAddons);
-    setTotal(parseFloat(entry.total_amount));
-  };
-
-  const filterOptionalServices = (services) => {
-    return services
-      .map((service) => {
-        const filteredCategories = service.categories
-          .map((category) => {
-            const filteredEditing = category.editing_types.filter((editing) => {
-              // Check if this editing type is an optional service
-              const isOptional = optionalServices.some(
-                (opt) =>
-                  opt.service_name === service.service_name &&
-                  opt.category_name === category.category_name &&
-                  opt.editing_type_name === editing.editing_type_name
-              );
-              return !isOptional; // Only keep non-optional services
-            });
-
-            return { ...category, editing_types: filteredEditing };
-          })
-          .filter((cat) => cat.editing_types.length > 0);
-
-        return { ...service, categories: filteredCategories };
-      })
-      .filter((service) => service.categories.length > 0);
   };
 
   const getSelectedService = data.find(
@@ -401,7 +360,6 @@ const Calculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAd
     });
 
     const finalAmount = baseAmount + optionalTotal;
-    setTotal(finalAmount);
 
     // ── IN-MEMORY MODE (embedded inside ProposalBuilder/Proforma) ──────────────────────
     // Jab onServiceAdded prop ho, DB call skip karo — sirf row return karo
@@ -567,8 +525,6 @@ const Calculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAd
       initialAddons[key] = false;
     });
     setAddons(initialAddons);
-
-    setTotal(0);
   };
 
   const handleClose = () => {

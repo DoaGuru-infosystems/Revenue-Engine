@@ -7,10 +7,9 @@ import axios from "axios";
 import moment from "moment";
 import Swal from "sweetalert2";
 import { clearUser } from "../redux/user/userSlice";
-import img1 from "../assets/Dg 1copy.png";
+import DocumentHeaderBanner from "./document/DocumentHeaderBanner";
+import DocumentBankDetails from "./document/DocumentBankDetails";
 import img2 from "../assets/Dg 2copy.png";
-import img3 from "../assets/dghead.jpeg";
-import img4 from "../assets/DOAGURU Infosystyem.png";
 import {
   Package,
   X,
@@ -40,7 +39,6 @@ export default function BalanceProforma() {
   const sourceFromURL = query.get("source");
   const navigate = useNavigate();
   const { currentUser, token } = useSelector((state) => state.user);
-  const userName = currentUser?.name;
   const dispatch = useDispatch();
 
   const [serviceData, setServiceData] = useState([]);
@@ -48,20 +46,14 @@ export default function BalanceProforma() {
   const [adsData, setAdsData] = useState([]);
   const [complimentaryData, setComplimentaryData] = useState([]);
   const [selecteddiscount, setSelecteddiscount] = useState("");
-  const [selectedplan, setSelectedPlan] = useState("");
   const [notesData, setNotesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [clientData, setClientData] = useState([]);
   const [clientDataReceived, setClientDataReceived] = useState([]);
-  const [imagesLoaded, setImagesLoaded] = useState({
-    header: false,
-    footer: false,
-  });
   const [formData, setFormData] = useState({
     note_name: "",
     plan: "Customise",
   });
-  const [allClientNote, setAllClientNote] = useState([]);
   const [selectedNotesId, setSelectedNotesId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -81,15 +73,6 @@ export default function BalanceProforma() {
   const [showGoogleAd, setShowGoogleAd] = useState(true);
   const [proformaMeta, setProformaMeta] = useState(null);
   const dropdownRef = useRef(null);
-  const getServiceDisplayName = (name) => {
-    if (!name) return name;
-    const n = name.toLowerCase();
-    if (n.includes("content posting")) return "Meta Growth & Content Management";
-    if (n.includes("youtube video posting")) return "YouTube Channel Growth & Optimization";
-    if (n.includes("google ad")) return "Google Ads Campaign Management & Optimization";
-    if (n.includes("meta ad")) return "Meta Ads Campaign Management & Optimization";
-    return name;
-  };
   // Default notes that should appear automatically
   const defaultNotes = [
     {
@@ -136,8 +119,6 @@ export default function BalanceProforma() {
         }
       );
       setServiceData(res.data.data);
-
-      setSelectedPlan(res.data.data[0].plan_name || "Customise");
 
       console.log(serviceData);
     } catch (error) {
@@ -1653,19 +1634,7 @@ export default function BalanceProforma() {
         {/* Table for proper header/footer repetition */ }
         <table className="print:table print:border-collapse w-full">
           {/* Repeating Header */ }
-          <thead className="print:table-header-group w-full">
-            <tr>
-              <td className="p-0 m-0 w-full">
-                <div className="w-full h-auto">
-                  <img
-                    src={ img1 }
-                    alt="Header"
-                    className="w-full h-full object-cover " // use object-cover for full width fitting
-                  />
-                </div>
-              </td>
-            </tr>
-          </thead>
+          <DocumentHeaderBanner isGST={isGST} />
 
           {/* Repeating Footer */ }
 
@@ -2326,37 +2295,8 @@ export default function BalanceProforma() {
                     </div>
                     <section className="terms-bank-section print:block px-6 py-2 text-sm text-gray-800 border-t mt-2">
                       <div className="bank-details-section flex justify-between w-full mb-2">
-                        {/* LEFT SIDE: Bank Details */ }
-                        <div className="w-1/2 pr-3">
-                          <h2 className="font-bold mb-0.5 text-gray-800">Bank Details:</h2>
-                          { isGST ? (
-                            <ul className="space-y-0.5 text-gray-700">
-                              <li><span className="font-semibold">Name:</span> DOAGuru InfoSystems</li>
-                              <li><span className="font-semibold">IFSC:</span> SBIN0004677</li>
-                              <li><span className="font-semibold">Account No:</span> 38666325192</li>
-                              <li><span className="font-semibold">Bank:</span> SBI Bank, Jabalpur</li>
-                            </ul>
-                          ) : (
-                            <ul className="space-y-0.5 text-gray-700">
-                              <li><span className="font-semibold">Name:</span> DOAGuru IT Solutions</li>
-                              <li><span className="font-semibold">IFSC:</span> HDFC0000224</li>
-                              <li><span className="font-semibold">Account No:</span> 50200074931981</li>
-                              <li><span className="font-semibold">Bank:</span> HDFC Bank, Jabalpur</li>
-                            </ul>
-                          ) }
-                          {/* Signature */ }
-                          <div className="mt-3 text-center border border-gray-400 rounded-md p-0.5 inline-block">
-                            <img
-                              src={ img4 }
-                              alt="Authorized Signature"
-                              className="mx-auto h-[40px] w-[100px] min-w-[30px] max-w-none object-contain"
-                            />
-                            <p className="text-xs font-semibold text-gray-800">Signature</p>
-                            <p className="text-xs text-gray-700">
-                              { isGST ? "DOAGuru InfoSystems" : "DOAGuru IT Solutions" }
-                            </p>
-                          </div>
-                        </div>
+                        {/* LEFT SIDE: Bank Details */}
+                        <DocumentBankDetails isGST={isGST} variant="quotation" />
 
                         {/* RIGHT SIDE: Totals */ }
                         <div className="w-1/2 pl-5 border-l border-gray-200">

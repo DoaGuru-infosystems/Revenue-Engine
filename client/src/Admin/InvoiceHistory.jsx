@@ -148,6 +148,17 @@ const InvoiceHistory = ({ setActiveTab }) => {
     navigate(`/admin/invoice/${selectedClient}/${selectedTxn}?gst=${isGST ? 1 : 0}`);
   };
 
+  const handleCopyInvoice = (txnId) => {
+    navigator.clipboard.writeText(txnId);
+    Swal.fire({
+      icon: "success",
+      title: "Copied!",
+      text: "Transaction ID copied to clipboard.",
+      showConfirmButton: false,
+      timer: 1000,
+    });
+  };
+
   // Dropdown for Actions
   const ActionDropdown = ({ item, index, globalIndex }) => (
     <div className="relative action-dropdown-container">

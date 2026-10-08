@@ -183,6 +183,46 @@ const InvoiceCalculation = () => {
     setTotal(parseFloat(entry.total_amount));
   };
 
+  const handleDelete = async (entryId) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to delete this entry?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const res = await axios.delete(
+        `${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${entryId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.status === "Success") {
+        setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Entry has been deleted.",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Could not delete entry.",
+        showConfirmButton: false,
+        timer: 1000,
+      });
+    }
+  };
+
   const handleSave = () => {
     if (!selectedService) {
       Swal.fire({ icon: "warning", title: "Validation", text: "Please select a service." });

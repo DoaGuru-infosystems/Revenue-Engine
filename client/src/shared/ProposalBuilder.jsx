@@ -25,10 +25,6 @@ const getBillableTotals = (table = []) => {
   return { dmTotal, adsTotal };
 };
 
-const getBillablePricingTotal = (table = []) => {
-  const { dmTotal, adsTotal } = getBillableTotals(table);
-  return dmTotal + adsTotal;
-};
 
 export default function ProposalBuilder() {
   const { clientId, proposalId } = useParams();
@@ -54,7 +50,6 @@ export default function ProposalBuilder() {
   const [pricingTable, setPricingTable] = useState([]);
   // Generated once at proposal creation, flows to all downstream tables
   const [proposalTxnId, setProposalTxnId] = useState("");
-  const [grandTotal, setGrandTotal] = useState(0);
 
   const [milestones, setMilestones] = useState([]);
   const isFirstBillingTypeChange = React.useRef(true);
@@ -387,7 +382,6 @@ export default function ProposalBuilder() {
 
         const normalizedFinalTable = finalPricingTable.map(normalizeRow);
         setPricingTable(normalizedFinalTable);
-        setGrandTotal(getBillablePricingTotal(normalizedFinalTable));
         setIsInitialized(true);
       }
     } catch (err) {
@@ -403,10 +397,6 @@ export default function ProposalBuilder() {
 
   const toggleSection = (key) => {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const recalculateTotal = (table) => {
-    setGrandTotal(getBillablePricingTotal(table));
   };
 
   const normalizeRow = (row) => {
@@ -450,18 +440,6 @@ export default function ProposalBuilder() {
   const handlePricingTableChange = (table) => {
     const normalizedTable = table.map(normalizeRow);
     setPricingTable(normalizedTable);
-    recalculateTotal(normalizedTable);
-  };
-
-  const handlePricingChange = (index, field, value) => {
-    const newTable = [...pricingTable];
-    newTable[index] = { ...newTable[index], [field]: value };
-    if (field === 'quantity' || field === 'unit_price') {
-      const qty = Number(newTable[index].quantity) || 0;
-      const price = Number(newTable[index].unit_price) || 0;
-      newTable[index].total_price = qty * price;
-    }
-    handlePricingTableChange(newTable);
   };
 
   const addMilestoneRow = () => {
@@ -524,7 +502,6 @@ export default function ProposalBuilder() {
       } else {
         newTable = [...prevTable, normalized];
       }
-      recalculateTotal(newTable);
       return newTable;
     });
   };
@@ -532,43 +509,19 @@ export default function ProposalBuilder() {
   const handleServiceDeleted = (id) => {
     const newTable = pricingTable.filter(row => row.id !== id);
     setPricingTable(newTable);
-    recalculateTotal(newTable);
-  };
-
-  const syncCustomServices = async () => {
-    try {
-      const customItems = await fetchCustomServicesFromDB();
-      const nonCustom = pricingTable.filter(p => !p.source?.startsWith('custom'));
-      handlePricingTableChange([...nonCustom, ...customItems]);
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   const removePricingRow = async (index) => {
     const row = pricingTable[index];
     if (row.source === 'custom_graphic') {
-      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteGraphicEntryById/${row.id}`); } catch (e) { }
+      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteGraphicEntryById/${row.id}`); } catch { /* ignore */ }
     } else if (row.source === 'custom_ads') {
-      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${row.id}`); } catch (e) { }
+      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteAdsCampaignEntryById/${row.id}`); } catch { /* ignore */ }
     } else if (row.source === 'custom_complimentary') {
-      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteComplimenatryById/${row.id}`); } catch (e) { }
+      try { await axios.delete(`${API_BASE_URL}/auth/api/re_calculator/deleteComplimenatryById/${row.id}`); } catch { /* ignore */ }
     }
     const newTable = pricingTable.filter((_, i) => i !== index);
     handlePricingTableChange(newTable);
-  };
-
-  const mergeProposalNotes = (notes = []) => {
-    if (!notes.length) return;
-    const currentNotes = sections['notes_selection'] || [];
-    const existing = new Set(currentNotes.map((note) => String(note.note_name || "").toLowerCase()));
-    const nextNotes = notes.filter((note) => {
-      const name = String(note.note_name || "").toLowerCase();
-      return name && !existing.has(name);
-    });
-    if (nextNotes.length > 0) {
-      handleSectionChange('notes_selection', [...currentNotes, ...nextNotes]);
-    }
   };
 
   const getDiscountAmount = (baseTotal) => {

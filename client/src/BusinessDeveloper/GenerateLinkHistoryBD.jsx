@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import Swal from "sweetalert2";
+import { clearUser } from "../redux/user/userSlice";
 import API_BASE_URL from "../config/apiBaseUrl";
 // import moment from "moment";
 import styled from "styled-components";
 import ReactPaginate from "react-paginate";
 
 const GenerateLinkHistoryBD = () => {
-   const baseURL = API_BASE_URL;
-const navigate = useNavigate();
+  const baseURL = API_BASE_URL;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { token } = useSelector((state) => state.user);
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(0);

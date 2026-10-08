@@ -2,13 +2,17 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Check, Plus, Search, Trash2, Users, UserPlus } from "lucide-react";
 import Swal from "sweetalert2";
 import axios from "axios";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { clearUser } from "../redux/user/userSlice";
 import API_BASE_URL from "../config/apiBaseUrl";
 
 const CreateTeam = () => {
   // If your server is on a different base path, set VITE_API_BASE_URL accordingly.
   // e.g. https://revenueengine.siarasystems.com  (no trailing slash)
   const baseURL = API_BASE_URL;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { token } = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
