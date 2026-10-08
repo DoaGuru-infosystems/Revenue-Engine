@@ -8,7 +8,7 @@ import AdminAddPlan from "../Admin/AdminAddPlan";
 import AdminPlanHistory from "../Admin/AdminPlanHistory";
 import AdminComplimentaryData from "../Admin/AdminComplimentaryData";
 import NoteSection from "../shared/NoteSection";
-import AdminInvoice from "../Admin/AdminInvoice";
+import Invoice from "../shared/Invoice";
 
 import InvoiceCalculation from "../shared/InvoiceCalculation";
 import InvoiceAds from "../shared/InvoiceAds";
@@ -19,14 +19,14 @@ import ProformaServices from "../Components/InvoiceServices";
 import DiscountSetting from "../shared/DiscountSetting";
 
 const AdminDashboard = lazy(() => import("../Admin/AdminDashboard"));
-const AdminCalculator = lazy(() => import("../Admin/AdminCalculator"));
+const Calculator = lazy(() => import("../shared/Calculator"));
 const AdsCampaignCalculator = lazy(() =>
   import("../Admin/AdsCampaignCalculator")
 );
 const ServicesLanding = lazy(() => import("../Admin/ServicesLanding"));
-const History = lazy(() => import("../Admin/History"));
+const History = lazy(() => import("../shared/History"));
 const ReviewRequirements = lazy(() => import("../Admin/ReviewRequirements"));
-const ProposalBuilder = lazy(() => import("../Admin/ProposalBuilder"));
+const ProposalBuilder = lazy(() => import("../shared/ProposalBuilder"));
 import PremiumLoader from "../Components/PremiumLoader";
 const AdminRouter = () => {
   // const { currentUser } = useSelector((state) => state.user);
@@ -47,7 +47,7 @@ const AdminRouter = () => {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route
               path="calculator/:id/:proposalId"
-              element={<AdminCalculator />}
+              element={<Calculator />}
             />
             <Route path="add-plan" element={<AdminAddPlan />} />
             <Route
@@ -73,7 +73,7 @@ const AdminRouter = () => {
               element={<AdminComplimentaryData />}
             />
             <Route path="note-section/:id/:txn_id" element={<NoteSection />} />
-            <Route path="invoice/:id/:txn_id" element={<AdminInvoice />} />
+            <Route path="invoice/:id/:txn_id" element={<Invoice />} />
             <Route path="invoice-services" element={<ProformaServices />} />
 
             <Route

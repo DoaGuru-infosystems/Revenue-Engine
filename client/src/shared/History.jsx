@@ -28,20 +28,23 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
-import GenerateProformaModal from "./components/GenerateProformaModal";
+import GenerateProformaModal from "../Admin/components/GenerateProformaModal";
 import { classifyProformaServices, calcAdsRowTotal } from "../utils/proformaPricing";
 import { clearUser } from "../redux/user/userSlice";
 import Swal from "sweetalert2";
-import QuotationTypeModal from "./QuotationTypeModal";
+import QuotationTypeModal from "../Admin/QuotationTypeModal";
 import Header from "../Components/Header";
 import API_BASE_URL from "../config/apiBaseUrl";
-import ProposalTable from "./components/ProposalTable";
-import PaymentModal from "./components/PaymentModal";
-import ProformaManagerModal from "./components/ProformaManagerModal";
+import ProposalTable from "../Admin/components/ProposalTable";
+import PaymentModal from "../Admin/components/PaymentModal";
+import ProformaManagerModal from "../Admin/components/ProformaManagerModal";
 
 const History = () => {
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const basePath = isAdmin ? "/admin" : "/BD";
   const [fetchServices, setFetchServices] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [open, setOpen] = useState(false);
@@ -625,7 +628,7 @@ const History = () => {
       setQuotationServicesPreview([]);
       setShowModalInvoiceClient(false);
       navigate(
-        `/admin/quotation/${id}/${selectedTxn}?gst=${modalFormData.bill_type === "GST" ? 1 : 0}&doc=proforma`
+        `${basePath}/quotation/${id}/${selectedTxn}?gst=${modalFormData.bill_type === "GST" ? 1 : 0}&doc=proforma`
       );
     } catch (err) {
       console.error("Save error:", err);
@@ -1209,10 +1212,10 @@ const History = () => {
 
     const isGST = billtype === "GST";
     const docParam = docType === "proforma" ? "&doc=proforma" : "";
-    navigate(`/admin/invoice/${id}/${selectedTxn}?gst=${isGST ? 1 : 0}${docParam}`);
+    navigate(`${basePath}/invoice/${id}/${selectedTxn}?gst=${isGST ? 1 : 0}${docParam}`);
   };
   const handleCreateProposal = () => {
-    navigate(`/admin/proposal-builder/${id}`);
+    navigate(`${basePath}/proposal-builder/${id}`);
   };
 
   const currentPaymentInput = toNumber(paymentEntry.amount_received);
@@ -1279,8 +1282,8 @@ const History = () => {
               </button>
               <button
                 onClick={ () => {
-                  localStorage.setItem("admin-active-tab", "assign");
-                  navigate("/admin/dashboard");
+                  localStorage.setItem(isAdmin ? "admin-active-tab" : "bd-active-tab", "assign");
+                  navigate(`${basePath}/dashboard`);
                 } }
                 className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition mx-2"
               >
@@ -1371,7 +1374,7 @@ const History = () => {
                   <button
                     onClick={ () => {
                       navigate(
-                        `/admin/quotation/${selectedClient}/${selectedTxn}?gst=1`
+                        `${basePath}/quotation/${selectedClient}/${selectedTxn}?gst=1`
                       );
                       setShowModal(false);
                     } }
@@ -1382,7 +1385,7 @@ const History = () => {
                   <button
                     onClick={ () => {
                       navigate(
-                        `/admin/quotation/${selectedClient}/${selectedTxn}?gst=0`
+                        `${basePath}/quotation/${selectedClient}/${selectedTxn}?gst=0`
                       );
                       setShowModal(false);
                     } }
@@ -1416,7 +1419,7 @@ const History = () => {
                 />
           ) }
           {/* ── MODAL: Submit to Admin ────────────────────────────── */ }
-          { submitAdminModal && (
+          { isAdmin && submitAdminModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -1441,7 +1444,7 @@ const History = () => {
           ) }
 
           {/* ── MODAL: Send to Client (Quotation) ─────────────────── */ }
-          { sendClientModal && (
+          { isAdmin && sendClientModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -1505,7 +1508,7 @@ const History = () => {
           ) }
 
           {/* ── MODAL: Client Response (Quotation) ────────────────── */ }
-          { receivePaymentModal && (
+          { isAdmin && receivePaymentModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -1607,7 +1610,7 @@ const History = () => {
             </div>
           ) }
 
-          { clientResponseModal && (
+          { isAdmin && clientResponseModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -1645,7 +1648,7 @@ const History = () => {
 
           {/* --- FOR FUTURE DEVELOPMENT OK ---
           // ── MODAL: Make Strategy ──────────────────────────────── 
-          { strategyModal && (
+          { isAdmin && strategyModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
@@ -1702,7 +1705,7 @@ const History = () => {
           ) }
 
           // ── MODAL: Send Strategy to Client ───────────────────── 
-          { sendStrategyModal && (
+          { isAdmin && sendStrategyModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -1777,7 +1780,7 @@ const History = () => {
           ) }
 
           // ── MODAL: Client Strategy Decision ──────────────────── 
-          { clientStrategyModal && (
+          { isAdmin && clientStrategyModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -1810,7 +1813,7 @@ const History = () => {
           ) }
 
           // ── MODAL: Assign Team Lead ───────────────────────────── 
-          { teamLeadModal && (
+          { isAdmin && teamLeadModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -1864,7 +1867,7 @@ const History = () => {
           ) }
 
           // ── MODAL: Assign Task Owners ─────────────────────────── 
-          { taskOwnersModal && (
+          { isAdmin && taskOwnersModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">

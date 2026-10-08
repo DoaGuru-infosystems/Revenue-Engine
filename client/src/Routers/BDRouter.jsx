@@ -3,16 +3,16 @@ import { Navigate, Route, Routes } from "react-router-dom";
 // import { useSelector } from "react-redux";
 import styled from "styled-components";
 import NoteSection from "../shared/NoteSection";
-import BDInvoice from "../BusinessDeveloper/BDInvoice";
+import Invoice from "../shared/Invoice";
 const Quotation = lazy(() => import("../shared/Quotation"));
 const BalanceProforma = lazy(() => import("../shared/BalanceProforma"));
 const AdsCampaignCalciBD = lazy(() =>
   import("../BusinessDeveloper/AdsCampaignCalciBD")
 );
 const AddService = lazy(() => import("../BusinessDeveloper/AddService"));
-const HistoryBD = lazy(() => import("../BusinessDeveloper/HistoryBD"));
-const CalculatorBD = lazy(() => import("../BusinessDeveloper/CalculatorBD"));
-const ProposalBuilderBD = lazy(() => import("../BusinessDeveloper/ProposalBuilderBD"));
+const History = lazy(() => import("../shared/History"));
+const Calculator = lazy(() => import("../shared/Calculator"));
+const ProposalBuilder = lazy(() => import("../shared/ProposalBuilder"));
 
 const BusinessDeveloperDashboard = lazy(() =>
   import("../BusinessDeveloper/BusinessDeveloperDashboard")
@@ -43,12 +43,12 @@ const BDRouter = () => {
           <Routes>
             <Route path="dashboard" element={<BusinessDeveloperDashboard />} />
             <Route path="AddService/:id/:proposalId" element={<AddService />} />
-            <Route path="client/service/history/:id" element={<HistoryBD />} />
-            <Route path="proposal-builder/:clientId" element={<ProposalBuilderBD />} />
-            <Route path="proposal-builder/:clientId/:proposalId" element={<ProposalBuilderBD />} />
+            <Route path="client/service/history/:id" element={<History />} />
+            <Route path="proposal-builder/:clientId" element={<ProposalBuilder />} />
+            <Route path="proposal-builder/:clientId/:proposalId" element={<ProposalBuilder />} />
             <Route
               path="calculator/:id/:proposalId"
-              element={<CalculatorBD />}
+              element={<Calculator />}
             />
             <Route
               path="Adscalculator/:id/:proposalId"
@@ -63,7 +63,7 @@ const BDRouter = () => {
               path="note-section/:id/:txn_id"
               element={<NoteSection />}
             />
-            <Route path="invoice/:id/:txn_id" element={<BDInvoice />} />
+            <Route path="invoice/:id/:txn_id" element={<Invoice />} />
 
             <Route
               path="invoice-calculator/:id/:proposalId"

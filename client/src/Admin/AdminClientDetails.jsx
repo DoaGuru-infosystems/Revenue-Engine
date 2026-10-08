@@ -22,7 +22,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import ReactPaginate from "react-paginate";
 import styled from "styled-components";
-import AdminCalculator from "./AdminCalculator";
 import { clearUser } from "../redux/user/userSlice";
 import API_BASE_URL from "../config/apiBaseUrl";
 

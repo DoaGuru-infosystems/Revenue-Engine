@@ -38,7 +38,7 @@ const AdminClientDetails = lazy(() => import("./AdminClientDetails"));
 const AdminAddServices = lazy(() => import("./AdminAddServices"));
 const AdminServicesHistory = lazy(() => import("./AdminServicesHistory"));
 const AdminAdsCampign = lazy(() => import("./AdminAdsCampign"));
-// const AdminCalculator = lazy(() => import("./AdminCalculator"));
+// const Calculator = lazy(() => import("../shared/Calculator"));
 import InstantProforma from "../Components/InstantProforma";
 
 const AdminDashboard = () => {

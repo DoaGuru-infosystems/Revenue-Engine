@@ -282,6 +282,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
 
       {isOpen && (() => {
         const status = proposal.status?.toLowerCase() || "";
+        const isAdmin = !window.location.pathname.includes('/BD/');
         return (
           <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/60 rounded-xl shadow-2xl z-50 py-1">
             <ul className="py-1 text-sm text-gray-300">
@@ -298,11 +299,13 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
                       <Send size={14} /> {['sent', 'changes', 'rejected'].includes(status) ? 'Send Again' : 'Send to Client'}
                     </button>
                   </li>
-                  <li>
-                    <button onClick={() => handleAction("mark_approved")} className="w-full text-left px-4 py-2 hover:bg-green-500/10 text-green-400 hover:text-green-300 transition-all flex items-center gap-2">
-                      <CheckCircle size={14} /> Mark Approved
-                    </button>
-                  </li>
+                  {isAdmin && (
+                    <li>
+                      <button onClick={() => handleAction("mark_approved")} className="w-full text-left px-4 py-2 hover:bg-green-500/10 text-green-400 hover:text-green-300 transition-all flex items-center gap-2">
+                        <CheckCircle size={14} /> Mark Approved
+                      </button>
+                    </li>
+                  )}
                 </>
               )}
               
@@ -330,7 +333,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
                 </li>
               )}
 
-              {['proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
+              {isAdmin && ['proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
                 <li>
                   <button onClick={() => handleAction("record_payment")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
                     <CreditCard size={14} /> Record Payment
@@ -348,11 +351,13 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
               </li>
             )}
 
-            <li>
-              <button onClick={() => handleAction("delete_proposal")} className="w-full text-left px-4 py-2 hover:bg-red-500/15 text-red-400 hover:text-red-300 transition-all flex items-center gap-2">
-                <Trash size={14} /> Delete Proposal
-              </button>
-            </li>
+            {isAdmin && (
+              <li>
+                <button onClick={() => handleAction("delete_proposal")} className="w-full text-left px-4 py-2 hover:bg-red-500/15 text-red-400 hover:text-red-300 transition-all flex items-center gap-2">
+                  <Trash size={14} /> Delete Proposal
+                </button>
+              </li>
+            )}
           </ul>
         </div>
         );

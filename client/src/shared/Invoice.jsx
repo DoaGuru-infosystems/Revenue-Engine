@@ -1,9 +1,9 @@
 /* eslint-disable no-constant-binary-expression, no-constant-condition */
 import React, { useEffect, useRef, useState } from "react";
-import InvoicePrintWrapper from "../shared/invoice/InvoicePrintWrapper";
-import InvoiceNoteModal from "../shared/invoice/InvoiceNoteModal";
-import RemainingPaymentModal from "../shared/invoice/RemainingPaymentModal";
-import InvoiceDiscountModal from "../shared/invoice/InvoiceDiscountModal";
+import InvoicePrintWrapper from "./invoice/InvoicePrintWrapper";
+import InvoiceNoteModal from "./invoice/InvoiceNoteModal";
+import RemainingPaymentModal from "./invoice/RemainingPaymentModal";
+import InvoiceDiscountModal from "./invoice/InvoiceDiscountModal";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import numberToWords from "number-to-words";
@@ -41,10 +41,12 @@ import img4 from "../assets/DOAGURU Infosystyem.png";
 import img5 from "../assets/dghead.jpeg";
 import API_BASE_URL from "../config/apiBaseUrl";
 
-export default function AdminInvoice({ publicMode = false, publicData = null, publicToken = null }) {
+export default function Invoice({ publicMode = false, publicData = null, publicToken = null }) {
   const baseURL = API_BASE_URL;
   const { id, txn_id } = useParams();
   const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const basePath = isAdmin ? "/admin" : "/BD";
   const query = new URLSearchParams(location.search);
   const rawDocParam = query.get("doc");
   const isBalanceProforma = rawDocParam === "balance-proforma-view" || rawDocParam === "balance-proforma";
@@ -2216,7 +2218,7 @@ export default function AdminInvoice({ publicMode = false, publicData = null, pu
           { !publicMode && (
             <>
               <button
-                onClick={ () => navigate("/admin/dashboard") }
+                onClick={ () => navigate(`${basePath}/dashboard`) }
                 className="bg-yellow-600 text-white rounded-full px-4 py-2"
               >
                 Dashboard

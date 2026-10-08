@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -10,10 +10,9 @@ import {
 import API_BASE_URL from "../config/apiBaseUrl";
 import { clearUser } from "../redux/user/userSlice";
 import { PROPOSAL_SECTIONS, PROPOSAL_TYPES, BILLING_TYPES, buildInitialSections, buildInitialToggles, MILESTONE_PRESETS } from "../config/proposalDefaults";
-// import ProposalPricingBuilder from "./components/ProposalPricingBuilder";
-import AdminCalculator from "./AdminCalculator";
-import AdsCampaignCalculator from "./AdsCampaignCalculator";
-import ProposalDiscountModal from "./components/ProposalDiscountModal";
+import Calculator from "./Calculator";
+import AdsCampaignCalculator from "../Admin/AdsCampaignCalculator";
+import ProposalDiscountModal from "../Admin/components/ProposalDiscountModal";
 import { classifyProformaServices } from "../utils/proformaPricing";
 
 const getClientRecord = (payload) => (Array.isArray(payload) ? payload[0] : payload);
@@ -34,6 +33,9 @@ const getBillablePricingTotal = (table = []) => {
 export default function ProposalBuilder() {
   const { clientId, proposalId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const basePath = isAdmin ? "/admin" : "/BD";
   const dispatch = useDispatch();
   const { currentUser, token } = useSelector((state) => state.user);
 
@@ -663,7 +665,7 @@ export default function ProposalBuilder() {
         const savedId = proposalId || res.data.proposalId;
 
         if (!proposalId) {
-          navigate(`/admin/proposal-builder/${clientId}/${savedId}`, { replace: true });
+          navigate(`${basePath}/proposal-builder/${clientId}/${savedId}`, { replace: true });
         }
 
         if (generatePdf) {
@@ -806,9 +808,11 @@ export default function ProposalBuilder() {
               <button onClick={ () => sendToClient() } className="flex items-center gap-2 px-4 py-2 bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl hover:bg-red-600/30 transition text-sm font-semibold">
                 <Send className="w-4 h-4" /> Send to Client
               </button>
-              <button onClick={ () => markAsApproved() } className="flex items-center gap-2 px-4 py-2 bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold">
-                <CheckCircle className="w-4 h-4" /> Mark Approved
-              </button>
+              { isAdmin && (
+                <button onClick={ () => markAsApproved() } className="flex items-center gap-2 px-4 py-2 bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold">
+                  <CheckCircle className="w-4 h-4" /> Mark Approved
+                </button>
+              ) }
               <button onClick={ () => downloadPdf() } className="flex items-center gap-2 px-4 py-2 bg-yellow-600/20 text-yellow-400 border border-yellow-500/30 rounded-xl hover:bg-yellow-600/30 transition text-sm font-semibold">
                 <Download className="w-4 h-4" /> Download PDF
               </button>
@@ -1084,9 +1088,9 @@ export default function ProposalBuilder() {
                                           <td className="p-3 flex justify-center gap-2">
                                             { row.source?.startsWith('custom') ? (
                                               <button onClick={ () => setActiveCalculator(row.source === 'custom_ads' ? 'ads' : 'graphic') } className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition opacity-0 group-hover:opacity-100"><PenTool className="w-3.5 h-3.5" /></button>
-                                            ) : (
+                                            ) : isAdmin ? (
                                               <button onClick={ () => removePricingRow(row.originalIndex) } className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition opacity-0 group-hover:opacity-100"><Trash2 className="w-3.5 h-3.5" /></button>
-                                            ) }
+                                            ) : null }
                                           </td>
                                         </tr>
                                       )) }
@@ -1123,7 +1127,7 @@ export default function ProposalBuilder() {
                                 <button onClick={ () => setActiveCalculator(null) } className="w-8 h-8 rounded-lg hover:bg-gray-800 text-gray-400 flex items-center justify-center transition"><X className="w-5 h-5" /></button>
                               </div>
                               <div className="p-4 max-h-[80vh] overflow-y-auto">
-                                <AdminCalculator 
+                                <Calculator 
                                   hideNotes={ true } 
                                   onServiceAdded={ handleServiceAdded } 
                                   onServiceDeleted={ handleServiceDeleted }

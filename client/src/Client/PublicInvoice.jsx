@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import AdminInvoice from "../Admin/AdminInvoice";
+import Invoice from "../shared/Invoice";
 import API_BASE_URL from "../config/apiBaseUrl";
 import img3 from "../assets/DOAGURU IT Solution.png";
 
@@ -70,7 +70,7 @@ export default function PublicInvoice() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <AdminInvoice 
+      <Invoice 
         publicMode={true} 
         publicData={data} 
         publicToken={token} 
