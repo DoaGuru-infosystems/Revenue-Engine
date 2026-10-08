@@ -11,12 +11,12 @@ import NoteSection from "../Admin/NoteSection";
 import AdminInvoice from "../Admin/AdminInvoice";
 
 import InvoiceCalculation from "../Admin/InvoiceCalculation";
-import InvoiceAds from "../Admin/InvoiceAds";
-import InvoiceNoteSection from "../Admin/InvoiceNoteSection";
+import InvoiceAds from "../shared/InvoiceAds";
+import InvoiceNoteSection from "../shared/InvoiceNoteSection";
 import InvoiceHistory from "../Admin/InvoiceHistory";
 import HistoryHub from "../Admin/HistoryHub";
 import ProformaServices from "../Components/InvoiceServices";
-import DiscountSetting from "../Admin/DiscountSetting";
+import DiscountSetting from "../shared/DiscountSetting";
 
 const AdminDashboard = lazy(() => import("../Admin/AdminDashboard"));
 const AdminCalculator = lazy(() => import("../Admin/AdminCalculator"));

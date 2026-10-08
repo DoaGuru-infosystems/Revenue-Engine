@@ -19,10 +19,10 @@ const BusinessDeveloperDashboard = lazy(() =>
 const ReviewRequirements = lazy(() => import("../Admin/ReviewRequirements"));
 
 import InvoiceCalculation from "./../BusinessDeveloper/InvoiceCalculation";
-import InvoiceAds from "./../BusinessDeveloper/InvoiceAds";
-import InvoiceNoteSection from "./../BusinessDeveloper/InvoiceNoteSection";
+import InvoiceAds from "../shared/InvoiceAds";
+import InvoiceNoteSection from "../shared/InvoiceNoteSection";
 import InvoiceHistory from "./../BusinessDeveloper/InvoiceHistory";
-import DiscountSetting from "./../BusinessDeveloper/DiscountSetting";
+import DiscountSetting from "../shared/DiscountSetting";
 import PremiumLoader from "../Components/PremiumLoader";
 const BDRouter = () => {
   // const { currentUser } = useSelector((state) => state.user);

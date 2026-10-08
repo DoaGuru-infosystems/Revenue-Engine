@@ -38,7 +38,7 @@ const AdminAddServices = lazy(() => import("./AdminAddServices"));
 const AdminServicesHistory = lazy(() => import("./AdminServicesHistory"));
 const AdminAdsCampign = lazy(() => import("./AdminAdsCampign"));
 const NoteSection = lazy(() => import("./NoteSection"));
-const DiscountSetting = lazy(() => import("./DiscountSetting"));
+const DiscountSetting = lazy(() => import("../shared/DiscountSetting"));
 
 function AdmindashBoardSettings() {
   const [activeTab, setActiveTab] = useState("");
