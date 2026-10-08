@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import InvoicePrintWrapper from "./invoice/InvoicePrintWrapper";
+import InvoiceDiscountModal from "./invoice/InvoiceDiscountModal";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
@@ -24,15 +25,18 @@ import {
 import { classifyProformaServices } from "../utils/proformaPricing";
 import { inrToWords } from "../utils/inrToWords";
 import API_BASE_URL from "../config/apiBaseUrl";
-export default function Quotation() {
+export default function BalanceProforma() {
   const baseURL = API_BASE_URL;
   const { id, txn_id } = useParams();
   const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const basePath = isAdmin ? "/admin" : "/BD";
+  const servicesPath = isAdmin ? "ServicesLanding" : "AddService";
   const query = new URLSearchParams(location.search);
   const isGST = query.get("gst") === "1";
   const rawDocParam = query.get("doc");
-  const isBalanceProforma = false;
-  const docTypeFromURL = rawDocParam === "proforma" ? "proforma" : "quotation";
+  const isBalanceProforma = true;
+  const docTypeFromURL = "balance-proforma";
   const sourceFromURL = query.get("source");
   const navigate = useNavigate();
   const { currentUser, token } = useSelector((state) => state.user);
@@ -1197,7 +1201,7 @@ export default function Quotation() {
     window.print();
   };
   const handleProposalHistory = () => {
-    navigate(`/admin/client/service/history/${id}`);
+    navigate(`${basePath}/client/service/history/${id}`);
   };
 
   const handleShowDiscount = () => {
@@ -1593,7 +1597,7 @@ export default function Quotation() {
       !selectedNotes.some((s) => (s.note_name || "").trim().toLowerCase() === (p.note_text || "").trim().toLowerCase())
   );
   return (
-    <Wrapper>
+    <InvoicePrintWrapper>
       <div className="page-wrapper w-[210mm] min-h-[297mm] flex flex-col justify-between p-4 mx-auto bg-white print:p-0 print:m-0">
         {/* Hidden on print - Action Buttons */ }
 
@@ -1609,9 +1613,9 @@ export default function Quotation() {
             <button
               onClick={ () => {
                 if (docTypeFromURL === "proforma") {
-                  navigate(`/admin/ServicesLanding/${id}/${txn_id}?doc=proforma`);
+                  navigate(`${basePath}/${servicesPath}/${id}/${txn_id}?doc=proforma`);
                 } else {
-                  navigate(`/admin/ServicesLanding/${id}/${txn_id}`);
+                  navigate(`${basePath}/${servicesPath}/${id}/${txn_id}`);
                 }
               } }
               className="bg-orange-600 text-white rounded-full px-4 py-2"
@@ -1626,7 +1630,7 @@ export default function Quotation() {
             📝Proposal History
           </button>
           <button
-            onClick={ () => navigate("/admin/dashboard") }
+            onClick={ () => navigate(`${basePath}/dashboard`) }
             className="bg-yellow-600 text-white rounded-full px-4 py-2"
           >
             📊 Dashboard
@@ -1637,7 +1641,7 @@ export default function Quotation() {
                 navigate(-1);
               } else {
                 window.close();
-                setTimeout(() => navigate("/admin/dashboard"), 300);
+                setTimeout(() => navigate(`${basePath}/dashboard`), 300);
               }
             } }
             className="bg-gray-600 text-white rounded-full px-4 py-2"
@@ -2539,204 +2543,18 @@ export default function Quotation() {
                       </div>
                     ) }
 
-                    { showModalDiscount && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div
-                          className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
-                          onClick={ handleCloseDiscount }
-                        />
-
-                        <div className="relative bg-white w-full max-w-xs rounded-xl shadow-2xl transform transition-all animate-in fade-in-0 zoom-in-95 duration-200">
-                          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center">
-                                <IndianRupeeIcon className="w-3.5 h-3.5 text-red-600" />
-                              </div>
-                              <h2 className="text-sm font-semibold text-gray-900">
-                                { selecteddiscount
-                                  ? "Update Discount"
-                                  : "Set Discount" }
-                              </h2>
-                            </div>
-                            <button
-                              onClick={ handleCloseDiscount }
-                              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-
-                          <form
-                            onSubmit={ handleSaveDiscount }
-                            className="px-3 py-2 space-y-2"
-                          >
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-0.5">
-                                Discount Value
-                              </label>
-                              <div className="flex gap-1.5">
-                                <input
-                                  type="number"
-                                  name={
-                                    formDataDiscount.discount_type ===
-                                      "amount"
-                                      ? "discount_amt"
-                                      : "discount_per"
-                                  }
-                                  value={
-                                    formDataDiscount.discount_type ===
-                                      "amount"
-                                      ? formDataDiscount.discount_amt
-                                      : formDataDiscount.discount_per
-                                  }
-                                  onChange={ handleChangeDiscount }
-                                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-black text-sm"
-                                  placeholder={
-                                    formDataDiscount.discount_type ===
-                                      "amount"
-                                      ? `Enter ₹ (max ₹${discountDataSet?.discount_amt
-                                        ? Number(
-                                          discountDataSet.discount_amt
-                                        )
-                                        : grandTotal.toFixed(0)
-                                      })`
-                                      : `Enter % (max ${discountDataSet?.discount_per
-                                        ? discountDataSet.discount_per
-                                        : 100
-                                      }%)`
-                                  }
-                                  min="0"
-                                  max={
-                                    formDataDiscount.discount_type ===
-                                      "percent"
-                                      ? discountDataSet?.discount_per
-                                        ? Number(
-                                          discountDataSet.discount_per
-                                        )
-                                        : 100
-                                      : discountDataSet?.discount_amt
-                                        ? Number(discountDataSet.discount_amt)
-                                        : grandTotal
-                                  }
-                                />
-                                <select
-                                  name="discount_type"
-                                  value={ formDataDiscount.discount_type }
-                                  onChange={ handleChangeDiscount }
-                                  className="px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-black text-sm bg-white"
-                                >
-                                  <option value="amount">₹</option>
-                                  <option value="percent">%</option>
-                                </select>
-                              </div>
-                              <p className="text-xs text-gray-400 mt-0.5">
-                                { formDataDiscount.discount_type === "amount"
-                                  ? `Max allowed: ₹${discountDataSet?.discount_amt
-                                    ? Number(
-                                      discountDataSet.discount_amt
-                                    )
-                                    : grandTotal.toFixed(0)
-                                  }`
-                                  : `Max allowed: ${discountDataSet?.discount_per
-                                    ? discountDataSet.discount_per
-                                    : 100
-                                  }%${discountDataSet?.discount_amt
-                                    ? ` (or ₹${Number(
-                                      discountDataSet.discount_amt
-                                    ).toFixed(2)})`
-                                    : ""
-                                  }` }
-                              </p>
-                              { (() => {
-                                const isAmt =
-                                  formDataDiscount.discount_type ===
-                                  "amount";
-                                const val = isAmt
-                                  ? Number(formDataDiscount.discount_amt)
-                                  : Number(formDataDiscount.discount_per);
-                                if (!val || val <= 0) return null;
-
-                                const maxAmt = discountDataSet?.discount_amt
-                                  ? Number(discountDataSet.discount_amt)
-                                  : grandTotal;
-                                const maxPer = discountDataSet?.discount_per
-                                  ? Number(discountDataSet.discount_per)
-                                  : 100;
-                                const calculatedRupee = isAmt
-                                  ? val
-                                  : (grandTotal * val) / 100;
-                                const isExceeded = isAmt
-                                  ? val > maxAmt
-                                  : val > maxPer || calculatedRupee > maxAmt;
-
-                                return (
-                                  <p
-                                    className={ `text-xs mt-1 ${isExceeded
-                                      ? "text-red-500 font-semibold"
-                                      : "text-green-600"
-                                      }` }
-                                  >
-                                    { isAmt
-                                      ? `Discount: ₹${val.toLocaleString()} (${(
-                                        (val / grandTotal) *
-                                        100
-                                      ).toFixed(2)}% of ₹${grandTotal.toFixed(
-                                        0
-                                      )})${isExceeded
-                                        ? " Limit exceeded!"
-                                        : ""
-                                      }`
-                                      : `Discount: ₹${calculatedRupee.toFixed(
-                                        2
-                                      )} (${val}% of ₹${grandTotal.toFixed(
-                                        0
-                                      )})${isExceeded
-                                        ? " Limit exceeded!"
-                                        : ""
-                                      }` }
-                                  </p>
-                                );
-                              })() }
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2">
-                              <div>
-                                { selecteddiscount && (
-                                  <button
-                                    type="button"
-                                    onClick={ handleDeleteDiscount }
-                                    disabled={ loading }
-                                    className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50"
-                                  >
-                                    Delete
-                                  </button>
-                                ) }
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  type="button"
-                                  onClick={ handleCloseDiscount }
-                                  className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  type="submit"
-                                  disabled={ loading }
-                                  className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium shadow-sm disabled:opacity-50"
-                                >
-                                  { loading
-                                    ? "Saving..."
-                                    : selecteddiscount
-                                      ? "Update"
-                                      : "Set Discount" }
-                                </button>
-                              </div>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    ) }
+                    <InvoiceDiscountModal
+                      show={showModalDiscount}
+                      onClose={handleCloseDiscount}
+                      onSubmit={handleSaveDiscount}
+                      formDataDiscount={formDataDiscount}
+                      onChangeDiscount={handleChangeDiscount}
+                      onDeleteDiscount={handleDeleteDiscount}
+                      selecteddiscount={selecteddiscount}
+                      discountDataSet={discountDataSet}
+                      grandTotal={grandTotal}
+                      loading={loading}
+                    />
 
                     { docTypeFromURL !== "proforma" && (
                       <div className="space-y-2 print:hidden p-1 mt-4 border-t pt-4 border-gray-300">
@@ -2914,148 +2732,6 @@ export default function Quotation() {
           />
         </div>
       </div>
-    </Wrapper >
+    </InvoicePrintWrapper>
   );
 }
-const Wrapper = styled.div`
-  @media print {
-    @page {
-      size: A4;
-      margin: 0 0 20mm 0;
-    }
-
-    @page :first {
-      margin-top: 0 !important;
-    }
-
-    html, body {
-      width: 210mm;
-      height: auto;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    .page-wrapper {
-      width: 210mm;
-      height: auto !important;
-      min-height: auto !important;
-      break-after: auto;
-      page-break-after: auto;
-      display: block;
-      margin: 0 !important;
-      padding: 0 !important;
-      padding-top: 0 !important;
-      margin-top: 0 !important;
-    }
-
-    .print-fixed-footer {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      height: 20mm;
-      align-items: flex-end;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 9999;
-    }
-
-    .print-fixed-footer img {
-      width: 210mm;
-      height: 20mm;
-      object-fit: fill;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      margin: 0 !important;
-      padding: 0 !important;
-      margin-top: 0 !important;
-      border-spacing: 0;
-    }
-
-    thead {
-      display: table-header-group;
-    }
-
-    thead tr {
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    thead tr td {
-      padding: 0 !important;
-      margin: 0 !important;
-      line-height: 0;
-    }
-
-    thead tr td > div {
-      margin: 0 !important;
-      padding: 0 !important;
-      line-height: 0;
-    }
-
-    thead tr td img {
-      display: block;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    tfoot {
-      display: table-footer-group;
-    }
-
-    tfoot tr td {
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-
-    tbody {
-      display: table-row-group;
-    }
-
-    tbody tr:first-child td {
-      padding-top: 0 !important;
-    }
-
-    tr {
-      page-break-inside: auto;
-    }
-
-    td {
-      vertical-align: top;
-    }
-
-    section {
-      page-break-inside: auto;
-      break-inside: auto;
-      page-break-before: auto;
-      break-before: auto;
-      page-break-after: auto;
-      break-after: auto;
-    }
-
-    .terms-bank-section {
-      page-break-inside: auto !important;
-      break-inside: auto !important;
-    }
-
-    .bank-details-section {
-      page-break-inside: auto;
-      break-inside: auto;
-    }
-
-    .terms-conditions-section {
-      page-break-inside: auto;
-      break-inside: auto;
-    }
-  }
-`;

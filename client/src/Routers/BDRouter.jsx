@@ -2,9 +2,10 @@ import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 // import { useSelector } from "react-redux";
 import styled from "styled-components";
-import BDNoteSection from "../BusinessDeveloper/BDNoteSection";
+import NoteSection from "../shared/NoteSection";
 import BDInvoice from "../BusinessDeveloper/BDInvoice";
-const QuotationBD = lazy(() => import("../BusinessDeveloper/QuotationBD"));
+const Quotation = lazy(() => import("../shared/Quotation"));
+const BalanceProforma = lazy(() => import("../shared/BalanceProforma"));
 const AdsCampaignCalciBD = lazy(() =>
   import("../BusinessDeveloper/AdsCampaignCalciBD")
 );
@@ -18,7 +19,7 @@ const BusinessDeveloperDashboard = lazy(() =>
 );
 const ReviewRequirements = lazy(() => import("../Admin/ReviewRequirements"));
 
-import InvoiceCalculation from "./../BusinessDeveloper/InvoiceCalculation";
+import InvoiceCalculation from "../shared/InvoiceCalculation";
 import InvoiceAds from "../shared/InvoiceAds";
 import InvoiceNoteSection from "../shared/InvoiceNoteSection";
 import InvoiceHistory from "./../BusinessDeveloper/InvoiceHistory";
@@ -53,10 +54,14 @@ const BDRouter = () => {
               path="Adscalculator/:id/:proposalId"
               element={<AdsCampaignCalciBD />}
             />
-            <Route path="quotation/:id/:txn_id" element={<QuotationBD />} />
+            <Route path="quotation/:id/:txn_id" element={<Quotation />} />
+            <Route
+              path="balance-proforma/:id/:txn_id"
+              element={<BalanceProforma />}
+            />
             <Route
               path="note-section/:id/:txn_id"
-              element={<BDNoteSection />}
+              element={<NoteSection />}
             />
             <Route path="invoice/:id/:txn_id" element={<BDInvoice />} />
 

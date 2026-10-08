@@ -26,7 +26,7 @@ import AdminExplorePlans from "./AdminExplorePlans";
 import CreateTeam from "./CreateTeam";
 import GenerateLinkHistory from "./GenerateLinkHistory";
 import NavTabs from "../Components/NavTabs";
-import SeoServicesA from "./SeoServicesA";
+import SeoServicesA from "../shared/SeoServices";
 import ConvertLetterhead from "../Components/ConvertLetterhead";
 import AdmindashBoardSettings from "./AdmindashBoardSettings";
 import ThemeToggle from "../Components/ThemeToggle";

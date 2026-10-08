@@ -28,7 +28,7 @@ import CreateTeam from "./CreateTeam";
 import GenerateLinkHistory from "./GenerateLinkHistory";
 import NavTabs from "../Components/NavTabs";
 import InvoiceHistory from "./InvoiceHistory";
-import SeoServicesA from "./SeoServicesA";
+import SeoServicesA from "../shared/SeoServices";
 import ConvertLetterhead from "../Components/ConvertLetterhead";
 const AssignQuotation = lazy(() => import("./AssignQuotation"));
 // const AllHistory = lazy(() => import("./AllHistory"));
@@ -37,7 +37,7 @@ const AdminClientDetails = lazy(() => import("./AdminClientDetails"));
 const AdminAddServices = lazy(() => import("./AdminAddServices"));
 const AdminServicesHistory = lazy(() => import("./AdminServicesHistory"));
 const AdminAdsCampign = lazy(() => import("./AdminAdsCampign"));
-const NoteSection = lazy(() => import("./NoteSection"));
+const NoteSection = lazy(() => import("../shared/NoteSection"));
 const DiscountSetting = lazy(() => import("../shared/DiscountSetting"));
 
 function AdmindashBoardSettings() {

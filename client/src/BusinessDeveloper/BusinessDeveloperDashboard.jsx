@@ -19,7 +19,7 @@ import Swal from "sweetalert2";
 import { clearUser } from "../redux/user/userSlice";
 import NavTabs from "../Components/NavTabs";
 import InvoiceHistory from "./InvoiceHistory";
-import SeoServices from "./SeoServices";
+import SeoServices from "../shared/SeoServices";
 import ConvertLetterhead from "../Components/ConvertLetterhead";
 
 const AssignQuotationBD = lazy(() => import("./AssignQuotationBD"));
