@@ -1,0 +1,11 @@
+refactor(invoices): extract modal & print hooks, reduce Invoice.jsx to 461 lines
+
+- Extract useInvoicePrint hook: encapsulates canvas base64 conversion, dynamic document title, and styled popup window print/download flow
+- Extract useInvoiceModals hook: centralizes state & handlers for discounts, remaining payments, and client notes
+- Extract InvoiceModalsContainer component: unifies InvoiceNoteModal, RemainingPaymentModal, and InvoiceDiscountModal
+- Refactor shared/Invoice.jsx: decomposed from ~3,000 lines down to 461 lines of clean, declarative orchestration
+- Verified production build successfully (2110 modules transformed, zero errors)
+
+Next Steps:
+- Step 5: Leverage feature architecture to decouple BalanceProforma.jsx and Proforma views
+- Step 6: Expand feature-based architecture to proposals and other modules

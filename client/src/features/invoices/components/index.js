@@ -7,3 +7,4 @@ export { default as InvoiceSummaryRightSide } from "./InvoiceSummaryRightSide";
 export { default as InvoiceAmountInWords } from "./InvoiceAmountInWords";
 export { default as InvoicePaymentHistoryTable } from "./InvoicePaymentHistoryTable";
 export { default as InvoiceTermsConditions } from "./InvoiceTermsConditions";
+export { default as InvoiceModalsContainer } from "./InvoiceModalsContainer";
