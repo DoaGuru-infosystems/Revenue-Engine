@@ -6,9 +6,9 @@ import PremiumLoader from "../Components/PremiumLoader";
 const PublicRequirementForm = lazy(() => import("../Client/PublicRequirementForm"));
 const PublicInvoice = lazy(() => import("../Client/PublicInvoice"));
 const PublicProposal = lazy(() => import("../Client/PublicProposal"));
-const Login = lazy(() => import("../Screens/Login"));
-const RegisterAdmin = lazy(() => import("../Screens/RegisterAdmin"));
-const ForgotPassword = lazy(() => import("../Screens/ForgotPassword"));
+const Login = lazy(() => import("../features/auth/pages/LoginPage"));
+const RegisterAdmin = lazy(() => import("../features/auth/pages/RegisterAdminPage"));
+const ForgotPassword = lazy(() => import("../features/auth/pages/ForgotPasswordPage"));
 const AdminRouter = lazy(() => import("../Routers/AdminRouter"));
 const BDRouter = lazy(() => import("../Routers/BDRouter"));
 

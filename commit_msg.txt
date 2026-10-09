@@ -1,13 +1,13 @@
-feat(app): establish src/app/ foundation layer
+feat(auth): establish features/auth modular architecture
 
-- Create src/app/ folder matching target 4-layer architecture
-- Extract AppRoutes into src/app/app.routes.jsx
-- Setup root application shell in src/app/App.jsx
-- Setup centralized Redux store in src/app/app.store.js
-- Setup global Tailwind and styles in src/app/index.css
-- Update src/main.jsx to bootstrap from src/app/
-- Maintain 100% backward compatibility with legacy re-exports
-- Verified production build successfully (2111 modules transformed, 0 errors)
+- Create features/auth/services/authService.js encapsulating login, admin registration with OTP, password recovery, and BD registration
+- Create features/auth/auth.slice.js as centralized Redux slice for auth state
+- Create features/auth/hooks/useAuth.js hook managing login, logout, and auth state
+- Create features/auth/pages/ (LoginPage, RegisterAdminPage, ForgotPasswordPage)
+- Wire app.routes.jsx to load auth pages from features/auth/pages/
+- Maintain 100% backward compatibility by bridging legacy Screens and userSlice
+- Verified production build successfully (2116 modules transformed, 0 errors)
 
 Next Steps:
-- Phase 2: Refactor features/auth/ (components, hooks, pages, services, auth.slice.js)
+- Phase 3: Finalize features/invoices/pages/ and services/ mapping
+- Phase 4: Refactor features/proposals/ (ProposalBuilder, etc.)
