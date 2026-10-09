@@ -8,8 +8,8 @@ import {
   Trash2,
   BadgePercent,
 } from "lucide-react";
-import Calculator from "../../../shared/Calculator";
-import AdsCampaignCalculator from "../../../Admin/AdsCampaignCalculator";
+import GraphicCalculator from "../../calculator/components/GraphicCalculator";
+import AdsCampaignCalculator from "../../calculator/components/AdsCampaignCalculator";
 import ProposalDiscountModal from "./ProposalDiscountModal";
 import { classifyProformaServices } from "../../../utils/proformaPricing";
 
@@ -293,7 +293,7 @@ export default function ProposalPricingSection({
               </button>
             </div>
             <div className="p-4 max-h-[80vh] overflow-y-auto">
-              <Calculator
+              <GraphicCalculator
                 hideNotes={true}
                 onServiceAdded={handleServiceAdded}
                 onServiceDeleted={handleServiceDeleted}
