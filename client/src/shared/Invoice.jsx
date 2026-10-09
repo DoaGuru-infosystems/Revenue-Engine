@@ -6,7 +6,7 @@ import RemainingPaymentModal from "./invoice/RemainingPaymentModal";
 import InvoiceDiscountModal from "./invoice/InvoiceDiscountModal";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import numberToWords from "number-to-words";
+
 import {
   Calendar,
   Search,
@@ -17,15 +17,8 @@ import {
   Mail,
   Phone,
   MapPin,
-  Timer,
-  Calendar1,
   Trash,
   RefreshCcw,
-  Package,
-  StickyNote,
-  Notebook,
-  ChevronUp,
-  ChevronDown,
   IndianRupeeIcon,
 } from "lucide-react";
 import axios from "axios";
@@ -34,11 +27,10 @@ import { inrToWords } from "../utils/inrToWords";
 import moment from "moment";
 import Swal from "sweetalert2";
 import { clearUser } from "../redux/user/userSlice";
-import img1 from "../assets/Dg 1copy.png";
 import img2 from "../assets/Dg 2copy.png";
-import img3 from "../assets/DOAGURU IT Solution.png";
-import img4 from "../assets/DOAGURU Infosystyem.png";
-import img5 from "../assets/dghead.jpeg";
+import DocumentHeaderBanner from "./document/DocumentHeaderBanner";
+import DocumentBankDetails from "./document/DocumentBankDetails";
+import DocumentCompanyFrom from "./document/DocumentCompanyFrom";
 import API_BASE_URL from "../config/apiBaseUrl";
 
 export default function Invoice({ publicMode = false, publicData = null, publicToken = null }) {
@@ -60,7 +52,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
   const dispatch = useDispatch();
-  const [total, setTotal] = useState(0);
+
 
   const [serviceData, setServiceData] = useState([]);
   const [additionalServiceData, setAdditionalServiceData] = useState([]);
@@ -88,30 +80,9 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
     header: false,
     footer: false,
   });
-  const [selectedService, setSelectedService] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedEditingType, setSelectedEditingType] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [getData, setGetData] = useState([]);
-  const [optionalServices, setOptionalServices] = useState([]);
-  const [data, setData] = useState([]);
-
-  const [addons, setAddons] = useState({});
-  const [isEditingAddition, setIsEditingAddition] = useState(false);
-  const [showModalAddition, setShowModalAddition] = useState(false);
   const [showModalRemaining, setShowModalRemaining] = useState(false);
   const [isEditingRemaining, setIsEditingRemaining] = useState(false);
 
-  const [optionalAmounts, setOptionalAmounts] = useState([]);
-  const getServiceDisplayName = (name) => {
-    if (!name) return name;
-    const n = name.toLowerCase();
-    if (n.includes("content posting")) return "Meta Growth & Content Management";
-    if (n.includes("youtube video posting")) return "YouTube Channel Growth & Optimization";
-    if (n.includes("google ad")) return "Google Ads Campaign Management & Optimization";
-    if (n.includes("meta ad")) return "Meta Ads Campaign Management & Optimization";
-    return name;
-  };
 
   const parseAmount = (value) => {
     if (value === null || value === undefined || value === "") return 0;
@@ -158,9 +129,6 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
   const [isEditing, setIsEditing] = useState(false);
   const [predefinedNotes, setPredefinedNotes] = useState([]); // fetched from API
   const [selectedNotes, setSelectedNotes] = useState([]); // selected + manual
-  const [manualNote, setManualNote] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState(null);
   const [showModalDiscount, setShowModalDiscount] = useState(false);
   const [discountDataSet, setDiscountDataSet] = useState(null);
   const [formDataDiscount, setFormDataDiscount] = useState({
@@ -833,45 +801,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
     }
   }, [id, txn_id, docTypeFromURL, sourceFromURL, txnIdFromURL, isBalanceProforma, publicMode, publicData]);
 
-  const handleEdit = (entry) => {
-    setIsEditingAddition(entry.id);
-    setSelectedService(entry.service_name);
-    setSelectedCategory(entry.category_name);
-    setSelectedEditingType({
-      editing_type_id: entry.editing_type_id,
-      editing_type_name: entry.editing_type_name,
-      amount: parseFloat(entry.editing_type_amount),
-    });
-    setQuantity(parseInt(entry.quantity));
 
-    // Dynamically map optional services from entry
-    const updatedAddons = {};
-    optionalServices.forEach((opt) => {
-      const key = getOptionalServiceKey(opt.editing_type_name);
-      const entryKey = `include_${key}`;
-      updatedAddons[key] = parseFloat(entry[entryKey]) > 0;
-    });
-
-    setAddons(updatedAddons);
-    setTotal(parseFloat(entry.total_amount));
-    setShowModalAddition(true);
-  };
-
-  const getSelectedService = data.find(
-    (s) => s.service_name === selectedService
-  );
-  const getSelectedCategory = getSelectedService?.categories.find(
-    (c) => c.category_name === selectedCategory
-  );
-
-  const handleShow = () => {
-    setIsEditingAddition(false);
-    setShowModalAddition(true);
-  };
-  const handleRemainingShow = () => {
-    setIsEditingRemaining(false);
-    setShowModalRemaining(true);
-  };
   const handleChangeNote = (e) => {
     const { name, value } = e.target;
 
@@ -961,168 +891,6 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
     setAdsData(adsRaw);
     setLoading(false);
   }, [serviceData]);
-
-  useEffect(() => {
-    axios
-      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
-      .then((res) => {
-        // Filter out "Complimentary" service
-        const filteredServices = res.data.data.filter(
-          (service) => service.service_name.toLowerCase() !== "complimentary"
-        );
-        setData(filteredServices);
-      })
-      .catch((err) => console.error(err));
-  }, []);
-
-  useEffect(() => {
-    axios
-      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
-      .then((res) => {
-        if (res.data.status === "success") {
-          const services = res.data.data;
-          setOptionalServices(services);
-
-          const initialAddons = {};
-          services.forEach((item) => {
-            const key = getOptionalServiceKey(item.editing_type_name);
-            initialAddons[key] = false;
-          });
-          setAddons(initialAddons);
-          setOptionalAmounts(services); // already done in your code
-        }
-      })
-      .catch((err) => console.error(err));
-  }, []);
-
-  useEffect(() => {
-    if (isEditingAddition) return;
-
-    if (selectedService === "Video Services") {
-      setAddons({
-        youtube_video_posting: true,
-        "youtube_channel_growth_&_optimization": true,
-        thumbnail_creation: true,
-        content_posting: true,
-        "meta_growth_&_content_management": true,
-      });
-    } else if (selectedService === "Graphics Design") {
-      setAddons({
-        content_posting: true,
-        "meta_growth_&_content_management": true,
-        thumbnail_creation: false,
-      });
-    } else {
-      setAddons({});
-    }
-  }, [selectedService, isEditingAddition]);
-
-  const handleSave = (e) => {
-    e.preventDefault();
-    if (!selectedEditingType) return;
-
-    // Base amount
-    let baseAmount = selectedEditingType.amount * quantity;
-
-    // Optional addon values
-    let optionalTotal = 0;
-    let include_content_posting = 0;
-    let include_thumbnail_creation = 0;
-    let include_youtube_video_posting = 0;
-
-    optionalServices.forEach((opt) => {
-      const key = getOptionalServiceKey(opt.editing_type_name);
-      if (addons[key]) {
-        const amount = parseFloat(opt.amount);
-        const totalForThisAddon = amount * quantity; // âœ… multiply by quantity
-
-        optionalTotal += totalForThisAddon;
-
-        if (key === "content_posting" || key === "meta_growth_&_content_management") {
-          include_content_posting = amount; // Send unit amount, not total
-        } else if (key === "thumbnail_creation") {
-          include_thumbnail_creation = amount; // Send unit amount, not total
-        } else if (key === "youtube_video_posting" || key === "youtube_channel_growth_&_optimization") {
-          include_youtube_video_posting = amount;
-        }
-      }
-    });
-
-    const finalAmount = baseAmount + optionalTotal;
-    setTotal(finalAmount);
-
-    const payload = {
-      txn_id: txn_id,
-      client_id: id,
-      service_name: selectedService,
-      category_name: selectedCategory,
-      editing_type_id: selectedEditingType.editing_type_id,
-      editing_type_name: selectedEditingType.editing_type_name,
-      editing_type_amount: selectedEditingType.amount,
-      quantity,
-      include_content_posting,
-      include_thumbnail_creation,
-      include_youtube_video_posting,
-      total_amount: finalAmount,
-      employee: userName,
-    };
-
-    const request = isEditingAddition
-      ? axios.put(
-        `${baseURL}/auth/api/re_calculator/updateAdditionalDataById/${isEditingAddition}`,
-        payload
-      )
-      : axios.post(
-        `${baseURL}/auth/api/re_calculator/saveAdditionalData`,
-        payload
-      );
-
-    request
-      .then((res) => {
-        resetForm();
-        if (res.data.status === "Success") {
-          Swal.fire({
-            icon: "success",
-            title: isEditingAddition ? "Updated!" : "Saved!",
-            text: isEditingAddition
-              ? "Entry updated successfully"
-              : "Saved successfully",
-            showConfirmButton: false,
-            timer: 1000,
-            // timerProgressBar: true,
-          });
-          fetchAdditionservice();
-          if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
-            fetchProformaData();
-          } else if (sourceFromURL === "proposal_invoice") {
-            fetchProposalInvoiceData();
-          }
-          setShowModalAddition(false);
-        } else if (res.data.status === "Alert") {
-          Swal.fire({
-            icon: "warning",
-            title: "Already Exists",
-            text: res.data.message || "This Additional service already exists",
-            showConfirmButton: false,
-            timer: 1000,
-            // timerProgressBar: true,
-          });
-          resetForm();
-          fetchAdditionservice();
-          if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
-            fetchProformaData();
-          } else if (sourceFromURL === "proposal_invoice") {
-            fetchProposalInvoiceData();
-          }
-          setShowModalAddition(false);
-        }
-      })
-      .catch((err) => {
-        console.error("Save error:", err);
-      });
-  };
-
-
 
   const handleShowDiscount = () => {
     if (selecteddiscount) {
@@ -1343,16 +1111,6 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
     }
   };
 
-  const handleEditRemaining = (items) => {
-    setIsEditingRemaining(items.id);
-    setFormDataRemaining({
-      service_name: items.service_name,
-      price: items.price,
-    });
-    setShowModalRemaining(true);
-  };
-
-
 
   const handleChangeRemaining = (e) => {
     const { name, value } = e.target;
@@ -1504,95 +1262,6 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
         ...selectedNotes,
         { id: note.id, note_name: note.note_text, type: "predefined" },
       ]);
-    }
-  };
-  const handleAddManualNote = () => {
-    if (manualNote.trim() !== "") {
-      setSelectedNotes([
-        ...selectedNotes,
-        { id: Date.now(), note_name: manualNote, type: "manual" },
-      ]);
-      setManualNote("");
-    }
-  };
-
-  const handleRemoveNote = (id) => {
-    setSelectedNotes(selectedNotes.filter((note) => note.id !== id));
-  };
-
-  const handleSaveNotes = async () => {
-    if (selectedNotes.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "No Notes",
-        text: "Please add at least one note before saving.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-      return;
-    }
-
-    try {
-      const planNotes = selectedNotes.map((item) => ({
-        note_name: item.note_name,
-      }));
-
-      const payload = {
-        txn_id: txn_id,
-        client_id: id,
-        planNotes,
-      };
-
-      const response = await axios.post(
-        `${baseURL}/auth/api/re_calculator/saveInvoiceClientIdwiseNotes`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.status === "Alert") {
-        Swal.fire({
-          icon: "warning",
-          title: "Duplicate Note",
-          text: response.data.message,
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-        fetchClientNotes();
-        setManualNote("");
-        setPredefinedNotes([]);
-        setSelectedNotes([]);
-        fetchPredefinedNotes();
-        return; // stop execution here
-      }
-
-      Swal.fire({
-        icon: "success",
-        title: "Notes Created",
-        text: response.data.message || "Notes saved successfully!",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-
-      fetchClientNotes();
-      setManualNote("");
-      setPredefinedNotes([]);
-      setSelectedNotes([]);
-      fetchPredefinedNotes();
-    } catch (err) {
-      console.error("Save error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Something went wrong while saving the notes.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
     }
   };
 
@@ -1898,147 +1567,6 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
 
 
 
-  const handleDelete = async (entryId) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to delete this entry?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e11d48", // red
-      cancelButtonColor: "#6b7280", // gray
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    try {
-      const res = await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deleteAdditionalById/${entryId}`
-      );
-
-      const result = res.data;
-
-      if (result.status === "Success") {
-        setAdditionalServiceData((prev) =>
-          prev.filter((item) => item.id !== entryId)
-        );
-        if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
-          fetchProformaData();
-        } else if (sourceFromURL === "proposal_invoice") {
-          fetchProposalInvoiceData();
-        }
-
-        Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "Entry has been deleted.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: result.message || "Failed to delete entry.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error deleting entry:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while deleting entry.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-    }
-  };
-  const handleRemainingDelete = async (entryId) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to delete this entry?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e11d48", // red
-      cancelButtonColor: "#6b7280", // gray
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    try {
-      const res = await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deleteRemainingAmountById/${entryId}`
-      );
-
-      const result = res.data;
-
-      if (result.status === "Success") {
-        setRemainingAmountData((prev) =>
-          prev.filter((item) => item.id !== entryId)
-        );
-
-        Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "Entry has been deleted.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: result.message || "Failed to delete entry.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error deleting entry:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while deleting entry.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-    }
-  };
-
-  const handleClosesetRemaining = () => {
-    setShowModalRemaining(false);
-    setFormDataRemaining({
-      service_name: "",
-      price: "",
-    });
-  };
-  const handleCloseAddition = () => {
-    setShowModalAddition(false);
-  };
-  const resetForm = () => {
-    // setIsEditingAddition(null);
-    setSelectedService("");
-    setSelectedCategory("");
-    // setSelectedEditingType(null);
-    setQuantity(1);
-    const initialAddons = {};
-    optionalServices.forEach((item) => {
-      const key = getOptionalServiceKey(item.editing_type_name);
-      initialAddons[key] = false;
-    });
-    setAddons(initialAddons);
-
-    setTotal(0);
-  };
 
   const handlePrintPage = () => {
     const docName = isBalanceProforma 
@@ -2181,11 +1709,6 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
       alert("Error generating PDF. Please check console logs.");
     }
   };
-  const handleSelect = (note) => {
-    handleAddPredefinedNote(note);
-    setSelectedNote(null);
-    setIsOpen(false);
-  };
 
   const uniquePredefinedNotes = predefinedNotes.filter(
     (p) =>
@@ -2237,29 +1760,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
         {/* Table for proper header/footer repetition */ }
         <table className="print:table print:border-collapse w-full print:m-0 print:p-0">
           {/* Repeating Header */ }
-          <thead className="print:table-header-group w-full">
-            <tr>
-              <td className="p-0 m-0 w-full" style={ { padding: 0, margin: 0 } }>
-                <div className="w-full h-[35mm] print:h-[35mm]" style={ { margin: 0, padding: 0, lineHeight: 0 } }>
-                  { isGST ? (
-                    <img
-                      src={ img1 }
-                      alt="Header"
-                      className="w-full h-full object-cover object-top"
-                      style={ { display: 'block', margin: 0, padding: 0 } }
-                    />
-                  ) : (
-                    <img
-                      src={ img5 }
-                      alt="Header"
-                      className="w-full h-full object-cover object-top"
-                      style={ { display: 'block', margin: 0, padding: 0 } }
-                    />
-                  ) }
-                </div>
-              </td>
-            </tr>
-          </thead>
+          <DocumentHeaderBanner isGST={isGST} />
 
           {/* Main Content */ }
           <tbody className="print:table-row-group">
@@ -2360,32 +1861,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
                       </div>
 
                       {/* Company Info */ }
-                      <div className="border p-2 rounded-lg">
-                        <p>
-                          <strong> FROM:</strong>{ " " }
-                          { isGST
-                            ? "DOAGuru InfoSystems"
-                            : "DOAGuru IT Solutions" }
-                        </p>
-                        <p>
-                          <strong>Email:</strong> info@doaguru.com
-                        </p>
-                        <p>
-                          <strong>Phone:</strong> +91 74409 92424
-                        </p>
-                        { isGST ? (
-                          <p>
-                            <strong>GST No:</strong> 23AGLPP2890G1Z7
-                          </p>
-                        ) : (
-                          <p>
-                            <strong>Pan Card No:</strong> ASTPT3654Q
-                          </p>
-                        ) }
-                        <p>
-                          <strong>Address:</strong> 1815, Wright Town, Jabalpur
-                        </p>
-                      </div>
+                      <DocumentCompanyFrom isGST={isGST} className="mt-1" />
                     </div>
 
                     {/* ==================== COMBINED SERVICES TABLE ==================== */ }
@@ -2416,27 +1892,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
                             </thead>
 
                             <tbody>
-                              {/* ================= ADDITIONAL SERVICES ================= */ }
-                              { false && additionalServiceData.map((edit, eidx) => {
-                                const qty = Number(edit.quantity || 1);
-                                const base = Number(edit.editing_type_amount || edit.price || 0);
-                                const totalBase = base * qty;
-                                return (
-                                  <tr key={ `additional-${eidx}` } className="bg-white">
-                                    <td className="border px-2 py-1">
-                                      { edit.service_name || edit.category_name || "Additional Service" }
-                                    </td>
-                                    <td className="border px-2 py-1">
-                                      { edit.editing_type_name || edit.category_name || "-" }
-                                    </td>
-                                    <td className="border px-2 py-1 text-right">{ qty }</td>
-                                    <td className="border px-2 py-1 text-right">₹{ formatAmountNoDecimals(base) }</td>
-                                    <td className="border px-2 py-1 text-right">₹{ formatAmountNoDecimals(totalBase) }</td>
-                                  </tr>
-                                );
-                              }) }
-
-                              {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */ }
+                              {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */}
                               { graphicData.map((service, idx) => {
                                 // Service Charge (ads % charge) hamesha visible rahega
                                 // Hide/Show checkboxes sirf Ads Budget amounts pe apply hoti hain
@@ -2596,15 +2052,6 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
 
                     { clientData.tag_received_amt !== "received" && !publicMode && isProforma && (
                       <div className="print:hidden my-2 flex items-center gap-2">
-{ false && (
-                        <button
-                          onClick={ handleShow }
-                          className="px-2.5 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors"
-                          title="Add Additional Service"
-                        >
-                          + Additional Service
-                        </button>
-) }
 
                         <button
                           onClick={ handleShowDiscount }
@@ -2628,41 +2075,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
                 {/* Terms & Conditions + Bank Details Section */ }
                 <section className={ `terms-bank-section print:block px-6 py-1 text-sm text-gray-800 border-t mt-1` }>
                   <div className="bank-details-section flex w-full border border-gray-300 rounded-md mt-1 overflow-hidden">
-                    <div className="w-[45%] flex flex-col p-2.5 border-r border-gray-300 bg-white">
-                      <div>
-                        <h2 className="text-[13px] font-bold text-[#1e3a8a] mb-1.5">
-                          Bank Details:
-                        </h2>
-                        { isGST ? (
-                          <div className="text-[11px] space-y-1 text-gray-800">
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Name:</span> <span>DOAGuru InfoSystems</span></p>
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">IFSC:</span> <span>SBIN0004677</span></p>
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Account No:</span> <span>38666325192</span></p>
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Bank:</span> <span>SBI Bank, Jabalpur</span></p>
-                          </div>
-                        ) : (
-                          <div className="text-[11px] space-y-1 text-gray-800">
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Name:</span> <span>DOAGuru IT Solutions</span></p>
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">IFSC:</span> <span>HDFC0000224</span></p>
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Account No:</span> <span>50200074931981</span></p>
-                            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Bank:</span> <span>HDFC Bank, Jabalpur</span></p>
-                          </div>
-                        ) }
-                      </div>
-
-                      {/* Signature */ }
-                      <div className="mt-3 border border-gray-300 rounded-lg p-2 w-[160px] bg-white">
-                        <img
-                          src={ isGST ? img4 : img3 }
-                          alt="Authorized Signature"
-                          className="w-auto object-contain mx-auto mb-1"
-                        />
-                        <p className="text-[10px] font-bold text-gray-800">Signature</p>
-                        <p className="text-[9px] text-gray-500">
-                          { isGST ? "DOAGuru InfoSystems" : "DOAGuru IT Solutions" }
-                        </p>
-                      </div>
-                    </div>
+                      <DocumentBankDetails isGST={isGST} />
 
                     {/* RIGHT SIDE: Table-like layout */ }
                     <div className="w-[55%] flex flex-col text-xs bg-white">
@@ -3002,7 +2415,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
         />
         <RemainingPaymentModal
           show={showModalRemaining}
-          onClose={handleClosesetRemaining}
+          onClose={() => { setShowModalRemaining(false); setFormDataRemaining({ service_name: "", price: "" }); }}
           onSubmit={handleRemainingSave}
           formDataRemaining={formDataRemaining}
           onChangeRemaining={handleChangeRemaining}
