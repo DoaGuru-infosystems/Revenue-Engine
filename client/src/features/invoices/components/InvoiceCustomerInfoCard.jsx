@@ -6,6 +6,7 @@ export default function InvoiceCustomerInfoCard({
   clientData = {},
   isProforma = false,
   isBalanceProforma = false,
+  isQuotation = false,
   isGST = false,
 }) {
   return (
@@ -16,7 +17,9 @@ export default function InvoiceCustomerInfoCard({
             ? isBalanceProforma
               ? "BALANCE PROFORMA INVOICE"
               : "PROFORMA INVOICE"
-            : "INVOICE"}
+            : isQuotation
+              ? "QUOTATION"
+              : "INVOICE"}
         </p>
       </div>
 
@@ -44,6 +47,10 @@ export default function InvoiceCustomerInfoCard({
                     Ref: {clientData.source_proforma_number}
                   </div>
                 )}
+              </>
+            ) : isQuotation ? (
+              <>
+                <strong>Quotation: </strong> {clientData?.bill_number || clientData?.id}
               </>
             ) : isGST > 0 ? (
               <>

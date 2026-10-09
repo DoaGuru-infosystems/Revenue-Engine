@@ -1,10 +1,10 @@
-refactor(invoices): decouple BalanceProforma.jsx to feature architecture (2678 -> 315 lines)
+refactor(invoices): decouple Quotation.jsx to feature architecture (2678 -> 330 lines)
 
-- Support onProposalHistory and onEdit actions in InvoiceActionButtons
-- Refactor shared/BalanceProforma.jsx from a 2,678-line monolith down to 315 lines
-- Decouple Balance Proforma logic to reuse features/invoices hooks (useInvoiceData, useInvoiceCalculations, useInvoiceModals, useInvoicePrint)
-- Unify Balance Proforma visual structure with extracted invoice subcomponents
-- Verified production build (built in 14.86s, zero errors, chunk size down to 6.4 kB)
+- Support isQuotation title and numbering mode in InvoiceCustomerInfoCard
+- Refactor shared/Quotation.jsx from a 2,678-line duplicate down to 330 lines
+- Reuse features/invoices custom hooks (useInvoiceData, useInvoiceCalculations, useInvoiceModals, useInvoicePrint)
+- Unify Quotation and Proforma Invoice views across shared component architecture
+- Verified production build successfully (built in 12.81s, zero errors, chunk size 6.55 kB)
 
 Next Steps:
-- Step 6: Verify and extract Proforma standalone view if needed, or expand feature architecture to Proposals module
+- Verify public views (PublicInvoice.jsx) or expand feature architecture to proposals/calculators
