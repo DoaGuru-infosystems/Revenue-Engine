@@ -1,10 +1,13 @@
-refactor(invoices): decouple Quotation.jsx to feature architecture (2678 -> 330 lines)
+feat(app): establish src/app/ foundation layer
 
-- Support isQuotation title and numbering mode in InvoiceCustomerInfoCard
-- Refactor shared/Quotation.jsx from a 2,678-line duplicate down to 330 lines
-- Reuse features/invoices custom hooks (useInvoiceData, useInvoiceCalculations, useInvoiceModals, useInvoicePrint)
-- Unify Quotation and Proforma Invoice views across shared component architecture
-- Verified production build successfully (built in 12.81s, zero errors, chunk size 6.55 kB)
+- Create src/app/ folder matching target 4-layer architecture
+- Extract AppRoutes into src/app/app.routes.jsx
+- Setup root application shell in src/app/App.jsx
+- Setup centralized Redux store in src/app/app.store.js
+- Setup global Tailwind and styles in src/app/index.css
+- Update src/main.jsx to bootstrap from src/app/
+- Maintain 100% backward compatibility with legacy re-exports
+- Verified production build successfully (2111 modules transformed, 0 errors)
 
 Next Steps:
-- Verify public views (PublicInvoice.jsx) or expand feature architecture to proposals/calculators
+- Phase 2: Refactor features/auth/ (components, hooks, pages, services, auth.slice.js)

@@ -1,22 +1,11 @@
-// import { StrictMode } from "react";
-// import { createRoot } from "react-dom/client";
-// import "./index.css";
-// import App from "./App.jsx";
-
-// createRoot(document.getElementById("root")).render(
-//   <StrictMode>
-//     <App />
-//   </StrictMode>
-// );
-
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
+import "./app/index.css";
 import "./styles/theme.css";
-import App from "./App.jsx";
+import App from "./app/App.jsx";
 import { ThemeProvider } from "./context/ThemeContext";
 import { createHashRouter, RouterProvider } from "react-router-dom";
-import { persistor, store } from "./redux/store.js";
+import { persistor, store } from "./app/app.store.js";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 
