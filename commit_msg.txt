@@ -1,11 +1,10 @@
-refactor(invoices): extract modal & print hooks, reduce Invoice.jsx to 461 lines
+refactor(invoices): decouple BalanceProforma.jsx to feature architecture (2678 -> 315 lines)
 
-- Extract useInvoicePrint hook: encapsulates canvas base64 conversion, dynamic document title, and styled popup window print/download flow
-- Extract useInvoiceModals hook: centralizes state & handlers for discounts, remaining payments, and client notes
-- Extract InvoiceModalsContainer component: unifies InvoiceNoteModal, RemainingPaymentModal, and InvoiceDiscountModal
-- Refactor shared/Invoice.jsx: decomposed from ~3,000 lines down to 461 lines of clean, declarative orchestration
-- Verified production build successfully (2110 modules transformed, zero errors)
+- Support onProposalHistory and onEdit actions in InvoiceActionButtons
+- Refactor shared/BalanceProforma.jsx from a 2,678-line monolith down to 315 lines
+- Decouple Balance Proforma logic to reuse features/invoices hooks (useInvoiceData, useInvoiceCalculations, useInvoiceModals, useInvoicePrint)
+- Unify Balance Proforma visual structure with extracted invoice subcomponents
+- Verified production build (built in 14.86s, zero errors, chunk size down to 6.4 kB)
 
 Next Steps:
-- Step 5: Leverage feature architecture to decouple BalanceProforma.jsx and Proforma views
-- Step 6: Expand feature-based architecture to proposals and other modules
+- Step 6: Verify and extract Proforma standalone view if needed, or expand feature architecture to Proposals module

@@ -1,2656 +1,333 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import InvoicePrintWrapper from "./invoice/InvoicePrintWrapper";
-import InvoiceDiscountModal from "./invoice/InvoiceDiscountModal";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
-import moment from "moment";
+
+import {
+  useInvoiceData,
+  useInvoiceCalculations,
+  useInvoiceModals,
+  useInvoicePrint,
+} from "../features/invoices/hooks";
+import {
+  InvoiceActionButtons,
+  InvoiceCustomerInfoCard,
+  InvoiceServicesTable,
+  InvoiceComplimentaryTable,
+  InvoiceDiscountSection,
+  InvoiceSummaryRightSide,
+  InvoiceAmountInWords,
+  InvoicePaymentHistoryTable,
+  InvoiceTermsConditions,
+  InvoiceModalsContainer,
+} from "../features/invoices/components";
 import Swal from "sweetalert2";
 import { clearUser } from "../redux/user/userSlice";
+import img2 from "../assets/Dg 2copy.png";
 import DocumentHeaderBanner from "./document/DocumentHeaderBanner";
 import DocumentBankDetails from "./document/DocumentBankDetails";
-import img2 from "../assets/Dg 2copy.png";
-import {
-  Package,
-  X,
-  StickyNote,
-  Notebook,
-  ChevronUp,
-  ChevronDown,
-  IndianRupeeIcon,
-  User,
-  RefreshCcw,
-} from "lucide-react";
-import { classifyProformaServices } from "../utils/proformaPricing";
-import { inrToWords } from "../utils/inrToWords";
-import API_BASE_URL from "../config/apiBaseUrl";
+
 export default function BalanceProforma() {
-  const baseURL = API_BASE_URL;
   const { id, txn_id } = useParams();
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   const basePath = isAdmin ? "/admin" : "/BD";
   const servicesPath = isAdmin ? "ServicesLanding" : "AddService";
   const query = new URLSearchParams(location.search);
-  const isGST = query.get("gst") === "1";
-  const rawDocParam = query.get("doc");
-  const isBalanceProforma = true;
-  const docTypeFromURL = "balance-proforma";
-  const sourceFromURL = query.get("source");
+  const isGSTFromURL = query.get("gst") === "1";
   const navigate = useNavigate();
   const { currentUser, token } = useSelector((state) => state.user);
+  const userName = currentUser?.name;
   const dispatch = useDispatch();
 
-  const [serviceData, setServiceData] = useState([]);
-  const [graphicData, setGraphicData] = useState([]);
-  const [adsData, setAdsData] = useState([]);
-  const [complimentaryData, setComplimentaryData] = useState([]);
-  const [selecteddiscount, setSelecteddiscount] = useState("");
-  const [notesData, setNotesData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [clientData, setClientData] = useState([]);
-  const [clientDataReceived, setClientDataReceived] = useState([]);
-  const [formData, setFormData] = useState({
-    note_name: "",
-    plan: "Customise",
-  });
-  const [selectedNotesId, setSelectedNotesId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [predefinedNotes, setPredefinedNotes] = useState([]); // fetched from API
-  const [selectedNotes, setSelectedNotes] = useState([]); // selected + manual
-  const [manualNote, setManualNote] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState(null);
-  const [showModalDiscount, setShowModalDiscount] = useState(false);
-  const [discountDataSet, setDiscountDataSet] = useState(null);
-  const [formDataDiscount, setFormDataDiscount] = useState({
-    discount_type: "amount",
-    discount_per: "",
-    discount_amt: "",
-  });
-  const [showMetaAd, setShowMetaAd] = useState(true);
-  const [showGoogleAd, setShowGoogleAd] = useState(true);
-  const [proformaMeta, setProformaMeta] = useState(null);
-  const dropdownRef = useRef(null);
-  // Default notes that should appear automatically
-  const defaultNotes = [
-    {
-      id: 1,
-      note_name:
-        "The client pays for the Meta ad budget, and ad service charges will apply only if the client wants to run the ad.",
-    },
-    {
-      id: 2,
-      note_name:
-        "All amounts need to be paid in advance. Only the ad budget will be paid upon request of the client or immediately after the service is started.",
-    },
-    {
-      id: 3,
-      note_name:
-        "Please note that service charges are non-refundable but may be adjusted against another service.",
-    },
-    {
-      id: 4,
-      note_name:
-        "One dedicated SPOC (single point of contact) is required from the client side to approve the posts, contents, videos changes, etc.",
-    },
-    {
-      id: 5,
-      note_name:
-        "Required details like credentials and other details are needed to share timely.",
-    },
-  ];
+  const isBalanceProforma = true;
 
-  // Initialize with default notes
-  useEffect(() => {
-    setSelectedNotes(defaultNotes);
-  }, []);
-
-  const fetchServices = async () => {
-    try {
-      const res = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getClientServiceHistory/${id}/${txn_id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setServiceData(res.data.data);
-
-      console.log(serviceData);
-    } catch (error) {
-      if (error.response?.status === 401) {
-        Swal.fire({
-          title: "Session Expired",
-          text: "Please login again.",
-          icon: "warning",
-        }).then(() => {
-          dispatch(clearUser());
-          localStorage.removeItem("token");
-          navigate("/");
-        });
-      }
-    }
-  };
-
-  const fetchClient = async () => {
-    try {
-      const res = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (res.data.status === "Success") {
-        setClientData(res.data.data);
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        Swal.fire({
-          title: "Session Expired",
-          text: "Please login again.",
-          icon: "warning",
-        }).then(() => {
-          dispatch(clearUser());
-          localStorage.removeItem("token");
-          navigate("/");
-        });
-      }
-    }
-  };
-  const fetchClientNotes = async () => {
-    try {
-      const res = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${id}/${txn_id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (res.data.status === "Success" && res.data.data && res.data.data.length > 0) {
-        setNotesData(res.data.data);
-      }
-    } catch (error) {
-      if (error.response?.status === 401) {
-        Swal.fire({
-          title: "Session Expired",
-          text: "Please login again.",
-          icon: "warning",
-        }).then(() => {
-          dispatch(clearUser());
-          localStorage.removeItem("token");
-          navigate("/");
-        });
-      }
-    }
-  };
-
-  const fetchComplimentaryData = async () => {
-    try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${txn_id}/${id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log(data.data);
-      setComplimentaryData(data.data);
-    } catch (error) {
-      console.log(error);
-      if (error.response && error.response.status === 401) {
-        // Token is invalid or expired
-        Swal.fire({
-          title: "Session Expired",
-          text: "Please login again.",
-          icon: "warning",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        }).then(() => {
-          dispatch(clearUser());
-          localStorage.removeItem("token");
-          navigate("/");
-        });
-      }
-    }
-  };
-  const fetchDiscount = async () => {
-    try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${txn_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (data.data && data.data.length > 0) {
-        let fetched = data.data[0];
-        if (fetched && fetched.discount_type) {
-          fetched.discount_type = fetched.discount_type.toLowerCase();
-          if (fetched.discount_type === "percentage") {
-            fetched.discount_type = "percent";
-          }
-        }
-        setSelecteddiscount(fetched);
-      } else {
-        setSelecteddiscount(null);
-      }
-    } catch (error) {
-      console.error(error);
-      setSelecteddiscount(null);
-    }
-  };
-
-  const fetchDiscountSetting = async () => {
-    try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getDiscountSetting`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (data.data && data.data.length > 0) {
-        setDiscountDataSet(data.data[0]);
-      }
-    } catch (error) {
-      console.error("Error fetching discount setting:", error);
-    }
-  };
-
-  const fetchClientReceived = async () => {
-    try {
-      const res = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getInvoiceClientDetailsById/${id}/${txn_id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (res.data.status === "Success") {
-        setClientDataReceived(res.data.data);
-      }
-      console.log(clientData);
-    } catch (error) {
-      if (error.response?.status === 401) {
-        Swal.fire({
-          title: "Session Expired",
-          text: "Please login again.",
-          icon: "warning",
-        }).then(() => {
-          dispatch(clearUser());
-          localStorage.removeItem("token");
-          navigate("/");
-        });
-      }
-    }
-  };
-  const clientName = clientData?.client_name;
-  const clientAddress = clientData?.address;
-  const clientPhone = clientData?.phone;
-
-  const fetchPredefinedNotes = async () => {
-    try {
-      const endpoint = isBalanceProforma
-        ? `${baseURL}/auth/api/re_calculator/getNotesbydefault`
-        : `${baseURL}/auth/api/re_calculator/getNoteData`;
-      const { data } = await axios.get(
-        endpoint,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setPredefinedNotes(data.data || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchProformaData = async () => {
-    try {
-      const res = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/client/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data.status === "Success") {
-        const proformas = res.data.data;
-        const proforma = proformas.find(p => p.id === parseInt(txn_id));
-        if (proforma) {
-          setProformaMeta({
-            has_invoice: proforma.has_invoice,
-            proposal_id: proforma.proposal_id,
-            proforma_number: proforma.proforma_number,
-            duration_start_date: proforma.duration_start_date,
-            duration_end_date: proforma.duration_end_date,
-          });
-          let clientSnap = null;
-          if (proforma.client_instructions_snapshot) {
-            try {
-              clientSnap = typeof proforma.client_instructions_snapshot === 'string'
-                ? JSON.parse(proforma.client_instructions_snapshot)
-                : proforma.client_instructions_snapshot;
-            } catch (e) {
-              clientSnap = null;
-            }
-          }
-
-          let p = null;
-          let propRes = null;
-          if (proforma.proposal_id) {
-            propRes = await axios.get(`${baseURL}/auth/api/re_calculator/proposal/${proforma.proposal_id}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            if (propRes.data.status === "Success") {
-              p = propRes.data.data;
-              try {
-                const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
-                  headers: { Authorization: `Bearer ${token}` }
-                });
-                if (clientRes.data.status === "Success") {
-                  const c = clientRes.data.data;
-                  p.phone = clientSnap?.phone || c.phone || p.phone;
-                  p.address = clientSnap?.address || c.address || p.address;
-                  p.client_name = clientSnap?.client_name || c.client_name || p.client_name;
-                  p.client_organization = clientSnap?.client_organization || c.client_organization || p.client_organization;
-                  p.email = clientSnap?.email || c.email || p.email;
-                }
-              } catch (e) {
-                console.error("Error fetching live client data for proforma fallback", e);
-              }
-            }
-          } else {
-            try {
-              const clientRes = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              const c = clientRes?.data?.status === "Success" && clientRes.data.data ? clientRes.data.data : {};
-              p = {
-                client_name: clientSnap?.client_name || c.client_name || "",
-                company_name: clientSnap?.client_organization || c.client_organization || c.company_name || "",
-                email: clientSnap?.email || c.email || "",
-                phone: clientSnap?.phone || c.phone || "",
-                address: clientSnap?.address || c.address || "",
-              };
-            } catch (e) {
-              if (clientSnap) {
-                p = {
-                  client_name: clientSnap.client_name || "",
-                  company_name: clientSnap.client_organization || "",
-                  email: clientSnap.email || "",
-                  phone: clientSnap.phone || "",
-                  address: clientSnap.address || "",
-                };
-              }
-            }
-          }
-
-          if (p) {
-            setClientData({
-              client_name: clientSnap?.client_name || p.client_name,
-              client_organization: clientSnap?.client_organization || p.company_name || p.client_organization,
-              email: clientSnap?.email || p.email,
-              phone: clientSnap?.phone || p.phone,
-              address: clientSnap?.address || p.address,
-              bill_type: proforma.is_gst ? "GST" : "NON_GST",
-              document_type: "proforma",
-              created_at: proforma.created_at,
-              duration_start_date: proforma.duration_start_date || p.billing_start_date,
-              duration_end_date: proforma.duration_end_date || p.billing_end_date,
-              proforma_number: proforma.proforma_number,
-            });
-
-            try {
-              const notesSource = docTypeFromURL === "proforma" ? proforma.notes_snapshot : (p.notes_json || proforma.notes_snapshot || p.terms_notes_json);
-              const liveNotes = JSON.parse(notesSource || "[]");
-              const formattedNotes = liveNotes.map((note, idx) => ({
-                id: idx + 1,
-                note_name: typeof note === 'string' ? note : note.note_name || ""
-              }));
-              setNotesData(formattedNotes);
-            } catch (e) {
-              setNotesData([]);
-            }
-
-            try {
-              let pricingDiscount = null;
-              if (docTypeFromURL === "proforma") {
-                if (proforma.discount_snapshot) {
-                  try {
-                    pricingDiscount = typeof proforma.discount_snapshot === 'string'
-                      ? JSON.parse(proforma.discount_snapshot)
-                      : proforma.discount_snapshot;
-                  } catch (e) {
-                    pricingDiscount = null;
-                  }
-                }
-              } else {
-                const sectionsData = typeof p?.sections_json === 'string' ? JSON.parse(p.sections_json) : p?.sections_json;
-                pricingDiscount = sectionsData?.pricing_discount;
-              }
-
-              if (pricingDiscount) {
-                const isPercent = pricingDiscount.type === 'Percentage' || pricingDiscount.discount_type === 'percent';
-                const discVal = Number(pricingDiscount.value ?? (isPercent ? pricingDiscount.discount_per : pricingDiscount.discount_amt) ?? 0);
-                if (discVal > 0) {
-                  setSelecteddiscount({
-                    id: proforma?.id,
-                    discount_type: isPercent ? 'percent' : 'amount',
-                    discount_amt: isPercent ? 0 : discVal,
-                    discount_per: isPercent ? discVal : 0,
-                    value: discVal,
-                    type: isPercent ? 'Percentage' : 'Amount',
-                  });
-                } else {
-                  setSelecteddiscount(null);
-                }
-              } else {
-                setSelecteddiscount(null);
-              }
-            } catch (e) {
-              console.error("Error setting discount in Quotation:", e);
-              setSelecteddiscount(null);
-            }
-          }
-
-          try {
-            const livePricing = propRes && propRes.data.status === "Success" && propRes.data.data ? propRes.data.data.pricing_table_json : null;
-            const pricingSource = docTypeFromURL === "proforma" ? proforma.pricing_snapshot : (livePricing || proforma.pricing_snapshot);
-            const parsed = JSON.parse(pricingSource || "[]");
-
-            let adsParsed = [];
-            if (proforma.ads_snapshot) {
-              try {
-                adsParsed = JSON.parse(proforma.ads_snapshot || "[]");
-              } catch (adsErr) {
-                console.error("Failed to parse proforma.ads_snapshot", adsErr);
-              }
-            }
-
-            const combined = [...parsed, ...adsParsed];
-            const { dmServices, adsServices } = classifyProformaServices(combined);
-            const compServices = parsed.filter(item => {
-              if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
-                return Boolean(item.is_complimentary);
-              }
-              if (item.source === 'custom_complimentary' || item.source === 'complimentary') return true;
-              if (item.include_in_total === false) return true;
-              const sName = String(item.service_name || item.service || '').toLowerCase();
-              return sName.includes('(complimentary)') || sName.includes('(complimntory)') || sName === 'complimentary';
-            }).map(item => ({
-              ...item,
-              is_complimentary: true,
-              service_type: item.service_type || "Complimentary",
-              editing_type_amount: (item.editing_type_amount && Number(item.editing_type_amount) > 0)
-                ? Number(item.editing_type_amount)
-                : (item.price && Number(item.price) > 0
-                  ? Number(item.price)
-                  : (item.amount && Number(item.amount) > 0
-                    ? Number(item.amount)
-                    : (item.unit_price && Number(item.unit_price) > 0
-                      ? Number(item.unit_price)
-                      : 0))),
-              total_amount: 0
-            }));
-
-            setServiceData([...dmServices, ...adsServices]);
-            setComplimentaryData(compServices);
-          } catch (e) {
-            console.error("Failed to parse proforma.pricing_snapshot", e);
-            setServiceData([]);
-            setComplimentaryData([]);
-          }
-          setLoading(false);
-        }
-      }
-    } catch (e) {
-      console.log(e);
-      setLoading(false);
-    }
-  };
-
-  const fetchBalanceProformaData = async () => {
-    try {
-      const res = await axios.get(`${baseURL}/auth/api/re_calculator/balance-proforma/${txn_id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data.status === "Success") {
-        const bp = res.data.data;
-        const isGstVal = (bp.is_gst && typeof bp.is_gst === 'object' && bp.is_gst.data ? bp.is_gst.data[0] === 1 : Number(bp.is_gst) === 1);
-
-        setProformaMeta({
-          is_balance_proforma: true,
-          balance_number: bp.balance_number,
-          balance_proforma_number: bp.balance_proforma_number,
-          source_proforma_id: bp.source_proforma_id,
-          source_proforma_number: bp.source_proforma_number,
-          duration_start_date: bp.duration_start_date,
-          duration_end_date: bp.duration_end_date,
-          total_amount: Number(bp.total_amount || 0),
-          received_amount: Number(bp.received_amount || 0),
-          current_balance: Number(bp.current_balance || 0),
-        });
-
-        setShowGoogleAd(Boolean(bp.show_google_ad));
-        setShowMetaAd(Boolean(bp.show_meta_ad));
-
-        setClientData({
-          client_name: bp.client_name || "",
-          client_organization: bp.client_organization || "",
-          email: bp.email || "",
-          phone: bp.phone || "",
-          address: bp.address || "",
-          bill_type: isGstVal ? "GST" : "NON_GST",
-          document_type: "balance-proforma",
-          created_at: bp.created_at,
-          duration_start_date: bp.duration_start_date,
-          duration_end_date: bp.duration_end_date,
-          proforma_number: bp.balance_proforma_number || `BAL-PROF-${bp.balance_number}`,
-          source_proforma_number: bp.source_proforma_number,
-        });
-
-        try {
-          const liveNotes = JSON.parse(bp.notes_snapshot || "[]");
-          const formattedNotes = liveNotes.map((note, idx) => ({
-            id: idx + 1,
-            note_name: typeof note === 'string' ? note : note.note_name || ""
-          }));
-          setNotesData(formattedNotes);
-        } catch (e) {
-          setNotesData([]);
-        }
-
-        try {
-          let pricingDiscount = null;
-          if (bp.discount_snapshot) {
-            pricingDiscount = typeof bp.discount_snapshot === 'string'
-              ? JSON.parse(bp.discount_snapshot)
-              : bp.discount_snapshot;
-          }
-          if (pricingDiscount) {
-            const isPercent = pricingDiscount.type === 'Percentage' || pricingDiscount.discount_type === 'percent';
-            const discVal = Number(pricingDiscount.value ?? (isPercent ? pricingDiscount.discount_per : pricingDiscount.discount_amt) ?? 0);
-            if (discVal > 0) {
-              setSelecteddiscount({
-                id: bp.id,
-                discount_type: isPercent ? 'percent' : 'amount',
-                discount_amt: isPercent ? 0 : discVal,
-                discount_per: isPercent ? discVal : 0,
-                value: discVal,
-                type: isPercent ? 'Percentage' : 'Amount',
-              });
-            } else {
-              setSelecteddiscount(null);
-            }
-          } else {
-            setSelecteddiscount(null);
-          }
-        } catch (e) {
-          setSelecteddiscount(null);
-        }
-
-        try {
-          const parsed = JSON.parse(bp.pricing_snapshot || "[]");
-          let adsParsed = [];
-          if (bp.ads_snapshot) {
-            try { adsParsed = JSON.parse(bp.ads_snapshot || "[]"); } catch (adsErr) { }
-          }
-          const combined = [...parsed, ...adsParsed];
-          const { dmServices, adsServices } = classifyProformaServices(combined);
-          const compServices = parsed.filter(item => {
-            if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
-              return Boolean(item.is_complimentary);
-            }
-            if (item.source === 'custom_complimentary' || item.source === 'complimentary') return true;
-            if (item.include_in_total === false) return true;
-            const sName = String(item.service_name || item.service || '').toLowerCase();
-            return sName.includes('(complimentary)') || sName.includes('(complimntory)') || sName === 'complimentary';
-          }).map(item => ({
-            ...item,
-            is_complimentary: true,
-            service_type: item.service_type || "Complimentary",
-            editing_type_amount: (item.editing_type_amount && Number(item.editing_type_amount) > 0)
-              ? Number(item.editing_type_amount)
-              : (item.price && Number(item.price) > 0
-                ? Number(item.price)
-                : (item.amount && Number(item.amount) > 0
-                  ? Number(item.amount)
-                  : (item.unit_price && Number(item.unit_price) > 0
-                    ? Number(item.unit_price)
-                    : 0))),
-            total_amount: 0
-          }));
-
-          setServiceData([...dmServices, ...adsServices]);
-          setComplimentaryData(compServices);
-          setAdsData(adsServices);
-        } catch (e) {
-          setServiceData([]);
-          setComplimentaryData([]);
-          setAdsData([]);
-        }
-
-        setLoading(false);
-      }
-    } catch (e) {
-      console.error("fetchBalanceProformaData error:", e);
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isBalanceProforma) {
-      fetchBalanceProformaData();
-      fetchPredefinedNotes();
-      fetchDiscountSetting();
-    } else if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
-      fetchProformaData();
-      fetchPredefinedNotes();
-      fetchDiscountSetting();
-    } else {
-      fetchServices();
-      fetchClient();
-      fetchClientNotes();
-      fetchComplimentaryData();
-      fetchDiscount();
-      fetchDiscountSetting();
-      fetchClientReceived();
-      fetchPredefinedNotes();
-    }
-  }, [id, txn_id, docTypeFromURL, sourceFromURL, isBalanceProforma]);
-
-  const handleClose = () => {
-    setShowModal(false);
-    setFormData({
-      note_name: "",
-      plan: "",
-    });
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    setLoading(true);
-
-    try {
-      console.log("Submitting form data:", formData);
-
-      if (isBalanceProforma && isEditing && selectedNotesId) {
-        const updated = notesData.map((item) =>
-          item.id === selectedNotesId.id
-            ? { ...item, note_name: formData.note_name }
-            : item
-        );
-        const res = await axios.put(
-          `${baseURL}/auth/api/re_calculator/balance-proforma/${txn_id}/notes`,
-          { notes: updated.map((n) => ({ note_name: n.note_name })) },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (res.data.status === "Success") {
-          setNotesData(updated);
-          setShowModal(false);
-          Swal.fire({
-            icon: "success",
-            title: "Success",
-            text: "Note updated successfully!",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: res.data.message || "Failed to update note",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-        }
-        return;
-      }
-
-      let response;
-
-      if (isEditing && selectedNotesId) {
-        response = await axios.put(
-          `${baseURL}/auth/api/re_calculator/updateClientNoteDataById/${selectedNotesId.id}`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log(response.data);
-      } else {
-        response = await axios.post(
-          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log(response.data);
-      }
-
-      console.log("API response:", response.data);
-
-      if (response.data.status === "Success") {
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: isEditing
-            ? "Note updated successfully!"
-            : "Note added successfully!",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        }).then(() => {
-          setShowModal(false);
-
-          fetchClientNotes();
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text:
-            response.data.message || "Failed to save Note. Please try again.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error saving Note:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Status:", error.response.status);
-        Swal.fire({
-          icon: "error",
-          title: `Error ${error.response.status}`,
-          text:
-            error.response.data.message ||
-            "Failed to save note. Please try again.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to save note. Please try again.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleAddPredefinedNote = (note) => {
-    if (!selectedNotes.find((n) => n.id === note.id)) {
-      setSelectedNotes([
-        ...selectedNotes,
-        { id: note.id, note_name: note.note_text, type: "predefined" },
-      ]);
-    }
-  };
-  const handleAddManualNote = async () => {
-    if (manualNote.trim() === "") return;
-
-    if (isBalanceProforma) {
-      const newNote = {
-        id: Date.now(),
-        note_name: manualNote.trim(),
-      };
-      const updatedNotes = [...notesData, newNote];
-      setNotesData(updatedNotes);
-      setManualNote("");
-
-      try {
-        await axios.put(
-          `${baseURL}/auth/api/re_calculator/balance-proforma/${txn_id}/notes`,
-          { notes: updatedNotes.map((n) => ({ note_name: n.note_name })) },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Note Added",
-          text: "Custom note added to balance proforma",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        console.error("Error saving note to balance proforma:", err);
-      }
-      return;
-    }
-
-    setSelectedNotes([
-      ...selectedNotes,
-      { id: Date.now(), note_name: manualNote, type: "manual" },
-    ]);
-    setManualNote("");
-  };
-
-  const handleRemoveNote = (id) => {
-    setSelectedNotes(selectedNotes.filter((note) => note.id !== id));
-  };
-  const handleSaveNotes = async () => {
-    if (selectedNotes.length === 0) {
+  const {
+    serviceData,
+    additionalServiceData,
+    remainingAmountData,
+    graphicData,
+    adsData,
+    complimentaryData,
+    selecteddiscount,
+    setSelecteddiscount,
+    discountDataSet,
+    notesData,
+    setNotesData,
+    clientData,
+    setClientData,
+    proformaPayments,
+    loading,
+    showMetaAd,
+    showGoogleAd,
+    fetchDiscount,
+    fetchRemainingAmount,
+    fetchClientNotes,
+  } = useInvoiceData({
+    id,
+    txn_id,
+    activeTxnId: txn_id,
+    token,
+    isBalanceProforma: true,
+    docTypeFromURL: "balance-proforma",
+    onSessionExpired: () => {
       Swal.fire({
+        title: "Session Expired",
+        text: "Please login again.",
         icon: "warning",
-        title: "No Notes",
-        text: "Please add at least one note before saving.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
+      }).then(() => {
+        dispatch(clearUser());
+        localStorage.removeItem("token");
+        navigate("/");
       });
-      return;
-    }
+    },
+  });
 
-    try {
-      const planNotes = selectedNotes.map((item) => ({
-        note_name: item.note_name,
-      }));
+  const isGST = clientData?.bill_type
+    ? clientData.bill_type === "GST"
+    : isGSTFromURL;
+  const isProforma = true;
 
-      const payload = {
-        txn_id: txn_id,
-        client_id: id,
-        planNotes,
-      };
+  const {
+    grandTotal,
+    dmServiceTotal,
+    discountAmount,
+    totalAfterDiscount,
+    visibleGoogleBudget,
+    visibleMetaBudget,
+    visibleAdBudget,
+    isPartialPayment,
+    currentBillGrossReceived,
+    activeTaxableSubtotal,
+    pastActiveTaxableSubtotal,
+    projectValueDeferred,
+    gstAmount,
+    invoiceSubtotal,
+    activeInvoiceTotal,
+    previousAmountForSummary,
+    pastReceivedAmount,
+    previousInvoiceNo,
+    previousInvoiceDate,
+    receivedAmountForSummary,
+    hasReceivedAmount,
+    tdsAmountToShow,
+    hasPayment,
+    amountInWords,
+    formatAmount,
+    formatAmountNoDecimals,
+    parseAmount,
+  } = useInvoiceCalculations({
+    serviceData,
+    graphicData,
+    adsData,
+    additionalServiceData,
+    remainingAmountData,
+    complimentaryData,
+    selecteddiscount,
+    clientData: clientData || {},
+    proformaPayments,
+    isGST,
+    isProforma: true,
+    showGoogleAd,
+    showMetaAd,
+    txnIdFromURL: null,
+  });
 
-      const res = await axios.post(
-        `${baseURL}/auth/api/re_calculator/saveClientIdwiseNotes`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+  const {
+    modalLoading,
+    showModalDiscount,
+    formDataDiscount,
+    handleShowDiscount,
+    handleCloseDiscount,
+    handleChangeDiscount,
+    handleSaveDiscount,
+    handleDeleteDiscount,
 
-      if (res.data.status === "Success") {
-        Swal.fire({
-          icon: "success",
-          title: "Notes Created",
-          text: res.data.message,
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
+    showModalRemaining,
+    setShowModalRemaining,
+    isEditingRemaining,
+    formDataRemaining,
+    setFormDataRemaining,
+    handleChangeRemaining,
+    handleRemainingSave,
 
-        setManualNote("");
-        setPredefinedNotes([]);
-        setSelectedNotes([]);
-        fetchPredefinedNotes();
-        fetchClientNotes();
-      } else if (res.data.status === "Alert") {
-        Swal.fire({
-          icon: "warning",
-          title: "Duplicate Notes",
-          text: res.data.message,
+    showModalNote,
+    setShowModalNote,
+    isEditingNote,
+    setIsEditingNote,
+    setSelectedNotesId,
+    formDataNote,
+    setFormDataNote,
+    handleChangeNote,
+    handleCloseNote,
+    handleSubmitNote,
+    handleDeleteClientNote,
+  } = useInvoiceModals({
+    id,
+    txn_id,
+    token,
+    userName,
+    grandTotal,
+    discountDataSet,
+    selecteddiscount,
+    setSelecteddiscount,
+    setClientData,
+    setNotesData,
+    fetchDiscount,
+    fetchRemainingAmount,
+    fetchClientNotes,
+  });
 
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-        setManualNote("");
-        setPredefinedNotes([]);
-        setSelectedNotes([]);
-        fetchPredefinedNotes();
-        fetchClientNotes();
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text:
-            res.data.message || "Something went wrong while saving the notes.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } catch (err) {
-      console.error("Save error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Something went wrong while saving the notes.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-    }
-  };
+  const { handlePrintPage, handleDownload } = useInvoicePrint({
+    clientData,
+    isProforma: true,
+    isBalanceProforma: true,
+    contentId: "balance-proforma-content",
+  });
 
-  useEffect(() => {
-    if (serviceData.length === 0 && (!complimentaryData || complimentaryData.length === 0)) return;
-
-    const graphicRaw = serviceData.filter(
-      (item) => item.service_type === "Graphic Service"
+  if (loading) {
+    return (
+      <div className="text-center p-10 font-semibold text-gray-700">
+        Loading Balance Proforma...
+      </div>
     );
-    const adsRaw = serviceData.filter(
-      (item) => item.service_type === "Ads Campaign"
-    );
-
-    const groupedGraphic = [];
-
-    graphicRaw.forEach((item) => {
-      // Find service (e.g., Video Services, Video Shoot)
-      let service = groupedGraphic.find((s) => s.service === item.service_name);
-      if (!service) {
-        service = { service: item.service_name, editingTypes: [] };
-        groupedGraphic.push(service);
-      }
-
-      // Push editing types directly (attach category info in the row if needed)
-      service.editingTypes.push({
-        category: item.category_name,
-        type: item.editing_type_name || "N/A",
-        quantity: Number(item.quantity) || 1,
-        price: Number(item.editing_type_amount) || 0,
-        include_content_posting: Number(item.include_content_posting) || 0,
-        include_thumbnail_creation:
-          Number(item.include_thumbnail_creation) || 0,
-        include_youtube_video_posting:
-          Number(item.include_youtube_video_posting) || 0,
-        total: Number(item.total_amount) || 0,
-      });
-    });
-
-    setGraphicData(groupedGraphic);
-    setAdsData(adsRaw);
-    setLoading(false);
-  }, [serviceData, complimentaryData]);
-  console.log(graphicData);
-
-  const graphicTotal = graphicData.reduce(
-    (sum, service) =>
-      sum +
-      service.editingTypes.reduce(
-        (editSum, edit) => {
-          return editSum + (edit.total || edit.price * edit.quantity);
-        },
-        0
-      ),
-    0
-  );
-  const complimentaryTotal = complimentaryData.reduce((sum, service) => {
-    // prefer total_amount if available, otherwise editing_type_amount * quantity
-    const amount =
-      service.total_amount !== null && service.total_amount !== undefined
-        ? Number(service.total_amount)
-        : Number(service.editing_type_amount || 0) *
-        Number(service.quantity || 0);
-
-    return sum + amount;
-  }, 0);
-
-  const adsTotalBudget = adsData.reduce((sum, ad) => {
-    const cat = (ad.category_name || "").toLowerCase();
-    const amt = Number(ad.budget || ad.amount || 0);
-    if (cat.includes("meta") && !showMetaAd) return sum;
-    if (cat.includes("google") && !showGoogleAd) return sum;
-    return sum + amt;
-  }, 0);
-
-  // Discount applies ONLY on DM Services (graphicTotal)
-  const discountAmount = selecteddiscount
-    ? selecteddiscount.discount_type === "percent"
-      ? (graphicTotal * Number(selecteddiscount.discount_per)) / 100
-      : selecteddiscount.discount_type === "amount"
-        ? Number(selecteddiscount.discount_amt)
-        : 0
-    : 0;
-
-  const dmTotalAfterDiscount = Math.max(0, graphicTotal - discountAmount);
-
-  const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
-  const dmSubtotalWithGst = dmTotalAfterDiscount + dmGstAmount;
-
-  const adsGstAmount = 0; // Ads GST removed
-  const adsTotalWithGst = adsTotalBudget;
-
-  const grandTotal = dmSubtotalWithGst + adsTotalWithGst;
-
-  // Ads budgets for Google and Meta
-  const googleAdItem = adsData.find(ad => (ad.category_name || "").toLowerCase().includes("google"));
-  const googleAdAmount = Number(googleAdItem?.amount || googleAdItem?.budget || 0);
-
-  const metaAdItem = adsData.find(ad => (ad.category_name || "").toLowerCase().includes("meta"));
-  const metaAdAmount = Number(metaAdItem?.amount || metaAdItem?.budget || 0);
-
-  const activeAdsBudget = (showGoogleAd ? googleAdAmount : 0) + (showMetaAd ? metaAdAmount : 0);
-
-  // For Balance Proforma:
-  let displayedSubtotal = dmSubtotalWithGst;
-  if (isBalanceProforma && proformaMeta?.total_amount !== undefined) {
-    const fullAdBudgets = googleAdAmount + metaAdAmount;
-    if (fullAdBudgets > 0 && Number(proformaMeta.total_amount) > fullAdBudgets) {
-      displayedSubtotal = Math.max(0, Number(proformaMeta.total_amount) - fullAdBudgets);
-    }
   }
 
-  // Displayed Grand Total = Subtotal + Active (toggled) Ads Budgets
-  const displayedGrandTotal = isBalanceProforma && proformaMeta?.total_amount !== undefined
-    ? displayedSubtotal + activeAdsBudget
-    : grandTotal;
-
-  // Breakdown for Taxable & GST
-  let displayedTaxable = dmTotalAfterDiscount;
-  let displayedCgst = dmGstAmount / 2;
-  let displayedSgst = dmGstAmount / 2;
-
-  if (isBalanceProforma && Math.abs(dmSubtotalWithGst - displayedSubtotal) > 1) {
-    if (isGST) {
-      displayedTaxable = Math.round((displayedSubtotal / 1.18) * 100) / 100;
-      const gstTotal = displayedSubtotal - displayedTaxable;
-      displayedCgst = gstTotal / 2;
-      displayedSgst = gstTotal / 2;
-    } else {
-      displayedTaxable = displayedSubtotal;
-      displayedCgst = 0;
-      displayedSgst = 0;
-    }
-  }
-
-  // Received and Current Balance for Balance Proforma
-  // Toggling a budget off removes that component consistently from BOTH Grand Total and Received
-  const removedAdsBudget = (!showGoogleAd ? googleAdAmount : 0) + (!showMetaAd ? metaAdAmount : 0);
-  const baseReceived = Number(proformaMeta?.received_amount || 0);
-  const displayedReceived = Math.max(0, baseReceived - removedAdsBudget);
-  const displayedCurrentBalance = Math.max(0, displayedGrandTotal - displayedReceived);
-
-  // if (loading) {
-  //   return (
-  //     <div className="text-center p-10 font-semibold text-gray-700">
-  //       Loading...
-  //     </div>
-  //   );
-  // }
-
-  const handleDeleteClientNote = async (noteId) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to delete this note ?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e11d48", // red
-      cancelButtonColor: "#6b7280", // gray
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    if (isBalanceProforma) {
-      const updated = notesData.filter((item) => item.id !== noteId);
-      try {
-        const res = await axios.put(
-          `${baseURL}/auth/api/re_calculator/balance-proforma/${txn_id}/notes`,
-          { notes: updated.map((n) => ({ note_name: n.note_name })) },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (res.data.status === "Success") {
-          setNotesData(updated);
-          Swal.fire({
-            icon: "success",
-            title: "Deleted!",
-            text: "Note has been deleted.",
-            timer: 1000,
-            showConfirmButton: false,
-          });
-        }
-      } catch (error) {
-        console.error("Error deleting note:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "An error occurred while deleting note.",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-      }
-      return;
-    }
-
-    try {
-      const res = await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`
-      );
-
-      const result = res.data;
-
-      if (result.status === "Success") {
-        setNotesData((prev) => prev.filter((item) => item.id !== noteId));
-
-        Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "note has been deleted.",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-      }
-    } catch (error) {
-      console.error("Error deleting note:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while deleting entry.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-    }
-  };
-  const clientOrganization = clientData?.client_organization;
-
-  const handlePrintPage = () => {
-    const docName = isBalanceProforma
-      ? "Balance Proforma Invoice"
-      : (docTypeFromURL === "proforma" ? "Proforma Invoice" : "Quotation");
-    document.title = clientOrganization
-      ? `${clientOrganization} ${docName}`
-      : `${clientName} ${docName}`;
-    window.print();
-  };
   const handleProposalHistory = () => {
     navigate(`${basePath}/client/service/history/${id}`);
   };
 
-  const handleShowDiscount = () => {
-    if (selecteddiscount) {
-      const isPercent = selecteddiscount.discount_type === "percent" || selecteddiscount.type === "Percentage";
-      const val = selecteddiscount.value ?? (isPercent ? selecteddiscount.discount_per : selecteddiscount.discount_amt) ?? "";
-      setFormDataDiscount({
-        discount_type: isPercent ? "percent" : "amount",
-        discount_per: isPercent ? String(val) : "",
-        discount_amt: !isPercent ? String(val) : "",
-      });
-    } else {
-      setFormDataDiscount({
-        discount_type: "amount",
-        discount_per: "",
-        discount_amt: "",
-      });
-    }
-    setShowModalDiscount(true);
+  const handleEdit = () => {
+    navigate(`${basePath}/${servicesPath}/${id}/${txn_id}`);
   };
 
-  const handleCloseDiscount = () => {
-    setShowModalDiscount(false);
-    setFormDataDiscount({
-      discount_type: "amount",
-      discount_per: "",
-      discount_amt: "",
-    });
-  };
-
-  const handleChangeDiscount = (e) => {
-    const { name, value } = e.target;
-    setFormDataDiscount((prev) => {
-      if (name === "discount_type") {
-        return {
-          ...prev,
-          discount_type: value,
-          discount_per: "",
-          discount_amt: "",
-        };
-      }
-
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
-
-  const handleSaveDiscount = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const resetAndClose = () => {
-      setShowModalDiscount(false);
-      setFormDataDiscount({
-        discount_type: "amount",
-        discount_per: "",
-        discount_amt: "",
-      });
-    };
-
-    try {
-      if (grandTotal <= 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Invalid Total!",
-          text: "Grand total should be greater than 0 before setting discount.",
-          showConfirmButton: false,
-          timer: 1200,
-        });
-        setLoading(false);
-        return;
-      }
-
-      const isAmountType = formDataDiscount.discount_type === "amount";
-      const enteredValue = isAmountType
-        ? Number(formDataDiscount.discount_amt)
-        : Number(formDataDiscount.discount_per);
-
-      if (!enteredValue || enteredValue < 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Required!",
-          text: `Please enter a valid discount ${isAmountType ? "amount (₹)" : "percentage (%)"
-            }`,
-          showConfirmButton: false,
-          timer: 1000,
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (!isAmountType && enteredValue > 100) {
-        Swal.fire({
-          icon: "warning",
-          title: "Invalid!",
-          text: "Percentage cannot exceed 100%",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (isAmountType) {
-        const maxAmt = discountDataSet?.discount_amt
-          ? Number(discountDataSet.discount_amt)
-          : grandTotal;
-        if (enteredValue > maxAmt) {
-          Swal.fire({
-            icon: "warning",
-            title: "Limit Exceeded!",
-            text: `Max discount amount is ₹${maxAmt.toLocaleString()} (set in settings)`,
-            showConfirmButton: false,
-            timer: 2000,
-          });
-          setLoading(false);
-          return;
-        }
-      }
-
-      if (!isAmountType) {
-        const maxPer = discountDataSet?.discount_per
-          ? Number(discountDataSet.discount_per)
-          : 100;
-        if (enteredValue > maxPer) {
-          Swal.fire({
-            icon: "warning",
-            title: "Limit Exceeded!",
-            text: `Max discount percentage is ${maxPer}% (set in settings)`,
-            showConfirmButton: false,
-            timer: 2000,
-          });
-          setLoading(false);
-          return;
-        }
-
-        if (discountDataSet?.discount_amt) {
-          const calculatedRupee = (grandTotal * enteredValue) / 100;
-          const maxAmt = Number(discountDataSet.discount_amt);
-          if (calculatedRupee > maxAmt) {
-            Swal.fire({
-              icon: "warning",
-              title: "Limit Exceeded!",
-              text: `This % gives ₹${calculatedRupee.toFixed(
-                0
-              )} discount which exceeds max ₹${maxAmt.toLocaleString()}`,
-              showConfirmButton: false,
-              timer: 2000,
-            });
-            setLoading(false);
-            return;
-          }
-        }
-      }
-
-      const payload = isAmountType
-        ? {
-          discount_type: "amount",
-          discount_per: parseFloat(
-            ((enteredValue / grandTotal) * 100).toFixed(4)
-          ),
-          discount_amt: enteredValue,
-          client_id: id,
-          txn_id: txn_id,
-        }
-        : {
-          discount_type: "percent",
-          discount_per: enteredValue,
-          discount_amt: parseFloat(
-            ((grandTotal * enteredValue) / 100).toFixed(2)
-          ),
-          client_id: id,
-          txn_id: txn_id,
-        };
-
-      if (docTypeFromURL === "proforma") {
-        const response = await axios.put(
-          `${baseURL}/auth/api/re_calculator/proforma/${txn_id}/discount`,
-          {
-            discount_type: isAmountType ? "amount" : "percent",
-            discount_val: enteredValue,
-            discount_amt: isAmountType ? enteredValue : 0,
-            discount_per: isAmountType ? 0 : enteredValue,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (response.data.status === "Success") {
-          Swal.fire({
-            icon: "success",
-            title: selecteddiscount ? "Updated!" : "Saved!",
-            text: "Proforma discount updated successfully",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-          fetchProformaData();
-          resetAndClose();
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Failed!",
-            text: response.data.message || "Failed to save discount.",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-        }
-        return;
-      }
-
-      const response = selecteddiscount
-        ? await axios.put(
-          `${baseURL}/auth/api/re_calculator/updateDiscountDataById/${selecteddiscount.id}`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        : await axios.post(
-          `${baseURL}/auth/api/re_calculator/saveDiscountData`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-      if (response.data.status === "Success") {
-        Swal.fire({
-          icon: "success",
-          title: selecteddiscount ? "Updated!" : "Saved!",
-          text: selecteddiscount
-            ? "Discount updated successfully"
-            : "Discount saved successfully",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-        fetchDiscount();
-        resetAndClose();
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: response.data.message || "Failed to save discount.",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-      }
-    } catch (err) {
-      console.error("Save error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text:
-          err.response?.data?.message ||
-          "Something went wrong while saving discount.",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteDiscount = async () => {
-    if (!selecteddiscount && docTypeFromURL !== "proforma") return;
-
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you want to delete this discount?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    setLoading(true);
-    try {
-      if (docTypeFromURL === "proforma") {
-        await axios.put(
-          `${baseURL}/auth/api/re_calculator/proforma/${txn_id}/discount`,
-          {
-            discount_type: "amount",
-            discount_val: 0,
-            discount_amt: 0,
-            discount_per: 0,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setSelecteddiscount(null);
-        setShowModalDiscount(false);
-        setFormDataDiscount({
-          discount_type: "amount",
-          discount_per: "",
-          discount_amt: "",
-        });
-        Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "Discount has been deleted.",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-        fetchProformaData();
-        return;
-      }
-
-      await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deleteDiscountById/${selecteddiscount.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSelecteddiscount(null);
-      setShowModalDiscount(false);
-      setFormDataDiscount({
-        discount_type: "amount",
-        discount_per: "",
-        discount_amt: "",
-      });
-      Swal.fire({
-        icon: "success",
-        title: "Deleted!",
-        text: "Discount has been deleted.",
-        showConfirmButton: false,
-        timer: 1000,
-      });
-      fetchDiscount();
-    } catch (err) {
-      console.error("Delete error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text:
-          err.response?.data?.message ||
-          "Something went wrong while deleting discount.",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelect = async (note) => {
-    if (isBalanceProforma) {
-      const newNote = {
-        id: Date.now(),
-        note_name: note.note_text,
-      };
-      const updatedNotes = [...notesData, newNote];
-      setNotesData(updatedNotes);
-      setSelectedNote(null);
-      setIsOpen(false);
-
-      try {
-        await axios.put(
-          `${baseURL}/auth/api/re_calculator/balance-proforma/${txn_id}/notes`,
-          { notes: updatedNotes.map((n) => ({ note_name: n.note_name })) },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Note Added",
-          text: "Note added to balance proforma",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        console.error("Error saving note to balance proforma:", err);
-      }
-      return;
-    }
-
-    handleAddPredefinedNote(note);
-    setSelectedNote(null);
-    setIsOpen(false);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const uniquePredefinedNotes = predefinedNotes.filter(
-    (p) =>
-      !notesData.some((c) => (c.note_name || "").trim().toLowerCase() === (p.note_text || "").trim().toLowerCase()) &&
-      !selectedNotes.some((s) => (s.note_name || "").trim().toLowerCase() === (p.note_text || "").trim().toLowerCase())
-  );
   return (
     <InvoicePrintWrapper>
-      <div className="page-wrapper w-[210mm] min-h-[297mm] flex flex-col justify-between p-4 mx-auto bg-white print:p-0 print:m-0">
-        {/* Hidden on print - Action Buttons */ }
+      <div
+        id="balance-proforma-content"
+        className="page-wrapper w-[210mm] min-h-[297mm] flex flex-col justify-between p-4 mx-auto bg-white print:break-after-page print:p-0 print:m-0 print:h-auto print:block"
+      >
+        <InvoiceActionButtons
+          handlePrintPage={handlePrintPage}
+          handleDownload={handleDownload}
+          basePath={basePath}
+          onProposalHistory={handleProposalHistory}
+          onEdit={clientData?.tag_received_amt !== "received" ? handleEdit : undefined}
+        />
 
-        <div className="print:hidden flex justify-end gap-3 my-4">
-          <button
-            onClick={ handlePrintPage }
-            target="_blank"
-            className="bg-red-600 text-white rounded-full px-4 py-2"
-          >
-            🖨️ Print
-          </button>
-          { clientDataReceived.tag_received_amt === "received" || (docTypeFromURL === "proforma" && proformaMeta?.has_invoice) ? null : (
-            <button
-              onClick={ () => {
-                if (docTypeFromURL === "proforma") {
-                  navigate(`${basePath}/${servicesPath}/${id}/${txn_id}?doc=proforma`);
-                } else {
-                  navigate(`${basePath}/${servicesPath}/${id}/${txn_id}`);
-                }
-              } }
-              className="bg-orange-600 text-white rounded-full px-4 py-2"
-            >
-              ✏️ Edit
-            </button>
-          ) }
-          <button
-            onClick={ handleProposalHistory }
-            className=" px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition-colors"
-          >
-            📝Proposal History
-          </button>
-          <button
-            onClick={ () => navigate(`${basePath}/dashboard`) }
-            className="bg-yellow-600 text-white rounded-full px-4 py-2"
-          >
-            📊 Dashboard
-          </button>
-          <button
-            onClick={ () => {
-              if (window.history.length > 1 && window.history.state && window.history.state.idx > 0) {
-                navigate(-1);
-              } else {
-                window.close();
-                setTimeout(() => navigate(`${basePath}/dashboard`), 300);
-              }
-            } }
-            className="bg-gray-600 text-white rounded-full px-4 py-2"
-          >
-            🔙 Back
-          </button>
-        </div>
-
-        {/* Table for proper header/footer repetition */ }
-        <table className="print:table print:border-collapse w-full">
-          {/* Repeating Header */ }
+        <table className="print:table print:border-collapse w-full print:m-0 print:p-0">
           <DocumentHeaderBanner isGST={isGST} />
 
-          {/* Repeating Footer */ }
-
-          {/* Main Content */ }
           <tbody className="print:table-row-group">
             <tr>
               <td className="p-0 m-0 align-top">
-                <div className="flex flex-col justify-between h-full px-6 py-1 print:px-4 ">
-                  <div className="flex-grow">
-                    { isBalanceProforma && (
-                      <div className="mb-2 text-center">
-                        <p className="text-sm font-bold tracking-wide text-gray-800 uppercase">
-                          BALANCE PROFORMA INVOICE
-                        </p>
-                      </div>
-                    ) }
-                    { docTypeFromURL === "proforma" && !isBalanceProforma && (
-                      <div className="mb-2 text-center">
-                        <p className="text-sm font-bold tracking-wide text-gray-800 uppercase">
-                          PROFORMA INVOICE
-                        </p>
-                      </div>
-                    ) }
-                    {/* Client Details */ }
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 print:grid-cols-2">
-                      <div className="break-words text-xs">
-                        <h3 className="text-md font-bold">Client Details</h3>
-                        <p className="break-words">
-                          <strong>Name:</strong> { clientData?.client_name }
-                        </p>
-                        <p className="break-words">
-                          <strong>Organization Name:</strong>{ " " }
-                          { clientData?.client_organization }
-                        </p>
-                        <p className="break-words">
-                          <strong>Contact:</strong> { clientData?.phone }
-                        </p>
-                        <p className="break-words">
-                          <strong>Address:</strong> { clientData?.address }
-                        </p>
-                        <p className="break-words">
-                          <strong>Email:</strong> { clientData?.email || "N/A" }
-                        </p>
-                      </div>
-                      <div className="text-end text-xs">
-                        <p className="font-bold">
-                          { sourceFromURL === "proposal" || docTypeFromURL === "proforma" || isBalanceProforma ? null : <span className="font-bold text-amber-600 border border-amber-600 px-1 py-0.5 rounded mr-1">Legacy</span> }
-                          { isBalanceProforma ? "Proforma Invoice No: " : (docTypeFromURL === "proforma" ? "Proforma Invoice: " : "Quotation: ") } { isBalanceProforma ? (proformaMeta?.balance_proforma_number || clientData?.proforma_number) : (proformaMeta?.proforma_number || clientData?.proforma_number || txn_id) }
-                        </p>
-                        { isBalanceProforma && (proformaMeta?.source_proforma_number || clientData?.source_proforma_number) && (
-                          <p className="text-gray-600 font-semibold mt-0.5 text-xs">
-                            Ref: { proformaMeta?.source_proforma_number || clientData?.source_proforma_number }
-                          </p>
-                        ) }
-                        <p>{ moment().format("DD/MM/YYYY") }</p>
-                        { (docTypeFromURL === "proforma" || isBalanceProforma) && (clientData?.duration_start_date || proformaMeta?.duration_start_date) && (
-                          <p className="text-gray-700 mt-0.5 font-medium">
-                            <strong>Service From:</strong>{ " " }
-                            { moment(clientData?.duration_start_date || proformaMeta?.duration_start_date).format("DD/MM/YYYY") } to{ " " }
-                            { moment(clientData?.duration_end_date || proformaMeta?.duration_end_date).format("DD/MM/YYYY") }
-                          </p>
-                        ) }
-                      </div>
-                      {/* <div className="text-right text-gray-600 break-words">
-                    <p>1815, Wright Town, Jabalpur,</p>
-                    <p>Madhya Pradesh 482002</p>
-                    <p>Phone: 074409 92424</p>
-                  </div> */}
-                    </div>
-
-                    {/* Graphic Services */ }
-                    { graphicData.length > 0 && (
-                      <section className="mb-2 text-sm">
-                        <table className="w-full border text-xs">
-                          <thead className="bg-orange-100">
-                            <tr>
-                              <th className="border w-[10rem] px-2 py-1 text-left">
-                                Services
-                              </th>
-                              <th className="border w-[20rem] px-2 py-1 text-left">
-                                Categories
-                              </th>
-                              <th className="border px-2 py-1 text-right">
-                                Quantity
-                              </th>
-                              <th className="border px-2 py-1 text-right">
-                                Price (₹)
-                              </th>
-                              <th className="border px-2 py-1 text-right">
-                                Total (₹)
-                              </th>
-                            </tr>
-                          </thead>
-
-                          <tbody>
-                            {/* ================= GRAPHIC SERVICES (Grouped by Service) ================= */ }
-                            { graphicData.map((service, idx) => {
-                              const visibleEditingTypes = service.editingTypes;
-
-                              if (visibleEditingTypes.length === 0) return null;
-
-                              return visibleEditingTypes.map((edit, eidx) => {
-                                const qty = Number(edit.quantity);
-                                const base = Number(edit.price);
-                                const totalBase = base * qty;
-
-                                return (
-                                  <tr
-                                    key={ `graphic-${idx}-${eidx}` }
-                                    className="bg-white"
-                                  >
-                                    {/* Show Services name only once using rowspan */ }
-                                    { eidx === 0 ? (
-                                      <td
-                                        className="border px-2 py-1 align-center"
-                                        rowSpan={ visibleEditingTypes.length }
-                                      >
-                                        { service.service }
-                                      </td>
-                                    ) : null }
-
-                                    <td className="border px-2 py-1">
-                                      { (() => {
-                                        if (service.service === "Service Charge") {
-                                          return edit.type && edit.type !== "N/A" && edit.type.toLowerCase().includes("management")
-                                            ? edit.type
-                                            : `${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type || "Management & Optimization"}`.trim();
-                                        }
-
-                                        const cat = edit.category && edit.category !== "N/A" ? edit.category : "";
-                                        const type =
-                                          edit.type &&
-                                            edit.type !== "N/A" &&
-                                            edit.type !== "null" &&
-                                            edit.type !== "undefined" &&
-                                            edit.type.trim() !== "" &&
-                                            edit.type.toLowerCase() !== "proposal item"
-                                            ? edit.type.trim()
-                                            : "";
-
-                                        if (
-                                          cat &&
-                                          type &&
-                                          cat.trim().toLowerCase() !== type.toLowerCase() &&
-                                          type.toLowerCase() !== (service.service || "").trim().toLowerCase()
-                                        ) {
-                                          return `${cat} (${type})`;
-                                        }
-                                        return cat || type || service.service;
-                                      })() }
-                                    </td>
-                                    <td className="border px-2 py-1 text-right">
-                                      { qty }
-                                    </td>
-                                    <td className="border px-2 py-1 text-right">
-                                      ₹{ base.toLocaleString("en-IN") }
-                                    </td>
-                                    <td className="border px-2 py-1 text-right">
-                                      ₹{ totalBase.toLocaleString("en-IN") }
-                                    </td>
-                                  </tr>
-                                );
-                              });
-                            }) }
-
-                            {/* ================= THUMBNAIL CREATION TOTAL ================= */ }
-                            { (() => {
-                              const thumbEdits = graphicData.flatMap(
-                                (service) =>
-                                  service.editingTypes.filter(
-                                    (edit) =>
-                                      Number(edit.include_thumbnail_creation) >
-                                      0
-                                  )
-                              );
-                              if (thumbEdits.length === 0) return null;
-
-                              const totalThumbQty = thumbEdits.reduce(
-                                (sum, edit) => sum + Number(edit.quantity),
-                                0
-                              );
-                              const pricePerThumb =
-                                thumbEdits[0]?.include_thumbnail_creation || 0;
-                              const totalThumbAmount = thumbEdits.reduce(
-                                (sum, edit) =>
-                                  sum +
-                                  Number(edit.include_thumbnail_creation) *
-                                  Number(edit.quantity),
-                                0
-                              );
-
-                              return (
-                                <tr className="bg-gray-50">
-                                  <td className="border px-2 py-1" colSpan={ 2 }>
-                                    Thumbnail Creation Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    { totalThumbQty }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ pricePerThumb }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹0
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-
-                            {/* ================= CONTENT POSTING TOTAL ================= */ }
-                            { (() => {
-                              const postEdits = graphicData.flatMap((service) =>
-                                service.editingTypes.filter(
-                                  (edit) =>
-                                    Number(edit.include_content_posting) > 0
-                                )
-                              );
-                              if (postEdits.length === 0) return null;
-
-                              const totalPostQty = postEdits.reduce(
-                                (sum, edit) => sum + Number(edit.quantity),
-                                0
-                              );
-                              const pricePerPost =
-                                postEdits[0]?.include_content_posting || 0;
-                              const totalPostAmount = postEdits.reduce(
-                                (sum, edit) =>
-                                  sum +
-                                  Number(edit.include_content_posting) *
-                                  Number(edit.quantity),
-                                0
-                              );
-
-                              return (
-                                <tr className="bg-gray-50">
-                                  <td className="border px-2 py-1" colSpan={ 2 }>
-                                    Meta Growth & Content Management Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    { totalPostQty }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ pricePerPost }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹0
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-
-                            {/* ================= YOUTUBE VIDEO POSTING TOTAL ================= */ }
-                            { (() => {
-                              const ytEdits = graphicData.flatMap((service) =>
-                                service.editingTypes.filter(
-                                  (edit) =>
-                                    Number(edit.include_youtube_video_posting) > 0
-                                )
-                              );
-                              if (ytEdits.length === 0) return null;
-
-                              const totalYtQty = ytEdits.reduce(
-                                (sum, edit) => sum + Number(edit.quantity),
-                                0
-                              );
-                              const pricePerYt =
-                                ytEdits[0]?.include_youtube_video_posting || 0;
-                              const totalYtAmount = ytEdits.reduce(
-                                (sum, edit) =>
-                                  sum +
-                                  Number(edit.include_youtube_video_posting) *
-                                  Number(edit.quantity),
-                                0
-                              );
-
-                              return (
-                                <tr className="bg-gray-50">
-                                  <td className="border px-2 py-1" colSpan={ 2 }>
-                                    YouTube Channel Growth & Optimization Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    { totalYtQty }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ pricePerYt }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹0
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-
-
-
-                            {/* ================= DM SERVICE TOTAL ================= */ }
-                            { (() => {
-                              const graphicTotal = graphicData.reduce(
-                                (sum, service) =>
-                                  sum +
-                                  service.editingTypes.reduce(
-                                    (s, edit) => {
-                                      return (
-                                        s +
-                                        Number(edit.price) *
-                                        Number(edit.quantity)
-                                      );
-                                    },
-                                    0
-                                  ),
-                                0
-                              );
-                              const thumbTotal = graphicData
-                                .flatMap((s) =>
-                                  s.editingTypes.filter(
-                                    (e) =>
-                                      Number(e.include_thumbnail_creation) > 0
-                                  )
-                                )
-                                .reduce(
-                                  (sum, e) =>
-                                    sum +
-                                    Number(e.include_thumbnail_creation) *
-                                    Number(e.quantity),
-                                  0
-                                );
-                              const postTotal = graphicData
-                                .flatMap((s) =>
-                                  s.editingTypes.filter(
-                                    (e) => Number(e.include_content_posting) > 0
-                                  )
-                                )
-                                .reduce(
-                                  (sum, e) =>
-                                    sum +
-                                    Number(e.include_content_posting) *
-                                    Number(e.quantity),
-                                  0
-                                );
-
-                              const ytTotal = graphicData
-                                .flatMap((s) =>
-                                  s.editingTypes.filter(
-                                    (e) => Number(e.include_youtube_video_posting) > 0
-                                  )
-                                )
-                                .reduce(
-                                  (sum, e) =>
-                                    sum +
-                                    Number(e.include_youtube_video_posting) *
-                                    Number(e.quantity),
-                                  0
-                                );
-
-                              const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal;
-
-                              return (
-                                <tr className=" font-semibold">
-                                  <td
-                                    className="border px-2 py-1 text-right"
-                                    colSpan={ 4 }
-                                  >
-                                    Services Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ dmServiceTotal }
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-
-                            {/* ================= DM SERVICE TOTAL ================= */ }
-                          </tbody>
-                        </table>
-                      </section>
-                    ) }
-                    {/* Ads Services Table has been removed per user request */ }
-
-                    {/* ================= SEPARATE COMPLIMENTARY SERVICES TABLE ================= */ }
-                    { complimentaryData.length > 0 && (
-                      <section className="mb-2 mt-4 text-sm">
-                        <table className="w-full border text-xs">
-                          <thead className="bg-orange-100">
-                            <tr>
-                              <th className="border w-[10rem] px-2 py-1 text-left">
-                                Complimentary Service
-                              </th>
-                              <th className="border w-[20rem] px-2 py-1 text-left">
-                                Service Name
-                              </th>
-                              <th className="border px-2 py-1 text-right">
-                                Quantity
-                              </th>
-                              <th className="border px-2 py-1 text-right">
-                                Price (₹)
-                              </th>
-                              <th className="border px-2 py-1 text-right">
-                                Total (₹)
-                              </th>
-                            </tr>
-                          </thead>
-
-                          <tbody>
-                            {/* ================= COMPLIMENTARY SERVICES ================= */ }
-                            { complimentaryData.map((edit, eidx) => {
-                              const qty = Number(edit.quantity);
-                              const base = Number(edit.editing_type_amount || edit.price || edit.amount || 0);
-                              const totalBase = base * qty;
-
-                              const rawSName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
-                                ? edit.service_name
-                                : (edit.category_name || "Complimentary Service");
-                              const sName = String(rawSName || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
-
-                              const rawDetailName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
-                                ? (edit.editing_type_name && edit.editing_type_name !== "null" ? `${edit.category_name} (${edit.editing_type_name})` : edit.category_name)
-                                : (edit.editing_type_name || edit.category_name || "-");
-                              const detailName = String(rawDetailName || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
-
-                              return (
-                                <tr
-                                  key={ `compl-${eidx}` }
-                                  className="bg-gray-50"
-                                >
-                                  <td className="border px-2 py-1">
-                                    { sName }
-                                  </td>
-                                  <td className="border px-2 py-1">
-                                    { detailName }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    { qty }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ base }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ totalBase }
-                                  </td>
-                                </tr>
-                              );
-                            }) }
-                            {/* ✅ Thumbnail Creation Total */ }
-                            { (() => {
-                              const thumbEdits = complimentaryData.filter(
-                                (item) =>
-                                  Number(item.include_thumbnail_creation) > 0
-                              );
-                              if (thumbEdits.length === 0) return null;
-
-                              const totalThumbQty = thumbEdits.reduce(
-                                (sum, item) => sum + Number(item.quantity),
-                                0
-                              );
-                              const pricePerThumb =
-                                Number(
-                                  thumbEdits[0].include_thumbnail_creation
-                                ) || 0;
-                              const totalThumbAmount = thumbEdits.reduce(
-                                (sum, item) =>
-                                  sum +
-                                  Number(item.include_thumbnail_creation) *
-                                  Number(item.quantity),
-                                0
-                              );
-
-                              return (
-                                <tr className="bg-gray-50">
-                                  <td className="border px-2 py-1" colSpan={ 2 }>
-                                    Thumbnail Creation Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    { totalThumbQty }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ pricePerThumb }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ totalThumbAmount }
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-
-                            {/* ✅ Content Posting Total */ }
-                            { (() => {
-                              const postEdits = complimentaryData.filter(
-                                (item) =>
-                                  Number(item.include_content_posting) > 0
-                              );
-                              if (postEdits.length === 0) return null;
-
-                              const totalPostQty = postEdits.reduce(
-                                (sum, item) => sum + Number(item.quantity),
-                                0
-                              );
-                              const pricePerPost =
-                                Number(postEdits[0].include_content_posting) ||
-                                0;
-                              const totalPostAmount = postEdits.reduce(
-                                (sum, item) =>
-                                  sum +
-                                  Number(item.include_content_posting) *
-                                  Number(item.quantity),
-                                0
-                              );
-
-                              return (
-                                <tr className="bg-gray-50">
-                                  <td className="border px-2 py-1" colSpan={ 2 }>
-                                    Meta Growth & Content Management Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    { totalPostQty }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ pricePerPost }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ totalPostAmount }
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-
-                            {/* ✅ YouTube Video Posting Total */ }
-                            { (() => {
-                              const ytEdits = complimentaryData.filter(
-                                (item) =>
-                                  Number(item.include_youtube_video_posting) > 0
-                              );
-                              if (ytEdits.length === 0) return null;
-
-                              const totalYtQty = ytEdits.reduce(
-                                (sum, item) => sum + Number(item.quantity),
-                                0
-                              );
-                              const pricePerYt =
-                                Number(ytEdits[0].include_youtube_video_posting) ||
-                                0;
-                              const totalYtAmount = ytEdits.reduce(
-                                (sum, item) =>
-                                  sum +
-                                  Number(item.include_youtube_video_posting) *
-                                  Number(item.quantity),
-                                0
-                              );
-
-                              return (
-                                <tr className="bg-gray-50">
-                                  <td className="border px-2 py-1" colSpan={ 2 }>
-                                    YouTube Channel Growth & Optimization Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    { totalYtQty }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ pricePerYt }
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ totalYtAmount }
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-                            { (() => {
-                              const compTableTotal = complimentaryData.reduce((sum, item) => {
-                                const qty = Number(item.quantity || 1);
-                                const base = Number(item.editing_type_amount || item.price || item.amount || 0);
-                                const thumb = (Number(item.include_thumbnail_creation) || 0) * qty;
-                                const post = (Number(item.include_content_posting) || 0) * qty;
-                                const yt = (Number(item.include_youtube_video_posting) || 0) * qty;
-                                return sum + (base * qty) + thumb + post + yt;
-                              }, 0);
-                              return (
-                                <tr className=" font-semibold">
-                                  <td
-                                    className="border px-2 py-1 text-right"
-                                    colSpan={ 4 }
-                                  >
-                                    Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹{ compTableTotal }
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-                            {/* ================= COMPLIMENTARY TOTAL ================= */ }
-                            { (() => {
-                              return (
-                                <tr className=" font-semibold">
-                                  <td
-                                    className="border px-2 py-1 text-right"
-                                    colSpan={ 4 }
-                                  >
-                                    Complimentary Total
-                                  </td>
-                                  <td className="border px-2 py-1 text-right">
-                                    ₹0
-                                  </td>
-                                </tr>
-                              );
-                            })() }
-                          </tbody>
-                        </table>
-                      </section>
-                    ) }
-
-                    {/* Action row below service table: Discount on left, Ads toggles on right */ }
-                    <div className="print:hidden flex items-center justify-between gap-3 mt-3 mb-2 px-1">
-                      <div>
-                        { isBalanceProforma || clientDataReceived.tag_received_amt === "received" || (docTypeFromURL === "proforma" && proformaMeta?.has_invoice) ? null : (
-                          <button
-                            type="button"
-                            onClick={ handleShowDiscount }
-                            className={ `inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm ${selecteddiscount
-                              ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20"
-                              : "bg-white hover:bg-gray-100 !text-black dark:bg-gray-700 dark:!text-white dark:border-gray-600 dark:hover:bg-gray-600 border-gray-300 hover:border-gray-400"
-                              }` }
-                          >
-                            🏷️ { selecteddiscount ? "Edit Discount" : "Set Discount" }
-                          </button>
-                        ) }
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        { (docTypeFromURL === "proforma" || isBalanceProforma) && adsData.some(ad => {
-                          const name = (ad.category_name || ad.category || ad.service_name || ad.service || "").toLowerCase();
-                          return (name.includes("meta") || name.includes("facebook") || name.includes("fb") || name.includes("insta")) && Number(ad.amount || ad.budget || 0) > 0;
-                        }) && (
-                            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 !text-black bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
-                              <input
-                                type="checkbox"
-                                checked={ showMetaAd }
-                                onChange={ (e) => setShowMetaAd(e.target.checked) }
-                                className="w-4 h-4 accent-red-600 rounded cursor-pointer"
-                              />
-                              Show Meta Ads Budget
-                            </label>
-                          ) }
-
-                        { (docTypeFromURL === "proforma" || isBalanceProforma) && adsData.some(ad => {
-                          const name = (ad.category_name || ad.category || ad.service_name || ad.service || "").toLowerCase();
-                          return name.includes("google") && Number(ad.amount || ad.budget || 0) > 0;
-                        }) && (
-                            <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer font-bold text-gray-700 !text-black bg-white hover:bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-300 shadow-sm transition-all">
-                              <input
-                                type="checkbox"
-                                checked={ showGoogleAd }
-                                onChange={ (e) => setShowGoogleAd(e.target.checked) }
-                                className="w-4 h-4 accent-red-600 rounded cursor-pointer"
-                              />
-                              Show Google Ads Budget
-                            </label>
-                          ) }
-                      </div>
-                    </div>
-                    <section className="terms-bank-section print:block px-6 py-2 text-sm text-gray-800 border-t mt-2">
-                      <div className="bank-details-section flex justify-between w-full mb-2">
-                        {/* LEFT SIDE: Bank Details */}
-                        <DocumentBankDetails isGST={isGST} variant="quotation" />
-
-                        {/* RIGHT SIDE: Totals */ }
-                        <div className="w-1/2 pl-5 border-l border-gray-200">
-                          <div className="space-y-1 text-xs text-gray-700">
-                            { discountAmount > 0 && (
-                              <>
-                                <div className="flex justify-between items-center text-gray-600 py-0.5">
-                                  <span>Subtotal</span>
-                                  <span className="font-semibold text-gray-900">₹{ graphicTotal.toLocaleString("en-IN") }</span>
-                                </div>
-                                <div className="flex justify-between items-center text-red-600 font-semibold py-0.5">
-                                  <span>
-                                    Discount ({ selecteddiscount?.discount_type === "percent"
-                                      ? `${selecteddiscount?.discount_per}%`
-                                      : `₹${selecteddiscount?.discount_amt}` })
-                                  </span>
-                                  <span>-₹{ discountAmount.toLocaleString("en-IN") }</span>
-                                </div>
-                              </>
-                            ) }
-
-                            <div className="flex justify-between items-center text-gray-600 py-0.5">
-                              <span>Taxable Amount</span>
-                              <span className="font-semibold text-gray-900">
-                                ₹{ displayedTaxable.toLocaleString("en-IN", { minimumFractionDigits: displayedTaxable % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 }) }
-                              </span>
-                            </div>
-
-                            { isGST && (
-                              <>
-                                <div className="flex justify-between items-center text-gray-600 py-0.5">
-                                  <span>CGST @9%</span>
-                                  <span className="font-semibold text-gray-900">
-                                    ₹{ displayedCgst.toLocaleString("en-IN", { minimumFractionDigits: displayedCgst % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 }) }
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center text-gray-600 py-0.5">
-                                  <span>SGST @9%</span>
-                                  <span className="font-semibold text-gray-900">
-                                    ₹{ displayedSgst.toLocaleString("en-IN", { minimumFractionDigits: displayedSgst % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 }) }
-                                  </span>
-                                </div>
-                              </>
-                            ) }
-
-                            <div className="flex justify-between items-center font-bold text-gray-800 py-1 border-t border-gray-200">
-                              <span>Subtotal</span>
-                              <span>₹{ Math.round(displayedSubtotal).toLocaleString("en-IN") }</span>
-                            </div>
-
-                            { adsData && adsData.length > 0 && adsData.map((ad, idx) => {
-                              const amount = Number(ad.amount || ad.budget || 0);
-                              const cat = (ad.category_name || "").toLowerCase();
-                              if (cat.includes("meta") && !showMetaAd) return null;
-                              if (cat.includes("google") && !showGoogleAd) return null;
-                              let adsCategoryName = ad.category_name || ad.service_name || "Ads";
-                              adsCategoryName = adsCategoryName.replace(/\badd\b/gi, "Ad");
-                              return (
-                                <div key={ idx } className="flex justify-between items-center text-gray-600 py-0.5">
-                                  <span>{ adsCategoryName } Budget</span>
-                                  <span className="font-semibold text-gray-900">₹{ amount.toLocaleString("en-IN") }</span>
-                                </div>
-                              );
-                            }) }
-
-                            <div className="flex justify-between items-center py-1 px-2.5 bg-gray-50/80 rounded border border-gray-200 mt-1">
-                              <span className="text-sm font-bold text-gray-900">Grand Total</span>
-                              <span className="text-base font-bold text-green-700">
-                                ₹{ Math.round(displayedGrandTotal).toLocaleString("en-IN") }
-                              </span>
-                            </div>
-
-                            { isBalanceProforma && (
-                              <div className="pt-2 border-t border-gray-300 space-y-1">
-                                <div className="flex justify-between items-center px-2 py-0.5 text-gray-700">
-                                  <span className="font-medium text-xs">Received</span>
-                                  <span className="font-semibold text-gray-900 text-xs">
-                                    ₹{ Math.round(displayedReceived).toLocaleString("en-IN") }
-                                  </span>
-                                </div>
-                                <div className="flex justify-between items-center px-2.5 py-1 bg-green-50/70 rounded border border-green-200">
-                                  <span className="text-xs font-bold text-green-900">Current Balance</span>
-                                  { displayedCurrentBalance <= 0 ? (
-                                    <span className="bg-green-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
-                                      Fully Paid
-                                    </span>
-                                  ) : (
-                                    <span className="text-sm font-bold text-green-700">
-                                      ₹{ Math.round(displayedCurrentBalance).toLocaleString("en-IN") }
-                                    </span>
-                                  ) }
-                                </div>
-                              </div>
-                            ) }
-
-                            <div className="mt-2 pt-2 border-t border-gray-200 text-right">
-                              <p className="text-[10px] text-gray-500 italic block leading-tight">Total Amount (in words):</p>
-                              <p className="font-semibold text-gray-800 text-xs capitalize leading-tight">
-                                { inrToWords(displayedGrandTotal) }
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-
-
-                    { showModal && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        {/* Backdrop */ }
-                        <div
-                          className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
-                          onClick={ handleClose }
-                        />
-
-                        {/* Modal */ }
-                        <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl transform transition-all animate-in fade-in-0 zoom-in-95 duration-200">
-                          {/* Header */ }
-                          <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                                <StickyNote className="w-5 h-5 text-red-600" />
-                              </div>
-                              <h2 className="text-xl font-semibold text-gray-900">
-                                { isEditing ? "Edit Note" : "Add New Note" }
-                              </h2>
-                            </div>
-                            <button
-                              onClick={ handleClose }
-                              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-
-                          {/* Form */ }
-                          <form
-                            onSubmit={ handleSubmit }
-                            className="p-6 space-y-4"
-                          >
-                            {/* Note */ }
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                <Notebook className="w-4 h-4 inline mr-2" />
-                                Note
-                              </label>
-                              <textarea
-                                name="note_name"
-                                value={ formData.note_name }
-                                onChange={ handleChange }
-                                className="w-full text-black px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors resize-none"
-                                placeholder="Enter note details"
-                                rows={ 4 } // number of visible lines
-                                required
-                              ></textarea>
-                            </div>
-
-                            {/* Buttons */ }
-                            <div className="flex justify-end gap-3 pt-4">
-                              <button
-                                type="button"
-                                onClick={ handleClose }
-                                className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="submit"
-                                disabled={ loading }
-                                className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
-                              >
-                                { loading
-                                  ? isEditing
-                                    ? "Updating..."
-                                    : "Saving..."
-                                  : isEditing
-                                    ? "Update Note"
-                                    : "Save Note" }
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    ) }
-
-                    <InvoiceDiscountModal
-                      show={showModalDiscount}
-                      onClose={handleCloseDiscount}
-                      onSubmit={handleSaveDiscount}
-                      formDataDiscount={formDataDiscount}
-                      onChangeDiscount={handleChangeDiscount}
-                      onDeleteDiscount={handleDeleteDiscount}
-                      selecteddiscount={selecteddiscount}
-                      discountDataSet={discountDataSet}
-                      grandTotal={grandTotal}
-                      loading={loading}
+                <div className="print:block flex flex-col px-6 py-1 print:px-4 print:py-4 print:pt-6 pt-4">
+                  <div className="w-full">
+                    <InvoiceCustomerInfoCard
+                      clientData={clientData}
+                      isProforma={true}
+                      isBalanceProforma={true}
+                      isGST={isGST}
                     />
 
-                    { docTypeFromURL !== "proforma" && (
-                      <div className="space-y-2 print:hidden p-1 mt-4 border-t pt-4 border-gray-300">
-                        <h3 className="font-bold mb-2 text-gray-800">
-                          { isBalanceProforma ? "Add Notes for Balance Proforma" : "Add Notes" }
-                        </h3>
-                        {/* Predefined Notes Dropdown */ }
-                        <div className="relative w-full" ref={ dropdownRef }>
-                          <div
-                            className={ `flex items-center justify-between w-full px-4 py-2.5 rounded-xl border-2 cursor-pointer transition-all duration-200 ${isOpen ? 'bg-gradient-to-r from-orange-500 to-red-500 border-orange-400 text-white shadow-lg shadow-orange-200' : 'bg-gradient-to-r from-orange-50 to-red-50 border-orange-200 text-orange-700 hover:border-orange-400 hover:shadow-md hover:shadow-orange-100'}` }
-                            onClick={ () => setIsOpen(!isOpen) }
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className={ `text-lg flex-shrink-0 ${isOpen ? 'opacity-100' : 'opacity-70'}` }>📋</span>
-                              <span className={ `truncate text-sm font-medium ${isOpen ? 'text-white' : (!selectedNote ? 'text-orange-400 italic' : 'text-orange-800')}` }>
-                                { selectedNote ? selectedNote.note_text : (isBalanceProforma ? "Select a predefined balance proforma note..." : "Select a predefined note to add...") }
-                              </span>
-                            </div>
-                            <div className={ `flex-shrink-0 ml-2 w-6 h-6 rounded-full flex items-center justify-center ${isOpen ? 'bg-white/20' : 'bg-orange-100'}` }>
-                              { isOpen ? (
-                                <ChevronUp className="w-3.5 h-3.5 text-white" />
-                              ) : (
-                                <ChevronDown className="w-3.5 h-3.5 text-orange-500" />
-                              ) }
-                            </div>
-                          </div>
+                    <InvoiceServicesTable
+                      graphicData={graphicData}
+                      complimentaryData={complimentaryData}
+                      additionalServiceData={additionalServiceData}
+                      adsData={adsData}
+                      dmServiceTotal={dmServiceTotal}
+                      formatAmountNoDecimals={formatAmountNoDecimals}
+                    />
 
-                          { isOpen && (
-                            <div className="absolute z-20 bg-white w-full mt-1.5 max-h-52 overflow-auto rounded-xl border border-orange-100 shadow-xl shadow-orange-100">
-                              { uniquePredefinedNotes.length === 0 ? (
-                                <div className="p-4 text-sm text-orange-400 text-center">
-                                  <span className="text-2xl block mb-1">✅</span>
-                                  { isBalanceProforma ? "All balance proforma notes are already added" : "All notes are already added" }
-                                </div>
-                              ) : (
-                                uniquePredefinedNotes.map((note, idx) => (
-                                  <div
-                                    key={ note.id }
-                                    onClick={ () => handleSelect(note) }
-                                    className={ `px-4 py-2.5 text-sm text-gray-700 cursor-pointer transition-all duration-150 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:text-orange-700 ${idx !== uniquePredefinedNotes.length - 1 ? 'border-b border-gray-100' : ''}` }
-                                  >
-                                    <span className="text-orange-300 mr-2 font-bold">›</span>
-                                    { note.note_text }
-                                  </div>
-                                ))
-                              ) }
-                            </div>
-                          ) }
-                        </div>
+                    <InvoiceComplimentaryTable
+                      complimentaryData={complimentaryData}
+                      formatAmount={formatAmount}
+                    />
 
-                        {/* Manual Note Input */ }
-                        <div className="flex flex-wrap gap-2">
-                          <textarea
-                            type="text"
-                            value={ manualNote }
-                            onChange={ (e) => setManualNote(e.target.value) }
-                            placeholder={ isBalanceProforma ? "Enter custom note for this balance proforma" : "Enter custom note" }
-                            rows={ 1 }
-                            className="flex-1 p-2 rounded-lg border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                          <button
-                            onClick={ handleAddManualNote }
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
-                          >
-                            + Add
-                          </button>
-                        </div>
-
-                        {/* Selected Notes List for regular quotation */ }
-                        { !isBalanceProforma && selectedNotes.length > 0 && (
-                          <div className="space-y-2">
-                            { selectedNotes.map((note) => (
-                              <div
-                                key={ note.id }
-                                className="p-3 bg-gray-100 rounded-lg gap-5 flex justify-between items-center border border-gray-300"
-                              >
-                                <span className="text-gray-800 font-medium">
-                                  { note.note_name }
-                                </span>
-                                <div className="">
-                                  <button
-                                    onClick={ () => handleRemoveNote(note.id) }
-                                    className="bg-red-500 mx-2 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold transition"
-                                    title="Remove"
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              </div>
-                            )) }
-                            {/* Save Button */ }
-                            <button
-                              onClick={ handleSaveNotes }
-                              className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
-                            >
-                              💾 Save Notes
-                            </button>
-                          </div>
-                        ) }
-                      </div>
-                    ) }
-
-                    { notesData.length > 0 ? (
-                      <div className={docTypeFromURL === "proforma" ? "mt-4 border-t pt-4 border-gray-300" : "mt-2"}>
-                        <p className="text-sm  font-bold">Notes</p>
-
-                        <ul className="list-disc pl-5">
-                          { notesData.map((note) => (
-                            <>
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-white">
-                                <li
-                                  key={ note.id }
-                                  className="text-xs text-gray-700 font-bold"
-                                >
-                                  { note.note_name }
-                                </li>
-                                { clientDataReceived.tag_received_amt ===
-                                  "received" ? null : (
-                                  <div className="flex print:hidden items-center gap-2 sm:gap-4">
-                                    <button
-                                      onClick={ (e) => {
-                                        e.stopPropagation(); // prevent card onClick
-                                        setSelectedNotesId(note);
-                                        setFormData({
-                                          note_name: note.note_name,
-                                          plan: note.plan,
-                                        });
-                                        setIsEditing(true);
-                                        setShowModal(true);
-                                      } }
-                                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                                      title="Edit"
-                                    >
-                                      ✎
-                                    </button>
-                                    <button
-                                      onClick={ () =>
-                                        handleDeleteClientNote(note.id)
-                                      }
-                                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                                      title="Delete"
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ) }
-                              </div>
-                            </>
-                          )) }
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 italic"></p>
-                    ) }
+                    <InvoiceDiscountSection
+                      graphicData={graphicData}
+                      additionalServiceData={additionalServiceData}
+                      adsData={adsData}
+                      complimentaryData={complimentaryData}
+                      selecteddiscount={selecteddiscount}
+                      discountAmount={discountAmount}
+                      invoiceSubtotal={invoiceSubtotal}
+                      clientData={clientData}
+                      isProforma={true}
+                      handleShowDiscount={handleShowDiscount}
+                      formatAmountNoDecimals={formatAmountNoDecimals}
+                    />
                   </div>
                 </div>
+
+                <section className="terms-bank-section print:block px-6 py-1 text-sm text-gray-800 border-t mt-1">
+                  <div className="bank-details-section flex w-full border border-gray-300 rounded-md mt-1 overflow-hidden">
+                    <DocumentBankDetails isGST={isGST} />
+
+                    <InvoiceSummaryRightSide
+                      isPartialPayment={isPartialPayment}
+                      currentBillGrossReceived={currentBillGrossReceived}
+                      totalAfterDiscount={totalAfterDiscount}
+                      pastActiveTaxableSubtotal={pastActiveTaxableSubtotal}
+                      projectValueDeferred={projectValueDeferred}
+                      activeTaxableSubtotal={activeTaxableSubtotal}
+                      isGST={isGST}
+                      gstAmount={gstAmount}
+                      invoiceSubtotal={invoiceSubtotal}
+                      activeInvoiceTotal={activeInvoiceTotal}
+                      hasReceivedAmount={hasReceivedAmount}
+                      receivedAmountForSummary={receivedAmountForSummary}
+                      clientData={clientData}
+                      isProforma={true}
+                      visibleAdBudget={visibleAdBudget}
+                      visibleGoogleBudget={visibleGoogleBudget}
+                      visibleMetaBudget={visibleMetaBudget}
+                      hasPayment={hasPayment}
+                      tdsAmountToShow={tdsAmountToShow}
+                      isBalanceProforma={true}
+                      formatAmount={formatAmount}
+                      formatAmountNoDecimals={formatAmountNoDecimals}
+                    />
+                  </div>
+
+                  <InvoiceAmountInWords amountInWords={amountInWords} />
+
+                  <InvoicePaymentHistoryTable
+                    isProforma={true}
+                    isBalanceProforma={true}
+                    proformaPayments={proformaPayments}
+                    id={id}
+                    txn_id={txn_id}
+                    parseAmount={parseAmount}
+                    formatAmount={formatAmount}
+                  />
+
+                  <InvoiceTermsConditions
+                    notesData={notesData}
+                    visibleAdBudget={visibleAdBudget}
+                    tdsAmountToShow={tdsAmountToShow}
+                    previousAmountForSummary={previousAmountForSummary}
+                    projectValueDeferred={projectValueDeferred}
+                    adsData={adsData}
+                    activeTaxableSubtotal={activeTaxableSubtotal}
+                    pastReceivedAmount={pastReceivedAmount}
+                    previousInvoiceNo={previousInvoiceNo}
+                    previousInvoiceDate={previousInvoiceDate}
+                    clientData={clientData}
+                    onEditNote={(note) => {
+                      setSelectedNotesId(note);
+                      setFormDataNote({
+                        note_name: note.note_name,
+                        plan: note.plan,
+                      });
+                      setIsEditingNote(true);
+                      setShowModalNote(true);
+                    }}
+                    onDeleteNote={handleDeleteClientNote}
+                  />
+                </section>
+
+                <div className="border-t mt-0"></div>
               </td>
             </tr>
           </tbody>
@@ -2658,19 +335,41 @@ export default function BalanceProforma() {
           <tfoot className="print:table-footer-group">
             <tr>
               <td className="p-0 m-0">
-                <div className="h-[20mm] w-full"></div>
+                <div className="h-[25mm] w-full"></div>
               </td>
             </tr>
           </tfoot>
         </table>
 
         <div className="hidden print:flex print-fixed-footer">
-          <img
-            src={ img2 }
-            alt="Footer"
-            className="h-full w-full object-fill"
-          />
+          <img src={img2} alt="Footer" className="h-full w-full object-fill" />
         </div>
+
+        <InvoiceModalsContainer
+          showModalNote={showModalNote}
+          handleCloseNote={handleCloseNote}
+          handleSubmitNote={handleSubmitNote}
+          formDataNote={formDataNote}
+          handleChangeNote={handleChangeNote}
+          isEditingNote={isEditingNote}
+          showModalRemaining={showModalRemaining}
+          setShowModalRemaining={setShowModalRemaining}
+          handleRemainingSave={handleRemainingSave}
+          formDataRemaining={formDataRemaining}
+          setFormDataRemaining={setFormDataRemaining}
+          handleChangeRemaining={handleChangeRemaining}
+          isEditingRemaining={isEditingRemaining}
+          showModalDiscount={showModalDiscount}
+          handleCloseDiscount={handleCloseDiscount}
+          handleSaveDiscount={handleSaveDiscount}
+          formDataDiscount={formDataDiscount}
+          handleChangeDiscount={handleChangeDiscount}
+          handleDeleteDiscount={handleDeleteDiscount}
+          selecteddiscount={selecteddiscount}
+          discountDataSet={discountDataSet}
+          grandTotal={grandTotal}
+          loading={loading || modalLoading}
+        />
       </div>
     </InvoicePrintWrapper>
   );
