@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
@@ -7,20 +7,12 @@ import Swal from "sweetalert2";
 import { ArrowLeft } from "lucide-react";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
-const AdsCampaignCalculator = ({
-  hideNotes,
-  onSaveComplete,
-  proposalIdOverride,
-  onServiceAdded,
-  onServiceDeleted,
-  embeddedData,
-}) => {
+const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
   const baseURL = API_BASE_URL;
   const params = useParams();
-  const location = useLocation();
   const id = params.id || params.clientId;
   const proposalId = proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
-  const searchParams = new URLSearchParams(location.search);
+  const searchParams = new URLSearchParams(useLocation().search);
   const docTypeFromURL = searchParams.get("doc");
   const { currentUser, token } = useSelector((state) => state.user);
 
@@ -31,23 +23,21 @@ const AdsCampaignCalculator = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [getData, setGetData] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState(null); // For proforma edit mode
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   // Sync embeddedData
   useEffect(() => {
     if (embeddedData) {
-      setAdsItems(
-        embeddedData.map((r) => ({
-          id: r.id,
-          category: r.category_name,
-          amount: r.budget,
-          percent: r.percent,
-          charge: r.charge,
-          total: r.total_price || r.total_amount,
-        }))
-      );
+      setAdsItems(embeddedData.map(r => ({
+        id: r.id,
+        category: r.category_name,
+        amount: r.budget,
+        percent: r.percent,
+        charge: r.charge,
+        total: r.total_price || r.total_amount
+      })));
     }
   }, [embeddedData]);
 
@@ -71,9 +61,9 @@ const AdsCampaignCalculator = ({
         } else {
           setError("Failed to load ads data");
         }
-      } catch (err) {
+      } catch (error) {
         setError("Failed to load ads data from server");
-        if (err.response && err.response.status === 401) {
+        if (error.response && error.response.status === 401) {
           Swal.fire({
             title: "Session Expired",
             text: "Please login again.",
@@ -124,7 +114,7 @@ const AdsCampaignCalculator = ({
     resetForm();
     setEditingId(null);
     if (onServiceDeleted) {
-      adsItems.forEach((item) => onServiceDeleted(item.id));
+      adsItems.forEach(item => onServiceDeleted(item.id));
     } else {
       setAdsItems([]);
     }
@@ -170,17 +160,19 @@ const AdsCampaignCalculator = ({
             showConfirmButton: false,
           });
         }
-      } catch (err) {
-        console.error("Error deleting entry:", err);
+      } catch (error) {
+        console.error("Error deleting entry:", error);
       }
     }
   };
 
   const handleEdit = (item) => {
+    // Pre-fill the input form with existing values
     setEnteredAmount((prev) => ({
       ...prev,
       [item.category]: item.amount,
     }));
+    // In proforma mode, track which entry we are updating
     if (docTypeFromURL === "proforma") {
       setEditingId(item.id);
     }
@@ -242,10 +234,9 @@ const AdsCampaignCalculator = ({
           const charge = roundCurrency((amount * percent) / 100);
           const total = roundCurrency(amount + charge);
 
-          const existingItem =
-            adsItems.find((item) => item.category === category) ||
-            getData.find((item) => (item.category || item.category_name) === category);
-
+          const existingItem = adsItems.find(item => item.category === category)
+            || getData.find(item => (item.category || item.category_name) === category);
+          
           results.push({
             txn_id: proposalId,
             client_id: id,
@@ -258,7 +249,9 @@ const AdsCampaignCalculator = ({
             employee: userName,
           });
         } else {
-          setError(`No matching range found for ${category} with amount ₹${amount}`);
+          setError(
+            `No matching range found for ${category} with amount Γé╣${amount}`
+          );
           hasError = true;
         }
       });
@@ -270,17 +263,17 @@ const AdsCampaignCalculator = ({
 
       if (results.length > 0) {
         if (onServiceAdded) {
-          results.forEach((newRecord) => {
+          results.forEach(newRecord => {
             onServiceAdded({
               id: newRecord.id,
-              service_name: "Ads Campaign",
+              service_name: 'Ads Campaign',
               category_name: newRecord.category,
               quantity: 1,
               unit_price: newRecord.total,
               total_price: newRecord.total,
               total_amount: newRecord.total,
               include_in_total: true,
-              source: "custom_ads",
+              source: 'custom_ads',
               budget: newRecord.amount,
               percent: newRecord.percent,
               charge: newRecord.charge,
@@ -300,9 +293,9 @@ const AdsCampaignCalculator = ({
 
         let response;
         if (docTypeFromURL === "proforma") {
-          const proformaItems = results.map((newRecord) => ({
+          const proformaItems = results.map(newRecord => ({
             id: newRecord.id,
-            service_name: "Ads Campaign",
+            service_name: 'Ads Campaign',
             category_name: newRecord.category,
             category: newRecord.category,
             quantity: 1,
@@ -311,18 +304,16 @@ const AdsCampaignCalculator = ({
             total_amount: newRecord.total,
             total: newRecord.total,
             include_in_total: true,
-            source: "custom_ads",
+            source: 'custom_ads',
             budget: newRecord.amount,
             amount: newRecord.amount,
             percent: newRecord.percent,
             charge: newRecord.charge,
           }));
 
-          const singleCategory =
-            proformaItems[0]?.category_name || proformaItems[0]?.category;
-          const existingInDb = getData.find(
-            (d) => (d.category || d.category_name) === singleCategory
-          );
+          // If editingId set OR agar category already DB mein hai ΓåÆ update action
+          const singleCategory = proformaItems[0]?.category_name || proformaItems[0]?.category;
+          const existingInDb = getData.find(d => (d.category || d.category_name) === singleCategory);
           const updateTargetId = editingId || existingInDb?.id;
 
           if (updateTargetId && proformaItems.length === 1) {
@@ -330,16 +321,13 @@ const AdsCampaignCalculator = ({
               `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
               {
                 method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
                   proformaId: proposalId,
                   action: "update",
                   editId: String(updateTargetId),
                   item: proformaItems[0],
-                  snapshotType: "ads",
+                  snapshotType: 'ads',
                 }),
               }
             );
@@ -348,28 +336,28 @@ const AdsCampaignCalculator = ({
               `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
               {
                 method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
                   proformaId: proposalId,
                   action: "addBulk",
                   item: proformaItems,
-                  snapshotType: "ads",
+                  snapshotType: 'ads',
                 }),
               }
             );
           }
         } else {
-          response = await fetch(`${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ adsItems: results }),
-          });
+          response = await fetch(
+            `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ adsItems: results }),
+            }
+          );
         }
 
         const result = await response.json();
@@ -379,9 +367,7 @@ const AdsCampaignCalculator = ({
           Swal.fire({
             icon: "success",
             title: editingId ? "Updated!" : "Saved!",
-            text: editingId
-              ? "Ads campaign entry updated!"
-              : "Ads campaign saved successfully!",
+            text: editingId ? "Ads campaign entry updated!" : "Ads campaign saved successfully!",
             showConfirmButton: false,
             timer: 1000,
           });
@@ -420,8 +406,9 @@ const AdsCampaignCalculator = ({
       });
       if (res.data.status === "Success") {
         if (docTypeFromURL === "proforma") {
+          // Ads data is now stored in the dedicated ads_snapshot column
           const parsed = JSON.parse(res.data.data.ads_snapshot || "[]");
-          const normalized = parsed.map((item) => ({
+          const normalized = parsed.map(item => ({
             ...item,
             category: item.category || item.category_name,
             amount: item.amount || item.budget,
@@ -432,8 +419,8 @@ const AdsCampaignCalculator = ({
           setGetData(res.data.data);
         }
       }
-    } catch (err) {
-      if (err.response && err.response.status === 401) {
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
         Swal.fire({
           title: "Session Expired",
           text: "Please login again.",
@@ -474,7 +461,7 @@ const AdsCampaignCalculator = ({
             proformaId: proposalId,
             action: "delete",
             entryId: entryId,
-            snapshotType: "ads",
+            snapshotType: 'ads',
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -503,8 +490,7 @@ const AdsCampaignCalculator = ({
           text: result.message || "Failed to delete entry.",
         });
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -520,13 +506,9 @@ const AdsCampaignCalculator = ({
     if (window.history.length > 1) {
       navigate(-1);
     } else {
-      const isBd = location.pathname.startsWith("/BD");
-      const basePath = isBd ? "/BD" : "/admin";
-      const servicesLandingPath = isBd ? "AddService" : "ServicesLanding";
-      const fallbackUrl =
-        docTypeFromURL === "proforma"
-          ? `${basePath}/${servicesLandingPath}/${id}/${proposalId}?doc=proforma`
-          : `${basePath}/${servicesLandingPath}/${id}/${proposalId}`;
+      const fallbackUrl = docTypeFromURL === "proforma"
+        ? `/admin/ServicesLanding/${id}/${proposalId}?doc=proforma`
+        : `/admin/ServicesLanding/${id}/${proposalId}`;
       navigate(fallbackUrl);
     }
   };
@@ -548,9 +530,11 @@ const AdsCampaignCalculator = ({
               </button>
             )}
             <h3 className="text-2xl sm:text-3xl font-bold text-center text-white">
-              📢 Ads Campaign Budget Calculator
+              ≡ƒôó Ads Campaign Budget Calculator
             </h3>
           </div>
+
+
 
           {loading && (
             <div className="p-4 rounded-lg bg-red-600/20 text-red-300 border border-red-500">
@@ -567,91 +551,176 @@ const AdsCampaignCalculator = ({
             </div>
           )}
 
-          {/* Form */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-200 border-b pb-2 border-white/20">
-              Select Ads Categories & Enter Budget
-            </h3>
-
-            {categories.length === 0 && !loading && (
-              <p className="text-gray-400">No categories found.</p>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {!loading && adsData.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xl font-semibold">Enter Budget Amounts</h4>
+                {editingId && (
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 border border-yellow-400/40 text-yellow-300">
+                    Γ£Å∩╕Å Editing existing entry
+                  </span>
+                )}
+              </div>
               {categories.map((category) => (
-                <div key={category} className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300">
-                    {category} Budget (₹)
-                  </label>
+                <div
+                  key={category}
+                  className={`backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4 ${
+                    editingId ? 'bg-yellow-500/10 border border-yellow-400/30' : 'bg-white/10'
+                  }`}
+                >
+                  <label className="sm:w-48 font-medium">{category}</label>
                   <input
                     type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter Amount (Γé╣)"
                     value={enteredAmount[category] || ""}
-                    onChange={(e) => handleAmountChange(category, e.target.value)}
-                    placeholder={`Enter ${category} budget`}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    onChange={(e) =>
+                      handleAmountChange(category, e.target.value)
+                    }
+                    className="w-full px-4 py-2 rounded-lg border border-white/20 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
                   />
                 </div>
               ))}
             </div>
+          )}
 
-            <div className="flex justify-end gap-4 pt-4 border-t border-white/20">
+          {!loading && adsData.length > 0 && (
+            <div className="flex flex-wrap gap-4">
               <button
-                type="button"
-                onClick={clearAll}
-                className="px-6 py-2.5 rounded-xl bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
-              >
-                Clear All
-              </button>
-              <button
-                type="button"
                 onClick={handleCalculateAndSave}
-                disabled={loading}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg transition"
+                disabled={loading || Object.keys(enteredAmount).length === 0}
+                className={`px-6 py-3 rounded-lg text-white font-semibold transition disabled:bg-gray-400 ${
+                  editingId ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700'
+                }`}
               >
-                {loading
-                  ? "Processing..."
-                  : editingId
-                  ? "Update Campaign"
-                  : "Calculate & Save"}
+                {loading ? "Saving..." : editingId ? "Update Entry" : "Calculate & Save"}
               </button>
+              {editingId ? (
+                <button
+                  onClick={resetEditingState}
+                  className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                >
+                  Cancel Edit
+                </button>
+              ) : (
+                <button
+                  onClick={clearAll}
+                  className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* Saved items list */}
-          {getData.length > 0 && !onServiceAdded && (
-            <div className="mt-8 space-y-4">
-              <h4 className="text-xl font-bold text-white border-b pb-2 border-white/20">
-                Saved Campaigns
-              </h4>
-              {getData.map((item) => (
+
+          {adsItems.length > 0 && (
+            <div className="space-y-4">
+              <h4 className="text-xl font-semibold">≡ƒôï Budget Breakdown</h4>
+              {adsItems.map((item) => (
                 <div
                   key={item.id}
-                  className="p-4 bg-white/5 rounded-xl border border-white/10"
+                  className="bg-gradient-to-r from-red-900/30 to-green-900/30 border border-white/10 p-4 rounded-lg"
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="w-full">
+                      <div className="flex justify-between items-center mb-2">
+                        <h5 className="text-lg font-semibold text-red-300">
+                          ≡ƒôó {item.category}
+                        </h5>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="text-blue-400 hover:text-blue-600 transition"
+                            title="Edit"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="text-red-400 hover:text-red-600 transition text-xl leading-none"
+                            title="Delete"
+                          >
+                            ├ù
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                        <p>
+                          ≡ƒÆ╝ Budget:{" "}
+                          <span className="font-medium text-white">
+                            Γé╣{item.amount.toLocaleString()}
+                          </span>
+                        </p>
+                        <p>
+                          ≡ƒôè Charge ({item.percent}%):{" "}
+                          <span className="font-medium text-white">
+                            Γé╣{item.charge.toLocaleString()}
+                          </span>
+                        </p>
+                        <p className="font-bold text-green-300">
+                          ≡ƒº╛ Total: Γé╣{item.total.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {adsItems.length > 0 && (
+            <div className="text-center bg-green-800/30 p-6 rounded-lg border border-green-600">
+              <h4 className="text-xl font-bold text-green-300 mb-2">
+                ≡ƒÆ░ Total Ads Budget
+              </h4>
+              <p className="text-4xl font-extrabold text-green-400">
+                Γé╣{totalAdsCost.toLocaleString()}
+              </p>
+            </div>
+          )}
+
+          {getData.length > 0 && (
+            <div className="mt-10 space-y-4">
+              <h3 className="text-xl font-bold text-white">
+                ≡ƒº╛ Previously Saved Campaigns
+              </h3>
+              {getData.map((item, index) => (
+                <div
+                  key={index}
+                  className={`p-4 border rounded-xl text-white transition-all ${
+                    editingId && String(editingId) === String(item.id)
+                      ? 'bg-yellow-500/15 border-yellow-400/40'
+                      : 'bg-white/10 border-white/10'
+                  }`}
                 >
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <p>
-                      📢 <strong>{item.category}</strong>
+                      ≡ƒôó <strong>{item.category}</strong>
                     </p>
                     <p>
-                      💰 Budget: ₹{parseFloat(item.amount).toLocaleString()}
+                      ≡ƒÆ░ Budget: Γé╣{parseFloat(item.amount).toLocaleString()}
                     </p>
                     <p>
-                      📊 Charge: ₹{parseFloat(item.charge).toLocaleString()} (
+                      ≡ƒôè Charge: Γé╣{parseFloat(item.charge).toLocaleString()} (
                       {item.percent}%)
                     </p>
-                    <p>🧾 Total: ₹{parseFloat(item.total).toLocaleString()}</p>
+                    <p>≡ƒº╛ Total: Γé╣{parseFloat(item.total).toLocaleString()}</p>
                     <div className="flex items-center gap-2">
                       {docTypeFromURL === "proforma" && (
                         <button
                           onClick={() => handleEdit(item)}
                           className={`text-white text-sm rounded-full w-8 h-8 flex items-center justify-center transition ${
                             editingId && String(editingId) === String(item.id)
-                              ? "bg-yellow-500 hover:bg-yellow-600"
-                              : "bg-blue-600 hover:bg-blue-700"
+                              ? 'bg-yellow-500 hover:bg-yellow-600'
+                              : 'bg-blue-600 hover:bg-blue-700'
                           }`}
                           title="Edit this entry"
                         >
-                          ✏️
+                          Γ£Å∩╕Å
                         </button>
                       )}
                       <button
@@ -659,7 +728,7 @@ const AdsCampaignCalculator = ({
                         className="bg-red-600 hover:bg-red-700 text-white text-lg rounded-full w-8 h-8 flex items-center justify-center"
                         title="Delete this entry"
                       >
-                        ×
+                        ├ù
                       </button>
                     </div>
                   </div>

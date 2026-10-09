@@ -127,12 +127,50 @@ export default function PublicProposalPage() {
 
   const pricing = [...dmPricing, ...adsPricing];
 
+  const isItemComplimentary = (item) => {
+    if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+      return Boolean(item.is_complimentary);
+    }
+    if (item.source === "custom_complimentary" || item.source === "complimentary") return true;
+    if (item.include_in_total === false) return true;
+    const sName = String(item.service_name || item.service || "").toLowerCase();
+    return (
+      sName.includes("(complimentary)") ||
+      sName.includes("(complimntory)") ||
+      sName === "complimentary"
+    );
+  };
+
+  const getComplimentaryAmount = (item) => {
+    const qty = Number(item.quantity) || 1;
+    let unitAmt =
+      Number(item.editing_type_amount) > 0
+        ? Number(item.editing_type_amount)
+        : Number(item.price) > 0
+          ? Number(item.price)
+          : Number(item.unit_price) > 0
+            ? Number(item.unit_price)
+            : Number(item.amount) > 0
+              ? Number(item.amount) / qty
+              : Number(item.total_price || item.total_amount) > 0
+                ? Number(item.total_price || item.total_amount) / qty
+                : 0;
+
+    if (item.include_thumbnail_creation) {
+      unitAmt += Number(item.include_thumbnail_creation) || 0;
+    }
+    if (item.include_content_posting) {
+      unitAmt += Number(item.include_content_posting) || 0;
+    }
+    if (item.include_youtube_video_posting) {
+      unitAmt += Number(item.include_youtube_video_posting) || 0;
+    }
+
+    return unitAmt * qty;
+  };
+
   const dmSubtotal = dmPricing.reduce(
-    (sum, item) =>
-      sum +
-      (item.service_name?.toLowerCase() === "re_complimentary" || item.include_in_total === false
-        ? 0
-        : Number(item.total_price) || 0),
+    (sum, item) => sum + (isItemComplimentary(item) ? 0 : Number(item.total_price) || 0),
     0
   );
   const adsSubtotal = adsPricing.reduce(
@@ -439,17 +477,30 @@ export default function PublicProposalPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {pricing.map((item, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4 font-medium text-slate-800">{item.service}</td>
-                          <td className="px-6 py-4 text-center text-slate-700">
-                            {item.quantity !== undefined ? item.quantity : 1}
-                          </td>
-                          <td className="px-6 py-4 text-right text-slate-700 font-medium">
-                            ₹ {Number(item.total_price || 0).toLocaleString("en-IN")}
-                          </td>
-                        </tr>
-                      ))}
+                      {pricing.map((item, idx) => {
+                        const isComp = isItemComplimentary(item);
+                        const compAmt = isComp ? getComplimentaryAmount(item) : 0;
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-4 font-medium text-slate-800">{item.service}</td>
+                            <td className="px-6 py-4 text-center text-slate-700">
+                              {item.quantity !== undefined ? item.quantity : 1}
+                            </td>
+                            <td className="px-6 py-4 text-right font-medium">
+                              {isComp ? (
+                                <span className="text-slate-800">
+                                  ₹ {compAmt.toLocaleString("en-IN")}{" "}
+                                  <span className="text-emerald-600 font-semibold text-xs">(Free)</span>
+                                </span>
+                              ) : (
+                                <span className="text-slate-700">
+                                  ₹ {Number(item.total_price || 0).toLocaleString("en-IN")}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                     <tfoot className="border-t border-slate-200">
                       <tr className="bg-slate-50/50">

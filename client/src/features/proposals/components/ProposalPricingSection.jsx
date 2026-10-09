@@ -63,8 +63,38 @@ export default function ProposalPricingSection({
   const complimentaryItems = tableWithIndex.filter(isItemComplimentary);
   const dmItems = dmServices.filter((item) => !isItemComplimentary(item));
 
+  const getComplimentaryAmount = (row) => {
+    const qty = Number(row.quantity) || 1;
+    let unitAmt =
+      Number(row.editing_type_amount) > 0
+        ? Number(row.editing_type_amount)
+        : Number(row.price) > 0
+          ? Number(row.price)
+          : Number(row.unit_price) > 0
+            ? Number(row.unit_price)
+            : Number(row.amount) > 0
+              ? Number(row.amount) / qty
+              : Number(row.total_price || row.total_amount) > 0
+                ? Number(row.total_price || row.total_amount) / qty
+                : 0;
+
+    if (row.include_thumbnail_creation) {
+      unitAmt += Number(row.include_thumbnail_creation) || 0;
+    }
+    if (row.include_content_posting) {
+      unitAmt += Number(row.include_content_posting) || 0;
+    }
+    if (row.include_youtube_video_posting) {
+      unitAmt += Number(row.include_youtube_video_posting) || 0;
+    }
+
+    return unitAmt * qty;
+  };
+
   const renderTable = (title, items, isAds = false) => {
     if (items.length === 0) return null;
+    const isComplimentaryTable = title.toLowerCase().includes("complimentary");
+
     return (
       <div className="overflow-x-auto bg-gray-900/40 rounded-xl border border-gray-800/50 mb-4">
         <h4 className="p-3 text-white font-bold bg-gray-800/80 border-b border-gray-700/50">{title}</h4>
@@ -74,12 +104,16 @@ export default function ProposalPricingSection({
               <th className="p-3">Category Name</th>
               <th className="p-3">Service Name</th>
               <th className="p-3 w-20 text-center">Qty</th>
-              <th className="p-3 w-32 text-right">Total</th>
+              <th className="p-3 w-36 text-right">Total</th>
               <th className="p-3 w-20 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((row, idx) => (
+            {items.map((row, idx) => {
+              const isRowComplimentary = isComplimentaryTable || isItemComplimentary(row);
+              const compAmt = isRowComplimentary ? getComplimentaryAmount(row) : 0;
+
+              return (
               <tr
                 key={`${row.originalIndex}-${idx}`}
                 className="border-b border-gray-800/50 hover:bg-gray-800/20 transition group"
@@ -132,8 +166,17 @@ export default function ProposalPricingSection({
                   </p>
                 </td>
                 <td className="p-3 text-center text-gray-300">{isAds ? "-" : row.quantity || 1}</td>
-                <td className="p-3 text-right text-yellow-400 font-semibold">
-                  ₹{Number(isAds ? row.budget : row.total_price).toLocaleString()}
+                <td className="p-3 text-right font-semibold">
+                  {isRowComplimentary ? (
+                    <span className="text-yellow-400">
+                      ₹{compAmt.toLocaleString("en-IN")}{" "}
+                      <span className="text-emerald-400 text-xs font-semibold">(Free)</span>
+                    </span>
+                  ) : (
+                    <span className="text-yellow-400">
+                      ₹{Number(isAds ? row.budget : row.total_price).toLocaleString("en-IN")}
+                    </span>
+                  )}
                 </td>
                 <td className="p-3 flex justify-center gap-2">
                   {row.source?.startsWith("custom") ? (
@@ -153,7 +196,8 @@ export default function ProposalPricingSection({
                   ) : null}
                 </td>
               </tr>
-            ))}
+            );
+          })}
           </tbody>
         </table>
       </div>

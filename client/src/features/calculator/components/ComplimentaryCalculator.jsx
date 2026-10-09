@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Palette,
   Megaphone,
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
+import { useNavigate, useLocation } from "react-router-dom";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
 const ComplimentaryCalculator = ({
@@ -34,13 +35,12 @@ const ComplimentaryCalculator = ({
   onServiceDeleted,
   embeddedData,
 }) => {
-  const baseURL = API_BASE_URL;
-  const dispatch = useDispatch();
+   const baseURL = API_BASE_URL;
+const dispatch = useDispatch();
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
   const { id, clientId, proposalId } = useParams();
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const searchParams = new URLSearchParams(useLocation().search);
   const docTypeFromURL = searchParams.get("doc");
   const effectiveClientId = id || clientId;
   const effectiveProposalId = proposalIdOverride || proposalId;
@@ -60,6 +60,7 @@ const ComplimentaryCalculator = ({
 
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
+  console.log(id, proposalId);
   const [editId, setEditId] = useState(null);
   const [allPlanNote, setAllPlanNote] = useState([]);
   const [formData, setFormData] = useState({
@@ -69,597 +70,1262 @@ const ComplimentaryCalculator = ({
   const [selectedNotesId, setSelectedNotesId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [predefinedNotes, setPredefinedNotes] = useState([]);
-  const [selectedNotes, setSelectedNotes] = useState([]);
+  const [predefinedNotes, setPredefinedNotes] = useState([]); // fetched from API
+  const [selectedNotes, setSelectedNotes] = useState([]); // selected + manual
   const [manualNote, setManualNote] = useState("");
   const [selectedNote, setSelectedNote] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    axios
+      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
+      .then((res) => {
+        // Exclude dummy "complimentary" if any, show all normal services
+        const normalServices = (res.data.data || []).filter(
+          (service) => service.service_name.toLowerCase() !== "complimentary"
+        );
+        setData(normalServices);
+      })
+      .catch((err) => console.error(err));
   }, []);
 
-  const handleSelectNote = (note) => {
-    setSelectedNote(note);
-    if (!selectedNotes.some((n) => n.id === note.id)) {
-      setSelectedNotes([...selectedNotes, note]);
+  useEffect(() => {
+    axios
+      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
+      .then((res) => {
+        if (res.data.status === "success") {
+          const services = res.data.data;
+          setOptionalServices(services);
+
+          const initialAddons = {};
+          services.forEach((item) => {
+            const key = item.editing_type_name
+              .toLowerCase()
+              .replace(/\s+/g, "_");
+            initialAddons[key] = false;
+          });
+          setAddons(initialAddons);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  // useEffect(() => {
+  //   if (selectedService === "Video Services") {
+  //     setAddons({
+  //       thumbnail_creation: true,
+  //       content_posting: true,
+  //     });
+  //   } else if (selectedService === "Graphics Design") {
+  //     setAddons({
+  //       content_posting: true,
+  //       thumbnail_creation: false,
+  //     });
+  //   } else {
+  //     setAddons({});
+  //   }
+  // }, [selectedService]);
+  const fetchPredefinedNotes = async () => {
+    try {
+      const { data } = await axios.get(
+        `${baseURL}/auth/api/re_calculator/getNoteData`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setPredefinedNotes(data.data || []);
+    } catch (error) {
+      console.error(error);
     }
-    setIsOpen(false);
+  };
+  useEffect(() => {
+    fetchPredefinedNotes();
+  }, []);
+
+  const handleEdit = (entry) => {
+    setEditId(entry.id);
+    const cleanServiceName = (entry.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+    setSelectedService(cleanServiceName);
+    setSelectedCategory(entry.category_name);
+    setSelectedEditingType({
+      editing_type_id: entry.editing_type_id,
+      editing_type_name: entry.editing_type_name,
+      amount: parseFloat(entry.editing_type_amount || 0),
+    });
+    setQuantity(parseInt(entry.quantity || 1));
+
+    // Dynamically map optional services from entry
+    const updatedAddons = {};
+    optionalServices.forEach((opt) => {
+      const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
+      const entryKey = `include_${key}`;
+      updatedAddons[key] = parseFloat(entry[entryKey]) > 0;
+    });
+
+    setAddons(updatedAddons);
+    setTotal(0);
   };
 
-  const handleAddManualNote = () => {
-    if (manualNote.trim()) {
-      const newNote = {
-        id: Date.now(),
-        note_name: manualNote.trim(),
-        isManual: true,
+  const getSelectedService = data.find(
+    (s) => s.service_name === selectedService
+  );
+  const getSelectedCategory = getSelectedService?.categories.find(
+    (c) => c.category_name === selectedCategory
+  );
+  const normalizeSelection = (value) => String(value || "").trim().toLowerCase();
+  const shouldShowOptionalAddons =
+    ["video services", "graphics design"].includes(
+      normalizeSelection(selectedService)
+    ) ||
+    ["video services", "graphics design"].includes(
+      normalizeSelection(selectedCategory)
+    );
+
+  const handleSave = () => {
+    if (!selectedService) {
+      Swal.fire({ icon: "warning", title: "Validation", text: "Please select a service." });
+      return;
+    }
+    if (!selectedCategory) {
+      Swal.fire({ icon: "warning", title: "Validation", text: "Please select a category." });
+      return;
+    }
+    if (!selectedEditingType || !selectedEditingType.editing_type_id) {
+      Swal.fire({ icon: "warning", title: "Editing Type Required", text: "Please select an editing type." });
+      return;
+    }
+    if (!quantity || quantity <= 0) {
+      Swal.fire({ icon: "warning", title: "Validation", text: "Please enter a valid quantity of at least 1." });
+      return;
+    }
+    setLoading(true);
+
+    // Optional addon values
+    let optionalTotal = 0;
+    let include_content_posting = 0;
+    let include_thumbnail_creation = 0;
+
+    if (shouldShowOptionalAddons) {
+      optionalServices.forEach((opt) => {
+        const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
+        if (addons[key]) {
+          const amount = parseFloat(opt.amount);
+          const totalForThisAddon = amount * quantity;
+
+          optionalTotal += totalForThisAddon;
+
+          if (key === "content_posting") {
+            include_content_posting = amount; // send unit amount
+          } else if (key === "thumbnail_creation") {
+            include_thumbnail_creation = amount;
+          }
+        }
+      });
+    }
+
+    const cleanBase = selectedService.replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+    const finalServiceName = cleanBase;
+
+    // ΓöÇΓöÇ IN-MEMORY MODE (embedded inside ProposalBuilder) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    if (onServiceAdded) {
+      if (!editId && embeddedData && embeddedData.length > 0) {
+        // ONLY compare against OTHER complimentary items (Addition #1 & #2)
+        const isComp = (r) => {
+          if (r.is_complimentary !== undefined && r.is_complimentary !== null) {
+            return Boolean(r.is_complimentary);
+          }
+          if (r.source === 'custom_complimentary' || r.source === 'complimentary') return true;
+          if (r.include_in_total === false) return true;
+          const s = String(r.service_name || r.service || "").toLowerCase();
+          return s.includes('(complimentary)') || s.includes('(complimntory)') || s === 'complimentary';
+        };
+        const compRows = embeddedData.filter(r => isComp(r));
+        const dupRow = compRows.find(
+          (r) => {
+            const rClean = String(r.service_name || r.service || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
+            return (
+              rClean === cleanBase.toLowerCase() &&
+              String(r.category_name || "").trim().toLowerCase() === String(selectedCategory || "").trim().toLowerCase() &&
+              String(r.editing_type_name || "").trim().toLowerCase() === String(selectedEditingType.editing_type_name || "").trim().toLowerCase()
+            );
+          }
+        );
+        if (dupRow) {
+          Swal.fire({
+            icon: "warning",
+            title: "Already Exists",
+            text: "This complimentary service already exists.",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      const row = {
+        id: editId || Date.now(),
+        service_name: finalServiceName,
+        service: (selectedEditingType?.editing_type_name && selectedEditingType?.editing_type_name !== "null")
+          ? `${finalServiceName} - ${selectedCategory} (${selectedEditingType.editing_type_name})`
+          : `${finalServiceName} - ${selectedCategory}`,
+        category_name: selectedCategory,
+        editing_type_name: selectedEditingType?.editing_type_name,
+        editing_type_amount: selectedEditingType?.amount || 0,
+        quantity,
+        unit_price: 0,
+        total_price: 0,
+        total_amount: 0,
+        include_content_posting,
+        include_thumbnail_creation,
+        include_in_total: false,
+        is_complimentary: true,
+        source: 'custom_complimentary',
       };
-      setSelectedNotes([...selectedNotes, newNote]);
-      setManualNote("");
+      onServiceAdded(row);
+      Swal.fire({
+        icon: "success",
+        title: editId ? "Updated!" : "Added!",
+        text: editId ? "Complimentary service updated." : "Complimentary service added to proposal.",
+        showConfirmButton: false,
+        timer: 1200,
+      });
+      resetForm();
+      setLoading(false);
+      return;
     }
+
+    // ΓöÇΓöÇ DB / SNAPSHOT MODE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    const payload = {
+      txn_id: effectiveProposalId,
+      client_id: effectiveClientId,
+      service_name: finalServiceName,
+      category_name: selectedCategory,
+      editing_type_id: selectedEditingType.editing_type_id,
+      editing_type_name: selectedEditingType.editing_type_name,
+      editing_type_amount: selectedEditingType.amount,
+      quantity,
+      include_content_posting,
+      include_thumbnail_creation,
+      total_amount: 0,
+      unit_price: 0,
+      is_complimentary: true,
+      employee: userName,
+    };
+
+    // Γ£à Only Quotation API (no invoice)
+    let quotationRequest;
+    if (docTypeFromURL === "proforma") {
+      quotationRequest = axios.put(
+        `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+        {
+          proformaId: effectiveProposalId,
+          action: editId ? "update" : "add",
+          editId,
+          item: { ...payload, source: "custom_complimentary" },
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else {
+      quotationRequest = editId
+        ? axios.put(
+            `${baseURL}/auth/api/re_calculator/updateComplimenatryDataById/${editId}`,
+            payload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        : axios.post(
+            `${baseURL}/auth/api/re_calculator/saveComplimentaryData`,
+            payload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+    }
+
+    quotationRequest
+      .then((res) => {
+        if (res.data.status === "Success") {
+          Swal.fire({
+            icon: "success",
+            title: editId ? "Updated!" : "Saved!",
+            text: editId
+              ? "Complimentary updated successfully"
+              : "Complimentary saved successfully",
+            showConfirmButton: false,
+            timer: 1000,
+            // timerProgressBar: true,
+          });
+          resetForm();
+          fetchData();
+        } else if (res.data.status === "Alert") {
+          Swal.fire({
+            icon: "warning",
+            title: "Already Exists",
+            text:
+              res.data.message || "This complimentary service already exists",
+            showConfirmButton: false,
+            timer: 1000,
+            // timerProgressBar: true,
+          });
+          resetForm();
+          fetchData();
+        }
+      })
+
+      .catch((err) => {
+        console.error("Save error:", err);
+        Swal.fire("Error!", "Something went wrong while saving.", "error");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  const handleRemoveNote = (idToRemove) => {
-    setSelectedNotes(selectedNotes.filter((note) => note.id !== idToRemove));
-    if (selectedNote?.id === idToRemove) {
-      setSelectedNote(null);
-    }
+  const resetForm = () => {
+    setEditId(null);
+    setSelectedService("");
+    setSelectedCategory("");
+    setSelectedEditingType(null);
+    setQuantity(1);
+    const initialAddons = {};
+    optionalServices.forEach((item) => {
+      const key = item.editing_type_name.toLowerCase().replace(/\s+/g, "_");
+      initialAddons[key] = false;
+    });
+    setAddons(initialAddons);
+
+    setTotal(0);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
 
-  const handleClose = () => {
-    setShowModal(false);
-    setIsEditing(false);
-    setSelectedNotesId(null);
-    setFormData({ note_name: "", plan: "Customise" });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
+
     try {
-      if (isEditing) {
-        await axios.put(
-          `${baseURL}/auth/api/re_calculator/updateClientNote/${selectedNotesId.id}`,
-          { ...formData, client_id: effectiveClientId },
-          { headers: { Authorization: `Bearer ${token}` } }
+      console.log("Submitting form data:", formData);
+      let response;
+
+      if (isEditing && selectedNotesId) {
+        response = await axios.put(
+          `${baseURL}/auth/api/re_calculator/updateClientNoteDataById/${selectedNotesId.id}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
+        console.log(response.data);
+      } else {
+        response = await axios.post(
+          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(response.data);
+      }
+
+      console.log("API response:", response.data);
+
+      if (response.data.status === "Success") {
         Swal.fire({
           icon: "success",
           title: "Success",
-          text: "Note updated successfully!",
+          text: isEditing
+            ? "Note updated successfully!"
+            : "Note added successfully!",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        }).then(() => {
+          setShowModal(false);
+          getAllPlanNotes();
         });
       } else {
-        await axios.post(
-          `${baseURL}/auth/api/re_calculator/insertClientNote`,
-          { ...formData, client_id: effectiveClientId },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
         Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Note added successfully!",
+          icon: "error",
+          title: "Error",
+          text:
+            response.data.message || "Failed to save Note. Please try again.",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
         });
       }
-      fetchClientNotes();
-      handleClose();
-    } catch (err) {
-      console.error(err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Failed to save note",
-      });
+    } catch (error) {
+      console.error("Error saving Note:", error);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Status:", error.response.status);
+        Swal.fire({
+          icon: "error",
+          title: `Error ${error.response.status}`,
+          text:
+            error.response.data.message ||
+            "Failed to save note. Please try again.",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to save note. Please try again.",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
+  const handleAddPredefinedNote = (note) => {
+    if (!selectedNotes.find((n) => n.id === note.id)) {
+      setSelectedNotes([
+        ...selectedNotes,
+        { id: note.id, note_name: note.note_text, type: "predefined" },
+      ]);
+    }
+  };
+  const handleAddManualNote = () => {
+    if (manualNote.trim() !== "") {
+      setSelectedNotes([
+        ...selectedNotes,
+        { id: Date.now(), note_name: manualNote, type: "manual" },
+      ]);
+      setManualNote("");
+    }
+  };
 
+  const handleRemoveNote = (id) => {
+    setSelectedNotes(selectedNotes.filter((note) => note.id !== id));
+  };
   const handleSaveNotes = async () => {
     if (selectedNotes.length === 0) {
       Swal.fire({
         icon: "warning",
-        title: "No notes selected",
-        text: "Please select or add at least one note before saving.",
+        title: "No Notes",
+        text: "Please add at least one note before saving.",
+        showConfirmButton: false,
+        timer: 1000,
+        // timerProgressBar: true,
       });
       return;
     }
 
     try {
-      const notesToSave = selectedNotes.map((note) => ({
-        note_name: note.note_name,
-        plan: "Customise",
-        client_id: effectiveClientId,
+      const planNotes = selectedNotes.map((item) => ({
+        note_name: item.note_name,
       }));
 
-      await Promise.all(
-        notesToSave.map((noteData) =>
-          axios.post(`${baseURL}/auth/api/re_calculator/insertClientNote`, noteData, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-        )
+      const payload = {
+        txn_id: proposalId,
+        client_id: effectiveClientId,
+        planNotes,
+      };
+
+      const res = await axios.post(
+        `${baseURL}/auth/api/re_calculator/saveClientIdwiseNotes`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      Swal.fire({
-        icon: "success",
-        title: "Success!",
-        text: "All notes saved successfully!",
-      });
+      if (res.data.status === "Success") {
+        Swal.fire({
+          icon: "success",
+          title: "Notes Created",
+          text: res.data.message,
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        });
 
-      setSelectedNotes([]);
-      setSelectedNote(null);
-      fetchClientNotes();
+        getAllPlanNotes();
+        setManualNote("");
+        setPredefinedNotes([]);
+        setSelectedNotes([]);
+        fetchPredefinedNotes();
+      } else if (res.data.status === "Alert") {
+        Swal.fire({
+          icon: "warning",
+          title: "Duplicate Notes",
+          text: res.data.message,
+
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        });
+        getAllPlanNotes();
+        setManualNote("");
+        setPredefinedNotes([]);
+        setSelectedNotes([]);
+        fetchPredefinedNotes();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text:
+            res.data.message || "Something went wrong while saving the notes.",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        });
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Save error:", err);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to save notes. Please try again.",
+        text: "Something went wrong while saving the notes.",
+        showConfirmButton: false,
+        timer: 1000,
+        // timerProgressBar: true,
       });
     }
   };
 
-  const fetchClientNotes = async () => {
-    if (!effectiveClientId) return;
-    try {
-      const res = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getClientNotesById/${effectiveClientId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data.status === "Success") {
-        setAllClientNote(res.data.data);
-      }
-    } catch (err) {
-      console.error(err);
+  const fetchData = async () => {
+    if (embeddedData !== undefined) {
+      setGetData(embeddedData);
+      return;
     }
-  };
-
-  const handleDeleteClientNote = async (noteId) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e11d48",
-      cancelButtonColor: "#4b5563",
-      confirmButtonText: "Yes, delete it!",
-    });
-    if (confirm.isConfirmed) {
-      try {
-        await axios.delete(`${baseURL}/auth/api/re_calculator/deleteClientNote/${noteId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        Swal.fire("Deleted!", "Note has been deleted.", "success");
-        fetchClientNotes();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
-
-  const fetchServicesData = async () => {
-    try {
-      const res = await axios.get(`${baseURL}/auth/api/re_calculator/getAddServices`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setData(res.data.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchPredefinedNotes = async () => {
-    try {
-      const res = await axios.get(`${baseURL}/auth/api/re_calculator/getNoteData`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPredefinedNotes(res.data.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchTransactions = async () => {
-    if (!effectiveProposalId || !effectiveClientId) return;
+    if (!effectiveClientId || !effectiveProposalId) return;
     try {
       let endpoint = `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${effectiveProposalId}/${effectiveClientId}`;
       if (docTypeFromURL === "proforma") {
         endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`;
       }
-      const res = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await axios.get(endpoint, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
-      if (res.data.status === "Success") {
-        if (docTypeFromURL === "proforma") {
-          const parsed = JSON.parse(res.data.data.complimentary_snapshot || "[]");
-          setGetData(parsed);
-        } else {
-          setGetData(res.data.data);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
-  useEffect(() => {
-    fetchServicesData();
-    fetchPredefinedNotes();
-    fetchTransactions();
-    fetchClientNotes();
-  }, [effectiveClientId, effectiveProposalId]);
-
-  const uniqueServices = Array.from(
-    new Set(data.map((item) => item.service_name).filter(Boolean))
-  );
-
-  const categoriesForService = Array.from(
-    new Set(
-      data
-        .filter((item) => item.service_name === selectedService)
-        .map((item) => item.category_name)
-        .filter(Boolean)
-    )
-  );
-
-  const editingTypesForCategory = data.filter(
-    (item) =>
-      item.service_name === selectedService &&
-      item.category_name === selectedCategory &&
-      item.editing_type_name
-  );
-
-  const handleServiceChange = (e) => {
-    setSelectedService(e.target.value);
-    setSelectedCategory("");
-    setSelectedEditingType(null);
-    setQuantity(1);
-    setAddons({});
-  };
-
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
-    setSelectedEditingType(null);
-    setQuantity(1);
-    setAddons({});
-  };
-
-  const handleEditingTypeSelect = (type) => {
-    setSelectedEditingType(type);
-  };
-
-  const handleAddonToggle = (addonName) => {
-    setAddons((prev) => ({
-      ...prev,
-      [addonName]: !prev[addonName],
-    }));
-  };
-
-  const calculateItemTotal = () => {
-    if (!selectedEditingType) return 0;
-    const base = Number(selectedEditingType.editing_type_amount) || 0;
-    return base * quantity;
-  };
-
-  const handleSaveService = async () => {
-    if (!selectedService || !selectedCategory || !selectedEditingType) {
-      Swal.fire("Incomplete selection", "Please select service, category, and editing type.", "warning");
-      return;
-    }
-
-    const payload = {
-      id: Date.now(),
-      service_name: selectedService,
-      category_name: selectedCategory,
-      editing_type_name: selectedEditingType.editing_type_name,
-      editing_type_amount: Number(selectedEditingType.editing_type_amount) || 0,
-      quantity,
-      total_amount: calculateItemTotal(),
-      total_price: calculateItemTotal(),
-      unit_price: Number(selectedEditingType.editing_type_amount) || 0,
-      include_in_total: false,
-      is_complimentary: true,
-      source: "custom_complimentary",
-      addons,
-      client_id: effectiveClientId,
-      txn_id: effectiveProposalId,
-    };
-
-    if (onServiceAdded) {
-      onServiceAdded(payload);
-      Swal.fire({
-        icon: "success",
-        title: "Added!",
-        text: "Complimentary service added to proposal.",
-        timer: 1000,
-        showConfirmButton: false,
-      });
-      setSelectedEditingType(null);
-      setQuantity(1);
-      setAddons({});
-      return;
-    }
-
-    try {
-      setLoading(true);
       if (docTypeFromURL === "proforma") {
-        await fetch(`${baseURL}/auth/api/re_calculator/proformas/snapshot`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            proformaId: effectiveProposalId,
-            action: "addBulk",
-            item: [payload],
-            snapshotType: "complimentary",
-          }),
-        });
+        const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
+        // Only get complimentary services
+        const filtered = parsed.filter(
+          item => item.source === 'custom_complimentary' || 
+                  item.is_complimentary === true ||
+                  item.service_name?.toLowerCase() === 'complimentary' ||
+                  item.service_name?.toLowerCase().includes('complimentary') ||
+                  item.service_name?.toLowerCase().includes('complimntory')
+        );
+        setGetData(filtered);
       } else {
-        await axios.post(`${baseURL}/auth/api/re_calculator/saveComplimenatryData`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
+        setGetData(data.data || []);
+      }
+    } catch (error) {
+      console.log(error);
+      if (error.response && error.response.status === 401) {
+        // Token is invalid or expired
+        Swal.fire({
+          title: "Session Expired",
+          text: "Please login again.",
+          icon: "warning",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        }).then(() => {
+          dispatch(clearUser());
+          localStorage.removeItem("token");
+          navigate("/");
         });
       }
-
-      Swal.fire({
-        icon: "success",
-        title: "Saved!",
-        text: "Complimentary service saved successfully.",
-        timer: 1000,
-        showConfirmButton: false,
-      });
-
-      fetchTransactions();
-      setSelectedEditingType(null);
-      setQuantity(1);
-      setAddons({});
-      if (onSaveComplete) onSaveComplete();
-    } catch (err) {
-      console.error(err);
-      Swal.fire("Error", "Failed to save complimentary service.", "error");
-    } finally {
-      setLoading(false);
     }
   };
+  const getAllPlanNotes = async () => {
+    if (hideNotes) return;
+    if (!effectiveClientId || !effectiveProposalId) return;
+    try {
+      const response = await axios.get(
+        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${effectiveClientId}/${effectiveProposalId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  const handleDeleteTransaction = async (transId) => {
+      const notes = response.data.data;
+
+      setAllClientNote(notes);
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Please login again.",
+          icon: "warning",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        }).then(() => {
+          dispatch(clearUser());
+          localStorage.removeItem("token");
+          navigate("/");
+        });
+      }
+    }
+  };
+  useEffect(() => {
+    if (embeddedData !== undefined) {
+      setGetData(embeddedData);
+      return;
+    }
+    fetchData();
+    getAllPlanNotes();
+  }, [effectiveClientId, effectiveProposalId, embeddedData]);
+
+  console.log(getData);
+
+  const handleDelete = async (entryId) => {
+    if (onServiceDeleted) {
+      onServiceDeleted(entryId);
+      return;
+    }
     const confirm = await Swal.fire({
       title: "Are you sure?",
-      text: "Delete this complimentary service?",
+      text: "Do you really want to delete this entry?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#e11d48",
-      cancelButtonColor: "#4b5563",
+      confirmButtonColor: "#e11d48", // red
+      cancelButtonColor: "#6b7280", // gray
       confirmButtonText: "Yes, delete it!",
     });
 
     if (!confirm.isConfirmed) return;
 
-    if (onServiceDeleted) {
-      onServiceDeleted(transId);
-      setGetData((prev) => prev.filter((item) => item.id !== transId));
-      Swal.fire("Deleted!", "Removed from proposal.", "success");
-      return;
-    }
-
     try {
+      let res;
       if (docTypeFromURL === "proforma") {
-        await axios.put(
+        res = await axios.put(
           `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
           {
             proformaId: effectiveProposalId,
             action: "delete",
-            entryId: transId,
-            snapshotType: "complimentary",
+            entryId: entryId
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
-        await axios.delete(`${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${transId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        res = await axios.delete(
+          `${baseURL}/auth/api/re_calculator/deleteComplimenatryById/${entryId}`
+        );
+      }
+
+      const result = res.data;
+
+      if (result.status === "Success") {
+        setGetData((prev) => prev.filter((item) => item.id !== entryId));
+
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Entry has been deleted.",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: result.message || "Failed to delete entry.",
+          showConfirmButton: false,
+          timer: 1000,
+          // timerProgressBar: true,
         });
       }
-      Swal.fire("Deleted!", "Entry deleted.", "success");
-      fetchTransactions();
-    } catch (err) {
-      console.error(err);
-      Swal.fire("Error", "Failed to delete.", "error");
+    } catch (error) {
+      console.error("Error deleting entry:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while deleting entry.",
+        showConfirmButton: false,
+        timer: 1000,
+        // timerProgressBar: true,
+      });
     }
   };
+  const handleDeleteClientNote = async (noteId) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to delete this note ?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48", // red
+      cancelButtonColor: "#6b7280", // gray
+      confirmButtonText: "Yes, delete it!",
+    });
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      const isBd = location.pathname.startsWith("/BD");
-      const basePath = isBd ? "/BD" : "/admin";
-      const servicesLandingPath = isBd ? "AddService" : "ServicesLanding";
-      const fallbackUrl =
-        docTypeFromURL === "proforma"
-          ? `${basePath}/${servicesLandingPath}/${effectiveClientId}/${effectiveProposalId}?doc=proforma`
-          : `${basePath}/${servicesLandingPath}/${effectiveClientId}/${effectiveProposalId}`;
-      navigate(fallbackUrl);
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const res = await axios.delete(
+        `${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`
+      );
+
+      const result = res.data;
+
+      if (result.status === "Success") {
+        setAllClientNote((prev) => prev.filter((item) => item.id !== noteId));
+
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "note has been deleted.",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+
+        getAllPlanNotes();
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while deleting entry.",
+        showConfirmButton: false,
+        timer: 1000,
+        // timerProgressBar: true,
+      });
     }
   };
+  const grandTotal = getData.reduce(
+    (acc, order) => acc + parseFloat(order.total_amount),
+    0
+  );
+  const handleSelect = (note) => {
+    handleAddPredefinedNote(note);
+    setSelectedNote(null);
+    setIsOpen(false);
+  };
+  const handleClose = () => {
+    setShowModal(false);
+    setFormData({
+      note_name: "",
+      plan: "",
+    });
+  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  const uniquePredefinedNotes = predefinedNotes.filter(
+    (p) => !allClientNote.some((c) => c.note_name === p.note_text)
+  );
   return (
-    <div className="space-y-6 text-white">
-      <div className="flex items-center justify-between pb-4 border-b border-gray-700/50">
-        <div className="flex items-center gap-3">
-          {!onServiceAdded && (
-            <button
-              onClick={handleBack}
-              className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
-            🎁 Complimentary Services
-          </h2>
-        </div>
-      </div>
-
-      {/* Select Service & Category */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <>
+      <div className="w-full max-w-2xl backdrop-blur rounded-xl px-10 py-8 space-y-6 shadow-2xl">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Select Service
-          </label>
+          <label className="block font-semibold mb-1">Select Service</label>
           <select
+            className="w-full p-2 border rounded bg-white text-black"
             value={selectedService}
-            onChange={handleServiceChange}
-            className="w-full bg-gray-900/60 border border-gray-700 rounded-xl p-3 text-white focus:border-amber-500 outline-none"
+            onChange={(e) => {
+              setSelectedService(e.target.value);
+              setSelectedCategory("");
+              setSelectedEditingType(null);
+            }}
+            disabled={!!editId}
           >
             <option value="">-- Choose Service --</option>
-            {uniqueServices.map((svc) => (
-              <option key={svc} value={svc}>
-                {svc}
+            {data.map((service) => (
+              <option key={service.service_id} value={service.service_name}>
+                {service.service_name}
               </option>
             ))}
           </select>
         </div>
+
+        {getSelectedService && (
+          <div>
+            <label className="block font-semibold mb-1">Select Category</label>
+            <select
+              className="w-full p-2 border rounded bg-white text-black"
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setSelectedEditingType(null);
+              }}
+              disabled={!!editId}
+            >
+              <option value="">-- Choose Category --</option>
+              {getSelectedService.categories.map((category) => (
+                <option
+                  key={category.category_id}
+                  value={category.category_name}
+                >
+                  {category.category_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {getSelectedCategory && (
+          <div>
+            <label className="block font-semibold mb-1">
+              Select Editing Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              className="w-full p-2 border rounded bg-white text-black"
+              value={selectedEditingType?.editing_type_id || ""}
+              onChange={(e) => {
+                const edit = getSelectedCategory.editing_types.find(
+                  (et) => et.editing_type_id === parseInt(e.target.value)
+                );
+                setSelectedEditingType(edit || null);
+              }}
+              disabled={!!editId}
+            >
+              <option value="">-- Choose Editing Type (Required) --</option>
+              {getSelectedCategory.editing_types.map((edit) => (
+                <option key={edit.editing_type_id} value={edit.editing_type_id}>
+                  {edit.editing_type_name} - Γé╣{edit.amount}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div>
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            Select Category
-          </label>
-          <select
-            value={selectedCategory}
-            onChange={handleCategoryChange}
-            disabled={!selectedService}
-            className="w-full bg-gray-900/60 border border-gray-700 rounded-xl p-3 text-white focus:border-amber-500 outline-none disabled:opacity-50"
-          >
-            <option value="">-- Choose Category --</option>
-            {categoriesForService.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+          <label className="block font-semibold mb-1">Quantity</label>
+          <input
+            type="number"
+            className="w-full p-2 border rounded bg-white text-black"
+            min={1}
+            value={quantity}
+            onChange={(e) => setQuantity(parseInt(e.target.value))}
+          />
         </div>
-      </div>
 
-      {/* Editing Types */}
-      {selectedCategory && editingTypesForCategory.length > 0 && (
-        <div className="space-y-3">
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Select Editing Type / Tier
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {editingTypesForCategory.map((type) => {
-              const isSelected = selectedEditingType?.id === type.id;
+        {shouldShowOptionalAddons && optionalServices?.length > 0 && (
+          <div className="space-y-4">
+            {optionalServices.map((opt) => {
+              const key = opt.editing_type_name
+                .toLowerCase()
+                .replace(/\s+/g, "_");
+
               return (
-                <div
-                  key={type.id}
-                  onClick={() => handleEditingTypeSelect(type)}
-                  className={`p-4 rounded-xl border cursor-pointer transition ${
-                    isSelected
-                      ? "bg-amber-500/20 border-amber-500 shadow-md"
-                      : "bg-gray-800/60 border-gray-700 hover:border-gray-600"
-                  }`}
-                >
-                  <p className="font-semibold text-sm text-white">{type.editing_type_name}</p>
-                  <p className="text-xs text-amber-400 font-bold mt-1">
-                    Value: ₹{Number(type.editing_type_amount).toLocaleString()} (Free)
-                  </p>
+                <div key={key}>
+                  <label className="block font-semibold">
+                    {opt.editing_type_name}?
+                  </label>
+                  <div className="flex gap-4 mt-2">
+                  <button
+                    type="button"
+                    disabled={editId} // Γ£à disable when editing
+                    className={`px-4 py-2 rounded ${
+                      addons[key]
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-300 text-black"
+                    } ${editId ? "opacity-50 cursor-not-allowed" : ""}`}
+                    onClick={() =>
+                      !editId &&
+                      setAddons((prev) => ({
+                        ...prev,
+                        [key]: true,
+                      }))
+                    }
+                  >
+                    YES
+                  </button>
+                  <button
+                    type="button"
+                    disabled={editId} // Γ£à disable when editing
+                    className={`px-4 py-2 rounded ${
+                      !addons[key]
+                        ? "bg-red-600 text-white"
+                        : "bg-gray-300 text-black"
+                    } ${editId ? "opacity-50 cursor-not-allowed" : ""}`}
+                    onClick={() =>
+                      !editId &&
+                      setAddons((prev) => ({
+                        ...prev,
+                        [key]: false,
+                      }))
+                    }
+                  >
+                    NO
+                  </button>
+                  </div>
                 </div>
               );
             })}
           </div>
+        )}
+
+        <button
+          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold p-3 rounded mt-4"
+          onClick={handleSave}
+          disabled={loading}
+        >
+          {loading ? "Save..." : "Calculate & Save"}
+        </button>
+        <button
+          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold p-3 rounded mt-2"
+          onClick={resetForm}
+        >
+          Reset Form
+        </button>
+
+        <div className="text-xl font-semibold text-center text-green-300 mt-4">
+          Total Amount: Γé╣{grandTotal.toLocaleString()}
         </div>
-      )}
 
-      {/* Quantity & Action */}
-      {selectedEditingType && (
-        <div className="p-4 bg-gray-800/40 rounded-xl border border-gray-700/50 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-gray-300">Quantity:</span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 flex items-center justify-center font-bold"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-16 text-center bg-gray-900 border border-gray-700 rounded-lg py-1 text-white"
-              />
-              <button
-                type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="w-8 h-8 rounded-lg bg-gray-700 hover:bg-gray-600 flex items-center justify-center font-bold"
-              >
-                +
-              </button>
-            </div>
-          </div>
+        {/* Client Orders */}
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-xs text-gray-400">Complimentary Value</p>
-              <p className="text-lg font-bold text-amber-400">
-                ₹{calculateItemTotal().toLocaleString()} (₹0 Charged)
-              </p>
-            </div>
-            <button
-              onClick={handleSaveService}
-              disabled={loading}
-              className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition shadow-lg"
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Package className="w-5 h-5" />
+          Recent Client Orders
+        </h3>
+        <div className="space-y-4">
+          {getData.map((order) => (
+            <div
+              key={order.id}
+              className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
             >
-              Add Complimentary
-            </button>
-          </div>
-        </div>
-      )}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-white">
+                {/* Left Section: Info */}
+                <div className="space-y-1 flex-1 min-w-0">
+                  <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
+                    <Megaphone className="w-5 h-5 text-yellow-400" />
+                    <span>
+                      {order.service_name} ΓåÆ {order.category_name}
+                    </span>
+                  </div>
+                  <div className="text-lg text-white/80">
+                    ≡ƒÄ¼ {order.editing_type_name} ├ù {order.quantity}
+                  </div>
+                  {(Number(order.include_content_posting) > 0 ||
+                    Number(order.include_thumbnail_creation) > 0) && (
+                    <div className="text-base text-white/60 italic">
+                      {Number(order.include_content_posting) > 0 && (
+                        <>≡ƒôó Meta Growth & Content Management </>                      )}
+                      {Number(order.include_thumbnail_creation) > 0 && (
+                        <>≡ƒû╝ Thumbnail Creation </>
+                      )}
+                    </div>
+                  )}
 
-      {/* Saved Complimentary Services */}
-      {getData.length > 0 && !onServiceAdded && (
-        <div className="space-y-3 pt-6 border-t border-gray-700/50">
-          <h3 className="font-bold text-lg text-white">Added Complimentary Services</h3>
-          <div className="space-y-2">
-            {getData.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 bg-gray-800/50 rounded-xl border border-gray-700 flex items-center justify-between gap-4"
-              >
-                <div>
-                  <p className="font-semibold text-white">
-                    {item.service_name} - {item.category_name} ({item.editing_type_name})
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Qty: {item.quantity} • Value: ₹{Number(item.total_amount || item.total_price).toLocaleString()}
-                  </p>
+                  {/* <div className="text-xs text-white/50">
+                      ≡ƒòÆ {new Date(order.created_at).toLocaleString("en-IN")}
+                    </div> */}
                 </div>
-                <button
-                  onClick={() => handleDeleteTransaction(item.id)}
-                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition"
-                  title="Delete"
+
+                {/* Right Section: Amount + Delete */}
+                <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
+                  <div className="text-green-400 font-bold text-xl">
+                    Γé╣{parseFloat(order.total_amount).toLocaleString()}
+                  </div>
+                  <button
+                    onClick={() => handleEdit(order)}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                    title="Edit"
+                  >
+                    Γ£Ä
+                  </button>
+                  <button
+                    onClick={() => handleDelete(order.id)}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                    title="Delete"
+                  >
+                    ├ù
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {!hideNotes && (
+          <>
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Notes Section
+            </h3>
+
+            <div className="space-y-4">
+              <div className="relative w-full" ref={dropdownRef}>
+                {/* Button to open dropdown */}
+                <div
+                  className="flex items-center justify-between w-full p-2 bg-white rounded-lg border border-gray-300 text-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  onClick={() => setIsOpen(!isOpen)}
                 >
-                  <X className="w-5 h-5" />
+                  <span className="truncate">
+                    {selectedNote
+                      ? selectedNote.note_text
+                      : "-- Select Predefined Note --"}
+                  </span>
+                  {isOpen ? (
+                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                  )}
+                </div>
+                {/* Dropdown menu */}
+                {isOpen && (
+                  <div className="absolute z-10 bg-white w-full mt-1 max-h-60 overflow-auto border rounded-lg text-black focus:ring-2 focus:ring-orange-500">
+                    {uniquePredefinedNotes.map((note) => (
+                      <div
+                        key={note.id}
+                        onClick={() => handleSelect(note)}
+                        className="p-2 m-1 border rounded-lg bg-gray-100 hover:bg-orange-100 cursor-pointer break-words"
+                      >
+                        {note.note_text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Note Input */}
+              <div className="flex flex-wrap gap-2">
+                <textarea
+                  type="text"
+                  value={manualNote}
+                  onChange={(e) => setManualNote(e.target.value)}
+                  placeholder="Enter custom note"
+                  rows={1}
+                  className="flex-1 p-2 rounded-lg border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <button
+                  onClick={handleAddManualNote}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+                >
+                  + Add
                 </button>
               </div>
+
+              {/* Selected Notes List */}
+              <div className="space-y-2">
+                {selectedNotes.map((note) => (
+                  <div
+                    key={note.id}
+                    className="p-3 bg-gray-100 rounded-lg flex justify-between items-start gap-3 border border-gray-300"
+                  >
+                    <span className="text-gray-800 font-medium break-words whitespace-pre-wrap leading-relaxed flex-1">
+                      {note.note_name}
+                    </span>
+                    <div className="flex-shrink-0">
+                      <button
+                        onClick={() => handleRemoveNote(note.id)}
+                        className="bg-red-500 mx-2 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold transition"
+                        title="Remove"
+                      >
+                        ├ù
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Save Button */}
+              <button
+                onClick={handleSaveNotes}
+                className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+              >
+                ≡ƒÆ╛ Save Notes
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {allClientNote.map((notes) => (
+                <div
+                  key={notes.id}
+                  className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-white">
+                    {/* Left Section: Info */}
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
+                        <span>ΓåÆ {notes.note_name}</span>
+                      </div>
+                    </div>
+
+                    {/* Right Section: Amount + Delete */}
+                    <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent card onClick
+                          setSelectedNotesId(notes);
+                          setFormData({
+                            note_name: notes.note_name,
+                            plan: notes.plan,
+                          });
+                          setIsEditing(true);
+                          setShowModal(true);
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                        title="Edit"
+                      >
+                        Γ£Ä
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClientNote(notes.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                        title="Delete"
+                      >
+                        ├ù
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {showModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                {/* Backdrop */}
+                <div
+                  className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+                  onClick={handleClose}
+                />
+
+                {/* Modal */}
+                <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl transform transition-all animate-in fade-in-0 zoom-in-95 duration-200">
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <StickyNote className="w-5 h-5 text-red-600" />
+                      </div>
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {isEditing ? "Edit Note" : "Add New Note"}
+                      </h2>
+                    </div>
+                    <button
+                      onClick={handleClose}
+                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Form */}
+                  <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    {/* Note */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <Notebook className="w-4 h-4 inline mr-2" />
+                        Note
+                      </label>
+                      <textarea
+                        name="note_name"
+                        value={formData.note_name}
+                        onChange={handleChange}
+                        className="w-full text-black px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors resize-none"
+                        placeholder="Enter note details"
+                        rows={4}
+                        required
+                      ></textarea>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex justify-end gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
+                      >
+                        {loading
+                          ? isEditing
+                            ? "Updating..."
+                            : "Saving..."
+                          : isEditing
+                          ? "Update Note"
+                          : "Save Note"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* <div className="space-y-3">
+            {getData.map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center justify-between p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/15 transition-colors"
+              >
+                <div className="flex flex-wrap gap-6 text-white items-center">
+                  <div className="flex items-center gap-1">
+                    <Megaphone className="w-4 h-4 text-yellow-400" />
+                    <span className="font-medium">
+                      {order.service_name} ΓåÆ {order.category_name}
+                    </span>
+                  </div>
+                  <div className="text-sm">
+                    ≡ƒÄ¼ {order.editing_type_name} ├ù {order.quantity}
+                  </div>
+                  <div className="text-xs italic text-white/70">
+                    {order.include_content_posting === "1" &&
+                      "≡ƒôó Meta Growth & Content Management"}
+                    {order.include_thumbnail_creation === "1" &&
+                      " ≡ƒû╝ Thumbnail Creation"}
+                  </div>
+                  <div className="text-xs text-white/50">
+                    ≡ƒòÆ {new Date(order.created_at).toLocaleString("en-IN")}
+                  </div>
+                  <div className="ml-auto text-green-400 font-bold text-lg">
+                    <div className="text-green-400 font-bold text-lg">
+                      Γé╣{parseFloat(order.total_amount).toLocaleString()}
+                    </div>
+                    <button
+                      onClick={() => handleDelete(order.id)}
+                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold"
+                      title="Delete"
+                    >
+                      ├ù
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
-          </div>
-        </div>
-      )}
-    </div>
+          </div> */}
+      </div>
+    </>
   );
 };
 

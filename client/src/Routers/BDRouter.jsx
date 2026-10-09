@@ -1,9 +1,15 @@
 import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-// import { useSelector } from "react-redux";
 import styled from "styled-components";
 import NoteSection from "../shared/NoteSection";
 import Invoice from "../features/invoices/pages/InvoicePage";
+import InvoiceCalculation from "../shared/InvoiceCalculation";
+import InvoiceAds from "../shared/InvoiceAds";
+import InvoiceNoteSection from "../shared/InvoiceNoteSection";
+import InvoiceHistory from "../features/history/pages/InvoiceHistoryPage";
+import DiscountSetting from "../shared/DiscountSetting";
+import PremiumLoader from "../Components/PremiumLoader";
+
 const Quotation = lazy(() => import("../features/invoices/pages/QuotationPage"));
 const BalanceProforma = lazy(() => import("../features/invoices/pages/BalanceProformaPage"));
 const AdsCampaignCalciBD = lazy(() =>
@@ -18,13 +24,6 @@ const BusinessDeveloperDashboard = lazy(() =>
   import("../features/bd/pages/BusinessDeveloperDashboardPage")
 );
 const ReviewRequirements = lazy(() => import("../features/admin/pages/ReviewRequirementsPage"));
-
-import InvoiceCalculation from "../shared/InvoiceCalculation";
-import InvoiceAds from "../shared/InvoiceAds";
-import InvoiceNoteSection from "../shared/InvoiceNoteSection";
-import InvoiceHistory from "../features/history/pages/InvoiceHistoryPage";
-import DiscountSetting from "../shared/DiscountSetting";
-import PremiumLoader from "../Components/PremiumLoader";
 const BDRouter = () => {
   // const { currentUser } = useSelector((state) => state.user);
   return (

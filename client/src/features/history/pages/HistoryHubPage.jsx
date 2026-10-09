@@ -89,7 +89,7 @@ const SUB_TABS = [
 ];
 
 // ─── Main HistoryHub Component ───────────────────────────────────────────────
-const HistoryHub = ({ setActiveTab }) => {
+const HistoryHubPage = ({ setActiveTab }) => {
   const [activeSubTab, setActiveSubTab] = useState(() => {
     return localStorage.getItem("history-hub-active-tab") || "proposals";
   });

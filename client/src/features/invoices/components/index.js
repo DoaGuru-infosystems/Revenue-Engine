@@ -8,3 +8,5 @@ export { default as InvoiceAmountInWords } from "./InvoiceAmountInWords";
 export { default as InvoicePaymentHistoryTable } from "./InvoicePaymentHistoryTable";
 export { default as InvoiceTermsConditions } from "./InvoiceTermsConditions";
 export { default as InvoiceModalsContainer } from "./InvoiceModalsContainer";
+export { default as QuotationSummaryRightSide } from "./QuotationSummaryRightSide";
+export { default as QuotationNotesSection } from "./QuotationNotesSection";

@@ -32,8 +32,15 @@ export const getClientDisplayName = (client) =>
 
 export const getBillableTotals = (table = []) => {
   const { dmServices, adsServices } = classifyProformaServices(table);
+  const isComp = (row) =>
+    row?.include_in_total === false ||
+    Boolean(row?.is_complimentary) ||
+    row?.source === "custom_complimentary" ||
+    String(row?.service_name || row?.service || "").toLowerCase() === "complimentary" ||
+    String(row?.service_name || row?.service || "").toLowerCase().includes("(complimentary)");
+
   const dmTotal = dmServices.reduce(
-    (sum, row) => sum + (row?.include_in_total === false ? 0 : Number(row?.total_price) || 0),
+    (sum, row) => sum + (isComp(row) ? 0 : Number(row?.total_price) || 0),
     0
   );
   const adsTotal = adsServices.reduce((sum, row) => sum + (Number(row?.budget) || 0), 0);

@@ -42,6 +42,7 @@ export const useInvoiceCalculations = ({
   proformaPayments = [],
   isGST = false,
   isProforma = false,
+  isBalanceProforma = false,
   showGoogleAd = true,
   showMetaAd = true,
   txnIdFromURL = null,
@@ -279,6 +280,71 @@ export const useInvoiceCalculations = ({
       ? totalcurrentamount
       : budgetAwareCurrentTotalAmount;
 
+    // Quotation / Proforma / Balance Proforma specific totals
+    const dmTotalAfterDiscount = Math.max(0, graphicTotal - discountAmount);
+    const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
+    const dmSubtotalWithGst = dmTotalAfterDiscount + dmGstAmount;
+
+    const googleAdItem = adsData.find((ad) =>
+      (ad.category_name || "").toLowerCase().includes("google")
+    );
+    const googleAdAmount = Number(googleAdItem?.amount || googleAdItem?.budget || 0);
+
+    const metaAdItem = adsData.find((ad) =>
+      (ad.category_name || "").toLowerCase().includes("meta")
+    );
+    const metaAdAmount = Number(metaAdItem?.amount || metaAdItem?.budget || 0);
+
+    const activeAdsBudget =
+      (showGoogleAd ? googleAdAmount : 0) + (showMetaAd ? metaAdAmount : 0);
+
+    let displayedSubtotal = dmSubtotalWithGst;
+    const isBalProf = Boolean(isBalanceProforma);
+    const totalAmt =
+      clientData?.total_amt !== undefined
+        ? Number(clientData.total_amt)
+        : Number(clientData?.total_amount || 0);
+
+    if (isBalProf && totalAmt > 0) {
+      const fullAdBudgets = googleAdAmount + metaAdAmount;
+      if (fullAdBudgets > 0 && totalAmt > fullAdBudgets) {
+        displayedSubtotal = Math.max(0, totalAmt - fullAdBudgets);
+      }
+    }
+
+    const displayedGrandTotal =
+      isBalProf && totalAmt > 0
+        ? displayedSubtotal + activeAdsBudget
+        : dmSubtotalWithGst + activeAdsBudget;
+
+    let displayedTaxable = dmTotalAfterDiscount;
+    let displayedCgst = dmGstAmount / 2;
+    let displayedSgst = dmGstAmount / 2;
+
+    if (isBalProf && Math.abs(dmSubtotalWithGst - displayedSubtotal) > 1) {
+      if (isGST) {
+        displayedTaxable = Math.round((displayedSubtotal / 1.18) * 100) / 100;
+        const gstTotal = displayedSubtotal - displayedTaxable;
+        displayedCgst = gstTotal / 2;
+        displayedSgst = gstTotal / 2;
+      } else {
+        displayedTaxable = displayedSubtotal;
+        displayedCgst = 0;
+        displayedSgst = 0;
+      }
+    }
+
+    const removedAdsBudget =
+      (!showGoogleAd ? googleAdAmount : 0) + (!showMetaAd ? metaAdAmount : 0);
+    const baseReceived = Number(
+      clientData?.received_amt || clientData?.received_amount || 0
+    );
+    const displayedReceived = Math.max(0, baseReceived - removedAdsBudget);
+    const displayedCurrentBalance = Math.max(
+      0,
+      displayedGrandTotal - displayedReceived
+    );
+
     return {
       graphicTotal,
       complimentaryTotal,
@@ -337,6 +403,16 @@ export const useInvoiceCalculations = ({
       totalcurrentamount,
       hasSavedOutstandingFromPartial,
       totalDueForReceived,
+      dmTotalAfterDiscount,
+      dmGstAmount,
+      dmSubtotalWithGst,
+      displayedTaxable,
+      displayedCgst,
+      displayedSgst,
+      displayedSubtotal,
+      displayedGrandTotal,
+      displayedReceived,
+      displayedCurrentBalance,
       formatAmount,
       formatAmountNoDecimals,
       parseAmount,
@@ -354,6 +430,7 @@ export const useInvoiceCalculations = ({
     proformaPayments,
     isGST,
     isProforma,
+    isBalanceProforma,
     showGoogleAd,
     showMetaAd,
     txnIdFromURL,

@@ -2479,10 +2479,22 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
               ? `${item.service_name} - ${item.category_name}`
               : item.service_name || item.category_name || "Deliverable");
 
+        const isComp =
+          item.include_in_total === false ||
+          Boolean(item.is_complimentary) ||
+          item.source === "custom_complimentary" ||
+          String(item.service_name || "").toLowerCase().includes("complimentary");
+        const qty = item.quantity !== undefined ? item.quantity : 1;
+        const compAmt =
+          Number(item.editing_type_amount || item.price || item.unit_price || 0) * qty;
+        const priceStr = isComp
+          ? `₹ ${(compAmt || Number(item.total_price || 0)).toLocaleString("en-IN")} (Free)`
+          : `₹ ${Number(item.total_price || 0).toLocaleString("en-IN")}`;
+
         htmlContent += `<tr>
           <td>${itemTitle}</td>
-          <td style="text-align: center;">${item.quantity !== undefined ? item.quantity : 1}</td>
-          <td style="text-align: right;">₹ ${Number(item.total_price || 0).toLocaleString("en-IN")}</td>
+          <td style="text-align: center;">${qty}</td>
+          <td style="text-align: right;">${priceStr}</td>
         </tr>`;
       });
 

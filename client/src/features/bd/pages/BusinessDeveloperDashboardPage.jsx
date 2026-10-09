@@ -118,9 +118,45 @@ export default function BusinessDeveloperDashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* User Info - Hidden on small screens */}
+              <div className="hidden sm:block text-right">
+                <div className="text-xs sm:text-sm text-gray-400">
+                  Welcome back,
+                </div>
+                <div className="font-semibold text-sm sm:text-base text-white">
+                  {currentUser?.name || "BD User"}
+                </div>
+              </div>
+
+              {/* Avatar */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </div>
+
+              {/* Theme Toggle */}
               <ThemeToggle />
 
+              {/* CSMS Button */}
+              <a
+                href="https://csms.dentalguru.software/login"
+                target="_blank"
+                rel="noreferrer"
+                className="hidden sm:flex px-3 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-500 rounded-xl transition-colors"
+              >
+                CSMS
+              </a>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/80 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors border border-gray-700/50"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:inline">Logout</span>
+              </button>
+
+              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"

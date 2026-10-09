@@ -346,9 +346,64 @@ export const useInvoiceData = ({
             setNotesData([]);
           }
 
+          try {
+            let pricingDiscount = null;
+            if (proforma.discount_snapshot) {
+              try {
+                pricingDiscount =
+                  typeof proforma.discount_snapshot === "string"
+                    ? JSON.parse(proforma.discount_snapshot)
+                    : proforma.discount_snapshot;
+              } catch (e) {
+                pricingDiscount = null;
+              }
+            }
+            if (!pricingDiscount && p?.sections_json) {
+              try {
+                const sectionsData =
+                  typeof p.sections_json === "string"
+                    ? JSON.parse(p.sections_json)
+                    : p.sections_json;
+                pricingDiscount = sectionsData?.pricing_discount;
+              } catch (e) {
+                pricingDiscount = null;
+              }
+            }
+
+            if (pricingDiscount) {
+              const isPercent =
+                pricingDiscount.type === "Percentage" ||
+                pricingDiscount.discount_type === "percent" ||
+                Number(pricingDiscount.discount_per || 0) > 0;
+              const discVal = Number(
+                pricingDiscount.value ??
+                  (isPercent
+                    ? pricingDiscount.discount_per
+                    : pricingDiscount.discount_amt) ??
+                  0
+              );
+              if (discVal > 0) {
+                setSelecteddiscount({
+                  id: proforma?.id || p?.id,
+                  discount_type: isPercent ? "percent" : "amount",
+                  discount_amt: isPercent ? 0 : discVal,
+                  discount_per: isPercent ? discVal : 0,
+                  value: discVal,
+                  type: isPercent ? "Percentage" : "Amount",
+                });
+              } else {
+                setSelecteddiscount(null);
+              }
+            } else {
+              setSelecteddiscount(null);
+            }
+          } catch (e) {
+            console.error("Error setting discount in Proforma:", e);
+            setSelecteddiscount(null);
+          }
+
           setAdditionalServiceData([]);
-          setDiscountDataSet(null);
-          fetchDiscount();
+          await fetchDiscountSetting();
           setLoading(false);
         } else {
           setProformaPayments([]);
@@ -359,7 +414,7 @@ export const useInvoiceData = ({
       console.error("Error in fetchProformaData:", e);
       setLoading(false);
     }
-  }, [id, txn_id, token, fetchProformaPayments, fetchDiscount]);
+  }, [id, txn_id, token, fetchProformaPayments, fetchDiscountSetting]);
 
   // 12. Fetch Balance Proforma Data
   const fetchBalanceProformaData = useCallback(async () => {
@@ -463,9 +518,51 @@ export const useInvoiceData = ({
           setNotesData([]);
         }
 
+        try {
+          let pricingDiscount = null;
+          if (bp.discount_snapshot) {
+            try {
+              pricingDiscount =
+                typeof bp.discount_snapshot === "string"
+                  ? JSON.parse(bp.discount_snapshot)
+                  : bp.discount_snapshot;
+            } catch (e) {
+              pricingDiscount = null;
+            }
+          }
+          if (pricingDiscount) {
+            const isPercent =
+              pricingDiscount.type === "Percentage" ||
+              pricingDiscount.discount_type === "percent" ||
+              Number(pricingDiscount.discount_per || 0) > 0;
+            const discVal = Number(
+              pricingDiscount.value ??
+                (isPercent
+                  ? pricingDiscount.discount_per
+                  : pricingDiscount.discount_amt) ??
+                0
+            );
+            if (discVal > 0) {
+              setSelecteddiscount({
+                id: bp.id,
+                discount_type: isPercent ? "percent" : "amount",
+                discount_amt: isPercent ? 0 : discVal,
+                discount_per: isPercent ? discVal : 0,
+                value: discVal,
+                type: isPercent ? "Percentage" : "Amount",
+              });
+            } else {
+              setSelecteddiscount(null);
+            }
+          } else {
+            setSelecteddiscount(null);
+          }
+        } catch (e) {
+          setSelecteddiscount(null);
+        }
+
         setAdditionalServiceData([]);
-        setDiscountDataSet(null);
-        fetchDiscount();
+        await fetchDiscountSetting();
         setProformaPayments([]);
         setLoading(false);
       }
@@ -473,7 +570,7 @@ export const useInvoiceData = ({
       console.error("fetchBalanceProformaData error:", e);
       setLoading(false);
     }
-  }, [txn_id, token, fetchDiscount]);
+  }, [txn_id, token, fetchDiscountSetting]);
 
   // 13. Fetch Proposal Invoice Data
   const fetchProposalInvoiceData = useCallback(async () => {
@@ -552,9 +649,51 @@ export const useInvoiceData = ({
           setNotesData([]);
         }
 
+        try {
+          let pricingDiscount = null;
+          if (client.discount_snapshot) {
+            try {
+              pricingDiscount =
+                typeof client.discount_snapshot === "string"
+                  ? JSON.parse(client.discount_snapshot)
+                  : client.discount_snapshot;
+            } catch (e) {
+              pricingDiscount = null;
+            }
+          }
+          if (pricingDiscount) {
+            const isPercent =
+              pricingDiscount.type === "Percentage" ||
+              pricingDiscount.discount_type === "percent" ||
+              Number(pricingDiscount.discount_per || 0) > 0;
+            const discVal = Number(
+              pricingDiscount.value ??
+                (isPercent
+                  ? pricingDiscount.discount_per
+                  : pricingDiscount.discount_amt) ??
+                0
+            );
+            if (discVal > 0) {
+              setSelecteddiscount({
+                id: client.id,
+                discount_type: isPercent ? "percent" : "amount",
+                discount_amt: isPercent ? 0 : discVal,
+                discount_per: isPercent ? discVal : 0,
+                value: discVal,
+                type: isPercent ? "Percentage" : "Amount",
+              });
+            } else {
+              setSelecteddiscount(null);
+            }
+          } else {
+            setSelecteddiscount(null);
+          }
+        } catch (e) {
+          setSelecteddiscount(null);
+        }
+
         setAdditionalServiceData([]);
-        setDiscountDataSet(null);
-        fetchDiscount();
+        await fetchDiscountSetting();
         setProformaPayments([]);
         setLoading(false);
       }
@@ -562,7 +701,7 @@ export const useInvoiceData = ({
       console.error("fetchProposalInvoiceData error:", e);
       setLoading(false);
     }
-  }, [id, txn_id, token, fetchDiscount]);
+  }, [id, txn_id, token, fetchDiscountSetting]);
 
   // Main Initial Load Effect
   useEffect(() => {
@@ -623,12 +762,15 @@ export const useInvoiceData = ({
     if (isBalanceProforma) {
       fetchBalanceProformaData();
       fetchPredefinedNotes();
+      fetchDiscountSetting();
     } else if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
       fetchProformaData();
       fetchPredefinedNotes();
+      fetchDiscountSetting();
     } else if (sourceFromURL === "proposal_invoice") {
       fetchProposalInvoiceData();
       fetchPredefinedNotes();
+      fetchDiscountSetting();
     } else {
       if (txnIdFromURL) {
         fetchProformaPayments(txn_id, id);

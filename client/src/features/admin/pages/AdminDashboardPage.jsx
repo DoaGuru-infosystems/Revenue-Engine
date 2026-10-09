@@ -12,6 +12,7 @@ import {
   FileText,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -143,9 +144,48 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* User Info - Hidden on small screens */}
+              <div className="hidden sm:block text-right">
+                <div className="text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
+                  Welcome back,
+                </div>
+                <div className="font-semibold text-sm sm:text-base" style={{ color: "var(--text-primary)" }}>
+                  {currentUser?.name || "Admin"}
+                </div>
+              </div>
+
+              {/* Avatar */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </div>
+
+              {/* Theme Toggle */}
               <ThemeToggle />
 
+              {/* CSMS Button */}
+              <a
+                href="https://csms.dentalguru.software/login"
+                target="_blank"
+                rel="noreferrer"
+                className="hidden sm:flex px-3 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-500 rounded-xl transition-colors"
+              >
+                CSMS
+              </a>
+
+              {/* Logout Button - Hidden on mobile */}
+              <button
+                onClick={handleLogout}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 backdrop-blur-sm"
+                style={{ color: "var(--text-primary)", backgroundColor: "var(--btn-secondary-bg)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--btn-secondary-hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--btn-secondary-bg)")}
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden lg:inline">Logout</span>
+              </button>
+
+              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 rounded-xl transition-colors"
@@ -223,6 +263,7 @@ export default function AdminDashboardPage() {
               onClick={handleLogout}
               className="w-full flex items-center gap-3 py-3 px-4 rounded-xl font-medium text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300 mt-4 pt-4 border-t border-gray-700/50"
             >
+              <LogOut className="w-5 h-5" />
               Logout
             </button>
           </div>
