@@ -1,0 +1,10 @@
+export { default as HistoryHubPage } from "./HistoryHubPage";
+export { default as ProposalHistoryPage } from "./ProposalHistoryPage";
+export { default as ProformaHistoryPage } from "./ProformaHistoryPage";
+export { default as BalanceProformaHistoryPage } from "./BalanceProformaHistoryPage";
+export { default as InvoiceHistoryPage } from "./InvoiceHistoryPage";
+export { default as PaymentHistoryPage } from "./PaymentHistoryPage";
+export { default as RevenueHistoryPage } from "./RevenueHistoryPage";
+export { default as ClientServiceHistoryPage } from "./ClientServiceHistoryPage";
+export { default as AllTransactionHistoryBDPage } from "./AllTransactionHistoryBDPage";
+export { default as AdminServicesHistoryPage } from "./AdminServicesHistoryPage";
