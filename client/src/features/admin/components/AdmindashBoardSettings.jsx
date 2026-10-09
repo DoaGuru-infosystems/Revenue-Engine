@@ -16,8 +16,8 @@ const AdminExplorePlans = lazy(() => import("../pages/AdminExplorePlansPage"));
 const CreateTeam = lazy(() => import("./CreateTeam"));
 const RegisterBD = lazy(() => import("../pages/RegisterBDPage"));
 const AdminAddServices = lazy(() => import("../../calculator/pages/AdminAddServicesPage"));
-const AdminServicesHistory = lazy(() => import("../../../Admin/AdminServicesHistory"));
-const AdminAdsCampign = lazy(() => import("../../../Admin/AdminAdsCampign"));
+const AdminServicesHistory = lazy(() => import("../../history/pages/AdminServicesHistoryPage"));
+const AdminAdsCampign = lazy(() => import("./AdminAdsCampaign"));
 const NoteSection = lazy(() => import("../../../shared/NoteSection"));
 const DiscountSetting = lazy(() => import("../../../shared/DiscountSetting"));
 

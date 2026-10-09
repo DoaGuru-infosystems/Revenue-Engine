@@ -28,12 +28,12 @@ const SeoServicesA = lazy(() => import("../../../shared/SeoServices"));
 const ConvertLetterhead = lazy(() => import("../../../Components/ConvertLetterhead"));
 const AdmindashBoardSettings = lazy(() => import("../components/AdmindashBoardSettings"));
 const AssignQuotation = lazy(() => import("./AssignQuotationPage"));
-const HistoryHub = lazy(() => import("../../../Admin/HistoryHub"));
+const HistoryHub = lazy(() => import("../../history/pages/HistoryHubPage"));
 const RegisterBD = lazy(() => import("./RegisterBDPage"));
 const AdminClientDetails = lazy(() => import("./AdminClientDetailsPage"));
 const AdminAddServices = lazy(() => import("../../calculator/pages/AdminAddServicesPage"));
-const AdminServicesHistory = lazy(() => import("../../../Admin/AdminServicesHistory"));
-const AdminAdsCampign = lazy(() => import("../../../Admin/AdminAdsCampign"));
+const AdminServicesHistory = lazy(() => import("../../history/pages/AdminServicesHistoryPage"));
+const AdminAdsCampign = lazy(() => import("../components/AdminAdsCampaign"));
 const InstantProforma = lazy(() => import("../../../Components/InstantProforma"));
 
 export default function AdminDashboardPage() {

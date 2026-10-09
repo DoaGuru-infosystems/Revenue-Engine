@@ -2,31 +2,31 @@ import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 // import { useSelector } from "react-redux";
 import styled from "styled-components";
-import Quotation from "../shared/Quotation";
-import BalanceProforma from "../shared/BalanceProforma";
-import AdminAddPlan from "../Admin/AdminAddPlan";
-import AdminPlanHistory from "../Admin/AdminPlanHistory";
-import AdminComplimentaryData from "../Admin/AdminComplimentaryData";
+import Quotation from "../features/invoices/pages/QuotationPage";
+import BalanceProforma from "../features/invoices/pages/BalanceProformaPage";
+import AdminAddPlan from "../features/admin/pages/AdminAddPlanPage";
+import AdminPlanHistory from "../features/admin/pages/AdminPlanHistoryPage";
+import AdminComplimentaryData from "../features/calculator/pages/ComplimentaryPage";
 import NoteSection from "../shared/NoteSection";
-import Invoice from "../shared/Invoice";
+import Invoice from "../features/invoices/pages/InvoicePage";
 
 import InvoiceCalculation from "../shared/InvoiceCalculation";
 import InvoiceAds from "../shared/InvoiceAds";
 import InvoiceNoteSection from "../shared/InvoiceNoteSection";
-import InvoiceHistory from "../Admin/InvoiceHistory";
-import HistoryHub from "../Admin/HistoryHub";
+import InvoiceHistory from "../features/history/pages/InvoiceHistoryPage";
+import HistoryHub from "../features/history/pages/HistoryHubPage";
 import ProformaServices from "../Components/InvoiceServices";
 import DiscountSetting from "../shared/DiscountSetting";
 
-const AdminDashboard = lazy(() => import("../Admin/AdminDashboard"));
-const Calculator = lazy(() => import("../shared/Calculator"));
+const AdminDashboard = lazy(() => import("../features/admin/pages/AdminDashboardPage"));
+const Calculator = lazy(() => import("../features/calculator/pages/CalculatorPage"));
 const AdsCampaignCalculator = lazy(() =>
-  import("../Admin/AdsCampaignCalculator")
+  import("../features/calculator/pages/AdsCampaignCalculatorPage")
 );
-const ServicesLanding = lazy(() => import("../Admin/ServicesLanding"));
-const History = lazy(() => import("../shared/History"));
-const ReviewRequirements = lazy(() => import("../Admin/ReviewRequirements"));
-const ProposalBuilder = lazy(() => import("../shared/ProposalBuilder"));
+const ServicesLanding = lazy(() => import("../features/calculator/pages/ServicesLandingPage"));
+const History = lazy(() => import("../features/history/pages/ClientServiceHistoryPage"));
+const ReviewRequirements = lazy(() => import("../features/admin/pages/ReviewRequirementsPage"));
+const ProposalBuilder = lazy(() => import("../features/proposals/pages/ProposalBuilderPage"));
 import PremiumLoader from "../Components/PremiumLoader";
 const AdminRouter = () => {
   // const { currentUser } = useSelector((state) => state.user);

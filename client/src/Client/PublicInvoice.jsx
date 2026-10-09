@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Invoice from "../shared/Invoice";
+import Invoice from "../features/invoices/pages/InvoicePage";
 import API_BASE_URL from "../config/apiBaseUrl";
 import img3 from "../assets/DOAGURU IT Solution.png";
 

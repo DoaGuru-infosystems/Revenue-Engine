@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import ProposalDiscountModal from "../Admin/components/ProposalDiscountModal";
+import ProposalDiscountModal from "../features/proposals/components/ProposalDiscountModal";
 import {
   ArrowLeft,
   Building2,

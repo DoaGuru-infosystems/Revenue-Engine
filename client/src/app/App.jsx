@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { GlobalStyle } from "../Admin/GlobalStyle ";
+import { GlobalStyle } from "../shared/GlobalStyle";
 import AppRoutes from "./app.routes.jsx";
 
 export default function App() {

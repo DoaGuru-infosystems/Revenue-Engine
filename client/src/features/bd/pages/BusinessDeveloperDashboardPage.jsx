@@ -20,8 +20,8 @@ import { clearUser } from "../../../redux/user/userSlice";
 import NavTabs from "../../../Components/NavTabs";
 
 const AssignQuotationBD = lazy(() => import("./AssignQuotationBDPage"));
-const AllHistory = lazy(() => import("../../../BusinessDeveloper/AllHistory"));
-const InvoiceHistory = lazy(() => import("../../../BusinessDeveloper/InvoiceHistory"));
+const AllHistory = lazy(() => import("../../history/pages/AllTransactionHistoryBDPage"));
+const InvoiceHistory = lazy(() => import("../../history/pages/InvoiceHistoryPage"));
 const ClientDetails = lazy(() => import("./BDClientDetailsPage"));
 const BdExplorePlans = lazy(() => import("./BdExplorePlansPage"));
 const GenerateLinkHistoryBD = lazy(() => import("./GenerateLinkHistoryBDPage"));

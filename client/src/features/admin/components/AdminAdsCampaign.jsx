@@ -10,14 +10,14 @@ import {
   Trash2,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { clearUser } from "../redux/user/userSlice";
+import { clearUser } from "../../../redux/user/userSlice";
 import { useNavigate } from "react-router-dom";
-import API_BASE_URL from "../config/apiBaseUrl";
+import API_BASE_URL from "../../../config/apiBaseUrl";
 
 const inputClassName =
   "w-full rounded-xl border border-white/15 bg-slate-900/60 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30";
 
-const AdminAdsCampign = () => {
+const AdminAdsCampaign = () => {
   const baseURL = API_BASE_URL;
   const [formData, setFormData] = useState({
     ads_category: "",
@@ -505,4 +505,5 @@ const AdminAdsCampign = () => {
   );
 };
 
-export default AdminAdsCampign;
+export default AdminAdsCampaign;
+export { AdminAdsCampaign as AdminAdsCampign };

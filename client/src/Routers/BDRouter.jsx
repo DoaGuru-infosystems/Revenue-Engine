@@ -3,26 +3,26 @@ import { Navigate, Route, Routes } from "react-router-dom";
 // import { useSelector } from "react-redux";
 import styled from "styled-components";
 import NoteSection from "../shared/NoteSection";
-import Invoice from "../shared/Invoice";
-const Quotation = lazy(() => import("../shared/Quotation"));
-const BalanceProforma = lazy(() => import("../shared/BalanceProforma"));
+import Invoice from "../features/invoices/pages/InvoicePage";
+const Quotation = lazy(() => import("../features/invoices/pages/QuotationPage"));
+const BalanceProforma = lazy(() => import("../features/invoices/pages/BalanceProformaPage"));
 const AdsCampaignCalciBD = lazy(() =>
-  import("../BusinessDeveloper/AdsCampaignCalciBD")
+  import("../features/calculator/pages/AdsCampaignCalculatorPage")
 );
-const AddService = lazy(() => import("../BusinessDeveloper/AddService"));
-const History = lazy(() => import("../shared/History"));
-const Calculator = lazy(() => import("../shared/Calculator"));
-const ProposalBuilder = lazy(() => import("../shared/ProposalBuilder"));
+const AddService = lazy(() => import("../features/calculator/pages/ServicesLandingPage"));
+const History = lazy(() => import("../features/history/pages/ClientServiceHistoryPage"));
+const Calculator = lazy(() => import("../features/calculator/pages/CalculatorPage"));
+const ProposalBuilder = lazy(() => import("../features/proposals/pages/ProposalBuilderPage"));
 
 const BusinessDeveloperDashboard = lazy(() =>
-  import("../BusinessDeveloper/BusinessDeveloperDashboard")
+  import("../features/bd/pages/BusinessDeveloperDashboardPage")
 );
-const ReviewRequirements = lazy(() => import("../Admin/ReviewRequirements"));
+const ReviewRequirements = lazy(() => import("../features/admin/pages/ReviewRequirementsPage"));
 
 import InvoiceCalculation from "../shared/InvoiceCalculation";
 import InvoiceAds from "../shared/InvoiceAds";
 import InvoiceNoteSection from "../shared/InvoiceNoteSection";
-import InvoiceHistory from "./../BusinessDeveloper/InvoiceHistory";
+import InvoiceHistory from "../features/history/pages/InvoiceHistoryPage";
 import DiscountSetting from "../shared/DiscountSetting";
 import PremiumLoader from "../Components/PremiumLoader";
 const BDRouter = () => {
