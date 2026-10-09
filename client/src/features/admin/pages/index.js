@@ -1,0 +1,9 @@
+export { default as AdminDashboardPage } from "./AdminDashboardPage";
+export { default as AdminAddPlanPage } from "./AdminAddPlanPage";
+export { default as AdminExplorePlansPage } from "./AdminExplorePlansPage";
+export { default as AdminPlanHistoryPage } from "./AdminPlanHistoryPage";
+export { default as AdminClientDetailsPage } from "./AdminClientDetailsPage";
+export { default as AssignQuotationPage } from "./AssignQuotationPage";
+export { default as GenerateLinkHistoryPage } from "./GenerateLinkHistoryPage";
+export { default as RegisterBDPage } from "./RegisterBDPage";
+export { default as ReviewRequirementsPage } from "./ReviewRequirementsPage";

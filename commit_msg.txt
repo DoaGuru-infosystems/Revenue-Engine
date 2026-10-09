@@ -1,10 +1,26 @@
-feat(invoices): align features/invoices with 4-layer architecture (services, hooks, components, pages)
+refactor(admin,bd): complete Phase 6 Admin and BD workspaces refactor into 4-layer architecture
 
-- Create features/invoices/services/ layer aliasing API endpoints
-- Create features/invoices/pages/ (InvoicePage, BalanceProformaPage, QuotationPage)
-- Update features/invoices/index.js barrel export
-- Refactor shared/Invoice.jsx, BalanceProforma.jsx, and Quotation.jsx as backward-compatible bridges to feature pages
-- Verified production build successfully (2119 modules transformed, 0 errors)
+- Established `src/features/admin/` domain:
+  * Services: `adminService.js` (team management, BD registration, plan CRUD, requirement reviews, assigned quotations)
+  * Hooks: `useAdminTeams.js`, `useAdminPlans.js`
+  * Components: `SkeletonTable`, `TeamPickerModal`, `CreateTeam`, `ServiceProgressTable`, `QuotationTypeModal`, `AdmindashBoardSettings`
+  * Pages: `AdminDashboardPage`, `AdminClientDetailsPage`, `AdminAddPlanPage`, `AdminExplorePlansPage`, `AdminPlanHistoryPage`, `AssignQuotationPage`, `ReviewRequirementsPage`, `RegisterBDPage`, `GenerateLinkHistoryPage`
+  * Clean barrel exports in `services/`, `hooks/`, `components/`, `pages/`, and root `index.js`
 
-Next Steps:
-- Phase 4: Refactor features/proposals/ (ProposalBuilder, etc.) into 4-layer architecture
+- Established `src/features/bd/` domain:
+  * Services: `bdService.js` (employee assigned quotations, BD plan notes & submissions)
+  * Hooks: `useBDAssignedQuotations.js`
+  * Components: `ServiceProgressTableBD.jsx`
+  * Pages: `BusinessDeveloperDashboardPage`, `BDClientDetailsPage`, `AssignQuotationBDPage`, `BdExplorePlansPage`, `GenerateLinkHistoryBDPage`
+  * Clean barrel exports in `services/`, `hooks/`, `components/`, `pages/`, and root `index.js`
+
+- Backward Compatibility Bridges:
+  * Added 21 zero-downtime re-export bridge files in `src/Admin/` and `src/BusinessDeveloper/`
+  * Fully preserves existing routes in `AdminRouter.jsx`, `BDRouter.jsx`, and lazy code-split imports
+  * Removed 2,000+ lines of dead commented-out legacy code
+
+- Build Validation:
+  * `npm run build` verified: clean compile in 14.70s with zero errors (exit code 0)
+
+Next Steps Roadmap:
+- Phase 7: History & Reports Domain refactor (`src/features/history/` for `HistoryHub`, `AllHistory`, `InvoiceHistory`, `RevenueHistory`, `PaymentHistory`) and global shared components cleanup (`src/shared/`, `src/Components/`).
