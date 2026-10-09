@@ -92,8 +92,7 @@ export default function Invoice({ publicMode = false, publicData = null, publicT
     return Number.isFinite(parsed) ? parsed : 0;
   };
 
-  const getOptionalServiceKey = (name = "") =>
-    String(name).replace(/\?/g, "").toLowerCase().replace(/\s+/g, "_");
+
 
   const getOptionalAmountFromItem = (item, aliases = []) => {
     const keys = Object.keys(item || {});
