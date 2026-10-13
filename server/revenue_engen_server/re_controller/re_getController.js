@@ -203,128 +203,74 @@ exports.getAllServiceDatas = (req, res) => {
         .json({ status: "Failure", message: "Failed to fetch data" });
     }
 
-    const groupedData = [];
-    // console.log(`204 ${groupedData}`);
-    // console.log(`205 ${results}`);
+    db.query("SELECT * FROM re_additional_services ORDER BY id ASC", (addErr, addResults) => {
+      const allAddons = addResults || [];
+      const groupedData = [];
 
-    results.forEach((row) => {
-      let service = groupedData.find((s) => s.service_id === row.service_id);
-      // console.log(`210 ${service}`);
+      results.forEach((row) => {
+        let service = groupedData.find((s) => s.service_id === row.service_id);
 
-      if (!service) {
-        service = {
-          service_id: row.service_id,
-          service_name: row.service_name,
-          service_created_at: row.service_created_at,
-          categories: [],
-        };
-        groupedData.push(service);
-        // console.log(`220 ${groupedData}`);
-      }
+        if (!service) {
+          const serviceAddons = allAddons.filter((a) => a.service_id === row.service_id);
+          service = {
+            service_id: row.service_id,
+            service_name: row.service_name,
+            service_created_at: row.service_created_at,
+            categories: [],
+            additional_services: serviceAddons.map((a) => ({
+              id: a.id,
+              service_id: a.service_id,
+              name: a.additional_service_name,
+              additional_service_name: a.additional_service_name,
+              amount: parseFloat(a.amount) || 0,
+            })),
+          };
+          groupedData.push(service);
+        }
 
-      // console.log(`224 ${groupedData}`);
-      // console.log(`225 ${service}`);
+        let category = service.categories.find(
+          (c) => c.category_id === row.category_id
+        );
+        if (!category && row.category_id) {
+          category = {
+            category_id: row.category_id,
+            category_name: row.category_name,
+            category_created_at: row.category_created_at,
+            editing_types: [],
+          };
+          service.categories.push(category);
+        }
 
-      let category = service.categories.find(
-        (c) => c.category_id === row.category_id
-      );
-      // console.log(`230 ${category}`);
-      if (!category && row.category_id) {
-        category = {
-          category_id: row.category_id,
-          category_name: row.category_name,
-          category_created_at: row.category_created_at,
-          editing_types: [],
-        };
-        service.categories.push(category);
-        // console.log(`239 ${category}`);
-      }
+        if (row.editing_type_id) {
+          category.editing_types.push({
+            editing_type_id: row.editing_type_id,
+            editing_type_name: row.editing_type_name,
+            amount: row.amount,
+            editing_type_created_at: row.editing_type_created_at,
+          });
+        }
+      });
 
-      if (row.editing_type_id) {
-        category.editing_types.push({
-          editing_type_id: row.editing_type_id,
-          editing_type_name: row.editing_type_name,
-          amount: row.amount,
-          editing_type_created_at: row.editing_type_created_at,
-        });
-      }
-    });
-
-    res.json({
-      status: "Success",
-      data: groupedData,
+      res.json({
+        status: "Success",
+        data: groupedData,
+      });
     });
   });
 };
 
 exports.getCalculatorTransactions = async (req, res) => {
-  try {
-    db.query("SELECT * FROM re_calculator_transactions", (err, results) => {
-      if (err) {
-        return res.status(500).json({
-          status: "Failure",
-          message: "Database error",
-          error: err,
-        });
-      }
-
-      if (results.length === 0) {
-        return res.status(404).json({
-          status: "Failure",
-          message: "No re_services found",
-        });
-      }
-
-      res.status(200).json({
-        status: "Success",
-        data: results,
-      });
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "Failure",
-      message: "Server error",
-      error,
-    });
-  }
+  return res.status(200).json({
+    status: "Success",
+    data: [],
+  });
 };
 
 exports.getByIDCalculatorTransactions = async (req, res) => {
-  const { txn_id, client_id } = req.params;
-
-  try {
-    db.query(
-      "SELECT * FROM re_calculator_transactions WHERE txn_id = ? AND client_id = ?",
-      [txn_id, client_id],
-      (err, results) => {
-        if (err) {
-          return res.status(500).json({
-            status: "Failure",
-            message: "Database error",
-            error: err,
-          });
-        }
-
-        if (results.length === 0) {
-          return res.status(404).json({
-            status: "Failure",
-            message: "No calculator transactions found",
-          });
-        }
-
-        res.status(200).json({
-          status: "Success",
-          data: results,
-        });
-      }
-    );
-  } catch (error) {
-    res.status(500).json({
-      status: "Failure",
-      message: "Server error",
-      error,
-    });
-  }
+  return res.status(200).json({
+    status: "Success",
+    data: [],
+  });
 };
 
 exports.getByIDAdsCampaignDetails = async (req, res) => {
@@ -408,8 +354,6 @@ exports.getClientTxnHistory = async (req, res) => {
 
   const query = `
     WITH txn_services AS (
-      SELECT txn_id, client_id, created_at FROM re_calculator_transactions
-      UNION ALL
       SELECT txn_id, client_id, created_at FROM re_ads_campaign_details
     )
     SELECT
@@ -496,28 +440,6 @@ exports.getClientServiceHistory = async (req, res) => {
   const { client_id, txn_id } = req.params;
 
   const query = `
-  SELECT 
-  'Graphic Service' AS service_type,
-  ct.txn_id,
-  ct.created_at,
-  ct.service_name,
-  ct.category_name,
-  ct.editing_type_name,
-  ct.editing_type_amount,
-  ct.quantity,
-  ct.include_content_posting,
-  ct.include_thumbnail_creation,
-  ct.include_youtube_video_posting,
-  ct.plan_name,
-  ct.total_amount,
-  NULL AS amount,
-  NULL AS percent,
-  NULL AS charge
-FROM re_calculator_transactions ct
-WHERE ct.txn_id = ? AND ct.client_id = ?
-
-UNION
-
 SELECT 
   'Ads Campaign' AS service_type,
   ad.txn_id,
@@ -539,7 +461,7 @@ FROM re_ads_campaign_details ad
 WHERE ad.txn_id = ? AND ad.client_id = ?;
   `;
 
-  db.query(query, [txn_id, client_id, txn_id, client_id], (err, result) => {
+  db.query(query, [txn_id, client_id], (err, result) => {
     if (err) {
       return res
         .status(500)
@@ -558,33 +480,6 @@ exports.getClientServiceHistoryAssign = async (req, res) => {
   const { client_id, txn_id } = req.params;
 
   const query = `
-  SELECT 
-  'Graphic Service' AS service_type,
-  ct.txn_id,
-  ct.created_at,
-  ct.service_name,
-  ct.category_name,
-  ct.editing_type_name,
-  ct.editing_type_amount,
-  ct.quantity,
-  ct.include_content_posting,
-  ct.include_thumbnail_creation,
-  ct.include_youtube_video_posting,
-  ct.plan_name,
-  ct.total_amount,
-  NULL AS amount,
-  NULL AS percent,
-  NULL AS charge
-FROM re_calculator_transactions ct
-WHERE ct.txn_id = ? AND ct.client_id = ?
-  AND NOT (ct.service_name = 'GMB' AND ct.category_name = 'LOCAL SEO')
-  AND NOT (ct.service_name = 'SEO' AND ct.category_name = 'Intended for Lead Generation')
-  AND NOT (ct.service_name = 'SEO' AND ct.category_name = 'Backlink Creation')
-  AND NOT (ct.service_name = 'SEO' AND ct.category_name = 'Google My Business (GMB)')
-  AND NOT (ct.service_name = 'Website Maintenance' AND ct.category_name = 'Website Maintenance')
-
-UNION
-
 SELECT 
   'Ads Campaign' AS service_type,
   ad.txn_id,
@@ -603,11 +498,10 @@ SELECT
   ad.percent,
   ad.charge
 FROM re_ads_campaign_details ad
-WHERE ad.txn_id = ? AND ad.client_id = ?
- 
+WHERE ad.txn_id = ? AND ad.client_id = ?;
   `;
 
-  db.query(query, [txn_id, client_id, txn_id, client_id], (err, result) => {
+  db.query(query, [txn_id, client_id], (err, result) => {
     if (err) {
       return res
         .status(500)
@@ -732,8 +626,6 @@ exports.getAllClientsTxnHistory = async (req, res) => {
 
   const query = `
 WITH txn_services AS (
-  SELECT txn_id, client_id, created_at, 'calculator' AS source FROM re_calculator_transactions
-  UNION
   SELECT txn_id, client_id, created_at, 'ads_campaign' AS source FROM re_ads_campaign_details
 ),
 txn_grouped AS (
@@ -911,8 +803,6 @@ exports.getClientsTxnHistoryByEmployee = async (req, res) => {
 
   const query = `
 WITH txn_services AS (
-  SELECT txn_id, client_id, created_at, 'calculator' AS source FROM re_calculator_transactions
-  UNION
   SELECT txn_id, client_id, created_at, 'ads_campaign' AS source FROM re_ads_campaign_details
 )
 SELECT

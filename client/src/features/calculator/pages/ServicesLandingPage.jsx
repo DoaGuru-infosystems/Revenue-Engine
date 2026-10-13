@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useTheme } from "../../../context/ThemeContext";
 import {
   Palette,
@@ -56,7 +56,7 @@ export default function ServicesLandingPage() {
   const userName = currentUser?.name;
   const dispatch = useDispatch();
 
-  // ΓöÇΓöÇΓöÇ Discount State ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ─── Discount State ───────────────────────────────────────────────────────
   const [discountType, setDiscountType] = useState("Amount");
   const [discountValue, setDiscountValue] = useState(0);
   const [discountSettings, setDiscountSettings] = useState([]);
@@ -66,15 +66,15 @@ export default function ServicesLandingPage() {
     discount_amt: "",
     discount_per: "",
   });
-  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ──────────────────────────────────────────────────────────────────────────
 
-  // ΓöÇΓöÇΓöÇ Search & Plan Popup State ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ─── Search & Plan Popup State ────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPlanPopup, setShowPlanPopup] = useState(false);
   const searchRef = useRef(null);
-  // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ──────────────────────────────────────────────────────────────────────────
 
    const services = [
     {
@@ -368,7 +368,7 @@ export default function ServicesLandingPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ΓöÇΓöÇΓöÇ Totals ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ─── Totals ─────────────────────────────────────────────────────────────────
   const grandTotal = getData.reduce((acc, order) => {
     if (order.service_name?.toLowerCase() === "complimentary") return acc;
     return acc + parseFloat(order.total_amount || 0);
@@ -479,7 +479,7 @@ export default function ServicesLandingPage() {
     }
   };
 
-  // ΓöÇΓöÇΓöÇ Group plan data ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ─── Group plan data ──────────────────────────────────────────────────────
   const groupByPlan = (data) => {
     const grouped = {};
     data.forEach((item) => {
@@ -506,7 +506,7 @@ export default function ServicesLandingPage() {
 
   const plans = groupByPlan(getPlanData);
 
-  // ΓöÇΓöÇΓöÇ Search filter ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ─── Search filter ────────────────────────────────────────────────────────
   const filteredPlans = plans.filter((p) =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -521,7 +521,7 @@ export default function ServicesLandingPage() {
   const generateUniqueId = () =>
     `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // ΓöÇΓöÇΓöÇ Create Quotation ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ─── Create Quotation ─────────────────────────────────────────────────────
   const handleCreateQuotation = async (plan) => {
     if (loading) return;
     setLoading(true);
@@ -623,7 +623,7 @@ export default function ServicesLandingPage() {
     }
   };
 
-  // ΓöÇΓöÇΓöÇ Delete handlers ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ─── Delete handlers ──────────────────────────────────────────────────────
   const handleDeleteClientPlanData = async (txn_id) => {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you want to delete this client plan data permanently?", icon: "warning", showCancelButton: true, confirmButtonText: "Yes, delete it!" });
     if (confirm.isConfirmed) {
@@ -792,10 +792,10 @@ export default function ServicesLandingPage() {
         <div className="absolute top-1/3 right-1/4 w-56 h-56 bg-yellow-500/[0.04] rounded-full blur-3xl animate-pulse delay-500" />
       </div>
 
-      {/* ΓöÇΓöÇ MAIN LAYOUT: flex-col, fills screen ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── MAIN LAYOUT: flex-col, fills screen ─────────────────────────── */}
       <div className="relative z-10 flex flex-col h-full px-4 sm:px-6 py-3 gap-3 overflow-hidden">
 
-        {/* ΓöÇΓöÇ ROW 1: Back + Stats ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+        {/* ── ROW 1: Back + Stats ───────────────────────────────────────── */}
         <div className="flex items-center gap-3 flex-shrink-0">
           {/* Back */}
           <button
@@ -816,9 +816,9 @@ export default function ServicesLandingPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider truncate">Amount</p>
-                <p className="text-sm font-bold text-white truncate">Γé╣{totalAmount.toLocaleString()}</p>
+                <p className="text-sm font-bold text-white truncate">₹{totalAmount.toLocaleString()}</p>
                 {discountValue > 0 && (
-                  <p className="text-[9px] text-yellow-400/80 truncate">Disc: -Γé╣{calculatedDiscount.toLocaleString()}</p>
+                  <p className="text-[9px] text-yellow-400/80 truncate">Disc: -₹{calculatedDiscount.toLocaleString()}</p>
                 )}
               </div>
             </div>
@@ -835,7 +835,7 @@ export default function ServicesLandingPage() {
                     <div className="min-w-0">
                       <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider truncate">Discount</p>
                       <p className="text-sm font-bold text-yellow-400 truncate">
-                        {discountValue > 0 ? `Γé╣${calculatedDiscount.toLocaleString()}` : "No Discount"}
+                        {discountValue > 0 ? `₹${calculatedDiscount.toLocaleString()}` : "No Discount"}
                       </p>
                     </div>
                   </div>
@@ -894,7 +894,7 @@ export default function ServicesLandingPage() {
           </div>
         </div>
 
-        {/* ΓöÇΓöÇ ROW 2: Plan Search Bar (prominent, top) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+        {/* ── ROW 2: Plan Search Bar (prominent, top) ────────────────────── */}
         <div className="flex-shrink-0" ref={searchRef}>
           <div className="relative">
             {/* Label */}
@@ -947,7 +947,7 @@ export default function ServicesLandingPage() {
                       <Star className="w-3 h-3 text-yellow-400/60" />
                       <span className="font-medium">{plan.title}</span>
                     </span>
-                    <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md shrink-0">Γé╣{plan.totalAmount.toLocaleString()}</span>
+                    <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md shrink-0">₹{plan.totalAmount.toLocaleString()}</span>
                   </button>
                 ))}
               </div>
@@ -960,7 +960,7 @@ export default function ServicesLandingPage() {
           </div>
         </div>
 
-        {/* ΓöÇΓöÇ ROW 3: Service Cards + Data Tables side by side ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+        {/* ── ROW 3: Service Cards + Data Tables side by side ────────────── */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-3 min-h-0">
 
           {/* Left: Compact service quick-links */}
@@ -1036,7 +1036,7 @@ export default function ServicesLandingPage() {
                     <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 shrink-0 pt-3 md:pt-0 border-t border-white/10 md:border-t-0">
                        <div className="text-left md:text-right">
                           <p className="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-0.5">Total Amount</p>
-                          <p className="text-xl md:text-2xl font-bold text-white leading-none">Γé╣{selectedPlan.totalAmount.toLocaleString()}</p>
+                          <p className="text-xl md:text-2xl font-bold text-white leading-none">₹{selectedPlan.totalAmount.toLocaleString()}</p>
                        </div>
                        <button
                          onClick={() => handleCreateQuotation(selectedPlan)}
@@ -1074,7 +1074,7 @@ export default function ServicesLandingPage() {
                     <span className="text-white font-semibold text-sm flex items-center gap-1.5">
                       <Palette className="w-4 h-4 text-slate-400" /> Graphic & SEO
                     </span>
-                    <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">Γé╣{grandTotal.toLocaleString()}</span>
+                    <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">₹{grandTotal.toLocaleString()}</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-left text-xs text-white">
@@ -1094,7 +1094,7 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 min-w-[100px]">{order.category_name}</td>
                             <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">Γé╣{order.total_amount}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total_amount}</td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
@@ -1118,7 +1118,7 @@ export default function ServicesLandingPage() {
                     <span className="text-white font-semibold text-sm flex items-center gap-1.5">
                       <Megaphone className="w-4 h-4 text-red-400" /> Campaigns
                     </span>
-                    <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">Γé╣{grandAdsTotal.toLocaleString()}</span>
+                    <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">₹{grandAdsTotal.toLocaleString()}</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-left text-xs text-white">
@@ -1135,10 +1135,10 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2">{index + 1}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.created_at}</td>
                             <td className="px-3 py-2 min-w-[100px]">{order.category}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">Γé╣{order.amount}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">₹{order.amount}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.percent}%</td>
-                            <td className="px-3 py-2 whitespace-nowrap">Γé╣{order.charge}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">Γé╣{order.total}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">₹{order.charge}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total}</td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
@@ -1163,8 +1163,8 @@ export default function ServicesLandingPage() {
                       <Gift className="w-4 h-4 text-yellow-400" /> Complimentary
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-orange-300 font-bold text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">Γé╣{grandComplimentryTotal.toLocaleString()}</span>
-                      <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">Γé╣0</span>
+                      <span className="text-orange-300 font-bold text-xs bg-orange-400/10 px-2 py-0.5 rounded-md">₹{grandComplimentryTotal.toLocaleString()}</span>
+                      <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">₹0</span>
                     </div>
                   </div>
                   <div className="overflow-x-auto">
@@ -1185,7 +1185,7 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 min-w-[100px]">{order.category_name}</td>
                             <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">Γé╣{order.total_amount}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total_amount}</td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
@@ -1227,7 +1227,7 @@ export default function ServicesLandingPage() {
 
                             <div className="flex flex-col mt-auto pt-2">
                               <span className="text-white/30 text-[9px] uppercase tracking-[0.15em] font-bold mb-0.5">Total Amount</span>
-                              <span className="text-white group-hover:text-yellow-400 font-bold text-[15px] md:text-base transition-colors">Γé╣{plan.totalAmount.toLocaleString()}</span>
+                              <span className="text-white group-hover:text-yellow-400 font-bold text-[15px] md:text-base transition-colors">₹{plan.totalAmount.toLocaleString()}</span>
                             </div>
                           </button>
                         ))}
@@ -1322,7 +1322,7 @@ export default function ServicesLandingPage() {
         </div>
       </div>
 
-      {/* ΓöÇΓöÇ Plan Card POPUP ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Plan Card POPUP ───────────────────────────────────────────────── */}
       {showPlanPopup && selectedPlan && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowPlanPopup(false); }}>
@@ -1346,7 +1346,7 @@ export default function ServicesLandingPage() {
               {/* Title & amount */}
               <h3 className="text-xl font-bold text-white mb-0.5">{selectedPlan.title}</h3>
               <p className={`text-xs font-medium bg-gradient-to-r ${selectedPlan.gradient} bg-clip-text text-transparent mb-1`}>Plan</p>
-              <p className="text-2xl font-bold text-white mb-3">Γé╣{selectedPlan.totalAmount.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white mb-3">₹{selectedPlan.totalAmount.toLocaleString()}</p>
 
               {/* Description */}
               <p className="text-white/60 text-sm leading-relaxed mb-4">{selectedPlan.description}</p>
@@ -1377,13 +1377,13 @@ export default function ServicesLandingPage() {
         </div>
       )}
 
-      {/* ΓöÇΓöÇ Quotation Type Modal ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Quotation Type Modal ──────────────────────────────────────────── */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="relative bg-gray-900 border border-gray-700 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md">
             <button onClick={() => setShowModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700">Γ£ò</div>
+              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700">✕</div>
             </button>
             <div className="text-center mb-8 mt-2">
               <div className="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1406,7 +1406,7 @@ export default function ServicesLandingPage() {
         </div>
       )}
 
-      {/* ΓöÇΓöÇ Proposal / Proforma Discount Modal ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */}
+      {/* ── Proposal / Proforma Discount Modal ────────────────────────────── */}
       <ProposalDiscountModal
         show={showDiscountModal}
         onClose={() => setShowDiscountModal(false)}

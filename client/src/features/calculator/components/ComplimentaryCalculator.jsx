@@ -229,7 +229,7 @@ const dispatch = useDispatch();
     const cleanBase = selectedService.replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
     const finalServiceName = cleanBase;
 
-    // ΓöÇΓöÇ IN-MEMORY MODE (embedded inside ProposalBuilder) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    // ── IN-MEMORY MODE (embedded inside ProposalBuilder) ──────────────────────
     if (onServiceAdded) {
       if (!editId && embeddedData && embeddedData.length > 0) {
         // ONLY compare against OTHER complimentary items (Addition #1 & #2)
@@ -298,7 +298,7 @@ const dispatch = useDispatch();
       return;
     }
 
-    // ΓöÇΓöÇ DB / SNAPSHOT MODE ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    // ── DB / SNAPSHOT MODE ───────────────────────────────────────────────────
     const payload = {
       txn_id: effectiveProposalId,
       client_id: effectiveClientId,
@@ -316,7 +316,7 @@ const dispatch = useDispatch();
       employee: userName,
     };
 
-    // Γ£à Only Quotation API (no invoice)
+    // ✅ Only Quotation API (no invoice)
     let quotationRequest;
     if (docTypeFromURL === "proforma") {
       quotationRequest = axios.put(
@@ -913,7 +913,7 @@ const dispatch = useDispatch();
               <option value="">-- Choose Editing Type (Required) --</option>
               {getSelectedCategory.editing_types.map((edit) => (
                 <option key={edit.editing_type_id} value={edit.editing_type_id}>
-                  {edit.editing_type_name} - Γé╣{edit.amount}
+                  {edit.editing_type_name} - ₹{edit.amount}
                 </option>
               ))}
             </select>
@@ -946,7 +946,7 @@ const dispatch = useDispatch();
                   <div className="flex gap-4 mt-2">
                   <button
                     type="button"
-                    disabled={editId} // Γ£à disable when editing
+                    disabled={editId} // ✅ disable when editing
                     className={`px-4 py-2 rounded ${
                       addons[key]
                         ? "bg-green-600 text-white"
@@ -964,7 +964,7 @@ const dispatch = useDispatch();
                   </button>
                   <button
                     type="button"
-                    disabled={editId} // Γ£à disable when editing
+                    disabled={editId} // ✅ disable when editing
                     className={`px-4 py-2 rounded ${
                       !addons[key]
                         ? "bg-red-600 text-white"
@@ -1002,7 +1002,7 @@ const dispatch = useDispatch();
         </button>
 
         <div className="text-xl font-semibold text-center text-green-300 mt-4">
-          Total Amount: Γé╣{grandTotal.toLocaleString()}
+          Total Amount: ₹{grandTotal.toLocaleString()}
         </div>
 
         {/* Client Orders */}
@@ -1023,46 +1023,46 @@ const dispatch = useDispatch();
                   <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
                     <Megaphone className="w-5 h-5 text-yellow-400" />
                     <span>
-                      {order.service_name} ΓåÆ {order.category_name}
+                      {order.service_name} → {order.category_name}
                     </span>
                   </div>
                   <div className="text-lg text-white/80">
-                    ≡ƒÄ¼ {order.editing_type_name} ├ù {order.quantity}
+                    🎬 {order.editing_type_name} × {order.quantity}
                   </div>
                   {(Number(order.include_content_posting) > 0 ||
                     Number(order.include_thumbnail_creation) > 0) && (
                     <div className="text-base text-white/60 italic">
                       {Number(order.include_content_posting) > 0 && (
-                        <>≡ƒôó Meta Growth & Content Management </>                      )}
+                        <>📢 Meta Growth & Content Management </>                      )}
                       {Number(order.include_thumbnail_creation) > 0 && (
-                        <>≡ƒû╝ Thumbnail Creation </>
+                        <>🖼 Thumbnail Creation </>
                       )}
                     </div>
                   )}
 
                   {/* <div className="text-xs text-white/50">
-                      ≡ƒòÆ {new Date(order.created_at).toLocaleString("en-IN")}
+                      🕒 {new Date(order.created_at).toLocaleString("en-IN")}
                     </div> */}
                 </div>
 
                 {/* Right Section: Amount + Delete */}
                 <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
                   <div className="text-green-400 font-bold text-xl">
-                    Γé╣{parseFloat(order.total_amount).toLocaleString()}
+                    ₹{parseFloat(order.total_amount).toLocaleString()}
                   </div>
                   <button
                     onClick={() => handleEdit(order)}
                     className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
                     title="Edit"
                   >
-                    Γ£Ä
+                    ✎
                   </button>
                   <button
                     onClick={() => handleDelete(order.id)}
                     className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
                     title="Delete"
                   >
-                    ├ù
+                    ×
                   </button>
                 </div>
               </div>
@@ -1145,7 +1145,7 @@ const dispatch = useDispatch();
                         className="bg-red-500 mx-2 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold transition"
                         title="Remove"
                       >
-                        ├ù
+                        ×
                       </button>
                     </div>
                   </div>
@@ -1157,7 +1157,7 @@ const dispatch = useDispatch();
                 onClick={handleSaveNotes}
                 className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
               >
-                ≡ƒÆ╛ Save Notes
+                💾 Save Notes
               </button>
             </div>
 
@@ -1171,7 +1171,7 @@ const dispatch = useDispatch();
                     {/* Left Section: Info */}
                     <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
-                        <span>ΓåÆ {notes.note_name}</span>
+                        <span>→ {notes.note_name}</span>
                       </div>
                     </div>
 
@@ -1191,14 +1191,14 @@ const dispatch = useDispatch();
                         className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
                         title="Edit"
                       >
-                        Γ£Ä
+                        ✎
                       </button>
                       <button
                         onClick={() => handleDeleteClientNote(notes.id)}
                         className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
                         title="Delete"
                       >
-                        ├ù
+                        ×
                       </button>
                     </div>
                   </div>
@@ -1293,31 +1293,31 @@ const dispatch = useDispatch();
                   <div className="flex items-center gap-1">
                     <Megaphone className="w-4 h-4 text-yellow-400" />
                     <span className="font-medium">
-                      {order.service_name} ΓåÆ {order.category_name}
+                      {order.service_name} → {order.category_name}
                     </span>
                   </div>
                   <div className="text-sm">
-                    ≡ƒÄ¼ {order.editing_type_name} ├ù {order.quantity}
+                    🎬 {order.editing_type_name} × {order.quantity}
                   </div>
                   <div className="text-xs italic text-white/70">
                     {order.include_content_posting === "1" &&
-                      "≡ƒôó Meta Growth & Content Management"}
+                      "📢 Meta Growth & Content Management"}
                     {order.include_thumbnail_creation === "1" &&
-                      " ≡ƒû╝ Thumbnail Creation"}
+                      " 🖼 Thumbnail Creation"}
                   </div>
                   <div className="text-xs text-white/50">
-                    ≡ƒòÆ {new Date(order.created_at).toLocaleString("en-IN")}
+                    🕒 {new Date(order.created_at).toLocaleString("en-IN")}
                   </div>
                   <div className="ml-auto text-green-400 font-bold text-lg">
                     <div className="text-green-400 font-bold text-lg">
-                      Γé╣{parseFloat(order.total_amount).toLocaleString()}
+                      ₹{parseFloat(order.total_amount).toLocaleString()}
                     </div>
                     <button
                       onClick={() => handleDelete(order.id)}
                       className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold"
                       title="Delete"
                     >
-                      ├ù
+                      ×
                     </button>
                   </div>
                 </div>

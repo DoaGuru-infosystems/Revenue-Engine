@@ -944,6 +944,18 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
         ? item.editing_type_name
         : catName;
 
+      let additional_services = [];
+      if (item.additional_services) {
+        try {
+          additional_services = typeof item.additional_services === "string"
+            ? JSON.parse(item.additional_services)
+            : item.additional_services;
+          if (!Array.isArray(additional_services)) additional_services = [];
+        } catch {
+          additional_services = [];
+        }
+      }
+
       service.editingTypes.push({
         category: catName,
         type: typeName,
@@ -952,6 +964,7 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
         include_content_posting,
         include_thumbnail_creation,
         include_youtube_video_posting,
+        additional_services,
         total: parseAmount(item.total_amount),
       });
     });
@@ -1704,7 +1717,13 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
       : Number(e.editing_type_amount || e.price || 0) * Number(e.quantity || 1);
     return sum + Number(amount || 0);
   }, 0);
-  const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
+  const additionalServicesTotal = graphicData
+    .flatMap((s) => s.editingTypes)
+    .reduce((sum, e) => {
+      const addons = Array.isArray(e.additional_services) ? e.additional_services : [];
+      return sum + addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
+    }, 0);
+  const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal + additionalServicesTotal;
 
   // Apply discount percentage only for display
   // Compute discounted amount based on type
@@ -2447,7 +2466,8 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
                                 return visibleEditingTypes.map((edit, eidx) => {
                                   const qty = Number(edit.quantity || 1);
                                   const base = Number(edit.price || 0);
-                                  const totalBase = base * qty;
+                                  const addonsTotal = (edit.additional_services || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+                                  const totalBase = (base * qty) + addonsTotal;
 
                                   return (
                                     <tr
@@ -2493,6 +2513,18 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
                                           }
                                           return cat || type || service.service;
                                         })()}
+                                        { Array.isArray(edit.additional_services) && edit.additional_services.length > 0 && (
+                                          <div className="mt-1 flex flex-wrap gap-1">
+                                            { edit.additional_services.map((addon, aIdx) => (
+                                              <span
+                                                key={ aIdx }
+                                                className="inline-block text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 rounded px-1.5 py-0.5"
+                                              >
+                                                + { addon.name || addon.additional_service_name } (₹{ formatAmountNoDecimals(addon.amount) })
+                                              </span>
+                                            )) }
+                                          </div>
+                                        ) }
                                       </td>
                                       <td className="border px-2 py-1 text-right">
                                         { qty }

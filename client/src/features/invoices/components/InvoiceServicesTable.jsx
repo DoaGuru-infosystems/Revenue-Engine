@@ -87,7 +87,8 @@ export default function InvoiceServicesTable({
             return visibleEditingTypes.map((edit, eidx) => {
               const qty = Number(edit.quantity || 1);
               const base = Number(edit.price || 0);
-              const totalBase = base * qty;
+              const addonsTotal = (edit.additional_services || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+              const totalBase = (base * qty) + addonsTotal;
 
               return (
                 <tr
@@ -149,6 +150,18 @@ export default function InvoiceServicesTable({
                       }
                       return cat || type || service.service;
                     })()}
+                    {Array.isArray(edit.additional_services) && edit.additional_services.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {edit.additional_services.map((addon, aIdx) => (
+                          <span
+                            key={aIdx}
+                            className="inline-block text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 rounded px-1.5 py-0.5"
+                          >
+                            + {addon.name || addon.additional_service_name} (₹{formatAmountNoDecimals(addon.amount)})
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </td>
                   <td className="border px-2 py-1 text-right">{qty}</td>
                   <td className="border px-2 py-1 text-right">

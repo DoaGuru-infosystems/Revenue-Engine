@@ -90,28 +90,22 @@ exports.updateCalculatorDataById = async (req, res) => {
   }
 
 
-  // --- First Update Quotation (re_calculator_transactions) ---
-  const updateQuotationQuery = `
-    UPDATE re_calculator_transactions
-    SET
-      quantity = ?,
-      include_youtube_video_posting = ?,
-      total_amount = ?,
-      employee = ?,
-      created_at = ?
+  const additionalServicesStr = req.body.additional_services
+    ? (typeof req.body.additional_services === 'object' ? JSON.stringify(req.body.additional_services) : String(req.body.additional_services))
+    : null;
+
+  // --- Directly Check and Update re_invoice_graphic ---
+  const checkInvoiceQuery = `
+    SELECT id FROM re_invoice_graphic 
     WHERE txn_id = ? 
       AND client_id = ? 
       AND service_name = ? 
       AND category_name = ? 
       AND editing_type_name = ?
+    LIMIT 1
   `;
 
-  const quotationValues = [
-    quantity,
-    include_youtube_video_posting || 0,
-    total_amount,
-    employee,
-    updatedAt,
+  const checkValues = [
     txn_id,
     client_id,
     service_name,
@@ -119,53 +113,21 @@ exports.updateCalculatorDataById = async (req, res) => {
     editing_type_name,
   ];
 
-  db.query(updateQuotationQuery, quotationValues, (err, result) => {
-    if (err) {
-      console.error("Update Quotation Error:", err);
+  db.query(checkInvoiceQuery, checkValues, (checkErr, checkResult) => {
+    if (checkErr) {
+      console.error("Check re_invoice Error:", checkErr);
       return res
         .status(500)
-        .json({ status: "Failure", message: "Quotation DB error" });
+        .json({ status: "Failure", message: "re_invoice check error" });
     }
 
-    if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ status: "Failure", message: "Quotation not found" });
-    }
-
-    // --- Check if re_invoice Exists ---
-    const checkInvoiceQuery = `
-      SELECT id FROM re_invoice_graphic 
-      WHERE txn_id = ? 
-        AND client_id = ? 
-        AND service_name = ? 
-        AND category_name = ? 
-        AND editing_type_name = ?
-      LIMIT 1
-    `;
-
-    const checkValues = [
-      txn_id,
-      client_id,
-      service_name,
-      category_name,
-      editing_type_name,
-    ];
-
-    db.query(checkInvoiceQuery, checkValues, (checkErr, checkResult) => {
-      if (checkErr) {
-        console.error("Check re_invoice Error:", checkErr);
-        return res
-          .status(500)
-          .json({ status: "Failure", message: "re_invoice check error" });
-      }
-
-      if (checkResult.length > 0) {
+    if (checkResult.length > 0) {
         // --- re_invoice exists → Update it as well ---
         const updateInvoiceQuery = `
           UPDATE re_invoice_graphic
           SET
             quantity = ?,
+            additional_services = ?,
             total_amount = ?,
             employee = ?,
             created_at = ?
@@ -178,6 +140,7 @@ exports.updateCalculatorDataById = async (req, res) => {
 
         const invoiceValues = [
           quantity,
+          additionalServicesStr,
           total_amount,
           employee,
           updatedAt,
@@ -202,14 +165,12 @@ exports.updateCalculatorDataById = async (req, res) => {
           });
         });
       } else {
-        // --- re_invoice does NOT exist → Only Quotation updated ---
         return res.status(200).json({
           status: "Success",
           message: "Quotation updated successfully (No re_invoice found)",
         });
       }
     });
-  });
 };
 
 exports.updateClientDetails = async (req, res) => {

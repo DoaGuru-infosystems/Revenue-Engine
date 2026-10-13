@@ -1624,11 +1624,14 @@ exports.approvePayment = async (req, res) => {
             createdAt,
           ]);
         } else {
+          const additionalServicesStr = item.additional_services
+            ? (typeof item.additional_services === 'object' ? JSON.stringify(item.additional_services) : String(item.additional_services))
+            : null;
           const igQ = `
             INSERT INTO re_invoice_graphic (
               txn_id, client_id, service_name, category_name, editing_type_id, editing_type_name, editing_type_amount,
-              quantity, include_content_posting, include_thumbnail_creation, include_youtube_video_posting, total_amount, plan_name, employee, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              quantity, include_content_posting, include_thumbnail_creation, include_youtube_video_posting, additional_services, total_amount, plan_name, employee, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
           await runQuery(igQ, [
             invoice_txn_id,
@@ -1642,6 +1645,7 @@ exports.approvePayment = async (req, res) => {
             "0",
             "0",
             0,
+            additionalServicesStr,
             item.total_price || 0,
             "",
             proposal.created_by || "",

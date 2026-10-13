@@ -57,9 +57,9 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
   const [selecteddiscount, setSelecteddiscount] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedEditingType, setSelectedEditingType] = useState(null);
-  const [quantity, setQuantity] = useState(1);
   const [getData, setGetData] = useState([]);
   const [optionalServices, setOptionalServices] = useState([]);
+  const [selectedAdditionalServices, setSelectedAdditionalServices] = useState([]);
 
   const [addons, setAddons] = useState({});
   const [loading, setLoading] = useState(false);
@@ -257,6 +257,19 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     });
 
     setAddons(updatedAddons);
+
+    let initialSelectedAddons = [];
+    if (entry.additional_services) {
+      try {
+        initialSelectedAddons = typeof entry.additional_services === "string"
+          ? JSON.parse(entry.additional_services)
+          : entry.additional_services;
+        if (!Array.isArray(initialSelectedAddons)) initialSelectedAddons = [];
+      } catch {
+        initialSelectedAddons = [];
+      }
+    }
+    setSelectedAdditionalServices(initialSelectedAddons);
   };
 
   const getSelectedService = data.find(
@@ -359,7 +372,11 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
       }
     });
 
-    const finalAmount = baseAmount + optionalTotal;
+    const additionalServicesTotal = selectedAdditionalServices.reduce(
+      (sum, item) => sum + (Number(item.amount) || 0),
+      0
+    );
+    const finalAmount = baseAmount + optionalTotal + additionalServicesTotal;
 
     // ── IN-MEMORY MODE (embedded inside ProposalBuilder/Proforma) ──────────────────────
     // Jab onServiceAdded prop ho, DB call skip karo — sirf row return karo
@@ -408,6 +425,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
         include_content_posting,
         include_thumbnail_creation,
         include_youtube_video_posting,
+        additional_services: selectedAdditionalServices,
         include_in_total: true,
         source: 'custom_graphic',
       };
@@ -437,6 +455,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
       include_content_posting,
       include_thumbnail_creation,
       include_youtube_video_posting,
+      additional_services: selectedAdditionalServices,
       total_amount: finalAmount,
       employee: userName,
     };
@@ -519,6 +538,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     setSelectedCategory("");
     setSelectedEditingType(null);
     setQuantity(1);
+    setSelectedAdditionalServices([]);
     const initialAddons = {};
     optionalServices.forEach((item) => {
       const key = item.editing_type_name.toLowerCase().replace(/\s+/g, "_");
@@ -1312,7 +1332,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                   <div>
                     <label className={ labelCls }>Service</label>
                     <select value={ selectedService } disabled={ !!editId } className={ selectCls }
-                      onChange={ (e) => { setSelectedService(e.target.value); setSelectedCategory(""); setSelectedEditingType(null); } }>
+                      onChange={ (e) => { setSelectedService(e.target.value); setSelectedCategory(""); setSelectedEditingType(null); setSelectedAdditionalServices([]); } }>
                       <option value="">-- Choose --</option>
                       { data.map((s) => <option key={ s.service_id } value={ s.service_name }>{ s.service_name }</option>) }
                     </select>
@@ -1390,6 +1410,64 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                   </div>
                 ) }
 
+                {/* Additional Services (Checkboxes) */}
+                { getSelectedService?.additional_services?.length > 0 && (
+                  <div className="bg-gray-700/50 rounded-xl p-3 border border-gray-600 space-y-2">
+                    <label className={ labelCls }>Additional Services</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                      { getSelectedService.additional_services.map((addon) => {
+                        const addonName = addon.name || addon.additional_service_name;
+                        const isChecked = selectedAdditionalServices.some(
+                          (item) => String(item.id) === String(addon.id) || (item.name || item.additional_service_name) === addonName
+                        );
+                        return (
+                          <label
+                            key={ addon.id }
+                            className={ `flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition select-none ${
+                              isChecked
+                                ? "bg-red-500/15 border-red-500/50 text-white"
+                                : "bg-gray-800/60 border-gray-600 text-gray-300 hover:bg-gray-700/70"
+                            }` }
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={ isChecked }
+                                onChange={ (e) => {
+                                  if (e.target.checked) {
+                                    setSelectedAdditionalServices((prev) => [
+                                      ...prev,
+                                      {
+                                        id: addon.id,
+                                        name: addonName,
+                                        additional_service_name: addonName,
+                                        amount: Number(addon.amount) || 0,
+                                      },
+                                    ]);
+                                  } else {
+                                    setSelectedAdditionalServices((prev) =>
+                                      prev.filter(
+                                        (item) =>
+                                          String(item.id) !== String(addon.id) &&
+                                          (item.name || item.additional_service_name) !== addonName
+                                      )
+                                    );
+                                  }
+                                } }
+                                className="w-4 h-4 rounded text-red-600 bg-gray-700 border-gray-500 focus:ring-red-500 focus:ring-offset-gray-800"
+                              />
+                              <span className="text-sm font-medium truncate">{ addonName }</span>
+                            </div>
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex-shrink-0 ml-2">
+                              + ₹{ Number(addon.amount).toLocaleString() }
+                            </span>
+                          </label>
+                        );
+                      }) }
+                    </div>
+                  </div>
+                ) }
+
                 {/* Buttons */ }
                 <div className="flex gap-2 pt-1">
                   <button onClick={ handleSave } disabled={ loading }
@@ -1447,6 +1525,24 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                             { Number(order.include_content_posting) > 0 && <span className="text-xs bg-red-500/20 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full">📢 Meta Growth & Content Mgmt</span> }
                             { Number(order.include_thumbnail_creation) > 0 && <span className="text-xs bg-orange-500/20 border border-orange-500/30 text-orange-400 px-2 py-0.5 rounded-full">🖼 Thumbnail</span> }
                             { Number(order.include_youtube_video_posting) > 0 && <span className="text-xs bg-red-500/20 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full">▶️ YouTube Channel Growth & Optimization</span> }
+                            { (() => {
+                              let orderAddons = [];
+                              if (order.additional_services) {
+                                try {
+                                  orderAddons = typeof order.additional_services === "string"
+                                    ? JSON.parse(order.additional_services)
+                                    : order.additional_services;
+                                  if (!Array.isArray(orderAddons)) orderAddons = [];
+                                } catch {
+                                  orderAddons = [];
+                                }
+                              }
+                              return orderAddons.map((addon, aIdx) => (
+                                <span key={ aIdx } className="text-xs bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                  ✨ { addon.name || addon.additional_service_name } (+₹{ Number(addon.amount || 0).toLocaleString() })
+                                </span>
+                              ));
+                            })() }
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">

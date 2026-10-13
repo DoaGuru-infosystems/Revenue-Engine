@@ -969,6 +969,18 @@ export default function BalanceProformaPage() {
         groupedGraphic.push(service);
       }
 
+      let additional_services = [];
+      if (item.additional_services) {
+        try {
+          additional_services = typeof item.additional_services === "string"
+            ? JSON.parse(item.additional_services)
+            : item.additional_services;
+          if (!Array.isArray(additional_services)) additional_services = [];
+        } catch {
+          additional_services = [];
+        }
+      }
+
       // Push editing types directly (attach category info in the row if needed)
       service.editingTypes.push({
         category: item.category_name,
@@ -980,6 +992,7 @@ export default function BalanceProformaPage() {
           Number(item.include_thumbnail_creation) || 0,
         include_youtube_video_posting:
           Number(item.include_youtube_video_posting) || 0,
+        additional_services,
         total: Number(item.total_amount) || 0,
       });
     });
@@ -1739,7 +1752,8 @@ export default function BalanceProformaPage() {
                               return visibleEditingTypes.map((edit, eidx) => {
                                 const qty = Number(edit.quantity);
                                 const base = Number(edit.price);
-                                const totalBase = base * qty;
+                                const addonsTotal = (edit.additional_services || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+                                const totalBase = (base * qty) + addonsTotal;
 
                                 return (
                                   <tr
@@ -1785,6 +1799,18 @@ export default function BalanceProformaPage() {
                                         }
                                         return cat || type || service.service;
                                       })() }
+                                      { Array.isArray(edit.additional_services) && edit.additional_services.length > 0 && (
+                                        <div className="mt-1 flex flex-wrap gap-1">
+                                          { edit.additional_services.map((addon, aIdx) => (
+                                            <span
+                                              key={ aIdx }
+                                              className="inline-block text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 rounded px-1.5 py-0.5"
+                                            >
+                                              + { addon.name || addon.additional_service_name } (₹{ Number(addon.amount || 0).toLocaleString("en-IN") })
+                                            </span>
+                                          )) }
+                                        </div>
+                                      ) }
                                     </td>
                                     <td className="border px-2 py-1 text-right">
                                       { qty }
@@ -1989,7 +2015,14 @@ export default function BalanceProformaPage() {
                                   0
                                 );
 
-                              const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal;
+                              const addTotal = graphicData
+                                .flatMap((s) => s.editingTypes)
+                                .reduce((sum, e) => {
+                                  const addons = Array.isArray(e.additional_services) ? e.additional_services : [];
+                                  return sum + addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
+                                }, 0);
+
+                              const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
 
                               return (
                                 <tr className=" font-semibold">

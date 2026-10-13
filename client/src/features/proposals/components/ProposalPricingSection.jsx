@@ -157,6 +157,32 @@ export default function ProposalPricingSection({
                       Manual
                     </span>
                   )}
+                  {(() => {
+                    let rowAddons = [];
+                    if (row.additional_services) {
+                      try {
+                        rowAddons = typeof row.additional_services === "string"
+                          ? JSON.parse(row.additional_services)
+                          : row.additional_services;
+                        if (!Array.isArray(rowAddons)) rowAddons = [];
+                      } catch {
+                        rowAddons = [];
+                      }
+                    }
+                    if (rowAddons.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {rowAddons.map((addon, aIdx) => (
+                          <span
+                            key={aIdx}
+                            className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1 font-medium"
+                          >
+                            ✨ {addon.name || addon.additional_service_name} (+₹{Number(addon.amount || 0).toLocaleString("en-IN")})
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="p-3">
                   <p className="font-medium text-gray-200">

@@ -89,6 +89,7 @@ function ProformaServices() {
   const [selectedGraphicEditId, setSelectedGraphicEditId] = useState("");
   const [graphicQuantity, setGraphicQuantity] = useState("1");
   const [graphicAddons, setGraphicAddons] = useState({});
+  const [selectedAdditionalServices, setSelectedAdditionalServices] = useState([]);
   const [plansData, setPlansData] = useState([]);
 
   const [selectedAdsCategory, setSelectedAdsCategory] = useState("");
@@ -209,13 +210,21 @@ function ProformaServices() {
   const adsOptionMap = useMemo(() => { const m = {}; adsOptions.forEach((i) => { m[i.category] = i; }); return m; }, [adsOptions]);
   const selectedAdsOption = useMemo(() => adsOptionMap[selectedAdsCategory] || null, [adsOptionMap, selectedAdsCategory]);
   const isAddonApplicable = useMemo(() => { const n = String(selectedGraphicService || "").toLowerCase(); return n === "video services" || n === "graphics design"; }, [selectedGraphicService]);
+  const availableAdditionalServices = useMemo(() => {
+    return Array.isArray(selectedGraphicServiceObj?.additional_services)
+      ? selectedGraphicServiceObj.additional_services
+      : [];
+  }, [selectedGraphicServiceObj]);
+  const additionalServicesTotal = useMemo(() => {
+    return selectedAdditionalServices.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  }, [selectedAdditionalServices]);
   const selectedGraphicAddonPerUnit = useMemo(() => optionalAddonList.reduce((sum, a) => graphicAddons[a.key] ? sum + a.amount_num : sum, 0), [graphicAddons, optionalAddonList]);
   const selectedGraphicPreviewTotal = useMemo(() => {
     if (!selectedGraphicEditingType) return 0;
     const qty = Math.max(1, toNumber(graphicQuantity || 1));
     const unit = toNumber(selectedGraphicEditingType.amount || selectedGraphicEditingType.editing_type_amount);
-    return (unit + selectedGraphicAddonPerUnit) * qty;
-  }, [graphicQuantity, selectedGraphicAddonPerUnit, selectedGraphicEditingType]);
+    return (unit + selectedGraphicAddonPerUnit) * qty + additionalServicesTotal;
+  }, [graphicQuantity, selectedGraphicAddonPerUnit, selectedGraphicEditingType, additionalServicesTotal]);
 
   const groupedPlans = useMemo(() => {
     if (!Array.isArray(plansData)) return [];
@@ -237,7 +246,14 @@ function ProformaServices() {
     return Object.values(grouped);
   }, [plansData]);
 
-  const handleGraphicServiceChange = (val) => { setSelectedGraphicService(val); setSelectedGraphicCategory(""); setSelectedGraphicEditId(""); setGraphicQuantity("1"); setGraphicAddons(createInitialAddonState(optionalServices)); };
+  const handleGraphicServiceChange = (val) => {
+    setSelectedGraphicService(val);
+    setSelectedGraphicCategory("");
+    setSelectedGraphicEditId("");
+    setGraphicQuantity("1");
+    setGraphicAddons(createInitialAddonState(optionalServices));
+    setSelectedAdditionalServices([]);
+  };
   const handleGraphicCategoryChange = (val) => {
     setSelectedGraphicCategory(val);
 
@@ -397,7 +413,7 @@ function ProformaServices() {
       if (addon.key === "content_posting") includeContentPosting = addon.amount_num;
       if (addon.key === "thumbnail_creation") includeThumbnailCreation = addon.amount_num;
     });
-    const rowTotal = (unitPrice + selectedGraphicAddonPerUnit) * qty;
+    const rowTotal = (unitPrice + selectedGraphicAddonPerUnit) * qty + additionalServicesTotal;
 
     const newRow = {
       row_id: generateRowId(),
@@ -414,6 +430,7 @@ function ProformaServices() {
       include_content_posting: includeContentPosting,
       include_thumbnail_creation: includeThumbnailCreation,
       addon_labels: selectedAddonLabels,
+      additional_services: selectedAdditionalServices,
       total: rowTotal,
       is_complimentary: false,
     };
@@ -432,6 +449,7 @@ function ProformaServices() {
     setSelectedGraphicEditId("");
     setGraphicQuantity("1");
     setGraphicAddons(createInitialAddonState(optionalServices));
+    setSelectedAdditionalServices([]);
   };
 
   const addAdsServiceRow = () => {
@@ -548,7 +566,14 @@ function ProformaServices() {
     const qty = Math.max(1, toNumber(qtyValue || 1));
     setSelectedItems((prev) => prev.map((item) => {
       if (item.row_id !== rowId || (item.source !== "graphic" && item.source !== "complimentary")) return item;
-      return { ...item, quantity: qty, total: Number(((toNumber(item.unit_price) + toNumber(item.optional_total_per_unit)) * qty).toFixed(2)) };
+      const addTotal = Array.isArray(item.additional_services)
+        ? item.additional_services.reduce((s, a) => s + (Number(a.amount) || 0), 0)
+        : 0;
+      return {
+        ...item,
+        quantity: qty,
+        total: Number((((toNumber(item.unit_price) + toNumber(item.optional_total_per_unit)) * qty) + addTotal).toFixed(2))
+      };
     }));
   };
 
@@ -650,6 +675,7 @@ function ProformaServices() {
           quantity: item.quantity,
           include_content_posting: item.include_content_posting || 0,
           include_thumbnail_creation: item.include_thumbnail_creation || 0,
+          additional_services: item.additional_services || [],
           total_amount: item.total,
           total_price: item.total,
           plan_name: "",
@@ -1447,6 +1473,49 @@ function ProformaServices() {
                   </div>
                 ) }
 
+                {/* Dynamic Additional Services */}
+                { availableAdditionalServices.length > 0 && (
+                  <div>
+                    <div className="is-section-title" style={ { marginTop: 6, display: "flex", alignItems: "center", gap: 5 } }>
+                      <Sparkles size={ 12 } style={ { color: "#f59e0b" } } />
+                      <span>Additional Services</span>
+                    </div>
+                    <div style={ { background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 11, padding: "6px 14px" } }>
+                      { availableAdditionalServices.map((ad) => {
+                        const isChecked = selectedAdditionalServices.some((s) => s.id === ad.id);
+                        return (
+                          <div key={ ad.id } className="is-addon-row">
+                            <span style={ { fontSize: 12.5, color: "#e2e8f0" } }>{ ad.additional_service_name || ad.name }</span>
+                            <div style={ { display: "flex", alignItems: "center", gap: 10 } }>
+                              <span style={ { fontSize: 11.5, fontWeight: 600, color: "#f59e0b" } }>+{ formatRs(ad.amount) }</span>
+                              <input
+                                type="checkbox"
+                                checked={ isChecked }
+                                onChange={ (e) => {
+                                  if (e.target.checked) {
+                                    setSelectedAdditionalServices((prev) => [
+                                      ...prev,
+                                      {
+                                        id: ad.id,
+                                        service_id: ad.service_id,
+                                        name: ad.additional_service_name || ad.name,
+                                        amount: Number(ad.amount) || 0,
+                                      },
+                                    ]);
+                                  } else {
+                                    setSelectedAdditionalServices((prev) => prev.filter((s) => s.id !== ad.id));
+                                  }
+                                } }
+                                className="is-checkbox"
+                              />
+                            </div>
+                          </div>
+                        );
+                      }) }
+                    </div>
+                  </div>
+                ) }
+
                 <div className="is-preview">
                   <div style={ { display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 500 } }>
                     <Zap size={ 13 } style={ { color: "#d4a940" } } /> Preview Total
@@ -1707,6 +1776,26 @@ function ProformaServices() {
                               <div style={ { fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 } }>{ item.category_name } { item.editing_type_name ? `› ${item.editing_type_name}` : "" }</div>
                               { item.addon_labels?.length > 0 && (
                                 <div style={ { fontSize: 10.5, color: "rgba(184,150,46,0.65)", marginTop: 3 } }>{ item.addon_labels.join(" · ") }</div>
+                              ) }
+                              { item.additional_services?.length > 0 && (
+                                <div style={ { display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 } }>
+                                  { item.additional_services.map((ad, idx) => (
+                                    <span
+                                      key={ idx }
+                                      style={ {
+                                        fontSize: 10,
+                                        padding: "1px 6px",
+                                        borderRadius: 4,
+                                        background: "rgba(245, 158, 11, 0.15)",
+                                        color: "#f59e0b",
+                                        border: "1px solid rgba(245, 158, 11, 0.3)",
+                                        fontWeight: 500,
+                                      } }
+                                    >
+                                      ✨ { ad.name || ad.additional_service_name } (+₹{ Number(ad.amount || 0).toLocaleString("en-IN") })
+                                    </span>
+                                  )) }
+                                </div>
                               ) }
                             </div>
                           ) : (

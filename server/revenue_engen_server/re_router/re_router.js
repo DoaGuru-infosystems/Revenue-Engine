@@ -53,6 +53,11 @@ const {
   saveNotesbydefault,
   sendRegisterAdminOtp,
   registerAdminWithOtp,
+  addAdditionalService,
+  getAdditionalServicesByService,
+  getAllAdditionalServices,
+  updateAdditionalService,
+  deleteAdditionalService,
 } = require("../re_controller/re_controller");
 const {
   getAddServices,
@@ -349,6 +354,11 @@ router.get("/getClientsByEmployee/:employee", getClientsByEmployee);
 router.post("/addServices", addServices);
 router.post("/addCategories", addCategories);
 router.post("/addEditingTypes", addEditingTypes);
+router.post("/addAdditionalService", addAdditionalService);
+router.get("/additionalServices/:service_id", getAdditionalServicesByService);
+router.get("/getAllAdditionalServices", getAllAdditionalServices);
+router.put("/updateAdditionalService/:id", updateAdditionalService);
+router.delete("/deleteAdditionalService/:id", deleteAdditionalService);
 router.post("/saveCalculatorData", saveCalculatorData);
 router.post("/saveAdsCampaign", saveAdsCampaign);
 router.post("/saveCalculatorDataofplan", saveCalculatorDataOfPlan);

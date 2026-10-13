@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
@@ -250,7 +250,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           });
         } else {
           setError(
-            `No matching range found for ${category} with amount Γé╣${amount}`
+            `No matching range found for ${category} with amount ₹${amount}`
           );
           hasError = true;
         }
@@ -311,7 +311,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
             charge: newRecord.charge,
           }));
 
-          // If editingId set OR agar category already DB mein hai ΓåÆ update action
+          // If editingId set OR agar category already DB mein hai → update action
           const singleCategory = proformaItems[0]?.category_name || proformaItems[0]?.category;
           const existingInDb = getData.find(d => (d.category || d.category_name) === singleCategory);
           const updateTargetId = editingId || existingInDb?.id;
@@ -530,7 +530,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
               </button>
             )}
             <h3 className="text-2xl sm:text-3xl font-bold text-center text-white">
-              ≡ƒôó Ads Campaign Budget Calculator
+              📢 Ads Campaign Budget Calculator
             </h3>
           </div>
 
@@ -557,7 +557,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                 <h4 className="text-xl font-semibold">Enter Budget Amounts</h4>
                 {editingId && (
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 border border-yellow-400/40 text-yellow-300">
-                    Γ£Å∩╕Å Editing existing entry
+                    ✏️ Editing existing entry
                   </span>
                 )}
               </div>
@@ -573,7 +573,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="Enter Amount (Γé╣)"
+                    placeholder="Enter Amount (₹)"
                     value={enteredAmount[category] || ""}
                     onChange={(e) =>
                       handleAmountChange(category, e.target.value)
@@ -617,7 +617,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
 
           {adsItems.length > 0 && (
             <div className="space-y-4">
-              <h4 className="text-xl font-semibold">≡ƒôï Budget Breakdown</h4>
+              <h4 className="text-xl font-semibold">📋 Budget Breakdown</h4>
               {adsItems.map((item) => (
                 <div
                   key={item.id}
@@ -627,7 +627,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                     <div className="w-full">
                       <div className="flex justify-between items-center mb-2">
                         <h5 className="text-lg font-semibold text-red-300">
-                          ≡ƒôó {item.category}
+                          📢 {item.category}
                         </h5>
                         <div className="flex items-center gap-3">
                           <button
@@ -644,25 +644,25 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                             className="text-red-400 hover:text-red-600 transition text-xl leading-none"
                             title="Delete"
                           >
-                            ├ù
+                            ×
                           </button>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                         <p>
-                          ≡ƒÆ╝ Budget:{" "}
+                          💼 Budget:{" "}
                           <span className="font-medium text-white">
-                            Γé╣{item.amount.toLocaleString()}
+                            ₹{item.amount.toLocaleString()}
                           </span>
                         </p>
                         <p>
-                          ≡ƒôè Charge ({item.percent}%):{" "}
+                          📊 Charge ({item.percent}%):{" "}
                           <span className="font-medium text-white">
-                            Γé╣{item.charge.toLocaleString()}
+                            ₹{item.charge.toLocaleString()}
                           </span>
                         </p>
                         <p className="font-bold text-green-300">
-                          ≡ƒº╛ Total: Γé╣{item.total.toLocaleString()}
+                          🧾 Total: ₹{item.total.toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -675,10 +675,10 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           {adsItems.length > 0 && (
             <div className="text-center bg-green-800/30 p-6 rounded-lg border border-green-600">
               <h4 className="text-xl font-bold text-green-300 mb-2">
-                ≡ƒÆ░ Total Ads Budget
+                💰 Total Ads Budget
               </h4>
               <p className="text-4xl font-extrabold text-green-400">
-                Γé╣{totalAdsCost.toLocaleString()}
+                ₹{totalAdsCost.toLocaleString()}
               </p>
             </div>
           )}
@@ -686,7 +686,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           {getData.length > 0 && (
             <div className="mt-10 space-y-4">
               <h3 className="text-xl font-bold text-white">
-                ≡ƒº╛ Previously Saved Campaigns
+                🧾 Previously Saved Campaigns
               </h3>
               {getData.map((item, index) => (
                 <div
@@ -699,16 +699,16 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                 >
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     <p>
-                      ≡ƒôó <strong>{item.category}</strong>
+                      📢 <strong>{item.category}</strong>
                     </p>
                     <p>
-                      ≡ƒÆ░ Budget: Γé╣{parseFloat(item.amount).toLocaleString()}
+                      💰 Budget: ₹{parseFloat(item.amount).toLocaleString()}
                     </p>
                     <p>
-                      ≡ƒôè Charge: Γé╣{parseFloat(item.charge).toLocaleString()} (
+                      📊 Charge: ₹{parseFloat(item.charge).toLocaleString()} (
                       {item.percent}%)
                     </p>
-                    <p>≡ƒº╛ Total: Γé╣{parseFloat(item.total).toLocaleString()}</p>
+                    <p>🧾 Total: ₹{parseFloat(item.total).toLocaleString()}</p>
                     <div className="flex items-center gap-2">
                       {docTypeFromURL === "proforma" && (
                         <button
@@ -720,7 +720,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                           }`}
                           title="Edit this entry"
                         >
-                          Γ£Å∩╕Å
+                          ✏️
                         </button>
                       )}
                       <button
@@ -728,7 +728,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                         className="bg-red-600 hover:bg-red-700 text-white text-lg rounded-full w-8 h-8 flex items-center justify-center"
                         title="Delete this entry"
                       >
-                        ├ù
+                        ×
                       </button>
                     </div>
                   </div>

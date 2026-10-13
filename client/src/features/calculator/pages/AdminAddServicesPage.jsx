@@ -25,6 +25,12 @@ export default function AdminAddServicesPage() {
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [categories, setCategories] = useState([]);
 
+  const [additionalServices, setAdditionalServices] = useState([]);
+  const [showAddAddon, setShowAddAddon] = useState(false);
+  const [addonName, setAddonName] = useState("");
+  const [addonAmount, setAddonAmount] = useState("");
+  const [isSavingAddon, setIsSavingAddon] = useState(false);
+
   const [isSavingCategory, setIsSavingCategory] = useState(false);
   const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
   const catDropdownRef = useRef(null);
@@ -105,6 +111,114 @@ export default function AdminAddServicesPage() {
           timer: 1200,
         });
       }
+    }
+  };
+
+  const fetchAdditionalServices = async (serviceId) => {
+    if (!serviceId) {
+      setAdditionalServices([]);
+      return;
+    }
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/additionalServices/${serviceId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.status === "Success") {
+        setAdditionalServices(res.data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching additional services", err);
+    }
+  };
+
+  const handleSaveAdditionalService = async () => {
+    if (!selectedServiceId) {
+      Swal.fire({
+        icon: "warning",
+        title: "Select Service",
+        text: "Please select a service first.",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+      return;
+    }
+    if (!addonName.trim() || addonAmount === "") {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation",
+        text: "Additional service name and amount are required.",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    setIsSavingAddon(true);
+    try {
+      const res = await axios.post(
+        `${baseURL}/auth/api/re_calculator/addAdditionalService`,
+        {
+          service_id: selectedServiceId,
+          additional_service_name: addonName.trim(),
+          amount: parseFloat(addonAmount) || 0,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.status === "Success") {
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          text: "Additional service added successfully.",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+        setAddonName("");
+        setAddonAmount("");
+        setShowAddAddon(false);
+        fetchAdditionalServices(selectedServiceId);
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: err.response?.data?.message || "Failed to save additional service.",
+      });
+    } finally {
+      setIsSavingAddon(false);
+    }
+  };
+
+  const handleDeleteAdditionalService = async (addonId) => {
+    const confirm = await Swal.fire({
+      title: "Delete Additional Service?",
+      text: "Do you want to delete this additional service?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48",
+      confirmButtonText: "Yes, delete",
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await axios.delete(
+        `${baseURL}/auth/api/re_calculator/deleteAdditionalService/${addonId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Additional service deleted.",
+        timer: 1000,
+        showConfirmButton: false,
+      });
+      fetchAdditionalServices(selectedServiceId);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to delete additional service.",
+      });
     }
   };
 
@@ -388,6 +502,7 @@ export default function AdminAddServicesPage() {
                 const serviceId = e.target.value;
                 setSelectedServiceId(serviceId);
                 fetchCategories(serviceId);
+                fetchAdditionalServices(serviceId);
                 setCategoryName("");
               }}
             >
@@ -492,6 +607,82 @@ export default function AdminAddServicesPage() {
                 </div>
               )}
             </div>
+
+            {/* Additional Services section under Category Name */}
+            {selectedServiceId && (
+              <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5 text-amber-400" />
+                    Additional Services ({additionalServices.length})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddAddon((prev) => !prev)}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 transition flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {showAddAddon ? "Close" : "Add Additional Service"}
+                  </button>
+                </div>
+
+                {showAddAddon && (
+                  <div className="p-3 bg-slate-900/90 rounded-xl border border-white/10 space-y-2 mt-2">
+                    <p className="text-xs text-slate-300 font-medium">New Additional Service</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={addonName}
+                        onChange={(e) => setAddonName(e.target.value)}
+                        placeholder="Additional service name"
+                        className={inputClassName}
+                      />
+                      <input
+                        type="number"
+                        value={addonAmount}
+                        onChange={(e) => setAddonAmount(e.target.value)}
+                        placeholder="Amount (₹)"
+                        className={inputClassName}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSaveAdditionalService}
+                      disabled={isSavingAddon}
+                      className="w-full py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:opacity-90 rounded-lg text-xs font-bold text-white transition flex items-center justify-center gap-1.5"
+                    >
+                      {isSavingAddon ? "Saving..." : "+ Save Additional Service"}
+                    </button>
+                  </div>
+                )}
+
+                {additionalServices.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {additionalServices.map((ad) => (
+                      <span
+                        key={ad.id}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-200"
+                      >
+                        <span className="font-medium">{ad.additional_service_name}</span>
+                        <span className="font-bold text-amber-400">₹{parseFloat(ad.amount).toLocaleString()}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAdditionalService(ad.id)}
+                          className="text-amber-400 hover:text-red-400 ml-0.5 text-sm leading-none"
+                          title="Delete"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  !showAddAddon && (
+                    <p className="text-[11px] text-slate-400 italic">No additional services added yet for this service.</p>
+                  )
+                )}
+              </div>
+            )}
 
             <input
               type="number"

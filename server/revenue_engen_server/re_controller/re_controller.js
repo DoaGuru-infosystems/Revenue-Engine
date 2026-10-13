@@ -947,32 +947,40 @@ exports.saveCalculatorData = async (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  // ?? Step 0: Check if the same service already exists for this txn_id
-  const checkDuplicate = `
-    SELECT id FROM re_calculator_transactions 
-    WHERE txn_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
-  `;
+  const additionalServicesStr = req.body.additional_services
+    ? (typeof req.body.additional_services === 'object' ? JSON.stringify(req.body.additional_services) : String(req.body.additional_services))
+    : null;
 
-  db.query(
-    checkDuplicate,
-    [txn_id, service_name, category_name, editing_type_id],
-    (dupErr, dupResult) => {
-      if (dupErr) {
-        console.error("Duplicate Check Error:", dupErr);
-        return res.status(500).json({ status: "Failure", message: "DB error" });
-      }
+  const values = [
+    txn_id,
+    client_id,
+    service_name,
+    category_name,
+    editing_type_id,
+    editing_type_name,
+    editing_type_amount,
+    quantity,
+    include_content_posting,
+    include_thumbnail_creation,
+    include_youtube_video_posting || 0,
+    additionalServicesStr,
+    total_amount,
+    employee,
+    plan_name || "Customise",
+    createdAt,
+  ];
 
-      if (dupResult.length > 0) {
-        // ?? Service already exists, stop insert
-        return res.status(200).json({
-          status: "Alert",
-          message: "This service already exists for the selected quotation",
-        });
-      }
+  // Check if re_invoice already exists
+  const checkInvoice = "SELECT id FROM re_invoice WHERE txn_id = ?";
+  db.query(checkInvoice, [txn_id], (err2, invoiceResult) => {
+    if (err2) {
+      console.error("Invoice Check Error:", err2);
+      return res.status(500).json({ status: "Failure", message: "DB error" });
+    }
 
-      // Step 1: Insert into re_calculator_transactions (Quotation)
-      const query = `
-        INSERT INTO re_calculator_transactions (
+    if (invoiceResult.length > 0) {
+      const invoiceQuery = `
+        INSERT INTO re_invoice_graphic (
           txn_id,
           client_id,
           service_name,
@@ -984,96 +992,35 @@ exports.saveCalculatorData = async (req, res) => {
           include_content_posting,
           include_thumbnail_creation,
           include_youtube_video_posting,
+          additional_services,
           total_amount,
           employee,
           plan_name,
           created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-      const values = [
-        txn_id,
-        client_id,
-        service_name,
-        category_name,
-        editing_type_id,
-        editing_type_name,
-        editing_type_amount,
-        quantity,
-        include_content_posting,
-        include_thumbnail_creation,
-        include_youtube_video_posting || 0,
-        total_amount,
-        employee,
-        plan_name || "Customise",
-        createdAt,
-      ];
-
-      db.query(query, values, (err, result) => {
-        if (err) {
-          console.error("Insert Error (Quotation):", err);
-          return res
-            .status(500)
-            .json({ status: "Failure", message: "DB error" });
+      db.query(invoiceQuery, values, (err3) => {
+        if (err3) {
+          console.error("Insert Error (re_invoice):", err3);
+          return res.status(500).json({
+            status: "Failure",
+            message: "re_invoice insert failed",
+          });
         }
 
-        // Step 2: Check if re_invoice already exists
-        const checkInvoice = "SELECT id FROM re_invoice WHERE txn_id = ?";
-        db.query(checkInvoice, [txn_id], (err2, invoiceResult) => {
-          if (err2) {
-            console.error("Invoice Check Error:", err2);
-            return res
-              .status(500)
-              .json({ status: "Failure", message: "DB error" });
-          }
-
-          if (invoiceResult.length > 0) {
-            // Step 3: Insert into re_invoice_graphic table
-            const invoiceQuery = `
-              INSERT INTO re_invoice_graphic (
-                txn_id,
-                client_id,
-                service_name,
-                category_name,
-                editing_type_id,
-                editing_type_name,
-                editing_type_amount,
-                quantity,
-                include_content_posting,
-                include_thumbnail_creation,
-                total_amount,
-                employee,
-                plan_name,
-                created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
-            `;
-
-            db.query(invoiceQuery, values, (err3) => {
-              if (err3) {
-                console.error("Insert Error (re_invoice):", err3);
-                return res.status(500).json({
-                  status: "Failure",
-                  message: "Quotation saved but re_invoice insert failed",
-                });
-              }
-
-              return res.status(200).json({
-                status: "Success",
-                message: "Quotation & re_invoice saved successfully",
-              });
-            });
-          } else {
-            // Only Quotation saved
-            return res.status(200).json({
-              status: "Success",
-              message:
-                "Quotation saved successfully (re_invoice not created yet)",
-            });
-          }
+        return res.status(200).json({
+          status: "Success",
+          message: "Saved successfully",
         });
       });
-    },
-  );
+    } else {
+      return res.status(200).json({
+        status: "Success",
+        message: "Saved successfully",
+      });
+    }
+  });
 };
 
 exports.saveAdsCampaign = async (req, res) => {
@@ -1313,39 +1260,8 @@ exports.saveClientWithPlan = async (req, res) => {
 
       const client_id = clientResult.insertId;
 
-      // Step 2: Insert plans
-      const planQuery = `
-        INSERT INTO re_calculator_transactions 
-        (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 
-        VALUES ?`;
-
-      const planValues = plans.map((p) => [
-        txn_id,
-        client_id,
-        p.service_name,
-        p.category_name,
-        p.editing_type_name,
-        p.editing_type_amount,
-        p.quantity,
-        p.include_content_posting,
-        p.include_thumbnail_creation,
-        p.total_amount,
-        p.employee,
-        p.plan_name,
-        createdAt,
-      ]);
-
-      db.query(planQuery, [planValues], (err) => {
-        if (err) {
-          return res.status(500).json({
-            status: "Failure",
-            message: "Error saving plans",
-            error: err,
-          });
-        }
-
-        // Step 3: Insert notes
-        const noteClientQuery = `
+      // Step 3: Insert notes directly
+      const noteClientQuery = `
           INSERT INTO re_plan_client_notes 
           (txn_id, client_id, note_name, created_at) 
           VALUES ?`;
@@ -1376,7 +1292,6 @@ exports.saveClientWithPlan = async (req, res) => {
           });
         });
       });
-    });
   } catch (error) {
     res.status(500).json({
       status: "Failure",
@@ -1462,41 +1377,8 @@ exports.savePlanClientNotes = (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  // Step 1: Insert Plans (re_calculator_transactions)
-  const planQuery = `
-    INSERT INTO re_calculator_transactions 
-    (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 
-    VALUES ?
-  `;
-
-  const planValues = plans.map((p) => [
-    txn_id,
-    client_id,
-    p.service_name,
-    p.category_name,
-    p.editing_type_name,
-    p.editing_type_amount,
-    p.quantity,
-    p.include_content_posting,
-    p.include_thumbnail_creation,
-    p.total_amount,
-    p.employee,
-    p.plan_name && p.plan_name.trim() !== "" ? p.plan_name : "Customise",
-    createdAt,
-  ]);
-
-  db.query(planQuery, [planValues], (err) => {
-    if (err) {
-      console.error("Error saving plans:", err);
-      return res.status(500).json({
-        status: "Failure",
-        message: "Error saving plans",
-        error: err,
-      });
-    }
-
-    // Step 2: Insert Notes (re_plan_client_notes)
-    const insertNotes = (callback) => {
+  // Step 2: Insert Notes (re_plan_client_notes)
+  const insertNotes = (callback) => {
       if (planNotes && planNotes.length > 0) {
         const noteClientQuery = `
           INSERT INTO re_plan_client_notes 
@@ -1569,7 +1451,6 @@ exports.savePlanClientNotes = (req, res) => {
         }
       });
     });
-  });
 };
 
 exports.saveClientIdwiseNotes = (req, res) => {
@@ -3519,21 +3400,28 @@ exports.saveInvoiceGD = (req, res) => {
       }
 
       // ? Step 3: Insert re_invoice line items into re_invoice_graphic
-      const invoiceValues = invoices.map((p) => [
-        txn_id,
-        client_id,
-        p.service_name,
-        p.category_name,
-        p.editing_type_name,
-        p.editing_type_amount,
-        p.quantity,
-        p.include_content_posting,
-        p.include_thumbnail_creation,
-        p.total_amount,
-        p.employee,
-        p.plan_name && p.plan_name.trim() !== "" ? p.plan_name : "Customise",
-        createdAt,
-      ]);
+      const invoiceValues = invoices.map((p) => {
+        const additionalServicesStr = p.additional_services
+          ? (typeof p.additional_services === 'object' ? JSON.stringify(p.additional_services) : String(p.additional_services))
+          : null;
+        return [
+          txn_id,
+          client_id,
+          p.service_name,
+          p.category_name,
+          p.editing_type_name,
+          p.editing_type_amount,
+          p.quantity,
+          p.include_content_posting || 0,
+          p.include_thumbnail_creation || 0,
+          p.include_youtube_video_posting || 0,
+          additionalServicesStr,
+          p.total_amount,
+          p.employee,
+          p.plan_name && p.plan_name.trim() !== "" ? p.plan_name : "Customise",
+          createdAt,
+        ];
+      });
 
       // ? CRITICAL FIX: Validate before executing query
       if (
@@ -3553,7 +3441,7 @@ exports.saveInvoiceGD = (req, res) => {
       // Only execute query if we have valid items
       const invoiceQuery = `
   INSERT INTO re_invoice_graphic 
-  (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 
+  (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, include_youtube_video_posting, additional_services, total_amount, employee, plan_name, created_at) 
   VALUES ?
 `;
 
@@ -4462,3 +4350,138 @@ exports.registerAdminWithOtp = async (req, res) => {
       .json({ status: "Failure", message: "Internal server error." });
   }
 };
+
+exports.addAdditionalService = async (req, res) => {
+  const { service_id, additional_service_name, amount } = req.body;
+  const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
+
+  if (
+    !service_id ||
+    !additional_service_name ||
+    amount === undefined ||
+    amount === null ||
+    amount === ""
+  ) {
+    return res.status(400).json({
+      status: "Failure",
+      message: "Service, Additional Service Name, and Amount are required",
+    });
+  }
+
+  try {
+    const trimmedName = String(additional_service_name).trim();
+    const finalAmount = parseFloat(amount) || 0;
+
+    db.query(
+      "INSERT INTO re_additional_services (service_id, additional_service_name, amount, created_at) VALUES (?, ?, ?, ?)",
+      [service_id, trimmedName, finalAmount, createdAt],
+      (err, result) => {
+        if (err) {
+          console.error("Database error in addAdditionalService:", err);
+          return res
+            .status(500)
+            .json({ status: "Failure", message: "Database error", error: err.message });
+        }
+
+        res.status(201).json({
+          status: "Success",
+          message: "Additional service added successfully",
+          data: {
+            id: result.insertId,
+            service_id,
+            additional_service_name: trimmedName,
+            amount: finalAmount,
+          },
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ status: "Failure", message: "Server error", error });
+  }
+};
+
+exports.getAdditionalServicesByService = async (req, res) => {
+  const { service_id } = req.params;
+  db.query(
+    "SELECT id, service_id, additional_service_name, amount, created_at FROM re_additional_services WHERE service_id = ? ORDER BY id DESC",
+    [service_id],
+    (err, results) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ status: "Failure", message: "Database error" });
+      }
+      res.status(200).json({ status: "Success", data: results });
+    }
+  );
+};
+
+exports.getAllAdditionalServices = async (req, res) => {
+  const query = `
+    SELECT 
+      a.id, 
+      a.service_id, 
+      s.service_name, 
+      a.additional_service_name, 
+      a.amount, 
+      a.created_at 
+    FROM re_additional_services a
+    LEFT JOIN re_services s ON a.service_id = s.service_id
+    ORDER BY a.id DESC
+  `;
+  db.query(query, (err, results) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ status: "Failure", message: "Database error" });
+    }
+    res.status(200).json({ status: "Success", data: results });
+  });
+};
+
+exports.updateAdditionalService = async (req, res) => {
+  const { id } = req.params;
+  const { additional_service_name, amount } = req.body;
+
+  if (!additional_service_name || amount === undefined || amount === null) {
+    return res
+      .status(400)
+      .json({ status: "Failure", message: "Name and Amount are required" });
+  }
+
+  db.query(
+    "UPDATE re_additional_services SET additional_service_name = ?, amount = ? WHERE id = ?",
+    [String(additional_service_name).trim(), parseFloat(amount) || 0, id],
+    (err, result) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ status: "Failure", message: "Database error" });
+      }
+      res.status(200).json({
+        status: "Success",
+        message: "Additional service updated successfully",
+      });
+    }
+  );
+};
+
+exports.deleteAdditionalService = async (req, res) => {
+  const { id } = req.params;
+  db.query(
+    "DELETE FROM re_additional_services WHERE id = ?",
+    [id],
+    (err, result) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ status: "Failure", message: "Database error" });
+      }
+      res.status(200).json({
+        status: "Success",
+        message: "Additional service deleted successfully",
+      });
+    }
+  );
+};
+
