@@ -60,6 +60,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
   const [getData, setGetData] = useState([]);
   const [optionalServices, setOptionalServices] = useState([]);
   const [selectedAdditionalServices, setSelectedAdditionalServices] = useState([]);
+  const [quantity, setQuantity] = useState(1);
 
   const [addons, setAddons] = useState({});
   const [loading, setLoading] = useState(false);
