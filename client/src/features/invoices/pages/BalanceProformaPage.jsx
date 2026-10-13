@@ -2020,7 +2020,7 @@ export default function BalanceProformaPage() {
                           <thead className="bg-orange-100">
                             <tr>
                               <th className="border w-[10rem] px-2 py-1 text-left">
-                                Complimentary Service
+                                Category Name
                               </th>
                               <th className="border w-[20rem] px-2 py-1 text-left">
                                 Service Name
@@ -2040,30 +2040,61 @@ export default function BalanceProformaPage() {
                           <tbody>
                             {/* ================= COMPLIMENTARY SERVICES ================= */ }
                             { complimentaryData.map((edit, eidx) => {
-                              const qty = Number(edit.quantity);
+                              const qty = Number(edit.quantity || 1);
                               const base = Number(edit.editing_type_amount || edit.price || edit.amount || 0);
                               const totalBase = base * qty;
 
-                              const rawSName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
-                                ? edit.service_name
-                                : (edit.category_name || "Complimentary Service");
-                              const sName = String(rawSName || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+                              let catName = edit.category_name && edit.category_name !== "null" && edit.category_name.toLowerCase() !== "proposal item"
+                                ? edit.category_name
+                                : "";
+                              const isGenericService = !edit.service_name || 
+                                edit.service_name.toLowerCase() === "complimentary" || 
+                                edit.service_name.toLowerCase() === "re_complimentary" ||
+                                edit.service_name.toLowerCase() === "proposal item";
 
-                              const rawDetailName = edit.service_name && edit.service_name !== "re_complimentary" && edit.service_name !== "complimentary"
-                                ? (edit.editing_type_name && edit.editing_type_name !== "null" ? `${edit.category_name} (${edit.editing_type_name})` : edit.category_name)
-                                : (edit.editing_type_name || edit.category_name || "-");
-                              const detailName = String(rawDetailName || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+                              let serviceName = "";
+                              if (!isGenericService) {
+                                serviceName = edit.service_name;
+                              } else if (edit.service && edit.service.toLowerCase() !== "proposal item") {
+                                serviceName = edit.service;
+                              } else if (edit.editing_type_name && edit.editing_type_name !== "null" && edit.editing_type_name.toLowerCase() !== "proposal item") {
+                                serviceName = edit.editing_type_name;
+                              } else if (catName) {
+                                serviceName = catName;
+                                catName = "Complimentary";
+                              } else {
+                                serviceName = "Complimentary Service";
+                              }
+
+                              if (!catName || catName.trim().toLowerCase() === serviceName.trim().toLowerCase()) {
+                                catName = edit.service_type || "Complimentary Service";
+                              }
+
+                              if (
+                                edit.editing_type_name &&
+                                edit.editing_type_name !== "null" &&
+                                edit.editing_type_name !== "N/A" &&
+                                edit.editing_type_name !== "undefined" &&
+                                edit.editing_type_name.toLowerCase() !== "proposal item" &&
+                                edit.editing_type_name.trim().toLowerCase() !== catName.trim().toLowerCase() &&
+                                edit.editing_type_name.trim().toLowerCase() !== serviceName.trim().toLowerCase()
+                              ) {
+                                catName = `${catName} (${edit.editing_type_name})`;
+                              }
+
+                              const finalCategory = String(catName).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+                              const finalService = String(serviceName).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() || "-";
 
                               return (
                                 <tr
                                   key={ `compl-${eidx}` }
                                   className="bg-gray-50"
                                 >
-                                  <td className="border px-2 py-1">
-                                    { sName }
+                                  <td className="border px-2 py-1 font-medium">
+                                    { finalCategory }
                                   </td>
                                   <td className="border px-2 py-1">
-                                    { detailName }
+                                    { finalService }
                                   </td>
                                   <td className="border px-2 py-1 text-right">
                                     { qty }

@@ -12,7 +12,7 @@ export default function InvoiceComplimentaryTable({
         <thead className="bg-green-100">
           <tr>
             <th className="border px-2 py-1 text-left w-[10rem] text-green-900 font-bold">
-              Complimentary Service
+              Category Name
             </th>
             <th className="border px-2 py-1 text-left w-[20rem] text-green-900 font-bold">
               Service Name
@@ -34,32 +34,55 @@ export default function InvoiceComplimentaryTable({
             const price = Number(
               svc.editing_type_amount || svc.price || svc.amount || 0
             );
+
+            let catName = svc.category_name && svc.category_name !== "null" && svc.category_name.toLowerCase() !== "proposal item"
+              ? svc.category_name
+              : "";
+            const isGenericService = !svc.service_name || 
+              svc.service_name.toLowerCase() === "complimentary" || 
+              svc.service_name.toLowerCase() === "re_complimentary" ||
+              svc.service_name.toLowerCase() === "proposal item";
+
+            let serviceName = "";
+            if (!isGenericService) {
+              serviceName = svc.service_name;
+            } else if (svc.service && svc.service.toLowerCase() !== "proposal item") {
+              serviceName = svc.service;
+            } else if (svc.editing_type_name && svc.editing_type_name !== "null" && svc.editing_type_name.toLowerCase() !== "proposal item") {
+              serviceName = svc.editing_type_name;
+            } else if (catName) {
+              serviceName = catName;
+              catName = "Complimentary";
+            } else {
+              serviceName = "Complimentary Service";
+            }
+
+            if (!catName || catName.trim().toLowerCase() === serviceName.trim().toLowerCase()) {
+              catName = svc.service_type || "Complimentary Service";
+            }
+
+            if (
+              svc.editing_type_name &&
+              svc.editing_type_name !== "null" &&
+              svc.editing_type_name !== "N/A" &&
+              svc.editing_type_name !== "undefined" &&
+              svc.editing_type_name.toLowerCase() !== "proposal item" &&
+              svc.editing_type_name.trim().toLowerCase() !== catName.trim().toLowerCase() &&
+              svc.editing_type_name.trim().toLowerCase() !== serviceName.trim().toLowerCase()
+            ) {
+              catName = `${catName} (${svc.editing_type_name})`;
+            }
+
+            const finalCategory = String(catName).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+            const finalService = String(serviceName).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() || "-";
+
             return (
               <tr key={`comp-${idx}`} className="bg-white">
                 <td className="border px-2 py-1 font-medium">
-                  {String(
-                    svc.service_name &&
-                      svc.service_name.toLowerCase() === "proposal item"
-                      ? svc.category_name || svc.service_name
-                      : svc.service_name || svc.category_name || "N/A"
-                  )
-                    .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
-                    .trim()}
+                  {finalCategory}
                 </td>
                 <td className="border px-2 py-1">
-                  {String(
-                    svc.editing_type_name &&
-                      svc.editing_type_name.toLowerCase() === "proposal item"
-                      ? svc.service ||
-                          svc.category_name ||
-                          svc.editing_type_name
-                      : svc.editing_type_name &&
-                        svc.editing_type_name !== "null"
-                      ? svc.editing_type_name
-                      : "-"
-                  )
-                    .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
-                    .trim()}
+                  {finalService}
                 </td>
                 <td className="border px-2 py-1 text-right">{qty}</td>
                 <td className="border px-2 py-1 text-right">
