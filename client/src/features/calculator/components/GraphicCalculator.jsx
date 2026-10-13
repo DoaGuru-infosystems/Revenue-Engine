@@ -39,6 +39,21 @@ import ComplimentaryCalculator from "./ComplimentaryCalculator";
 
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
+const isComplimentaryItem = (item) => {
+  if (!item) return false;
+  if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+    return Boolean(item.is_complimentary);
+  }
+  if (item.source === "custom_complimentary" || item.source === "complimentary") return true;
+  if (item.include_in_total === false) return true;
+  const s = String(item.service_name || item.service || "").toLowerCase();
+  return (
+    s.includes("(complimentary)") ||
+    s.includes("(complimntory)") ||
+    s === "complimentary"
+  );
+};
+
 const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
   const location = useLocation();
   const [serviceType, setServiceType] = useState("paid");
@@ -384,16 +399,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     if (onServiceAdded) {
       // Duplicate check in in-memory mode (edit mode mein skip karo)
       if (!editId && embeddedData && embeddedData.length > 0) {
-        const isComp = (r) => {
-          if (r.is_complimentary !== undefined && r.is_complimentary !== null) {
-            return Boolean(r.is_complimentary);
-          }
-          if (r.source === 'custom_complimentary' || r.source === 'complimentary') return true;
-          if (r.include_in_total === false) return true;
-          const s = String(r.service_name || r.service || "").toLowerCase();
-          return s.includes('(complimentary)') || s.includes('(complimntory)') || s === 'complimentary';
-        };
-        const paidItems = embeddedData.filter(r => !isComp(r));
+        const paidItems = embeddedData.filter(r => !isComplimentaryItem(r));
         const dupRow = paidItems.find(
           (r) =>
             r.service_name === selectedService &&
@@ -1081,7 +1087,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
 
   const fetchData = async () => {
     if (embeddedData) {
-      setGetData(embeddedData);
+      setGetData(embeddedData.filter(r => !isComplimentaryItem(r)));
       return;
     }
     if (!id || !proposalId) return;
@@ -1098,11 +1104,11 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
       });
 
       if (docTypeFromURL === "proforma") {
-        const parsed = JSON.parse(data.data.pricing_snapshot || "[]");
-        // pricing_snapshot now contains only service items (ads are in ads_snapshot)
-        setGetData(parsed);
+        const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
+        // In Paid Service tab, show only paid services (exclude complimentary)
+        setGetData(parsed.filter(r => !isComplimentaryItem(r)));
       } else {
-        setGetData(data.data);
+        setGetData((data.data || []).filter(r => !isComplimentaryItem(r)));
       }
     } catch (error) {
       console.log(error);
@@ -1158,7 +1164,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
 
   useEffect(() => {
     if (embeddedData) {
-      setGetData(embeddedData);
+      setGetData(embeddedData.filter(r => !isComplimentaryItem(r)));
     } else {
       fetchData();
     }
@@ -1246,10 +1252,12 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
       });
     }
   };
-  const grandTotal = getData.reduce(
-    (acc, order) => acc + parseFloat(order.total_amount || 0),
-    0
-  );
+  const grandTotal = getData
+    .filter(order => !isComplimentaryItem(order))
+    .reduce(
+      (acc, order) => acc + parseFloat(order.total_amount || 0),
+      0
+    );
 
   const discountAmount = selecteddiscount
     ? selecteddiscount.discount_type === "percent"
@@ -1513,10 +1521,10 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
               )}
 
               {/* Orders List */ }
-              { getData.length > 0 && (
+              { getData.filter(order => !isComplimentaryItem(order)).length > 0 && (
                 <div className="space-y-2">
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Package className="w-4 h-4 text-red-400" />Saved Services</h3>
-                  { getData.map((order) => (
+                  { getData.filter(order => !isComplimentaryItem(order)).map((order) => (
                     <div key={ order.id } className={ cardCls + " hover:border-red-500/50 transition" }>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
