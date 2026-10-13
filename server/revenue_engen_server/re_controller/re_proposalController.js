@@ -2829,7 +2829,7 @@ exports.getProformaSnapshot = async (req, res) => {
   try {
     const { id } = req.params;
     const results = await runQuery(
-      `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, is_gst, gst_rate, base_amount, gst_amount, total_amount FROM re_proposal_proforma WHERE id = ?`,
+      `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, is_gst, gst_rate, base_amount, gst_amount, total_amount FROM re_proposal_proforma WHERE id = ?`,
       [id]
     );
     if (results.length === 0) {
@@ -2845,8 +2845,8 @@ exports.getProformaSnapshot = async (req, res) => {
 exports.updateProformaSnapshot = async (req, res) => {
   try {
     const { proformaId, action, item, editId, entryId, snapshotType } = req.body;
-    // snapshotType: 'ads' => ads_snapshot column, default => pricing_snapshot column
-    const column = snapshotType === 'ads' ? 'ads_snapshot' : 'pricing_snapshot';
+    // snapshotType: 'ads' => ads_snapshot, 'notes' => notes_snapshot, default => pricing_snapshot
+    const column = snapshotType === 'ads' ? 'ads_snapshot' : snapshotType === 'notes' ? 'notes_snapshot' : 'pricing_snapshot';
 
     const results = await runQuery(`SELECT ${column} FROM re_proposal_proforma WHERE id = ?`, [proformaId]);
     if (results.length === 0) {
@@ -2855,7 +2855,9 @@ exports.updateProformaSnapshot = async (req, res) => {
 
     let parsed = JSON.parse(results[0][column] || "[]");
 
-    if (action === "add") {
+    if (action === "set") {
+      parsed = Array.isArray(item) ? item : [];
+    } else if (action === "add") {
       const isNewComp = isComplimentaryItem(item);
       const normalizeName = (name) => String(name || '').replace(/\s*\((complimentary|complimntory)\)\s*$/i, '').trim().toLowerCase();
 

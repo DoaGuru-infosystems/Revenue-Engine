@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useParams } from "react-router-dom";
@@ -58,11 +58,9 @@ const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
 
-  const [total, setTotal] = useState(0);
   const navigate = useNavigate();
   console.log(id, proposalId);
   const [editId, setEditId] = useState(null);
-  const [allPlanNote, setAllPlanNote] = useState([]);
   const [formData, setFormData] = useState({
     note_name: "",
     plan: "Customise",
@@ -126,6 +124,34 @@ const dispatch = useDispatch();
   //     setAddons({});
   //   }
   // }, [selectedService]);
+  const DEFAULT_PREDEFINED_NOTES = [
+    {
+      id: 1,
+      note_text:
+        "The client pays for the Meta ad budget, and ad service charges will apply only if the client wants to run the ad.",
+    },
+    {
+      id: 2,
+      note_text:
+        "All amounts need to be paid in advance. Only the ad budget will be paid upon request of the client or immediately after the service is started.",
+    },
+    {
+      id: 3,
+      note_text:
+        "Please note that service charges are non-refundable but may be adjusted against another service.",
+    },
+    {
+      id: 4,
+      note_text:
+        "One dedicated SPOC (single point of contact) is required from the client side to approve the posts, contents, videos changes, etc.",
+    },
+    {
+      id: 5,
+      note_text:
+        "Required details like credentials and other details are needed to share timely.",
+    },
+  ];
+
   const fetchPredefinedNotes = async () => {
     try {
       const { data } = await axios.get(
@@ -136,9 +162,14 @@ const dispatch = useDispatch();
           },
         }
       );
-      setPredefinedNotes(data.data || []);
+      if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+        setPredefinedNotes(data.data);
+      } else {
+        setPredefinedNotes(DEFAULT_PREDEFINED_NOTES);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("fetchPredefinedNotes error:", error);
+      setPredefinedNotes(DEFAULT_PREDEFINED_NOTES);
     }
   };
   useEffect(() => {
@@ -166,7 +197,6 @@ const dispatch = useDispatch();
     });
 
     setAddons(updatedAddons);
-    setTotal(0);
   };
 
   const getSelectedService = data.find(
@@ -226,6 +256,10 @@ const dispatch = useDispatch();
       });
     }
 
+    const baseUnit = parseFloat(selectedEditingType?.amount || 0);
+    const baseAmount = baseUnit * quantity;
+    const finalAmount = baseAmount + optionalTotal;
+
     const cleanBase = selectedService.replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
     const finalServiceName = cleanBase;
 
@@ -276,9 +310,9 @@ const dispatch = useDispatch();
         editing_type_name: selectedEditingType?.editing_type_name,
         editing_type_amount: selectedEditingType?.amount || 0,
         quantity,
-        unit_price: 0,
-        total_price: 0,
-        total_amount: 0,
+        unit_price: baseUnit,
+        total_price: finalAmount,
+        total_amount: finalAmount,
         include_content_posting,
         include_thumbnail_creation,
         include_in_total: false,
@@ -310,8 +344,10 @@ const dispatch = useDispatch();
       quantity,
       include_content_posting,
       include_thumbnail_creation,
-      total_amount: 0,
-      unit_price: 0,
+      total_amount: finalAmount,
+      total_price: finalAmount,
+      unit_price: baseUnit,
+      include_in_total: false,
       is_complimentary: true,
       employee: userName,
     };
@@ -358,6 +394,7 @@ const dispatch = useDispatch();
           });
           resetForm();
           fetchData();
+          if (onSaveComplete) onSaveComplete();
         } else if (res.data.status === "Alert") {
           Swal.fire({
             icon: "warning",
@@ -394,8 +431,6 @@ const dispatch = useDispatch();
       initialAddons[key] = false;
     });
     setAddons(initialAddons);
-
-    setTotal(0);
   };
 
   const handleChange = (e) => {
@@ -526,7 +561,6 @@ const dispatch = useDispatch();
         text: "Please add at least one note before saving.",
         showConfirmButton: false,
         timer: 1000,
-        // timerProgressBar: true,
       });
       return;
     }
@@ -537,7 +571,7 @@ const dispatch = useDispatch();
       }));
 
       const payload = {
-        txn_id: proposalId,
+        txn_id: effectiveProposalId,
         client_id: effectiveClientId,
         planNotes,
       };
@@ -550,34 +584,47 @@ const dispatch = useDispatch();
         }
       );
 
-      if (res.data.status === "Success") {
+      // Also sync to proforma notes_snapshot if in proforma mode
+      if (docTypeFromURL === "proforma") {
+        const mergedNotes = [
+          ...allClientNote.map((n) => ({ note_name: n.note_name })),
+          ...planNotes,
+        ];
+        await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: effectiveProposalId,
+            action: "set",
+            item: mergedNotes,
+            snapshotType: "notes",
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+
+      if (res.data?.status === "Success" || docTypeFromURL === "proforma") {
         Swal.fire({
           icon: "success",
           title: "Notes Created",
-          text: res.data.message,
+          text: res.data?.message || "Notes saved successfully!",
           showConfirmButton: false,
           timer: 1000,
-          // timerProgressBar: true,
         });
 
         getAllPlanNotes();
         setManualNote("");
-        setPredefinedNotes([]);
         setSelectedNotes([]);
         fetchPredefinedNotes();
-      } else if (res.data.status === "Alert") {
+      } else if (res.data?.status === "Alert") {
         Swal.fire({
           icon: "warning",
           title: "Duplicate Notes",
           text: res.data.message,
-
           showConfirmButton: false,
           timer: 1000,
-          // timerProgressBar: true,
         });
         getAllPlanNotes();
         setManualNote("");
-        setPredefinedNotes([]);
         setSelectedNotes([]);
         fetchPredefinedNotes();
       } else {
@@ -585,10 +632,9 @@ const dispatch = useDispatch();
           icon: "error",
           title: "Error",
           text:
-            res.data.message || "Something went wrong while saving the notes.",
+            res.data?.message || "Something went wrong while saving the notes.",
           showConfirmButton: false,
           timer: 1000,
-          // timerProgressBar: true,
         });
       }
     } catch (err) {
@@ -599,7 +645,6 @@ const dispatch = useDispatch();
         text: "Something went wrong while saving the notes.",
         showConfirmButton: false,
         timer: 1000,
-        // timerProgressBar: true,
       });
     }
   };
@@ -659,6 +704,28 @@ const dispatch = useDispatch();
     if (hideNotes) return;
     if (!effectiveClientId || !effectiveProposalId) return;
     try {
+      if (docTypeFromURL === "proforma") {
+        try {
+          const snapRes = await axios.get(
+            `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const snapNotes = JSON.parse(snapRes.data?.data?.notes_snapshot || "[]");
+          if (Array.isArray(snapNotes) && snapNotes.length > 0) {
+            setAllClientNote(
+              snapNotes.map((n, idx) =>
+                typeof n === "string"
+                  ? { id: idx + 1, note_name: n }
+                  : { id: n.id || idx + 1, note_name: n.note_name || n.note_text || "" }
+              )
+            );
+            return;
+          }
+        } catch (snapErr) {
+          console.warn("Could not fetch proforma notes snapshot:", snapErr);
+        }
+      }
+
       const response = await axios.get(
         `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${effectiveClientId}/${effectiveProposalId}`,
         {
@@ -668,8 +735,7 @@ const dispatch = useDispatch();
         }
       );
 
-      const notes = response.data.data;
-
+      const notes = response.data?.data || [];
       setAllClientNote(notes);
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -679,12 +745,13 @@ const dispatch = useDispatch();
           icon: "warning",
           showConfirmButton: false,
           timer: 1000,
-          // timerProgressBar: true,
         }).then(() => {
           dispatch(clearUser());
           localStorage.removeItem("token");
           navigate("/");
         });
+      } else {
+        setAllClientNote([]);
       }
     }
   };
@@ -783,6 +850,29 @@ const dispatch = useDispatch();
     if (!confirm.isConfirmed) return;
 
     try {
+      if (docTypeFromURL === "proforma") {
+        const remaining = allClientNote.filter((item) => item.id !== noteId);
+        setAllClientNote(remaining);
+        await axios.put(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
+          {
+            proformaId: effectiveProposalId,
+            action: "set",
+            item: remaining.map((n) => ({ note_name: n.note_name })),
+            snapshotType: "notes",
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Note has been deleted.",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+        return;
+      }
+
       const res = await axios.delete(
         `${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`
       );
@@ -814,8 +904,20 @@ const dispatch = useDispatch();
       });
     }
   };
+
+  const getOrderItemAmount = (order) => {
+    const rawTotal = Number(order.total_amount || order.total_price || 0);
+    if (rawTotal > 0) return rawTotal;
+    const qty = Number(order.quantity || 1);
+    const unit = Number(order.editing_type_amount || order.unit_price || order.price || 0);
+    const thumb = Number(order.include_thumbnail_creation || 0);
+    const post = Number(order.include_content_posting || 0);
+    const yt = Number(order.include_youtube_video_posting || 0);
+    return (unit * qty) + (thumb * qty) + (post * qty) + (yt * qty);
+  };
+
   const grandTotal = getData.reduce(
-    (acc, order) => acc + parseFloat(order.total_amount),
+    (acc, order) => acc + getOrderItemAmount(order),
     0
   );
   const handleSelect = (note) => {
@@ -987,12 +1089,30 @@ const dispatch = useDispatch();
           </div>
         )}
 
+        {/* Live Service Value Preview */}
+        {selectedEditingType && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-center font-semibold text-white text-sm mt-3">
+            Service Value:{" "}
+            <span className="text-green-400 font-bold text-base">
+              ₹
+              {(
+                parseFloat(selectedEditingType.amount || 0) * (parseInt(quantity) || 1) +
+                optionalServices.reduce((acc, opt) => {
+                  const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
+                  return acc + (addons[key] ? (parseFloat(opt.amount) || 0) * (parseInt(quantity) || 1) : 0);
+                }, 0)
+              ).toLocaleString()}
+            </span>{" "}
+            <span className="text-emerald-400 text-xs ml-1">(Complimentary / Free)</span>
+          </div>
+        )}
+
         <button
           className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold p-3 rounded mt-4"
           onClick={handleSave}
           disabled={loading}
         >
-          {loading ? "Save..." : "Calculate & Save"}
+          {loading ? "Save..." : editId ? "✔ Update Entry" : "💾 Calculate & Save"}
         </button>
         <button
           className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold p-3 rounded mt-2"
@@ -1002,7 +1122,7 @@ const dispatch = useDispatch();
         </button>
 
         <div className="text-xl font-semibold text-center text-green-300 mt-4">
-          Total Amount: ₹{grandTotal.toLocaleString()}
+          Total Complimentary Value: ₹{grandTotal.toLocaleString()}
         </div>
 
         {/* Client Orders */}
@@ -1048,7 +1168,7 @@ const dispatch = useDispatch();
                 {/* Right Section: Amount + Delete */}
                 <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
                   <div className="text-green-400 font-bold text-xl">
-                    ₹{parseFloat(order.total_amount).toLocaleString()}
+                    ₹{getOrderItemAmount(order).toLocaleString()}
                   </div>
                   <button
                     onClick={() => handleEdit(order)}
