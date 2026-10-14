@@ -37,6 +37,7 @@ const {
 } = require("./re_sendWhatsApp");
 const { generatePublicAccessToken } = require("./re_publicController");
 const notificationService = require("../re_services/notificationService");
+const { calculateProformaTotals } = require("./re_proformaSyncHelper");
 
 const isComplimentaryItem = (item) => {
   if (!item) return false;
@@ -1999,6 +2000,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
         payment_mode, payment_date, payment_reference,
         current_amt, received_amt,
         pricing_snapshot, notes_snapshot, terms_snapshot,
+        adjustment_amount, adjustment_snapshot,
         created_at
       ) VALUES (
         ?, ?, ?,
@@ -2010,6 +2012,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
         ?, ?, ?,
         ?, ?,
         ?, ?, ?,
+        ?, ?,
         NOW()
       )
     `;
@@ -2066,6 +2069,8 @@ exports.generateInvoiceFromProforma = async (req, res) => {
       proforma.pricing_snapshot || null,
       proforma.notes_snapshot || null,
       proforma.terms_snapshot || null,
+      proforma.adjustment_amount || 0,
+      proforma.adjustment_snapshot || null,
     ];
 
     const result = await runQuery(insertQ, insertValues);
@@ -2890,7 +2895,7 @@ exports.getProformaSnapshot = async (req, res) => {
   try {
     const { id } = req.params;
     const results = await runQuery(
-      `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, is_gst, gst_rate, base_amount, gst_amount, total_amount FROM re_proposal_proforma WHERE id = ?`,
+      `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, is_gst, gst_rate, base_amount, gst_amount, total_amount, adjustment_amount, adjustment_snapshot FROM re_proposal_proforma WHERE id = ?`,
       [id]
     );
     if (results.length === 0) {
@@ -2967,7 +2972,43 @@ exports.updateProformaSnapshot = async (req, res) => {
     }
 
     const updatedSnapshot = JSON.stringify(parsed);
-    await runQuery(`UPDATE re_proposal_proforma SET ${column} = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
+    if (column === 'pricing_snapshot' || column === 'ads_snapshot') {
+      const fullProfRows = await runQuery(
+        `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, adjustment_amount, is_gst, gst_rate FROM re_proposal_proforma WHERE id = ?`,
+        [proformaId]
+      );
+      if (fullProfRows.length > 0) {
+        const fullProf = fullProfRows[0];
+        let pricing = column === 'pricing_snapshot' ? parsed : [];
+        let ads = column === 'ads_snapshot' ? parsed : [];
+        if (column !== 'pricing_snapshot') {
+          try { pricing = JSON.parse(fullProf.pricing_snapshot || "[]"); } catch (e) {}
+        }
+        if (column !== 'ads_snapshot') {
+          try { ads = JSON.parse(fullProf.ads_snapshot || "[]"); } catch (e) {}
+        }
+        let discountObj = null;
+        if (fullProf.discount_snapshot) {
+          try { discountObj = typeof fullProf.discount_snapshot === "string" ? JSON.parse(fullProf.discount_snapshot) : fullProf.discount_snapshot; } catch (e) {}
+        }
+        const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+          pricing,
+          ads,
+          discountObj,
+          fullProf.adjustment_amount,
+          fullProf.is_gst,
+          fullProf.gst_rate
+        );
+        await runQuery(
+          `UPDATE re_proposal_proforma SET ${column} = ?, base_amount = ?, gst_amount = ?, total_amount = ? WHERE id = ?`,
+          [updatedSnapshot, baseAmount, gstAmount, totalAmount, proformaId]
+        );
+      } else {
+        await runQuery(`UPDATE re_proposal_proforma SET ${column} = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
+      }
+    } else {
+      await runQuery(`UPDATE re_proposal_proforma SET ${column} = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
+    }
     
     res.status(200).json({ status: "Success", message: "Proforma updated" });
   } catch (error) {
@@ -3010,31 +3051,14 @@ exports.updateProformaDiscount = async (req, res) => {
     const pricing = JSON.parse(prof.pricing_snapshot || "[]");
     const ads = JSON.parse(prof.ads_snapshot || "[]");
 
-    const dmTotal = pricing.reduce((sum, item) => {
-      if (isComplimentaryItem(item)) return sum;
-      return sum + Number(item.total_amount || item.total_price || 0);
-    }, 0);
-
-    const adsTotal = ads.reduce((sum, item) => {
-      return sum + Number(item.amount || item.budget || item.total || 0);
-    }, 0);
-
-    let calculatedDiscount = 0;
-    if (discountObj) {
-      if (discountObj.type === "Percentage") {
-        calculatedDiscount = (dmTotal * discountObj.value) / 100;
-      } else {
-        calculatedDiscount = discountObj.value;
-      }
-    }
-
-    const dmAfterDiscount = Math.max(0, dmTotal - calculatedDiscount);
-    const isGst = prof.is_gst && (Buffer.isBuffer(prof.is_gst) ? prof.is_gst[0] === 1 : Number(prof.is_gst) === 1);
-    const gstRate = Number(prof.gst_rate) || 18;
-
-    const baseAmount = dmAfterDiscount + adsTotal;
-    const gstAmount = isGst ? Number(((dmAfterDiscount * gstRate) / 100).toFixed(2)) : 0;
-    const totalAmount = baseAmount + gstAmount;
+    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+      pricing,
+      ads,
+      discountObj,
+      prof.adjustment_amount,
+      prof.is_gst,
+      prof.gst_rate
+    );
 
     await runQuery(
       `UPDATE re_proposal_proforma 
@@ -3055,6 +3079,66 @@ exports.updateProformaDiscount = async (req, res) => {
     });
   } catch (error) {
     console.error("updateProformaDiscount error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.updateProformaAdjustment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adjustment_amount } = req.body;
+
+    const proformas = await runQuery(
+      `SELECT * FROM re_proposal_proforma WHERE id = ?`,
+      [id]
+    );
+    if (proformas.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Proforma not found" });
+    }
+    const prof = proformas[0];
+
+    const adjAmt = Math.max(0, Number(adjustment_amount) || 0);
+    const adjustmentObj = adjAmt > 0 ? { amount: adjAmt, adjustment_amount: adjAmt } : null;
+
+    const pricing = JSON.parse(prof.pricing_snapshot || "[]");
+    const ads = JSON.parse(prof.ads_snapshot || "[]");
+
+    let discountObj = null;
+    if (prof.discount_snapshot) {
+      try {
+        discountObj = typeof prof.discount_snapshot === "string" ? JSON.parse(prof.discount_snapshot) : prof.discount_snapshot;
+      } catch (e) {}
+    }
+
+    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+      pricing,
+      ads,
+      discountObj,
+      adjAmt,
+      prof.is_gst,
+      prof.gst_rate
+    );
+
+    await runQuery(
+      `UPDATE re_proposal_proforma 
+       SET adjustment_amount = ?, adjustment_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
+       WHERE id = ?`,
+      [adjAmt, adjustmentObj ? JSON.stringify(adjustmentObj) : null, baseAmount, gstAmount, totalAmount, id]
+    );
+
+    res.status(200).json({
+      status: "Success",
+      message: adjAmt > 0 ? "Proforma adjustment updated successfully" : "Proforma adjustment removed successfully",
+      data: {
+        adjustment_amount: adjAmt,
+        adjustment_snapshot: adjustmentObj ? JSON.stringify(adjustmentObj) : null,
+        base_amount: baseAmount,
+        gst_amount: gstAmount,
+        total_amount: totalAmount,
+      }
+    });
+  } catch (error) {
+    console.error("updateProformaAdjustment error:", error);
     res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };
@@ -3153,8 +3237,10 @@ exports.createBalanceProforma = async (req, res) => {
         total_amount,
         received_amount,
         current_balance,
-        created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        created_by,
+        adjustment_amount,
+        adjustment_snapshot
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const result = await runQuery(insertQuery, [
@@ -3177,7 +3263,9 @@ exports.createBalanceProforma = async (req, res) => {
       finalTotal,
       received_amount,
       current_balance,
-      created_by || req.user?.name || "System"
+      created_by || req.user?.name || "System",
+      source.adjustment_amount || 0,
+      source.adjustment_snapshot || null
     ]);
 
     const createdId = result.insertId;

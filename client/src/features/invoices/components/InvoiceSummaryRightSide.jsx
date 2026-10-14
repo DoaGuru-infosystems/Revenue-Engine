@@ -4,6 +4,8 @@ export default function InvoiceSummaryRightSide({
   isPartialPayment = false,
   currentBillGrossReceived = 0,
   totalAfterDiscount = 0,
+  totalAfterAdjustment = 0,
+  adjustmentAmount = 0,
   pastActiveTaxableSubtotal = 0,
   projectValueDeferred = 0,
   activeTaxableSubtotal = 0,
@@ -39,7 +41,7 @@ export default function InvoiceSummaryRightSide({
             >
               <span className="text-gray-600">Total Project Base Value</span>
               <span className="text-gray-900 font-medium">
-                ₹{formatAmount(totalAfterDiscount)}
+                ₹{formatAmount(totalAfterAdjustment !== undefined && totalAfterAdjustment !== null && totalAfterAdjustment > 0 ? totalAfterAdjustment : (totalAfterDiscount - (adjustmentAmount || 0)))}
               </span>
             </div>
             {pastActiveTaxableSubtotal > 0 && (
@@ -121,6 +123,19 @@ export default function InvoiceSummaryRightSide({
         ) : (
           isGST && (
             <>
+              {adjustmentAmount > 0 && (
+                <div
+                  style={{
+                    background: "#faf5ff",
+                    color: "#7e22ce",
+                    fontWeight: 600,
+                  }}
+                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+                >
+                  <span>Adjustment</span>
+                  <span className="font-semibold">-₹{formatAmount(adjustmentAmount)}</span>
+                </div>
+              )}
               <div
                 style={{
                   background: "white",

@@ -38,6 +38,7 @@ export const useInvoiceCalculations = ({
   remainingAmountData = [],
   complimentaryData = [],
   selecteddiscount = null,
+  selectedAdjustment = null,
   clientData = {},
   proformaPayments = [],
   isGST = false,
@@ -127,6 +128,13 @@ export const useInvoiceCalculations = ({
 
     const totalAfterDiscount = grandTotal - discountAmount;
 
+    // 3.1 Adjustment Calculations (applies strictly to Service Charges after discount, Ads excluded)
+    const adjustmentAmount = selectedAdjustment
+      ? Number(selectedAdjustment.amount || selectedAdjustment.adjustment_amount || 0)
+      : Number(clientData?.adjustment_amount || 0);
+
+    const totalAfterAdjustment = Math.max(0, totalAfterDiscount - adjustmentAmount);
+
     // 4. Ad Budget Calculations
     const realizedAdBudget = Number(clientData?.realized_ad_budget || 0);
     const realizedGoogleBudget = Number(clientData?.realized_google_budget || 0);
@@ -182,7 +190,7 @@ export const useInvoiceCalculations = ({
       : pastServicesIncGst;
 
     const projectValueDeferred = Math.max(
-      totalAfterDiscount - activeTaxableSubtotal - pastActiveTaxableSubtotal,
+      totalAfterAdjustment - activeTaxableSubtotal - pastActiveTaxableSubtotal,
       0
     );
 
@@ -190,12 +198,12 @@ export const useInvoiceCalculations = ({
     const gstAmount = isGST
       ? isPartialPayment && currentBillGrossReceived > 0
         ? activeTaxableSubtotal * 0.18
-        : totalAfterDiscount * 0.18
+        : totalAfterAdjustment * 0.18
       : 0;
 
-    const totalgstamount = gstAmount + totalAfterDiscount;
+    const totalgstamount = gstAmount + totalAfterAdjustment;
     const currentTotalAmount = totalgstamount + Number(clientData?.previous_amt || 0);
-    const invoiceSubtotal = Math.max(totalAfterDiscount, 0);
+    const invoiceSubtotal = Math.max(totalAfterAdjustment, 0);
     const invoiceTotal = invoiceSubtotal + gstAmount;
 
     const activeInvoiceTotal =
@@ -293,8 +301,9 @@ export const useInvoiceCalculations = ({
 
     // Quotation / Proforma / Balance Proforma specific totals
     const dmTotalAfterDiscount = Math.max(0, graphicTotal - discountAmount);
-    const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
-    const dmSubtotalWithGst = dmTotalAfterDiscount + dmGstAmount;
+    const dmTotalAfterAdjustment = Math.max(0, dmTotalAfterDiscount - adjustmentAmount);
+    const dmGstAmount = isGST ? dmTotalAfterAdjustment * 0.18 : 0;
+    const dmSubtotalWithGst = dmTotalAfterAdjustment + dmGstAmount;
 
     const googleAdItem = adsData.find((ad) =>
       (ad.category_name || "").toLowerCase().includes("google")
@@ -328,7 +337,7 @@ export const useInvoiceCalculations = ({
         ? displayedSubtotal + activeAdsBudget
         : dmSubtotalWithGst + activeAdsBudget;
 
-    let displayedTaxable = dmTotalAfterDiscount;
+    let displayedTaxable = dmTotalAfterAdjustment;
     let displayedCgst = dmGstAmount / 2;
     let displayedSgst = dmGstAmount / 2;
 
@@ -415,6 +424,9 @@ export const useInvoiceCalculations = ({
       hasSavedOutstandingFromPartial,
       totalDueForReceived,
       dmTotalAfterDiscount,
+      adjustmentAmount,
+      totalAfterAdjustment,
+      dmTotalAfterAdjustment,
       dmGstAmount,
       dmSubtotalWithGst,
       displayedTaxable,
@@ -437,6 +449,7 @@ export const useInvoiceCalculations = ({
     remainingAmountData,
     complimentaryData,
     selecteddiscount,
+    selectedAdjustment,
     clientData,
     proformaPayments,
     isGST,

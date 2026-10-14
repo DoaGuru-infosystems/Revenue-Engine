@@ -925,12 +925,29 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
         "include_youtube_channel_growth_&_optimization",
       ]);
 
+      let additional_services = [];
+      if (item.additional_services) {
+        try {
+          additional_services = typeof item.additional_services === "string"
+            ? JSON.parse(item.additional_services)
+            : item.additional_services;
+          if (!Array.isArray(additional_services)) additional_services = [];
+        } catch {
+          additional_services = [];
+        }
+      }
+
+      const addonsTotal = additional_services.reduce(
+        (sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || quantity)),
+        0
+      );
+
       // Fallback: some invoice records include this amount only in total_amount.
       if (include_youtube_video_posting <= 0) {
         const rowTotal = parseAmount(item.total_amount);
         const knownTotal =
           quantity *
-          (price + include_content_posting + include_thumbnail_creation);
+          (price + include_content_posting + include_thumbnail_creation) + addonsTotal;
         const inferredYoutube = rowTotal - knownTotal;
         if (inferredYoutube > 0) {
           include_youtube_video_posting = Number(
@@ -943,18 +960,6 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
       const typeName = (item.editing_type_name && item.editing_type_name !== "N/A" && item.editing_type_name !== "null" && item.editing_type_name.trim() !== "")
         ? item.editing_type_name
         : catName;
-
-      let additional_services = [];
-      if (item.additional_services) {
-        try {
-          additional_services = typeof item.additional_services === "string"
-            ? JSON.parse(item.additional_services)
-            : item.additional_services;
-          if (!Array.isArray(additional_services)) additional_services = [];
-        } catch {
-          additional_services = [];
-        }
-      }
 
       service.editingTypes.push({
         category: catName,
@@ -1740,6 +1745,10 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
   // Grand total after discount
   const totalAfterDiscount = grandTotal - discountAmount;
 
+  // Adjustment applies strictly to Service Charges after discount (Ads excluded)
+  const adjustmentAmount = Number(clientData?.adjustment_amount || 0);
+  const totalAfterAdjustment = Math.max(0, totalAfterDiscount - adjustmentAmount);
+
   const realizedAdBudget = Number(clientData?.realized_ad_budget || 0);
   const realizedGoogleBudget = Number(clientData?.realized_google_budget || 0);
   const realizedMetaBudget = Number(clientData?.realized_meta_budget || 0);
@@ -1801,18 +1810,18 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
     : pastServicesIncGst;
 
   // ── Project Value Deferred to future bills ──
-  const projectValueDeferred = Math.max(totalAfterDiscount - activeTaxableSubtotal - pastActiveTaxableSubtotal, 0);
+  const projectValueDeferred = Math.max(totalAfterAdjustment - activeTaxableSubtotal - pastActiveTaxableSubtotal, 0);
 
   // ── GST Amount (conditional) ──
   const gstAmount = isGST
     ? (isPartialPayment && currentBillGrossReceived > 0)
       ? activeTaxableSubtotal * 0.18
-      : totalAfterDiscount * 0.18
+      : totalAfterAdjustment * 0.18
     : 0;
 
-  const totalgstamount = gstAmount + totalAfterDiscount;
+  const totalgstamount = gstAmount + totalAfterAdjustment;
   const currentTotalAmount = totalgstamount + Number(clientData.previous_amt || 0);
-  const invoiceSubtotal = Math.max(totalAfterDiscount, 0);
+  const invoiceSubtotal = Math.max(totalAfterAdjustment, 0);
   const invoiceTotal = invoiceSubtotal + gstAmount;
 
   // Explicitly calculate the active billed amount
@@ -2690,6 +2699,14 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
                                       </td>
                                     </tr>
                                   ) }
+                            { adjustmentAmount > 0 && (
+                                    <tr style={ { color: "#7e22ce", background: "#faf5ff", fontWeight: 700 } }>
+                                      <td className="border px-2 py-1 text-right" colSpan={ 4 }>Adjustment</td>
+                                      <td className="border px-2 py-1 text-right w-[15%]">
+                                        -₹{ formatAmountNoDecimals(adjustmentAmount) }
+                                      </td>
+                                    </tr>
+                                  ) }
                                   <tr className="bg-orange-50 font-semibold">
                                     <td className="border px-2 py-1 text-right" colSpan={ 4 }>Subtotal</td>
                                     <td className="border px-2 py-1 text-right w-[15%]">
@@ -2778,7 +2795,7 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
                           <>
                             <div style={ { background: "#f5f8fc", fontWeight: 800, color: "#111827" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
                               <span className="text-gray-600">Total Project Base Value</span>
-                              <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterDiscount) }</span>
+                              <span className="text-gray-900 font-medium">₹{ formatAmount(totalAfterAdjustment !== undefined ? totalAfterAdjustment : (totalAfterDiscount - (clientData?.adjustment_amount || 0))) }</span>
                             </div>
                             { pastActiveTaxableSubtotal > 0 && (
                               <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
@@ -2811,23 +2828,30 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
 
                           </>
                         ) : (
-                          isGST && (
-                            <>
-                              <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                                <span className="text-gray-600">Taxable Amount</span>
-                                <span className="text-gray-900 font-medium">₹{ formatAmount(invoiceSubtotal) }</span>
+                          <>
+                            { adjustmentAmount > 0 && (
+                              <div style={ { background: "#faf5ff", color: "#7e22ce", fontWeight: 600 } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                <span>Adjustment</span>
+                                <span className="font-semibold">-₹{ formatAmount(adjustmentAmount) }</span>
                               </div>
-                              <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                                <span className="text-gray-600">CGST @9%</span>
-                                <span className="text-gray-900 font-medium">₹{ formatAmount(gstAmount / 2) }</span>
-                              </div>
-                              <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
-                                <span className="text-gray-600">SGST @9%</span>
-                                <span className="text-gray-900 font-medium">₹{ formatAmount(gstAmount / 2) }</span>
-                              </div>
-
-                            </>
-                          )
+                            ) }
+                            { isGST && (
+                              <>
+                                <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                  <span className="text-gray-600">Taxable Amount</span>
+                                  <span className="text-gray-900 font-medium">₹{ formatAmount(invoiceSubtotal) }</span>
+                                </div>
+                                <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                  <span className="text-gray-600">CGST @9%</span>
+                                  <span className="text-gray-900 font-medium">₹{ formatAmount(gstAmount / 2) }</span>
+                                </div>
+                                <div style={ { background: "white", color: "#5f6b7a", fontWeight: "normal" } } className="flex justify-between items-center px-3 py-1 border-b border-gray-100">
+                                  <span className="text-gray-600">SGST @9%</span>
+                                  <span className="text-gray-900 font-medium">₹{ formatAmount(gstAmount / 2) }</span>
+                                </div>
+                              </>
+                            ) }
+                          </>
                         ) }
 
                         <div style={ { background: "#dcf7e8", color: "#047968", fontWeight: 900 } } className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100">

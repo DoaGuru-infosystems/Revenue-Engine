@@ -78,6 +78,96 @@ const resolveProformaId = async (txn_id, client_id) => {
 
 exports.resolveProformaId = resolveProformaId;
 
+const isComplimentaryItem = (item) => {
+  if (!item) return false;
+  if (item.source === "custom_complimentary" || item.source === "complimentary") return true;
+  if (item.is_complimentary === true || item.is_complimentary === 1 || item.is_complimentary === "true") return true;
+  if (item.include_in_total === false || item.include_in_total === 0 || item.include_in_total === "false") return true;
+  const name = String(item.service_name || item.service || "").toLowerCase();
+  if (name === "complimentary" || name.includes("(complimentary)") || name.includes("(complimntory)")) return true;
+  const type = String(item.service_type || "").toLowerCase();
+  if (type === "complimentary") return true;
+  return false;
+};
+
+const calculateProformaTotals = (pricing = [], ads = [], discountObj = null, adjustmentAmt = 0, isGst = false, gstRate = 18) => {
+  let dmTotal = pricing.reduce((sum, item) => {
+    if (isComplimentaryItem(item)) return sum;
+    const qty = Number(item.quantity) || 1;
+    let addonsTotal = 0;
+    if (item.additional_services) {
+      try {
+        const addons = typeof item.additional_services === "string" ? JSON.parse(item.additional_services) : item.additional_services;
+        if (Array.isArray(addons)) {
+          addonsTotal = addons.reduce((as, a) => as + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+        }
+      } catch {}
+    }
+    const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+    const baseTotal = base * qty;
+    const recorded = Number(item.total_amount || item.total_price || 0);
+    const effective = (recorded >= baseTotal + addonsTotal && recorded > 0)
+      ? recorded
+      : (recorded > 0 ? recorded : baseTotal) + addonsTotal;
+    return sum + effective;
+  }, 0);
+
+  // CRITICAL: Include Ads Service Charges in dmTotal (unless already added as custom_service_charge in pricing)
+  ads.forEach(ad => {
+    const charge = Number(ad.charge || ad.ad_charge || 0);
+    if (charge > 0) {
+      const catName = ad.category_name || ad.service_name || ad.service || "";
+      const alreadyInPricing = pricing.some(p => 
+        (p.service_name === "Service Charge" || p.source === "custom_service_charge") &&
+        (p.category_name || "").toLowerCase() === catName.toLowerCase()
+      );
+      if (!alreadyInPricing) {
+        dmTotal += charge;
+      }
+    }
+  });
+
+  const adsTotal = ads.reduce((sum, item) => {
+    return sum + Number(item.amount || item.budget || item.ad_budget || 0);
+  }, 0);
+
+  let calculatedDiscount = 0;
+  if (discountObj && Number(discountObj.value || discountObj.discount_amt || 0) > 0) {
+    const isPercent = discountObj.type === "Percentage" || discountObj.type === "percent" || discountObj.discountType === "percentage";
+    const val = Number(discountObj.value || discountObj.discount_amt || discountObj.discount_per || 0);
+    if (isPercent) {
+      calculatedDiscount = (dmTotal * val) / 100;
+    } else {
+      calculatedDiscount = val;
+    }
+  }
+
+  const dmAfterDiscount = Math.max(0, dmTotal - calculatedDiscount);
+  const adjAmt = Number(adjustmentAmt) || 0;
+  const dmAfterAdjustment = Math.max(0, dmAfterDiscount - adjAmt);
+  const isGstActive = isGst && (Buffer.isBuffer(isGst) ? isGst[0] === 1 : (Number(isGst) === 1 || isGst === true));
+  const rate = Number(gstRate) || 18;
+
+  const baseAmount = dmAfterAdjustment + adsTotal;
+  const gstAmount = isGstActive ? Number(((dmAfterAdjustment * rate) / 100).toFixed(2)) : 0;
+  const totalAmount = baseAmount + gstAmount;
+
+  return {
+    dmTotal,
+    adsTotal,
+    calculatedDiscount,
+    dmAfterDiscount,
+    adjustmentAmount: adjAmt,
+    dmAfterAdjustment,
+    baseAmount,
+    gstAmount,
+    totalAmount
+  };
+};
+
+exports.isComplimentaryItem = isComplimentaryItem;
+exports.calculateProformaTotals = calculateProformaTotals;
+
 /**
  * Synchronize discount_snapshot and recalculate base_amount, gst_amount, total_amount in re_proposal_proforma.
  * Pass discountObj = null to delete/clear discount.
@@ -91,7 +181,7 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
     }
 
     const rows = await runQuery(
-      "SELECT id, pricing_snapshot, ads_snapshot, is_gst, gst_rate FROM re_proposal_proforma WHERE id = ?",
+      "SELECT id, pricing_snapshot, ads_snapshot, is_gst, gst_rate, adjustment_amount FROM re_proposal_proforma WHERE id = ?",
       [proformaId]
     );
     if (rows.length === 0) return;
@@ -102,52 +192,14 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
     let ads = [];
     try { ads = JSON.parse(prof.ads_snapshot || "[]"); } catch (e) {}
 
-    const dmTotal = services.reduce((sum, item) => {
-      const isComp = item.source === "custom_complimentary" ||
-        (item.service_name && item.service_name.toLowerCase() === "complimentary") ||
-        (item.service_type && item.service_type.toLowerCase() === "complimentary");
-      if (isComp) return sum;
-      const qty = Number(item.quantity) || 1;
-      let addonsTotal = 0;
-      if (item.additional_services) {
-        try {
-          const addons = typeof item.additional_services === "string" ? JSON.parse(item.additional_services) : item.additional_services;
-          if (Array.isArray(addons)) {
-            addonsTotal = addons.reduce((as, a) => as + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
-          }
-        } catch {}
-      }
-      const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
-      const baseTotal = base * qty;
-      const recorded = Number(item.total_amount || item.total_price || 0);
-      const effective = (recorded >= baseTotal + addonsTotal && recorded > 0)
-        ? recorded
-        : (recorded > 0 ? recorded : baseTotal) + addonsTotal;
-      return sum + effective;
-    }, 0);
-
-    const adsTotal = ads.reduce((sum, item) => {
-      return sum + Number(item.amount || item.budget || item.total || 0);
-    }, 0);
-
-    let calculatedDiscount = 0;
-    if (discountObj && Number(discountObj.value || discountObj.discount_amt || 0) > 0) {
-      const isPercent = discountObj.type === "Percentage" || discountObj.type === "percent" || discountObj.discountType === "percentage";
-      const val = Number(discountObj.value || discountObj.discount_amt || discountObj.discount_per || 0);
-      if (isPercent) {
-        calculatedDiscount = (dmTotal * val) / 100;
-      } else {
-        calculatedDiscount = val;
-      }
-    }
-
-    const dmAfterDiscount = Math.max(0, dmTotal - calculatedDiscount);
-    const isGst = prof.is_gst && (Buffer.isBuffer(prof.is_gst) ? prof.is_gst[0] === 1 : Number(prof.is_gst) === 1);
-    const gstRate = Number(prof.gst_rate) || 18;
-
-    const baseAmount = dmAfterDiscount + adsTotal;
-    const gstAmount = isGst ? Number(((dmAfterDiscount * gstRate) / 100).toFixed(2)) : 0;
-    const totalAmount = baseAmount + gstAmount;
+    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+      services,
+      ads,
+      discountObj,
+      prof.adjustment_amount,
+      prof.is_gst,
+      prof.gst_rate
+    );
 
     const snapshotVal = (discountObj && Number(discountObj.value || discountObj.discount_amt || 0) > 0)
       ? JSON.stringify(discountObj)
@@ -174,7 +226,7 @@ exports.syncProformaAdditionalService = async (txn_id, client_id, action, entryI
     }
 
     const rows = await runQuery(
-      "SELECT id, pricing_snapshot, ads_snapshot, discount_snapshot, is_gst, gst_rate FROM re_proposal_proforma WHERE id = ?",
+      "SELECT id, pricing_snapshot, ads_snapshot, discount_snapshot, adjustment_amount, is_gst, gst_rate FROM re_proposal_proforma WHERE id = ?",
       [proformaId]
     );
     if (rows.length === 0) return;
@@ -224,18 +276,6 @@ exports.syncProformaAdditionalService = async (txn_id, client_id, action, entryI
     let ads = [];
     try { ads = JSON.parse(prof.ads_snapshot || "[]"); } catch (e) {}
 
-    const dmTotal = snapshot.reduce((sum, item) => {
-      const isComp = item.source === "custom_complimentary" ||
-        (item.service_name && item.service_name.toLowerCase() === "complimentary") ||
-        (item.service_type && item.service_type.toLowerCase() === "complimentary");
-      if (isComp) return sum;
-      return sum + Number(item.total_amount || item.total_price || (Number(item.editing_type_amount || 0) * Number(item.quantity || 1)) || 0);
-    }, 0);
-
-    const adsTotal = ads.reduce((sum, item) => {
-      return sum + Number(item.amount || item.budget || item.total || 0);
-    }, 0);
-
     let discountObj = null;
     if (prof.discount_snapshot) {
       try {
@@ -243,24 +283,14 @@ exports.syncProformaAdditionalService = async (txn_id, client_id, action, entryI
       } catch (e) {}
     }
 
-    let calculatedDiscount = 0;
-    if (discountObj && Number(discountObj.value || discountObj.discount_amt || 0) > 0) {
-      const isPercent = discountObj.type === "Percentage" || discountObj.type === "percent" || discountObj.discountType === "percentage";
-      const val = Number(discountObj.value || discountObj.discount_amt || discountObj.discount_per || 0);
-      if (isPercent) {
-        calculatedDiscount = (dmTotal * val) / 100;
-      } else {
-        calculatedDiscount = val;
-      }
-    }
-
-    const dmAfterDiscount = Math.max(0, dmTotal - calculatedDiscount);
-    const isGst = prof.is_gst && (Buffer.isBuffer(prof.is_gst) ? prof.is_gst[0] === 1 : Number(prof.is_gst) === 1);
-    const gstRate = Number(prof.gst_rate) || 18;
-
-    const baseAmount = dmAfterDiscount + adsTotal;
-    const gstAmount = isGst ? Number(((dmAfterDiscount * gstRate) / 100).toFixed(2)) : 0;
-    const totalAmount = baseAmount + gstAmount;
+    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+      snapshot,
+      ads,
+      discountObj,
+      prof.adjustment_amount,
+      prof.is_gst,
+      prof.gst_rate
+    );
 
     await runQuery(
       "UPDATE re_proposal_proforma SET pricing_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? WHERE id = ?",

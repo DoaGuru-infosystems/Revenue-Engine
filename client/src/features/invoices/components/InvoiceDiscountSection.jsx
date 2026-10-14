@@ -7,11 +7,14 @@ export default function InvoiceDiscountSection({
   complimentaryData = [],
   selecteddiscount = null,
   discountAmount = 0,
+  selectedAdjustment = null,
+  adjustmentAmount = 0,
   invoiceSubtotal = 0,
   clientData = {},
   publicMode = false,
   isProforma = false,
   handleShowDiscount,
+  handleShowAdjustment,
   formatAmountNoDecimals = (val) => Number(val || 0).toLocaleString("en-IN"),
 }) {
   const hasAnyServices =
@@ -42,6 +45,22 @@ export default function InvoiceDiscountSection({
                   </td>
                 </tr>
               )}
+              {adjustmentAmount > 0 && (
+                <tr
+                  style={{
+                    color: "#7e22ce",
+                    background: "#faf5ff",
+                    fontWeight: 700,
+                  }}
+                >
+                  <td className="border px-2 py-1 text-right" colSpan={4}>
+                    Adjustment
+                  </td>
+                  <td className="border px-2 py-1 text-right w-[15%]">
+                    -₹{formatAmountNoDecimals(adjustmentAmount)}
+                  </td>
+                </tr>
+              )}
               <tr className="bg-orange-50 font-semibold">
                 <td className="border px-2 py-1 text-right" colSpan={4}>
                   Subtotal
@@ -59,13 +78,24 @@ export default function InvoiceDiscountSection({
         !publicMode &&
         isProforma && (
           <div className="print:hidden my-2 flex items-center gap-2">
-            <button
-              onClick={handleShowDiscount}
-              className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors"
-              title="Add/Edit Discount"
-            >
-              {selecteddiscount ? "Edit Discount" : "+ Discount"}
-            </button>
+            {handleShowDiscount && (
+              <button
+                onClick={handleShowDiscount}
+                className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors"
+                title="Add/Edit Discount"
+              >
+                {selecteddiscount ? "Edit Discount" : "+ Discount"}
+              </button>
+            )}
+            {handleShowAdjustment && (
+              <button
+                onClick={handleShowAdjustment}
+                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 transition-colors"
+                title="Add/Edit Adjustment"
+              >
+                {selectedAdjustment && adjustmentAmount > 0 ? "Edit Adjustment" : "+ Adjustment"}
+              </button>
+            )}
           </div>
         )}
     </>

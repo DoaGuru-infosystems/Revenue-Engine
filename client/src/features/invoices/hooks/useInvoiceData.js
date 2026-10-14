@@ -845,10 +845,27 @@ export const useInvoiceData = ({
         "include_youtube_channel_growth_&_optimization",
       ]);
 
+      let additional_services = [];
+      if (item.additional_services) {
+        try {
+          additional_services = typeof item.additional_services === "string"
+            ? JSON.parse(item.additional_services)
+            : item.additional_services;
+          if (!Array.isArray(additional_services)) additional_services = [];
+        } catch {
+          additional_services = [];
+        }
+      }
+
+      const addonsTotal = additional_services.reduce(
+        (sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || quantity)),
+        0
+      );
+
       if (include_youtube_video_posting <= 0) {
         const rowTotal = parseAmount(item.total_amount);
         const knownTotal =
-          quantity * (price + include_content_posting + include_thumbnail_creation);
+          quantity * (price + include_content_posting + include_thumbnail_creation) + addonsTotal;
         const inferredYoutube = rowTotal - knownTotal;
         if (inferredYoutube > 0) {
           include_youtube_video_posting = Number((inferredYoutube / quantity).toFixed(2));
@@ -872,6 +889,7 @@ export const useInvoiceData = ({
         include_content_posting,
         include_thumbnail_creation,
         include_youtube_video_posting,
+        additional_services,
         total: parseAmount(item.total_amount),
       });
     });

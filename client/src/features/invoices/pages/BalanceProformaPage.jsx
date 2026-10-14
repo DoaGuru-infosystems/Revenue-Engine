@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import InvoicePrintWrapper from "../../../shared/invoice/InvoicePrintWrapper";
 import InvoiceDiscountModal from "../../../shared/invoice/InvoiceDiscountModal";
+import InvoiceAdjustmentModal from "../../../shared/invoice/InvoiceAdjustmentModal";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
@@ -69,6 +70,7 @@ export default function BalanceProformaPage() {
     discount_per: "",
     discount_amt: "",
   });
+  const [selectedAdjustment, setSelectedAdjustment] = useState(null);
   const [showMetaAd, setShowMetaAd] = useState(true);
   const [showGoogleAd, setShowGoogleAd] = useState(true);
   const [proformaMeta, setProformaMeta] = useState(null);
@@ -462,6 +464,32 @@ export default function BalanceProformaPage() {
               console.error("Error setting discount in Quotation:", e);
               setSelecteddiscount(null);
             }
+
+            try {
+              let adjAmt = Number(proforma.adjustment_amount || 0);
+              if (!adjAmt && proforma.adjustment_snapshot) {
+                try {
+                  const parsedAdj = typeof proforma.adjustment_snapshot === "string"
+                    ? JSON.parse(proforma.adjustment_snapshot)
+                    : proforma.adjustment_snapshot;
+                  adjAmt = Number(parsedAdj?.amount || parsedAdj?.adjustment_amount || 0);
+                } catch (e) {
+                  adjAmt = 0;
+                }
+              }
+              if (adjAmt > 0) {
+                setSelectedAdjustment({
+                  id: proforma?.id,
+                  amount: adjAmt,
+                  adjustment_amount: adjAmt,
+                });
+              } else {
+                setSelectedAdjustment(null);
+              }
+            } catch (e) {
+              console.error("Error setting adjustment in BalanceProforma:", e);
+              setSelectedAdjustment(null);
+            }
           }
 
           try {
@@ -598,6 +626,31 @@ export default function BalanceProformaPage() {
           }
         } catch (e) {
           setSelecteddiscount(null);
+        }
+
+        try {
+          let adjAmt = Number(bp.adjustment_amount || 0);
+          if (!adjAmt && bp.adjustment_snapshot) {
+            try {
+              const parsedAdj = typeof bp.adjustment_snapshot === "string"
+                ? JSON.parse(bp.adjustment_snapshot)
+                : bp.adjustment_snapshot;
+              adjAmt = Number(parsedAdj?.amount || parsedAdj?.adjustment_amount || 0);
+            } catch (e) {
+              adjAmt = 0;
+            }
+          }
+          if (adjAmt > 0) {
+            setSelectedAdjustment({
+              id: bp.id,
+              amount: adjAmt,
+              adjustment_amount: adjAmt,
+            });
+          } else {
+            setSelectedAdjustment(null);
+          }
+        } catch (e) {
+          setSelectedAdjustment(null);
         }
 
         try {
@@ -1053,8 +1106,15 @@ export default function BalanceProformaPage() {
 
   const dmTotalAfterDiscount = Math.max(0, graphicTotal - discountAmount);
 
-  const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
-  const dmSubtotalWithGst = dmTotalAfterDiscount + dmGstAmount;
+  // Adjustment applies strictly to Service Charges after discount (Ads excluded)
+  const adjustmentAmount = selectedAdjustment
+    ? Number(selectedAdjustment.amount || selectedAdjustment.adjustment_amount || 0)
+    : 0;
+
+  const dmTotalAfterAdjustment = Math.max(0, dmTotalAfterDiscount - adjustmentAmount);
+
+  const dmGstAmount = isGST ? dmTotalAfterAdjustment * 0.18 : 0;
+  const dmSubtotalWithGst = dmTotalAfterAdjustment + dmGstAmount;
 
   const adsGstAmount = 0; // Ads GST removed
   const adsTotalWithGst = adsTotalBudget;
@@ -1085,7 +1145,7 @@ export default function BalanceProformaPage() {
     : grandTotal;
 
   // Breakdown for Taxable & GST
-  let displayedTaxable = dmTotalAfterDiscount;
+  let displayedTaxable = dmTotalAfterAdjustment;
   let displayedCgst = dmGstAmount / 2;
   let displayedSgst = dmGstAmount / 2;
 
@@ -2399,6 +2459,13 @@ export default function BalanceProformaPage() {
                                   <span>-₹{ discountAmount.toLocaleString("en-IN") }</span>
                                 </div>
                               </>
+                            ) }
+
+                            { adjustmentAmount > 0 && (
+                              <div className="flex justify-between items-center text-purple-700 font-semibold py-0.5">
+                                <span>Adjustment</span>
+                                <span>-₹{ adjustmentAmount.toLocaleString("en-IN") }</span>
+                              </div>
                             ) }
 
                             <div className="flex justify-between items-center text-gray-600 py-0.5">

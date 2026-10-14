@@ -245,6 +245,7 @@ const {
   getProformaSnapshot,
   updateProformaSnapshot,
   updateProformaDiscount,
+  updateProformaAdjustment,
   createBalanceProforma,
   getBalanceProformaById,
   getAllBalanceProformas,
@@ -694,6 +695,8 @@ router.get("/proformas/snapshot/:id", authenticateToken, getProformaSnapshot);
 router.put("/proformas/snapshot", authenticateToken, updateProformaSnapshot);
 router.put("/proformas/discount/:id", authenticateToken, updateProformaDiscount);
 router.put("/proforma/:id/discount", authenticateToken, updateProformaDiscount);
+router.put("/proformas/adjustment/:id", authenticateToken, updateProformaAdjustment);
+router.put("/proforma/:id/adjustment", authenticateToken, updateProformaAdjustment);
 
 router.post("/proposals/:id/payment", authenticateToken, recordProposalPayment);
 router.post(

@@ -5,6 +5,7 @@ export default function QuotationSummaryRightSide({
   graphicTotal = 0,
   selecteddiscount = null,
   discountAmount = 0,
+  adjustmentAmount = 0,
   displayedTaxable = 0,
   isGST = false,
   displayedCgst = 0,
@@ -40,6 +41,13 @@ export default function QuotationSummaryRightSide({
               <span>-₹{discountAmount.toLocaleString("en-IN")}</span>
             </div>
           </>
+        )}
+
+        {adjustmentAmount > 0 && (
+          <div className="flex justify-between items-center text-purple-700 font-semibold py-0.5">
+            <span>Adjustment</span>
+            <span>-₹{adjustmentAmount.toLocaleString("en-IN")}</span>
+          </div>
         )}
 
         <div className="flex justify-between items-center text-gray-600 py-0.5">

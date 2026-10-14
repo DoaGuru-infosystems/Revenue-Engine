@@ -2107,6 +2107,7 @@ exports.getinInvoiceServiceHistory = async (req, res) => {
   ct.include_youtube_video_posting,
   ct.plan_name,
   ct.total_amount,
+  ct.additional_services,
   NULL AS amount,
   NULL AS percent,
   NULL AS charge
@@ -2129,6 +2130,7 @@ SELECT
   NULL AS include_youtube_video_posting,
   NULL AS plan_name,
   ad.total AS total_amount,
+  NULL AS additional_services,
   ad.amount,
   ad.percent,
   ad.charge
@@ -2170,6 +2172,7 @@ exports.getAllInvoiceServiceHistory = async (req, res) => {
       ct.include_youtube_video_posting,
       ct.plan_name,
       ct.total_amount,
+      ct.additional_services,
       NULL AS amount,
       NULL AS percent,
       NULL AS charge
@@ -2192,6 +2195,7 @@ exports.getAllInvoiceServiceHistory = async (req, res) => {
       NULL AS include_youtube_video_posting,
       NULL AS plan_name,
       ad.total AS total_amount,
+      NULL AS additional_services,
       ad.amount,
       ad.percent,
       ad.charge
@@ -2214,6 +2218,7 @@ exports.getAllInvoiceServiceHistory = async (req, res) => {
       NULL AS include_youtube_video_posting,
       NULL AS plan_name,
       c.total_amount,
+      NULL AS additional_services,
       NULL AS amount,
       NULL AS percent,
       NULL AS charge
@@ -2349,7 +2354,7 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
       invoice.total_past_ad_budget = Number(pastPayments[0].total_past_ad || 0);
 
       const proformaRows = await query(
-        "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot FROM re_proposal_proforma WHERE id = ?",
+        "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot, adjustment_amount, adjustment_snapshot FROM re_proposal_proforma WHERE id = ?",
         [invoice.proforma_id]
       );
       if (proformaRows.length > 0) {
@@ -2364,6 +2369,12 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
         }
         if (proformaRows[0].discount_snapshot) {
           invoice.discount_snapshot = proformaRows[0].discount_snapshot;
+        }
+        if (proformaRows[0].adjustment_amount !== undefined && proformaRows[0].adjustment_amount !== null) {
+          invoice.adjustment_amount = proformaRows[0].adjustment_amount;
+        }
+        if (proformaRows[0].adjustment_snapshot) {
+          invoice.adjustment_snapshot = proformaRows[0].adjustment_snapshot;
         }
       }
     }

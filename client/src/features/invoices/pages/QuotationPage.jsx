@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import InvoicePrintWrapper from "../../../shared/invoice/InvoicePrintWrapper";
 import InvoiceDiscountModal from "../../../shared/invoice/InvoiceDiscountModal";
+import InvoiceAdjustmentModal from "../../../shared/invoice/InvoiceAdjustmentModal";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
@@ -68,6 +69,11 @@ export default function QuotationPage() {
     discount_type: "amount",
     discount_per: "",
     discount_amt: "",
+  });
+  const [selectedAdjustment, setSelectedAdjustment] = useState(null);
+  const [showModalAdjustment, setShowModalAdjustment] = useState(false);
+  const [formDataAdjustment, setFormDataAdjustment] = useState({
+    adjustment_amt: "",
   });
   const [showMetaAd, setShowMetaAd] = useState(true);
   const [showGoogleAd, setShowGoogleAd] = useState(true);
@@ -461,6 +467,32 @@ export default function QuotationPage() {
             } catch (e) {
               console.error("Error setting discount in Quotation:", e);
               setSelecteddiscount(null);
+            }
+
+            try {
+              let adjAmt = Number(proforma.adjustment_amount || 0);
+              if (!adjAmt && proforma.adjustment_snapshot) {
+                try {
+                  const parsedAdj = typeof proforma.adjustment_snapshot === "string"
+                    ? JSON.parse(proforma.adjustment_snapshot)
+                    : proforma.adjustment_snapshot;
+                  adjAmt = Number(parsedAdj?.amount || parsedAdj?.adjustment_amount || 0);
+                } catch (e) {
+                  adjAmt = 0;
+                }
+              }
+              if (adjAmt > 0) {
+                setSelectedAdjustment({
+                  id: proforma?.id,
+                  amount: adjAmt,
+                  adjustment_amount: adjAmt,
+                });
+              } else {
+                setSelectedAdjustment(null);
+              }
+            } catch (e) {
+              console.error("Error setting adjustment in Quotation:", e);
+              setSelectedAdjustment(null);
             }
           }
 
@@ -1053,8 +1085,15 @@ export default function QuotationPage() {
 
   const dmTotalAfterDiscount = Math.max(0, graphicTotal - discountAmount);
 
-  const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
-  const dmSubtotalWithGst = dmTotalAfterDiscount + dmGstAmount;
+  // Adjustment applies strictly to Service Charges after discount (Ads excluded)
+  const adjustmentAmount = selectedAdjustment
+    ? Number(selectedAdjustment.amount || selectedAdjustment.adjustment_amount || 0)
+    : 0;
+
+  const dmTotalAfterAdjustment = Math.max(0, dmTotalAfterDiscount - adjustmentAmount);
+
+  const dmGstAmount = isGST ? dmTotalAfterAdjustment * 0.18 : 0;
+  const dmSubtotalWithGst = dmTotalAfterAdjustment + dmGstAmount;
 
   const adsGstAmount = 0; // Ads GST removed
   const adsTotalWithGst = adsTotalBudget;
@@ -1085,7 +1124,7 @@ export default function QuotationPage() {
     : grandTotal;
 
   // Breakdown for Taxable & GST
-  let displayedTaxable = dmTotalAfterDiscount;
+  let displayedTaxable = dmTotalAfterAdjustment;
   let displayedCgst = dmGstAmount / 2;
   let displayedSgst = dmGstAmount / 2;
 
@@ -1540,6 +1579,154 @@ export default function QuotationPage() {
           "Something went wrong while deleting discount.",
         showConfirmButton: false,
         timer: 1500,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ================= ADJUSTMENT HANDLERS =================
+  const handleShowAdjustment = () => {
+    if (selectedAdjustment) {
+      setFormDataAdjustment({
+        adjustment_amt: selectedAdjustment.amount || selectedAdjustment.adjustment_amount || "",
+      });
+    } else {
+      setFormDataAdjustment({ adjustment_amt: "" });
+    }
+    setShowModalAdjustment(true);
+  };
+
+  const handleCloseAdjustment = () => {
+    setShowModalAdjustment(false);
+    setFormDataAdjustment({ adjustment_amt: "" });
+  };
+
+  const handleChangeAdjustment = (e) => {
+    const { name, value } = e.target;
+    setFormDataAdjustment((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveAdjustment = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const resetAndClose = () => {
+      setShowModalAdjustment(false);
+      setFormDataAdjustment({ adjustment_amt: "" });
+    };
+
+    try {
+      const enteredValue = Number(formDataAdjustment.adjustment_amt);
+
+      if (isNaN(enteredValue) || enteredValue < 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Amount!",
+          text: "Please enter a valid positive adjustment amount (₹).",
+          showConfirmButton: false,
+          timer: 1200,
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (enteredValue > dmTotalAfterDiscount) {
+        Swal.fire({
+          icon: "warning",
+          title: "Limit Exceeded!",
+          text: `Adjustment amount cannot exceed service charge after discount (Max: ₹${dmTotalAfterDiscount.toLocaleString("en-IN")}).`,
+          showConfirmButton: false,
+          timer: 2000,
+        });
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.put(
+        `${baseURL}/auth/api/re_calculator/proforma/${txn_id}/adjustment`,
+        { adjustment_amount: enteredValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.status === "Success") {
+        Swal.fire({
+          icon: "success",
+          title: selectedAdjustment ? "Adjustment Updated!" : "Adjustment Saved!",
+          text: "Proforma adjustment updated successfully",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+        fetchProformaData();
+        resetAndClose();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: response.data.message || "Failed to save adjustment.",
+          showConfirmButton: false,
+          timer: 1200,
+        });
+      }
+    } catch (err) {
+      console.error("Adjustment save error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.response?.data?.message || "Something went wrong while saving adjustment.",
+        showConfirmButton: false,
+        timer: 1200,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAdjustment = async () => {
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "You want to remove this adjustment amount?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    try {
+      setLoading(true);
+      const response = await axios.put(
+        `${baseURL}/auth/api/re_calculator/proforma/${txn_id}/adjustment`,
+        { adjustment_amount: 0 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.status === "Success") {
+        setSelectedAdjustment(null);
+        setShowModalAdjustment(false);
+        setFormDataAdjustment({ adjustment_amt: "" });
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Adjustment has been removed.",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+        fetchProformaData();
+      }
+    } catch (err) {
+      console.error("Delete adjustment error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.response?.data?.message || "Something went wrong while deleting adjustment.",
+        showConfirmButton: false,
+        timer: 1200,
       });
     } finally {
       setLoading(false);
@@ -2332,15 +2519,26 @@ export default function QuotationPage() {
 
                     {/* Action row below service table: Discount on left, Ads toggles on right */ }
                     <div className="print:hidden flex items-center justify-between gap-3 mt-3 mb-2 px-1">
-                      <div>
+                      <div className="flex items-center gap-2">
                         { isBalanceProforma || clientDataReceived.tag_received_amt === "received" || (docTypeFromURL === "proforma" && proformaMeta?.has_invoice) ? null : (
-                          <button
-                            type="button"
-                            onClick={ handleShowDiscount }
-                            className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20"
-                          >
-                            🏷️ { selecteddiscount ? "Edit Discount" : "Set Discount" }
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={ handleShowDiscount }
+                              className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20"
+                            >
+                              🏷️ { selecteddiscount ? "Edit Discount" : "Set Discount" }
+                            </button>
+                            { docTypeFromURL === "proforma" && (
+                              <button
+                                type="button"
+                                onClick={ handleShowAdjustment }
+                                className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm bg-purple-600 hover:bg-purple-700 text-white border-purple-700 shadow-purple-600/20"
+                              >
+                                ⚖️ { selectedAdjustment && adjustmentAmount > 0 ? "Edit Adjustment" : "+ Adjustment" }
+                              </button>
+                            ) }
+                          </>
                         ) }
                       </div>
 
@@ -2399,6 +2597,13 @@ export default function QuotationPage() {
                                   <span>-₹{ discountAmount.toLocaleString("en-IN") }</span>
                                 </div>
                               </>
+                            ) }
+
+                            { adjustmentAmount > 0 && (
+                              <div className="flex justify-between items-center text-purple-700 font-semibold py-0.5">
+                                <span>Adjustment</span>
+                                <span>-₹{ adjustmentAmount.toLocaleString("en-IN") }</span>
+                              </div>
                             ) }
 
                             <div className="flex justify-between items-center text-gray-600 py-0.5">
@@ -2576,6 +2781,18 @@ export default function QuotationPage() {
                       selecteddiscount={selecteddiscount}
                       discountDataSet={discountDataSet}
                       grandTotal={grandTotal}
+                      loading={loading}
+                    />
+
+                    <InvoiceAdjustmentModal
+                      show={showModalAdjustment}
+                      onClose={handleCloseAdjustment}
+                      onSubmit={handleSaveAdjustment}
+                      formDataAdjustment={formDataAdjustment}
+                      onChangeAdjustment={handleChangeAdjustment}
+                      onDeleteAdjustment={handleDeleteAdjustment}
+                      selectedAdjustment={selectedAdjustment}
+                      maxAdjustment={dmTotalAfterDiscount}
                       loading={loading}
                     />
 
