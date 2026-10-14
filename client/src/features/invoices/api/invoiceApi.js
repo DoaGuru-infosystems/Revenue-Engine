@@ -21,6 +21,39 @@ const getAuthHeaders = (token) => {
 // ==========================================
 
 /**
+ * Fetch quotation/proforma service history for a client & txn
+ */
+export const fetchClientServiceHistory = async (clientId, txnId, token) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/auth/api/re_calculator/getClientServiceHistory/${clientId}/${txnId}`,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Fetch quotation/proforma client notes by client ID & txn ID
+ */
+export const fetchClientNotes = async (clientId, txnId, token) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/auth/api/re_calculator/getClientNotesbyId/${clientId}/${txnId}`,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Fetch quotation/proforma complimentary data
+ */
+export const fetchByIDComplimentaryData = async (txnId, clientId, token) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/auth/api/re_calculator/getByIDComplimentaryData/${txnId}/${clientId}`,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
  * Fetch invoice service history for a client & txn
  */
 export const fetchInvoiceServices = async (clientId, txnId, token) => {
@@ -285,3 +318,75 @@ export const deleteClientNote = async (noteId, token) => {
   );
   return response.data;
 };
+
+/**
+ * Save/Update proforma discount
+ */
+export const saveProformaDiscount = async (proformaId, payload, token) => {
+  const response = await axios.put(
+    `${API_BASE_URL}/auth/api/re_calculator/proforma/${proformaId}/discount`,
+    payload,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Save/Update proforma adjustment
+ */
+export const saveProformaAdjustment = async (proformaId, adjustmentAmount, token) => {
+  const response = await axios.put(
+    `${API_BASE_URL}/auth/api/re_calculator/proforma/${proformaId}/adjustment`,
+    { adjustment_amount: adjustmentAmount },
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Save client id wise notes (plan notes)
+ */
+export const saveClientIdwiseNotes = async (payload, token) => {
+  const response = await axios.post(
+    `${API_BASE_URL}/auth/api/re_calculator/saveClientIdwiseNotes`,
+    payload,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Update plan client note by ID
+ */
+export const updatePlanClientNoteById = async (noteId, payload, token) => {
+  const response = await axios.put(
+    `${API_BASE_URL}/auth/api/re_calculator/updateClientNoteDataById/${noteId}`,
+    payload,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Delete plan client note by ID
+ */
+export const deletePlanClientNotes = async (noteId, token) => {
+  const response = await axios.delete(
+    `${API_BASE_URL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Update balance proforma notes
+ */
+export const updateBalanceProformaNotes = async (txnId, notes, token) => {
+  const response = await axios.put(
+    `${API_BASE_URL}/auth/api/re_calculator/balance-proforma/${txnId}/notes`,
+    { notes },
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
