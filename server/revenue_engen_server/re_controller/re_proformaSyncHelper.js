@@ -107,16 +107,16 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
         (item.service_name && item.service_name.toLowerCase() === "complimentary") ||
         (item.service_type && item.service_type.toLowerCase() === "complimentary");
       if (isComp) return sum;
+      const qty = Number(item.quantity) || 1;
       let addonsTotal = 0;
       if (item.additional_services) {
         try {
           const addons = typeof item.additional_services === "string" ? JSON.parse(item.additional_services) : item.additional_services;
           if (Array.isArray(addons)) {
-            addonsTotal = addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
+            addonsTotal = addons.reduce((as, a) => as + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
           }
         } catch {}
       }
-      const qty = Number(item.quantity) || 1;
       const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
       const baseTotal = base * qty;
       const recorded = Number(item.total_amount || item.total_price || 0);

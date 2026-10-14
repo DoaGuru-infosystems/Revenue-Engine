@@ -232,11 +232,29 @@ exports.getAllServiceDatas = (req, res) => {
           (c) => c.category_id === row.category_id
         );
         if (!category && row.category_id) {
+          const categoryAddons = allAddons.filter((a) => {
+            if (a.service_id !== row.service_id) return false;
+            if (a.category_id && row.category_id) return a.category_id === row.category_id;
+            if (a.category_name && row.category_name) {
+              return a.category_name.trim().toLowerCase() === row.category_name.trim().toLowerCase();
+            }
+            return true;
+          });
+
           category = {
             category_id: row.category_id,
             category_name: row.category_name,
             category_created_at: row.category_created_at,
             editing_types: [],
+            additional_services: categoryAddons.map((a) => ({
+              id: a.id,
+              service_id: a.service_id,
+              category_id: a.category_id,
+              category_name: a.category_name,
+              name: a.additional_service_name,
+              additional_service_name: a.additional_service_name,
+              amount: parseFloat(a.amount) || 0,
+            })),
           };
           service.categories.push(category);
         }

@@ -209,15 +209,29 @@ function ProformaServices() {
   }, [adsServices]);
   const adsOptionMap = useMemo(() => { const m = {}; adsOptions.forEach((i) => { m[i.category] = i; }); return m; }, [adsOptions]);
   const selectedAdsOption = useMemo(() => adsOptionMap[selectedAdsCategory] || null, [adsOptionMap, selectedAdsCategory]);
-  const isAddonApplicable = useMemo(() => { const n = String(selectedGraphicService || "").toLowerCase(); return n === "video services" || n === "graphics design"; }, [selectedGraphicService]);
   const availableAdditionalServices = useMemo(() => {
-    return Array.isArray(selectedGraphicServiceObj?.additional_services)
+    if (!selectedGraphicCategoryObj) return [];
+    if (Array.isArray(selectedGraphicCategoryObj.additional_services) && selectedGraphicCategoryObj.additional_services.length > 0) {
+      return selectedGraphicCategoryObj.additional_services;
+    }
+    const allAddons = Array.isArray(selectedGraphicServiceObj?.additional_services)
       ? selectedGraphicServiceObj.additional_services
       : [];
-  }, [selectedGraphicServiceObj]);
+    return allAddons.filter((ad) => {
+      if (!ad.category_id && !ad.category_name) return true;
+      if (selectedGraphicCategoryObj.category_id && ad.category_id) {
+        return String(ad.category_id) === String(selectedGraphicCategoryObj.category_id);
+      }
+      if (selectedGraphicCategoryObj.category_name && ad.category_name) {
+        return String(ad.category_name).trim().toLowerCase() === String(selectedGraphicCategoryObj.category_name).trim().toLowerCase();
+      }
+      return false;
+    });
+  }, [selectedGraphicServiceObj, selectedGraphicCategoryObj]);
   const additionalServicesTotal = useMemo(() => {
-    return selectedAdditionalServices.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-  }, [selectedAdditionalServices]);
+    const qty = Math.max(1, toNumber(graphicQuantity || 1));
+    return selectedAdditionalServices.reduce((sum, item) => sum + ((Number(item.amount || item.unit_price) || 0) * qty), 0);
+  }, [selectedAdditionalServices, graphicQuantity]);
   const selectedGraphicAddonPerUnit = useMemo(() => optionalAddonList.reduce((sum, a) => graphicAddons[a.key] ? sum + a.amount_num : sum, 0), [graphicAddons, optionalAddonList]);
   const selectedGraphicPreviewTotal = useMemo(() => {
     if (!selectedGraphicEditingType) return 0;
@@ -256,6 +270,7 @@ function ProformaServices() {
   };
   const handleGraphicCategoryChange = (val) => {
     setSelectedGraphicCategory(val);
+    setSelectedAdditionalServices([]);
 
     // Auto-select editing type if there is exactly 1 editing type and its name is null/empty
     if (selectedGraphicServiceObj && val) {
@@ -430,7 +445,17 @@ function ProformaServices() {
       include_content_posting: includeContentPosting,
       include_thumbnail_creation: includeThumbnailCreation,
       addon_labels: selectedAddonLabels,
-      additional_services: selectedAdditionalServices,
+      additional_services: selectedAdditionalServices.map((ad) => ({
+        ...ad,
+        category_id: selectedGraphicCategoryObj?.category_id || selectedGraphicCategoryObj?.id || ad.category_id || null,
+        category_name: selectedGraphicCategoryObj?.category_name || ad.category_name || "",
+        service_name: selectedGraphicServiceObj?.service_name || ad.service_name || "",
+        quantity: qty,
+        unit_price: Number(ad.amount || ad.unit_price || 0),
+        amount: Number(ad.amount || ad.unit_price || 0),
+        total: Number(ad.amount || ad.unit_price || 0) * qty,
+        total_amount: Number(ad.amount || ad.unit_price || 0) * qty,
+      })),
       total: rowTotal,
       is_complimentary: false,
     };
@@ -566,12 +591,24 @@ function ProformaServices() {
     const qty = Math.max(1, toNumber(qtyValue || 1));
     setSelectedItems((prev) => prev.map((item) => {
       if (item.row_id !== rowId || (item.source !== "graphic" && item.source !== "complimentary")) return item;
-      const addTotal = Array.isArray(item.additional_services)
-        ? item.additional_services.reduce((s, a) => s + (Number(a.amount) || 0), 0)
-        : 0;
+      const updatedAddons = Array.isArray(item.additional_services)
+        ? item.additional_services.map((a) => {
+            const unit = Number(a.unit_price || a.amount || 0);
+            return {
+              ...a,
+              quantity: qty,
+              unit_price: unit,
+              amount: unit,
+              total: unit * qty,
+              total_amount: unit * qty,
+            };
+          })
+        : [];
+      const addTotal = updatedAddons.reduce((s, a) => s + (Number(a.total) || 0), 0);
       return {
         ...item,
         quantity: qty,
+        additional_services: updatedAddons,
         total: Number((((toNumber(item.unit_price) + toNumber(item.optional_total_per_unit)) * qty) + addTotal).toFixed(2))
       };
     }));
@@ -1487,19 +1524,28 @@ function ProformaServices() {
                           <div key={ ad.id } className="is-addon-row">
                             <span style={ { fontSize: 12.5, color: "#e2e8f0" } }>{ ad.additional_service_name || ad.name }</span>
                             <div style={ { display: "flex", alignItems: "center", gap: 10 } }>
-                              <span style={ { fontSize: 11.5, fontWeight: 600, color: "#f59e0b" } }>+{ formatRs(ad.amount) }</span>
+                              <span style={ { fontSize: 11.5, fontWeight: 600, color: "#f59e0b" } }>+{ formatRs((Number(ad.amount || ad.unit_price) || 0) * Math.max(1, toNumber(graphicQuantity || 1))) }</span>
                               <input
                                 type="checkbox"
                                 checked={ isChecked }
                                 onChange={ (e) => {
+                                  const currentQty = Math.max(1, toNumber(graphicQuantity || 1));
+                                  const unitAmt = Number(ad.amount || ad.unit_price) || 0;
                                   if (e.target.checked) {
                                     setSelectedAdditionalServices((prev) => [
                                       ...prev,
                                       {
                                         id: ad.id,
                                         service_id: ad.service_id,
+                                        category_id: ad.category_id || selectedGraphicCategoryObj?.id || null,
+                                        category_name: ad.category_name || selectedGraphicCategoryObj?.category_name || "",
+                                        service_name: selectedGraphicServiceObj?.service_name || "",
                                         name: ad.additional_service_name || ad.name,
-                                        amount: Number(ad.amount) || 0,
+                                        amount: unitAmt,
+                                        unit_price: unitAmt,
+                                        quantity: currentQty,
+                                        total: unitAmt * currentQty,
+                                        total_amount: unitAmt * currentQty,
                                       },
                                     ]);
                                   } else {
@@ -1792,7 +1838,7 @@ function ProformaServices() {
                                         fontWeight: 500,
                                       } }
                                     >
-                                      ✨ { ad.name || ad.additional_service_name } (+₹{ Number(ad.amount || 0).toLocaleString("en-IN") })
+                                      ✨ { ad.name || ad.additional_service_name } (+₹{ ((Number(ad.amount || ad.unit_price) || 0) * (Number(item.quantity) || 1)).toLocaleString("en-IN") })
                                     </span>
                                   )) }
                                 </div>

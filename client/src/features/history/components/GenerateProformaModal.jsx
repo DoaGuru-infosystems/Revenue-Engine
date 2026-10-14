@@ -169,7 +169,19 @@ const GenerateProformaModal = ({
           const cp = Number(svc.include_content_posting || 0);
           const th = Number(svc.include_thumbnail_creation || 0);
           const yt = Number(svc.include_youtube_video_posting || 0);
-          return sum + (basePrice * qty) + (cp * qty) + (th * qty) + (yt * qty);
+          let addons = [];
+          if (svc.additional_services) {
+            try {
+              addons = typeof svc.additional_services === 'string'
+                ? JSON.parse(svc.additional_services)
+                : svc.additional_services;
+              if (!Array.isArray(addons)) addons = [];
+            } catch {
+              addons = [];
+            }
+          }
+          const addonsTotal = addons.reduce((s, a) => s + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+          return sum + (basePrice * qty) + (cp * qty) + (th * qty) + (yt * qty) + addonsTotal;
         }, 0);
 
         const adsTotal = adsServices.reduce((sum, svc) => sum + calcAdsRowTotal(svc, true), 0);
@@ -768,7 +780,19 @@ const GenerateProformaModal = ({
                   const cp = Number(svc.include_content_posting || 0);
                   const th = Number(svc.include_thumbnail_creation || 0);
                   const yt = Number(svc.include_youtube_video_posting || 0);
-                  return sum + (basePrice * qty) + (cp * qty) + (th * qty) + (yt * qty);
+                  let addons = [];
+                  if (svc.additional_services) {
+                    try {
+                      addons = typeof svc.additional_services === 'string'
+                        ? JSON.parse(svc.additional_services)
+                        : svc.additional_services;
+                      if (!Array.isArray(addons)) addons = [];
+                    } catch {
+                      addons = [];
+                    }
+                  }
+                  const addonsTotal = addons.reduce((s, a) => s + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+                  return sum + (basePrice * qty) + (cp * qty) + (th * qty) + (yt * qty) + addonsTotal;
                 }, 0);
 
                 const isProposalSource = !!selectedProposalForProforma;
@@ -814,82 +838,146 @@ const GenerateProformaModal = ({
                               </tr>
                             </thead>
                             <tbody>
-                              { dmServices.map((svc, idx) => {
-                                const qty = Number(svc.quantity || 1);
-                                const basePrice = Number(svc.editing_type_amount || svc.amount || 0);
-                                const cp = Number(svc.include_content_posting || 0);
-                                const th2 = Number(svc.include_thumbnail_creation || 0);
-                                const yt2 = Number(svc.include_youtube_video_posting || 0);
-                                return (
-                                  <React.Fragment key={ `dm-${idx}` }>
-                                    <tr>
-                                      <td className="ci-td-cell ci-text-orange font-medium">{ (svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || "N/A") }</td>
-                                      <td className="ci-td-cell">
-                                        {(() => {
-                                          const isServiceCharge = (svc.service_name || "").toLowerCase() === "service charge";
-                                          if (isServiceCharge) {
-                                            return getServiceDisplayName(
-                                              (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item")
-                                                ? (svc.service || svc.category_name || svc.editing_type_name)
-                                                : (svc.editing_type_name || svc.category_name || "N/A")
-                                            );
-                                          }
-                                          const cat = svc.category_name && svc.category_name !== "N/A" ? svc.category_name : "";
-                                          const type =
-                                            svc.editing_type_name &&
-                                            svc.editing_type_name !== "N/A" &&
-                                            svc.editing_type_name !== "null" &&
-                                            svc.editing_type_name !== "undefined" &&
-                                            svc.editing_type_name.trim() !== "" &&
-                                            svc.editing_type_name.toLowerCase() !== "proposal item"
-                                              ? svc.editing_type_name.trim()
-                                              : "";
+                              {(() => {
+                                const groupedDm = [];
+                                dmServices.forEach((svc) => {
+                                  const parentServiceTitle = (svc.service_name && svc.service_name.toLowerCase() === "proposal item")
+                                    ? (svc.category_name || svc.service_name)
+                                    : (svc.service_name || "N/A");
+                                  let lastGroup = groupedDm[groupedDm.length - 1];
+                                  if (lastGroup && lastGroup.title === parentServiceTitle) {
+                                    lastGroup.items.push(svc);
+                                  } else {
+                                    groupedDm.push({ title: parentServiceTitle, items: [svc] });
+                                  }
+                                });
 
-                                          if (
-                                            cat &&
-                                            type &&
-                                            cat.trim().toLowerCase() !== type.toLowerCase() &&
-                                            type.toLowerCase() !== (svc.service_name || "").trim().toLowerCase()
-                                          ) {
-                                            return `${cat} (${type})`;
+                                return groupedDm.map((group, gIdx) => {
+                                  return (
+                                    <React.Fragment key={ `dm-${gIdx}` }>
+                                      {/* Category rows for this service group */}
+                                      { group.items.map((svc, sIdx) => {
+                                        const qty = Number(svc.quantity || 1);
+                                        const basePrice = Number(svc.editing_type_amount || svc.amount || 0);
+
+                                        return (
+                                          <tr key={ `dm-${gIdx}-${sIdx}` }>
+                                            { sIdx === 0 && (
+                                              <td
+                                                className="ci-td-cell ci-text-orange font-medium align-middle"
+                                                rowSpan={ group.items.length }
+                                              >
+                                                { group.title }
+                                              </td>
+                                            ) }
+                                            <td className="ci-td-cell">
+                                              {(() => {
+                                                const isServiceCharge = (svc.service_name || "").toLowerCase() === "service charge";
+                                                if (isServiceCharge) {
+                                                  return getServiceDisplayName(
+                                                    (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item")
+                                                      ? (svc.service || svc.category_name || svc.editing_type_name)
+                                                      : (svc.editing_type_name || svc.category_name || "N/A")
+                                                  );
+                                                }
+                                                const cat = svc.category_name && svc.category_name !== "N/A" ? svc.category_name : "";
+                                                const type =
+                                                  svc.editing_type_name &&
+                                                  svc.editing_type_name !== "N/A" &&
+                                                  svc.editing_type_name !== "null" &&
+                                                  svc.editing_type_name !== "undefined" &&
+                                                  svc.editing_type_name.trim() !== "" &&
+                                                  svc.editing_type_name.toLowerCase() !== "proposal item"
+                                                    ? svc.editing_type_name.trim()
+                                                    : "";
+
+                                                if (
+                                                  cat &&
+                                                  type &&
+                                                  cat.trim().toLowerCase() !== type.toLowerCase() &&
+                                                  type.toLowerCase() !== (svc.service_name || "").trim().toLowerCase()
+                                                ) {
+                                                  return `${cat} (${type})`;
+                                                }
+                                                return cat || type || "N/A";
+                                              })()}
+                                            </td>
+                                            <td className="ci-td-cell-right">{ qty }</td>
+                                            <td className="ci-td-cell-right">₹{ basePrice.toLocaleString("en-IN") }</td>
+                                            <td className="ci-td-cell-right">₹{ (basePrice * qty).toLocaleString("en-IN") }</td>
+                                          </tr>
+                                        );
+                                      }) }
+
+                                      {/* Separate rows for Additional Services */}
+                                      { group.items.flatMap((svc, sIdx) => {
+                                        const qty = Number(svc.quantity || 1);
+                                        let addons = [];
+                                        if (svc.additional_services) {
+                                          try {
+                                            addons = typeof svc.additional_services === 'string'
+                                              ? JSON.parse(svc.additional_services)
+                                              : svc.additional_services;
+                                            if (!Array.isArray(addons)) addons = [];
+                                          } catch {
+                                            addons = [];
                                           }
-                                          return cat || type || "N/A";
-                                        })()}
-                                      </td>
-                                      <td className="ci-td-cell-right">{ qty }</td>
-                                      <td className="ci-td-cell-right">₹{ basePrice.toLocaleString("en-IN") }</td>
-                                      <td className="ci-td-cell-right">₹{ (basePrice * qty).toLocaleString("en-IN") }</td>
-                                    </tr>
-                                    { th2 > 0 && (
-                                      <tr className="ci-tr-subrow">
-                                        <td className="ci-td-cell ci-text-orange font-medium">Thumbnail Creation Total</td>
-                                        <td className="ci-td-cell"></td>
-                                        <td className="ci-td-cell-right">{ qty }</td>
-                                        <td className="ci-td-cell-right">₹{ th2.toLocaleString("en-IN") }</td>
-                                        <td className="ci-td-cell-right">₹{ (th2 * qty).toLocaleString("en-IN") }</td>
-                                      </tr>
-                                    ) }
-                                    { cp > 0 && (
-                                      <tr className="ci-tr-subrow">
-                                        <td className="ci-td-cell ci-text-orange font-medium">Meta Growth & Content Management Total</td>
-                                        <td className="ci-td-cell"></td>
-                                        <td className="ci-td-cell-right">{ qty }</td>
-                                        <td className="ci-td-cell-right">₹{ cp.toLocaleString("en-IN") }</td>
-                                        <td className="ci-td-cell-right">₹{ (cp * qty).toLocaleString("en-IN") }</td>
-                                      </tr>
-                                    ) }
-                                    { yt2 > 0 && (
-                                      <tr className="ci-tr-subrow">
-                                        <td className="ci-td-cell ci-text-orange font-medium">YouTube Channel Growth & Optimization Total</td>
-                                        <td className="ci-td-cell"></td>
-                                        <td className="ci-td-cell-right">{ qty }</td>
-                                        <td className="ci-td-cell-right">₹{ yt2.toLocaleString("en-IN") }</td>
-                                        <td className="ci-td-cell-right">₹{ (yt2 * qty).toLocaleString("en-IN") }</td>
-                                      </tr>
-                                    ) }
-                                  </React.Fragment>
-                                );
-                              }) }
+                                        }
+                                        return addons.map((ad, aIdx) => {
+                                          const addonAmt = Number(ad.amount || ad.unit_price || 0);
+                                          const addonQty = Number(ad.quantity) || qty;
+                                          const addonTotal = addonAmt * addonQty;
+                                          const addonName = ad.name || ad.additional_service_name || "Additional Service";
+                                          return (
+                                            <tr key={ `dm-${gIdx}-${sIdx}-addon-${aIdx}` } className="ci-tr-subrow">
+                                              <td className="ci-td-cell" colSpan={ 2 }>{ addonName } ({ group.title })</td>
+                                              <td className="ci-td-cell-right">{ addonQty }</td>
+                                              <td className="ci-td-cell-right">₹{ addonAmt.toLocaleString("en-IN") }</td>
+                                              <td className="ci-td-cell-right">₹{ addonTotal.toLocaleString("en-IN") }</td>
+                                            </tr>
+                                          );
+                                        });
+                                      }) }
+
+                                      {/* Optional service subrows for this group */}
+                                      { group.items.map((svc, sIdx) => {
+                                        const qty = Number(svc.quantity || 1);
+                                        const cp = Number(svc.include_content_posting || 0);
+                                        const th2 = Number(svc.include_thumbnail_creation || 0);
+                                        const yt2 = Number(svc.include_youtube_video_posting || 0);
+                                        return (
+                                          <React.Fragment key={ `dm-${gIdx}-${sIdx}-opt` }>
+                                            { th2 > 0 && (
+                                              <tr className="ci-tr-subrow">
+                                                <td className="ci-td-cell" colSpan={ 2 }>Thumbnail Creation Total</td>
+                                                <td className="ci-td-cell-right">{ qty }</td>
+                                                <td className="ci-td-cell-right">₹{ th2.toLocaleString("en-IN") }</td>
+                                                <td className="ci-td-cell-right">₹{ (th2 * qty).toLocaleString("en-IN") }</td>
+                                              </tr>
+                                            ) }
+                                            { cp > 0 && (
+                                              <tr className="ci-tr-subrow">
+                                                <td className="ci-td-cell" colSpan={ 2 }>Meta Growth & Content Management Total</td>
+                                                <td className="ci-td-cell-right">{ qty }</td>
+                                                <td className="ci-td-cell-right">₹{ cp.toLocaleString("en-IN") }</td>
+                                                <td className="ci-td-cell-right">₹{ (cp * qty).toLocaleString("en-IN") }</td>
+                                              </tr>
+                                            ) }
+                                            { yt2 > 0 && (
+                                              <tr className="ci-tr-subrow">
+                                                <td className="ci-td-cell" colSpan={ 2 }>YouTube Channel Growth & Optimization Total</td>
+                                                <td className="ci-td-cell-right">{ qty }</td>
+                                                <td className="ci-td-cell-right">₹{ yt2.toLocaleString("en-IN") }</td>
+                                                <td className="ci-td-cell-right">₹{ (yt2 * qty).toLocaleString("en-IN") }</td>
+                                              </tr>
+                                            ) }
+                                          </React.Fragment>
+                                        );
+                                      }) }
+                                    </React.Fragment>
+                                  );
+                                });
+                              })()}
                             </tbody>
                             <tfoot className="ci-tfoot-dm">
                               <tr>

@@ -41,17 +41,16 @@ export const getBillableTotals = (table = []) => {
 
   const dmTotal = dmServices.reduce(
     (sum, row) => {
-      if (isComp(row)) return sum;
+      const qty = Number(row?.quantity) || 1;
       let addonsTotal = 0;
       if (row.additional_services) {
         try {
           const addons = typeof row.additional_services === "string" ? JSON.parse(row.additional_services) : row.additional_services;
           if (Array.isArray(addons)) {
-            addonsTotal = addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
+            addonsTotal = addons.reduce((as, a) => as + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
           }
         } catch {}
       }
-      const qty = Number(row?.quantity) || 1;
       const base = Number(row?.editing_type_amount || row?.price || row?.unit_price || 0);
       const baseTotal = base * qty;
       const recorded = Number(row?.total_price || row?.total_amount || 0);

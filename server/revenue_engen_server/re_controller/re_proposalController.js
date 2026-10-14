@@ -762,16 +762,16 @@ exports.createProforma = async (req, res) => {
     if (!finalBaseAmount || !finalTotalAmount) {
       const dmTotal = serviceItems.reduce((sum, item) => {
         if (isComplimentaryItem(item)) return sum;
+        const qty = Number(item.quantity) || 1;
         let addonsTotal = 0;
         if (item.additional_services) {
           try {
             const addons = typeof item.additional_services === "string" ? JSON.parse(item.additional_services) : item.additional_services;
             if (Array.isArray(addons)) {
-              addonsTotal = addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
+              addonsTotal = addons.reduce((as, a) => as + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
             }
           } catch {}
         }
-        const qty = Number(item.quantity) || 1;
         const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
         const baseTotal = base * qty;
         const recorded = Number(item.total_amount || item.total_price || 0);
@@ -2507,30 +2507,75 @@ async function createProposalPdfBuffer(id, snapshotData = null) {
         const qty = item.quantity !== undefined ? item.quantity : 1;
         const compAmt =
           Number(item.editing_type_amount || item.price || item.unit_price || 0) * qty;
+
+        let itemAddons = [];
+        if (item.additional_services) {
+          try {
+            itemAddons = typeof item.additional_services === "string"
+              ? JSON.parse(item.additional_services)
+              : item.additional_services;
+            if (!Array.isArray(itemAddons)) itemAddons = [];
+          } catch {
+            itemAddons = [];
+          }
+        }
+        const addonsSum = itemAddons.reduce((s, a) => s + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+        const recordedTotal = Number(item.total_price || 0);
+        const rowBaseTotal = (recordedTotal >= addonsSum && addonsSum > 0 && !isComp)
+          ? recordedTotal - addonsSum
+          : recordedTotal;
+
         const priceStr = isComp
-          ? `₹ ${(compAmt || Number(item.total_price || 0)).toLocaleString("en-IN")} (Free)`
-          : `₹ ${Number(item.total_price || 0).toLocaleString("en-IN")}`;
+          ? `₹ ${(compAmt || rowBaseTotal).toLocaleString("en-IN")} (Free)`
+          : `₹ ${rowBaseTotal.toLocaleString("en-IN")}`;
 
         htmlContent += `<tr>
           <td>${itemTitle}</td>
           <td style="text-align: center;">${qty}</td>
           <td style="text-align: right;">${priceStr}</td>
         </tr>`;
+
+        if (itemAddons.length > 0) {
+          itemAddons.forEach((ad) => {
+            const adAmt = Number(ad.amount || ad.unit_price || 0);
+            const adQty = Number(ad.quantity) || qty;
+            const adTotal = adAmt * adQty;
+            const adName = ad.name || ad.additional_service_name || "Additional Service";
+            const parentSvc = item.service_name || "Service";
+            htmlContent += `<tr>
+              <td>${adName} (${parentSvc})</td>
+              <td style="text-align: center;">${adQty}</td>
+              <td style="text-align: right;">₹ ${adTotal.toLocaleString("en-IN")}</td>
+            </tr>`;
+          });
+        }
       });
 
       const pricingDiscount = sections.pricing_discount || {};
       const discountVal = Number(pricingDiscount.value) || 0;
       const discountType = pricingDiscount.type || "Amount";
 
-      const dmSubtotal = dmPricing.reduce(
-        (sum, item) =>
-          sum +
-          (item.service_name?.toLowerCase() === "re_complimentary" ||
-          item.include_in_total === false
-            ? 0
-            : Number(item.total_price) || 0),
-        0,
-      );
+      const dmSubtotal = dmPricing.reduce((sum, item) => {
+        const isComp = item.service_name?.toLowerCase() === "re_complimentary" || item.include_in_total === false;
+        if (isComp) return sum;
+        const qty = Number(item.quantity) || 1;
+        let addonsTotal = 0;
+        if (item.additional_services) {
+          try {
+            const addons = typeof item.additional_services === "string" ? JSON.parse(item.additional_services) : item.additional_services;
+            if (Array.isArray(addons)) {
+              addonsTotal = addons.reduce((as, a) => as + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+            }
+          } catch {}
+        }
+        const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+        const baseTotal = base * qty;
+        const recorded = Number(item.total_price || 0);
+        const effective = (recorded >= baseTotal + addonsTotal && recorded > 0)
+          ? recorded
+          : (recorded > 0 ? recorded : baseTotal) + addonsTotal;
+        return sum + effective;
+      }, 0);
       const adsSubtotal = adsPricing.reduce(
         (sum, item) => sum + (Number(item.total_price) || 0),
         0,

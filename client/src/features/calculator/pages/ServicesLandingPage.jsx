@@ -371,16 +371,16 @@ export default function ServicesLandingPage() {
   // ─── Totals ─────────────────────────────────────────────────────────────────
   const grandTotal = getData.reduce((acc, order) => {
     if (order.service_name?.toLowerCase() === "complimentary") return acc;
+    const qty = Number(order.quantity) || 1;
     let addonsTotal = 0;
     if (order.additional_services) {
       try {
         const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
         if (Array.isArray(addons)) {
-          addonsTotal = addons.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+          addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
         }
       } catch {}
     }
-    const qty = Number(order.quantity) || 1;
     const base = Number(order.editing_type_amount || order.price || 0);
     const baseTotal = base * qty;
     const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
@@ -1140,16 +1140,16 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               {(() => {
+                                const qty = Number(order.quantity) || 1;
                                 let addonsTotal = 0;
                                 if (order.additional_services) {
                                   try {
                                     const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
                                     if (Array.isArray(addons)) {
-                                      addonsTotal = addons.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+                                      addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
                                     }
                                   } catch {}
                                 }
-                                const qty = Number(order.quantity) || 1;
                                 const base = Number(order.editing_type_amount || order.price || 0);
                                 const baseTotal = base * qty;
                                 const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);

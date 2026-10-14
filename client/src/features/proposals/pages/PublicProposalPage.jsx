@@ -169,10 +169,28 @@ export default function PublicProposalPage() {
     return unitAmt * qty;
   };
 
-  const dmSubtotal = dmPricing.reduce(
-    (sum, item) => sum + (isItemComplimentary(item) ? 0 : Number(item.total_price) || 0),
-    0
-  );
+  const dmSubtotal = dmPricing.reduce((sum, item) => {
+    if (isItemComplimentary(item)) return sum;
+    let addonsSum = 0;
+    const itemQty = item.quantity !== undefined ? Number(item.quantity) : 1;
+    if (item.additional_services) {
+      try {
+        const itemAddons = typeof item.additional_services === "string"
+          ? JSON.parse(item.additional_services)
+          : item.additional_services;
+        if (Array.isArray(itemAddons)) {
+          addonsSum = itemAddons.reduce((s, a) => s + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || itemQty)), 0);
+        }
+      } catch {}
+    }
+    const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+    const baseTotal = base * itemQty;
+    const recordedTotal = Number(item.total_price || 0);
+    const effective = (recordedTotal >= baseTotal + addonsSum && recordedTotal > 0)
+      ? recordedTotal
+      : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsSum;
+    return sum + effective;
+  }, 0);
   const adsSubtotal = adsPricing.reduce(
     (sum, item) => sum + (Number(item.total_price) || 0),
     0
@@ -480,25 +498,63 @@ export default function PublicProposalPage() {
                       {pricing.map((item, idx) => {
                         const isComp = isItemComplimentary(item);
                         const compAmt = isComp ? getComplimentaryAmount(item) : 0;
+                        let itemAddons = [];
+                        if (item.additional_services) {
+                          try {
+                            itemAddons = typeof item.additional_services === "string"
+                              ? JSON.parse(item.additional_services)
+                              : item.additional_services;
+                            if (!Array.isArray(itemAddons)) itemAddons = [];
+                          } catch {
+                            itemAddons = [];
+                          }
+                        }
+                        const itemQty = item.quantity !== undefined ? Number(item.quantity) : 1;
+                        const addonsSum = itemAddons.reduce((s, a) => s + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || itemQty)), 0);
+                        const recordedTotal = Number(item.total_price || 0);
+                        const rowBaseTotal = (recordedTotal >= addonsSum && addonsSum > 0 && !isComp)
+                          ? recordedTotal - addonsSum
+                          : recordedTotal;
+
                         return (
-                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4 font-medium text-slate-800">{item.service}</td>
-                            <td className="px-6 py-4 text-center text-slate-700">
-                              {item.quantity !== undefined ? item.quantity : 1}
-                            </td>
-                            <td className="px-6 py-4 text-right font-medium">
-                              {isComp ? (
-                                <span className="text-slate-800">
-                                  ₹ {compAmt.toLocaleString("en-IN")}{" "}
-                                  <span className="text-emerald-600 font-semibold text-xs">(Free)</span>
-                                </span>
-                              ) : (
-                                <span className="text-slate-700">
-                                  ₹ {Number(item.total_price || 0).toLocaleString("en-IN")}
-                                </span>
-                              )}
-                            </td>
-                          </tr>
+                          <React.Fragment key={idx}>
+                            <tr className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-6 py-4 font-medium text-slate-800">{item.service}</td>
+                              <td className="px-6 py-4 text-center text-slate-700">
+                                {itemQty}
+                              </td>
+                              <td className="px-6 py-4 text-right font-medium">
+                                {isComp ? (
+                                  <span className="text-slate-800">
+                                    ₹ {compAmt.toLocaleString("en-IN")}{" "}
+                                    <span className="text-emerald-600 font-semibold text-xs">(Free)</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-700">
+                                    ₹ {Number(rowBaseTotal).toLocaleString("en-IN")}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                            {itemAddons.map((addon, aIdx) => {
+                              const addonAmt = Number(addon.amount || addon.unit_price || 0);
+                              const addonQty = Number(addon.quantity) || itemQty;
+                              const addonTotal = addonAmt * addonQty;
+                              const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                              const parentName = item.service_name || item.service || "Service";
+                              return (
+                                <tr key={`addon-${idx}-${aIdx}`} className="bg-slate-50/40 hover:bg-slate-50/80 transition-colors">
+                                  <td className="px-6 py-3 font-medium text-slate-700">
+                                    {addonName} ({parentName})
+                                  </td>
+                                  <td className="px-6 py-3 text-center text-slate-600">{addonQty}</td>
+                                  <td className="px-6 py-3 text-right font-medium text-slate-700">
+                                    ₹ {addonTotal.toLocaleString("en-IN")}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </React.Fragment>
                         );
                       })}
                     </tbody>

@@ -114,10 +114,10 @@ export default function ProposalPricingSection({
               const compAmt = isRowComplimentary ? getComplimentaryAmount(row) : 0;
 
               return (
-              <tr
-                key={`${row.originalIndex}-${idx}`}
-                className="border-b border-gray-800/50 hover:bg-gray-800/20 transition group"
-              >
+                <React.Fragment key={`${row.originalIndex}-${idx}`}>
+                  <tr
+                    className="border-b border-gray-800/50 hover:bg-gray-800/20 transition group"
+                  >
                 <td className="p-3">
                   <p className="font-medium text-gray-200">
                     {row.category_name || "-"}
@@ -158,30 +158,8 @@ export default function ProposalPricingSection({
                     </span>
                   )}
                   {(() => {
-                    let rowAddons = [];
-                    if (row.additional_services) {
-                      try {
-                        rowAddons = typeof row.additional_services === "string"
-                          ? JSON.parse(row.additional_services)
-                          : row.additional_services;
-                        if (!Array.isArray(rowAddons)) rowAddons = [];
-                      } catch {
-                        rowAddons = [];
-                      }
-                    }
-                    if (rowAddons.length === 0) return null;
-                    return (
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {rowAddons.map((addon, aIdx) => (
-                          <span
-                            key={aIdx}
-                            className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1 font-medium"
-                          >
-                            ✨ {addon.name || addon.additional_service_name} (+₹{Number(addon.amount || 0).toLocaleString("en-IN")})
-                          </span>
-                        ))}
-                      </div>
-                    );
+                    // Chips are now shown as dedicated sub-rows below
+                    return null;
                   })()}
                 </td>
                 <td className="p-3">
@@ -200,7 +178,26 @@ export default function ProposalPricingSection({
                     </span>
                   ) : (
                     <span className="text-yellow-400">
-                      ₹{Number(isAds ? row.budget : row.total_price).toLocaleString("en-IN")}
+                      {(() => {
+                        let rowAddons = [];
+                        if (row.additional_services) {
+                          try {
+                            rowAddons = typeof row.additional_services === "string"
+                              ? JSON.parse(row.additional_services)
+                              : row.additional_services;
+                            if (!Array.isArray(rowAddons)) rowAddons = [];
+                          } catch {
+                            rowAddons = [];
+                          }
+                        }
+                        const rowQty = Number(row.quantity) || 1;
+                        const addonsSum = rowAddons.reduce((s, a) => s + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || rowQty)), 0);
+                        const recordedTotal = Number(isAds ? row.budget : row.total_price);
+                        const rowBaseTotal = (!isAds && !isRowComplimentary && recordedTotal >= addonsSum && addonsSum > 0)
+                          ? recordedTotal - addonsSum
+                          : recordedTotal;
+                        return `₹${Number(rowBaseTotal).toLocaleString("en-IN")}`;
+                      })()}
                     </span>
                   )}
                 </td>
@@ -222,8 +219,51 @@ export default function ProposalPricingSection({
                   ) : null}
                 </td>
               </tr>
-            );
-          })}
+
+              {/* Dedicated rows for Additional Services */}
+              {(() => {
+                let rowAddons = [];
+                if (row.additional_services) {
+                  try {
+                    rowAddons = typeof row.additional_services === "string"
+                      ? JSON.parse(row.additional_services)
+                      : row.additional_services;
+                    if (!Array.isArray(rowAddons)) rowAddons = [];
+                  } catch {
+                    rowAddons = [];
+                  }
+                }
+                if (rowAddons.length === 0) return null;
+                const parentName = String(row.service_name || row.service || "-")
+                  .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
+                  .trim();
+                return rowAddons.map((addon, aIdx) => {
+                  const addonAmt = Number(addon.amount || addon.unit_price || 0);
+                  const addonQty = Number(addon.quantity) || Number(row.quantity) || 1;
+                  const addonTotal = addonAmt * addonQty;
+                  const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                  return (
+                    <tr
+                      key={`${row.originalIndex}-addon-${aIdx}`}
+                      className="border-b border-gray-750 bg-gray-900/30 hover:bg-gray-750/20 transition-colors"
+                    >
+                      <td className="p-3" colSpan={2}>
+                        <p className="font-semibold text-white">
+                          {addonName} ({parentName})
+                        </p>
+                      </td>
+                      <td className="p-3 text-center text-gray-300">{addonQty}</td>
+                      <td className="p-3 text-right font-semibold text-yellow-400">
+                        ₹{addonTotal.toLocaleString("en-IN")}
+                      </td>
+                      <td className="p-3 text-center text-gray-500">-</td>
+                    </tr>
+                  );
+                });
+              })()}
+            </React.Fragment>
+          );
+        })}
           </tbody>
         </table>
       </div>

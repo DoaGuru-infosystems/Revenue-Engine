@@ -778,6 +778,7 @@ exports.addServices = async (req, res) => {
         res.status(201).json({
           status: "Success",
           message: "Service added successfully",
+          data: { service_id: result.insertId },
         });
       },
     );
@@ -4371,10 +4372,12 @@ exports.addAdditionalService = async (req, res) => {
   try {
     const trimmedName = String(additional_service_name).trim();
     const finalAmount = parseFloat(amount) || 0;
+    const catId = req.body.category_id ? parseInt(req.body.category_id) : null;
+    const catName = req.body.category_name ? String(req.body.category_name).trim() : null;
 
     db.query(
-      "INSERT INTO re_additional_services (service_id, additional_service_name, amount, created_at) VALUES (?, ?, ?, ?)",
-      [service_id, trimmedName, finalAmount, createdAt],
+      "INSERT INTO re_additional_services (service_id, category_id, category_name, additional_service_name, amount, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [service_id, catId, catName, trimmedName, finalAmount, createdAt],
       (err, result) => {
         if (err) {
           console.error("Database error in addAdditionalService:", err);
@@ -4389,6 +4392,8 @@ exports.addAdditionalService = async (req, res) => {
           data: {
             id: result.insertId,
             service_id,
+            category_id: catId,
+            category_name: catName,
             additional_service_name: trimmedName,
             amount: finalAmount,
           },
@@ -4402,18 +4407,25 @@ exports.addAdditionalService = async (req, res) => {
 
 exports.getAdditionalServicesByService = async (req, res) => {
   const { service_id } = req.params;
-  db.query(
-    "SELECT id, service_id, additional_service_name, amount, created_at FROM re_additional_services WHERE service_id = ? ORDER BY id DESC",
-    [service_id],
-    (err, results) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ status: "Failure", message: "Database error" });
-      }
-      res.status(200).json({ status: "Success", data: results });
+  const { category_id } = req.query;
+
+  let sql = "SELECT id, service_id, category_id, category_name, additional_service_name, amount, created_at FROM re_additional_services WHERE service_id = ?";
+  const params = [service_id];
+
+  if (category_id) {
+    sql += " AND (category_id = ? OR category_id IS NULL)";
+    params.push(category_id);
+  }
+  sql += " ORDER BY id DESC";
+
+  db.query(sql, params, (err, results) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ status: "Failure", message: "Database error" });
     }
-  );
+    res.status(200).json({ status: "Success", data: results });
+  });
 };
 
 exports.getAllAdditionalServices = async (req, res) => {
@@ -4422,6 +4434,8 @@ exports.getAllAdditionalServices = async (req, res) => {
       a.id, 
       a.service_id, 
       s.service_name, 
+      a.category_id, 
+      a.category_name, 
       a.additional_service_name, 
       a.amount, 
       a.created_at 
@@ -4441,7 +4455,7 @@ exports.getAllAdditionalServices = async (req, res) => {
 
 exports.updateAdditionalService = async (req, res) => {
   const { id } = req.params;
-  const { additional_service_name, amount } = req.body;
+  const { additional_service_name, amount, category_id, category_name } = req.body;
 
   if (!additional_service_name || amount === undefined || amount === null) {
     return res
@@ -4449,9 +4463,12 @@ exports.updateAdditionalService = async (req, res) => {
       .json({ status: "Failure", message: "Name and Amount are required" });
   }
 
+  const catId = category_id ? parseInt(category_id) : null;
+  const catName = category_name ? String(category_name).trim() : null;
+
   db.query(
-    "UPDATE re_additional_services SET additional_service_name = ?, amount = ? WHERE id = ?",
-    [String(additional_service_name).trim(), parseFloat(amount) || 0, id],
+    "UPDATE re_additional_services SET additional_service_name = ?, amount = ?, category_id = ?, category_name = ? WHERE id = ?",
+    [String(additional_service_name).trim(), parseFloat(amount) || 0, catId, catName, id],
     (err, result) => {
       if (err) {
         return res

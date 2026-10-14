@@ -92,7 +92,7 @@ export const getCustomServicesFromDB = async (proposalId, clientId, token) => {
       const qty = Number(item.quantity) || 1;
       const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
       const baseTotal = base * qty;
-      const addonsTotal = additional_services.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      const addonsTotal = additional_services.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
       const recordedTotal = Number(item.total_amount || item.total_price || 0);
       const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
         ? recordedTotal

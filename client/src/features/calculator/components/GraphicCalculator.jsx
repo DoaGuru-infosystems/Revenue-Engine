@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useLocation, useParams } from "react-router-dom";
@@ -331,9 +331,28 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
   const getSelectedService = data.find(
     (s) => s.service_name === selectedService
   );
-  const getSelectedCategory = getSelectedService?.categories.find(
+  const getSelectedCategory = getSelectedService?.categories?.find(
     (c) => c.category_name === selectedCategory
   );
+
+  const availableAddons = useMemo(() => {
+    if (!getSelectedCategory) return [];
+    if (Array.isArray(getSelectedCategory.additional_services) && getSelectedCategory.additional_services.length > 0) {
+      return getSelectedCategory.additional_services;
+    }
+    if (Array.isArray(getSelectedService?.additional_services)) {
+      return getSelectedService.additional_services.filter((a) => {
+        if (a.category_id && getSelectedCategory.category_id) {
+          return String(a.category_id) === String(getSelectedCategory.category_id);
+        }
+        if (a.category_name && getSelectedCategory.category_name) {
+          return a.category_name.trim().toLowerCase() === getSelectedCategory.category_name.trim().toLowerCase();
+        }
+        return false;
+      });
+    }
+    return [];
+  }, [getSelectedCategory, getSelectedService]);
 
   const handleSave = () => {
     if (!selectedService) {
@@ -442,10 +461,29 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     });
 
     const additionalServicesTotal = selectedAdditionalServices.reduce(
-      (sum, item) => sum + (Number(item.amount) || 0),
+      (sum, item) => sum + (Number(item.amount || item.unit_price) || 0) * quantity,
       0
     );
     const finalAmount = baseAmount + optionalTotal + additionalServicesTotal;
+
+    const formattedAdditionalServices = selectedAdditionalServices.map((addon) => {
+      const addonName = addon.name || addon.additional_service_name;
+      const unitAmt = Number(addon.amount || addon.unit_price) || 0;
+      return {
+        ...addon,
+        id: addon.id,
+        name: addonName,
+        additional_service_name: addonName,
+        amount: unitAmt,
+        unit_price: unitAmt,
+        quantity: quantity,
+        total: unitAmt * quantity,
+        total_amount: unitAmt * quantity,
+        category_id: addon.category_id || getSelectedCategory?.category_id,
+        category_name: addon.category_name || selectedCategory,
+        service_name: selectedService,
+      };
+    });
 
     const formattedServiceTitle = (effectiveEditingType?.editing_type_name && effectiveEditingType.editing_type_name !== "null" && effectiveEditingType.editing_type_name !== "N/A")
       ? `${selectedService} - ${selectedCategory} (${effectiveEditingType.editing_type_name})`
@@ -490,7 +528,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
         include_content_posting,
         include_thumbnail_creation,
         include_youtube_video_posting,
-        additional_services: selectedAdditionalServices,
+        additional_services: formattedAdditionalServices,
         include_in_total: true,
         source: 'custom_graphic',
         service: formattedServiceTitle,
@@ -524,7 +562,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
       include_content_posting,
       include_thumbnail_creation,
       include_youtube_video_posting,
-      additional_services: selectedAdditionalServices,
+      additional_services: formattedAdditionalServices,
       service: formattedServiceTitle,
       include_in_total: true,
       source: "custom_graphic",
@@ -1416,6 +1454,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                       onChange={ (e) => { 
                         const catName = e.target.value;
                         setSelectedCategory(catName);
+                        setSelectedAdditionalServices([]);
                         const category = getSelectedService?.categories.find(c => c.category_name === catName);
                         const hasRealEditingTypes = category?.editing_types?.some(
                           et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A"
@@ -1497,11 +1536,16 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                 ) }
 
                 {/* Additional Services (Checkboxes) */}
-                { getSelectedService?.additional_services?.length > 0 && (
+                { selectedCategory && availableAddons.length > 0 && (
                   <div className="bg-gray-700/50 rounded-xl p-3 border border-gray-600 space-y-2">
-                    <label className={ labelCls }>Additional Services</label>
+                    <div className="flex items-center justify-between">
+                      <label className={ labelCls }>Additional Services</label>
+                      <span className="text-[11px] text-gray-400">
+                        (Qty: {quantity})
+                      </span>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                      { getSelectedService.additional_services.map((addon) => {
+                      { availableAddons.map((addon) => {
                         const addonName = addon.name || addon.additional_service_name;
                         const isChecked = selectedAdditionalServices.some(
                           (item) => String(item.id) === String(addon.id) || (item.name || item.additional_service_name) === addonName
@@ -1528,6 +1572,9 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                                         name: addonName,
                                         additional_service_name: addonName,
                                         amount: Number(addon.amount) || 0,
+                                        category_id: addon.category_id || getSelectedCategory?.category_id,
+                                        category_name: addon.category_name || getSelectedCategory?.category_name,
+                                        service_name: selectedService,
                                       },
                                     ]);
                                   } else {
@@ -1544,9 +1591,16 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                               />
                               <span className="text-sm font-medium truncate">{ addonName }</span>
                             </div>
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex-shrink-0 ml-2">
-                              + ₹{ Number(addon.amount).toLocaleString() }
-                            </span>
+                            <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                + ₹{ Number(addon.amount).toLocaleString() }
+                              </span>
+                              { quantity > 1 && (
+                                <span className="text-[10px] text-gray-400 mt-0.5">
+                                  ₹{ (Number(addon.amount) * quantity).toLocaleString() } total
+                                </span>
+                              ) }
+                            </div>
                           </label>
                         );
                       }) }
