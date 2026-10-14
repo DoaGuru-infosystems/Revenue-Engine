@@ -841,9 +841,12 @@ const GenerateProformaModal = ({
                               {(() => {
                                 const groupedDm = [];
                                 dmServices.forEach((svc) => {
-                                  const parentServiceTitle = (svc.service_name && svc.service_name.toLowerCase() === "proposal item")
+                                  let parentServiceTitle = (svc.service_name && svc.service_name.toLowerCase() === "proposal item")
                                     ? (svc.category_name || svc.service_name)
                                     : (svc.service_name || "N/A");
+                                  if (parentServiceTitle && (parentServiceTitle.toLowerCase() === "service charge" || parentServiceTitle.toLowerCase() === "ads service charge")) {
+                                    parentServiceTitle = "Ads Service Charge";
+                                  }
                                   let lastGroup = groupedDm[groupedDm.length - 1];
                                   if (lastGroup && lastGroup.title === parentServiceTitle) {
                                     lastGroup.items.push(svc);
@@ -872,7 +875,7 @@ const GenerateProformaModal = ({
                                             ) }
                                             <td className="ci-td-cell">
                                               {(() => {
-                                                const isServiceCharge = (svc.service_name || "").toLowerCase() === "service charge";
+                                                const isServiceCharge = (svc.service_name || "").toLowerCase() === "service charge" || (svc.service_name || "").toLowerCase() === "ads service charge";
                                                 if (isServiceCharge) {
                                                   return getServiceDisplayName(
                                                     (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item")

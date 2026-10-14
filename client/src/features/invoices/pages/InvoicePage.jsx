@@ -2465,7 +2465,10 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
 
                                 if (visibleEditingTypes.length === 0) return null;
 
-                                const parentServiceTitle = (service.service && service.service.toLowerCase() === "proposal item") ? (visibleEditingTypes[0]?.category || service.service) : service.service;
+                                const rawTitle = (service.service && service.service.toLowerCase() === "proposal item") ? (visibleEditingTypes[0]?.category || service.service) : service.service;
+                                const parentServiceTitle = (rawTitle && (rawTitle.toLowerCase() === "service charge" || rawTitle.toLowerCase() === "ads service charge"))
+                                  ? "Ads Service Charge"
+                                  : rawTitle;
 
                                 return (
                                   <React.Fragment key={ `graphic-${idx}` }>
@@ -2495,7 +2498,7 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
 
                                           <td className="border px-2 py-1">
                                             {(() => {
-                                              if (service.service === "Service Charge") {
+                                              if (service.service === "Service Charge" || service.service === "Ads Service Charge" || parentServiceTitle === "Ads Service Charge") {
                                                 return edit.type && edit.type !== "N/A" && edit.type.toLowerCase().includes("management")
                                                   ? edit.type
                                                   : `${edit.category && !edit.category.toLowerCase().includes("campaign") ? edit.category + " Campaign" : (edit.category || "")} ${edit.type || "Management & Optimization"}`.trim();
