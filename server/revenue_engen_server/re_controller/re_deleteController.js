@@ -8,16 +8,25 @@ exports.deleteService = async (req, res) => {
   const { service_id } = req.params;
 
   db.query(
-    "DELETE FROM re_services WHERE service_id = ?",
+    "DELETE FROM re_additional_services WHERE service_id = ?",
     [service_id],
-    (err, result) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ status: "Failure", message: "Database error" });
+    (addErr) => {
+      if (addErr) {
+        console.error("Warning deleting additional services:", addErr);
       }
-      res.json({ status: "Success", message: "Service deleted successfully" });
-    },
+      db.query(
+        "DELETE FROM re_services WHERE service_id = ?",
+        [service_id],
+        (err, result) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ status: "Failure", message: "Database error" });
+          }
+          res.json({ status: "Success", message: "Service deleted successfully" });
+        },
+      );
+    }
   );
 };
 

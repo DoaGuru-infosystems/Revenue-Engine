@@ -53,7 +53,18 @@ export const useInvoiceCalculations = ({
       (sum, service) =>
         sum +
         service.editingTypes.reduce(
-          (editSum, edit) => editSum + (edit.total || edit.price * edit.quantity),
+          (editSum, edit) => {
+            const qty = Number(edit.quantity) || 1;
+            const base = Number(edit.price || edit.editing_type_amount || 0);
+            const baseTotal = base * qty;
+            const addons = Array.isArray(edit.additional_services) ? edit.additional_services : [];
+            const addonsTotal = addons.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+            const recordedTotal = Number(edit.total || 0);
+            const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+              ? recordedTotal
+              : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+            return editSum + effectiveTotal;
+          },
           0
         ),
       0

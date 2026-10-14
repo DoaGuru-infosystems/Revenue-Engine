@@ -762,7 +762,23 @@ exports.createProforma = async (req, res) => {
     if (!finalBaseAmount || !finalTotalAmount) {
       const dmTotal = serviceItems.reduce((sum, item) => {
         if (isComplimentaryItem(item)) return sum;
-        return sum + Number(item.total_amount || item.total_price || 0);
+        let addonsTotal = 0;
+        if (item.additional_services) {
+          try {
+            const addons = typeof item.additional_services === "string" ? JSON.parse(item.additional_services) : item.additional_services;
+            if (Array.isArray(addons)) {
+              addonsTotal = addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
+            }
+          } catch {}
+        }
+        const qty = Number(item.quantity) || 1;
+        const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+        const baseTotal = base * qty;
+        const recorded = Number(item.total_amount || item.total_price || 0);
+        const effective = (recorded >= baseTotal + addonsTotal && recorded > 0)
+          ? recorded
+          : (recorded > 0 ? recorded : baseTotal) + addonsTotal;
+        return sum + effective;
       }, 0);
       const adsTotal = adsItems.reduce((sum, item) => sum + Number(item.amount || item.budget || item.total || 0), 0);
       let discAmt = 0;

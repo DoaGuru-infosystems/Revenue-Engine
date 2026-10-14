@@ -77,20 +77,44 @@ export const getCustomServicesFromDB = async (proposalId, clientId, token) => {
   const compData = compRes.data?.status === "Success" ? compRes.data.data : [];
 
   return [
-    ...graphicData.map((item) => ({
-      id: item.id,
-      service: (item.editing_type_name && item.editing_type_name !== "null")
-        ? `${item.service_name} - ${item.category_name} (${item.editing_type_name})`
-        : `${item.service_name} - ${item.category_name}`,
-      service_name: item.service_name,
-      category_name: item.category_name,
-      editing_type_name: item.editing_type_name,
-      quantity: item.quantity,
-      unit_price: Number(item.total_amount) / Number(item.quantity || 1),
-      total_price: Number(item.total_amount),
-      include_in_total: true,
-      source: "custom_graphic",
-    })),
+    ...graphicData.map((item) => {
+      let additional_services = [];
+      if (item.additional_services) {
+        try {
+          additional_services = typeof item.additional_services === "string"
+            ? JSON.parse(item.additional_services)
+            : item.additional_services;
+          if (!Array.isArray(additional_services)) additional_services = [];
+        } catch {
+          additional_services = [];
+        }
+      }
+      const qty = Number(item.quantity) || 1;
+      const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+      const baseTotal = base * qty;
+      const addonsTotal = additional_services.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+      const recordedTotal = Number(item.total_amount || item.total_price || 0);
+      const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+        ? recordedTotal
+        : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+
+      return {
+        id: item.id,
+        service: (item.editing_type_name && item.editing_type_name !== "null")
+          ? `${item.service_name} - ${item.category_name} (${item.editing_type_name})`
+          : `${item.service_name} - ${item.category_name}`,
+        service_name: item.service_name,
+        category_name: item.category_name,
+        editing_type_name: item.editing_type_name,
+        quantity: qty,
+        unit_price: base > 0 ? base : (effectiveTotal / qty),
+        total_price: effectiveTotal,
+        total_amount: effectiveTotal,
+        additional_services,
+        include_in_total: true,
+        source: "custom_graphic",
+      };
+    }),
     ...adsData.map((item) => ({
       id: item.id,
       service: `Ads Campaign - ${item.category}`,

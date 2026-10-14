@@ -40,7 +40,26 @@ export const getBillableTotals = (table = []) => {
     String(row?.service_name || row?.service || "").toLowerCase().includes("(complimentary)");
 
   const dmTotal = dmServices.reduce(
-    (sum, row) => sum + (isComp(row) ? 0 : Number(row?.total_price) || 0),
+    (sum, row) => {
+      if (isComp(row)) return sum;
+      let addonsTotal = 0;
+      if (row.additional_services) {
+        try {
+          const addons = typeof row.additional_services === "string" ? JSON.parse(row.additional_services) : row.additional_services;
+          if (Array.isArray(addons)) {
+            addonsTotal = addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
+          }
+        } catch {}
+      }
+      const qty = Number(row?.quantity) || 1;
+      const base = Number(row?.editing_type_amount || row?.price || row?.unit_price || 0);
+      const baseTotal = base * qty;
+      const recorded = Number(row?.total_price || row?.total_amount || 0);
+      const effective = (recorded >= baseTotal + addonsTotal && recorded > 0)
+        ? recorded
+        : (recorded > 0 ? recorded : baseTotal) + addonsTotal;
+      return sum + effective;
+    },
     0
   );
   const adsTotal = adsServices.reduce((sum, row) => sum + (Number(row?.budget) || 0), 0);

@@ -181,11 +181,51 @@ const dispatch = useDispatch();
     const cleanServiceName = (entry.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
     setSelectedService(cleanServiceName);
     setSelectedCategory(entry.category_name);
-    setSelectedEditingType({
-      editing_type_id: entry.editing_type_id,
-      editing_type_name: entry.editing_type_name,
-      amount: parseFloat(entry.editing_type_amount || 0),
-    });
+
+    const serviceObj = data.find((s) => s.service_name === cleanServiceName);
+    const categoryObj = serviceObj?.categories?.find(
+      (c) => c.category_name === entry.category_name
+    );
+
+    let matchedEt = null;
+    if (categoryObj?.editing_types?.length > 0) {
+      if (entry.editing_type_id) {
+        matchedEt = categoryObj.editing_types.find(
+          (et) => et.editing_type_id === Number(entry.editing_type_id)
+        );
+      }
+      if (!matchedEt && entry.editing_type_name) {
+        matchedEt = categoryObj.editing_types.find(
+          (et) =>
+            et.editing_type_name &&
+            et.editing_type_name.trim().toLowerCase() ===
+              entry.editing_type_name.trim().toLowerCase()
+        );
+      }
+      if (!matchedEt && (entry.editing_type_amount || entry.unit_price)) {
+        const targetAmt = Number(entry.editing_type_amount || entry.unit_price);
+        matchedEt = categoryObj.editing_types.find(
+          (et) => Number(et.amount) === targetAmt
+        );
+      }
+      if (!matchedEt && categoryObj.editing_types.length === 1) {
+        matchedEt = categoryObj.editing_types[0];
+      }
+    }
+
+    if (matchedEt) {
+      setSelectedEditingType({
+        editing_type_id: matchedEt.editing_type_id,
+        editing_type_name: matchedEt.editing_type_name,
+        amount: parseFloat(matchedEt.amount),
+      });
+    } else {
+      setSelectedEditingType({
+        editing_type_id: entry.editing_type_id || null,
+        editing_type_name: entry.editing_type_name || null,
+        amount: parseFloat(entry.editing_type_amount || entry.unit_price || 0),
+      });
+    }
     setQuantity(parseInt(entry.quantity || 1));
 
     // Dynamically map optional services from entry
@@ -223,7 +263,20 @@ const dispatch = useDispatch();
       Swal.fire({ icon: "warning", title: "Validation", text: "Please select a category." });
       return;
     }
-    if (!selectedEditingType || !selectedEditingType.editing_type_id) {
+    let effectiveEditingType = selectedEditingType;
+    if (getSelectedCategory && (!effectiveEditingType?.editing_type_id || !effectiveEditingType?.amount)) {
+      if (effectiveEditingType?.editing_type_name) {
+        const found = getSelectedCategory.editing_types?.find(
+          (et) => et.editing_type_name && et.editing_type_name.trim().toLowerCase() === effectiveEditingType.editing_type_name.trim().toLowerCase()
+        );
+        if (found) effectiveEditingType = found;
+      }
+      if (!effectiveEditingType && getSelectedCategory.editing_types?.length === 1) {
+        effectiveEditingType = getSelectedCategory.editing_types[0];
+      }
+    }
+
+    if (!effectiveEditingType || !effectiveEditingType.editing_type_id) {
       Swal.fire({ icon: "warning", title: "Editing Type Required", text: "Please select an editing type." });
       return;
     }
@@ -256,7 +309,7 @@ const dispatch = useDispatch();
       });
     }
 
-    const baseUnit = parseFloat(selectedEditingType?.amount || 0);
+    const baseUnit = parseFloat(effectiveEditingType?.amount || 0);
     const baseAmount = baseUnit * quantity;
     const finalAmount = baseAmount + optionalTotal;
 
@@ -981,7 +1034,7 @@ const dispatch = useDispatch();
                 setSelectedCategory(e.target.value);
                 setSelectedEditingType(null);
               }}
-              disabled={!!editId}
+              disabled={!getSelectedService}
             >
               <option value="">-- Choose Category --</option>
               {getSelectedService.categories.map((category) => (
@@ -1003,14 +1056,23 @@ const dispatch = useDispatch();
             </label>
             <select
               className="w-full p-2 border rounded bg-white text-black"
-              value={selectedEditingType?.editing_type_id || ""}
+              value={(() => {
+                if (selectedEditingType?.editing_type_id) return selectedEditingType.editing_type_id;
+                if (selectedEditingType?.editing_type_name && getSelectedCategory?.editing_types) {
+                  const found = getSelectedCategory.editing_types.find(
+                    (et) => et.editing_type_name && et.editing_type_name.trim().toLowerCase() === selectedEditingType.editing_type_name.trim().toLowerCase()
+                  );
+                  if (found) return found.editing_type_id;
+                }
+                return "";
+              })()}
               onChange={(e) => {
                 const edit = getSelectedCategory.editing_types.find(
                   (et) => et.editing_type_id === parseInt(e.target.value)
                 );
                 setSelectedEditingType(edit || null);
               }}
-              disabled={!!editId}
+              disabled={!getSelectedCategory}
             >
               <option value="">-- Choose Editing Type (Required) --</option>
               {getSelectedCategory.editing_types.map((edit) => (
@@ -1029,7 +1091,7 @@ const dispatch = useDispatch();
             className="w-full p-2 border rounded bg-white text-black"
             min={1}
             value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value))}
+            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
           />
         </div>
 
@@ -1048,14 +1110,12 @@ const dispatch = useDispatch();
                   <div className="flex gap-4 mt-2">
                   <button
                     type="button"
-                    disabled={editId} // ✅ disable when editing
                     className={`px-4 py-2 rounded ${
                       addons[key]
                         ? "bg-green-600 text-white"
                         : "bg-gray-300 text-black"
-                    } ${editId ? "opacity-50 cursor-not-allowed" : ""}`}
+                    }`}
                     onClick={() =>
-                      !editId &&
                       setAddons((prev) => ({
                         ...prev,
                         [key]: true,
@@ -1066,14 +1126,12 @@ const dispatch = useDispatch();
                   </button>
                   <button
                     type="button"
-                    disabled={editId} // ✅ disable when editing
                     className={`px-4 py-2 rounded ${
                       !addons[key]
                         ? "bg-red-600 text-white"
                         : "bg-gray-300 text-black"
-                    } ${editId ? "opacity-50 cursor-not-allowed" : ""}`}
+                    }`}
                     onClick={() =>
-                      !editId &&
                       setAddons((prev) => ({
                         ...prev,
                         [key]: false,

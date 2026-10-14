@@ -371,7 +371,23 @@ export default function ServicesLandingPage() {
   // ─── Totals ─────────────────────────────────────────────────────────────────
   const grandTotal = getData.reduce((acc, order) => {
     if (order.service_name?.toLowerCase() === "complimentary") return acc;
-    return acc + parseFloat(order.total_amount || 0);
+    let addonsTotal = 0;
+    if (order.additional_services) {
+      try {
+        const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
+        if (Array.isArray(addons)) {
+          addonsTotal = addons.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+        }
+      } catch {}
+    }
+    const qty = Number(order.quantity) || 1;
+    const base = Number(order.editing_type_amount || order.price || 0);
+    const baseTotal = base * qty;
+    const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
+    const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+      ? recordedTotal
+      : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+    return acc + effectiveTotal;
   }, 0);
 
   const grandAdsTotal = getAdsData.reduce((acc, order) => acc + parseFloat(order.total || 0), 0);
@@ -1091,10 +1107,58 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">{index + 1}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.created_at}</td>
                             <td className="px-3 py-2 min-w-[100px]">{order.service_name}</td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.category_name}</td>
+                            <td className="px-3 py-2 min-w-[100px]">
+                              <div>{order.category_name || "-"}</div>
+                              {(() => {
+                                let orderAddons = [];
+                                if (order.additional_services) {
+                                  try {
+                                    orderAddons = typeof order.additional_services === "string"
+                                      ? JSON.parse(order.additional_services)
+                                      : order.additional_services;
+                                    if (!Array.isArray(orderAddons)) orderAddons = [];
+                                  } catch {
+                                    orderAddons = [];
+                                  }
+                                }
+                                if (orderAddons.length === 0) return null;
+                                return (
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {orderAddons.map((addon, aIdx) => (
+                                      <span
+                                        key={aIdx}
+                                        className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded px-1.5 py-0.5 font-medium"
+                                      >
+                                        ✨ {addon.name || addon.additional_service_name} (+₹{Number(addon.amount || 0).toLocaleString("en-IN")})
+                                      </span>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
+                            </td>
                             <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total_amount}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">
+                              {(() => {
+                                let addonsTotal = 0;
+                                if (order.additional_services) {
+                                  try {
+                                    const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
+                                    if (Array.isArray(addons)) {
+                                      addonsTotal = addons.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+                                    }
+                                  } catch {}
+                                }
+                                const qty = Number(order.quantity) || 1;
+                                const base = Number(order.editing_type_amount || order.price || 0);
+                                const baseTotal = base * qty;
+                                const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
+                                const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+                                  ? recordedTotal
+                                  : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+                                return `₹${effectiveTotal.toLocaleString("en-IN")}`;
+                              })()}
+                            </td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"

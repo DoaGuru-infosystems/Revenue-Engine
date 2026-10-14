@@ -1660,8 +1660,16 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
       sum +
       service.editingTypes.reduce(
         (editSum, edit) => {
-          // Service Charge (ads % charge) hamesha count hoga — hide/show sirf budget line pe apply hoti hai
-          return editSum + (edit.total || edit.price * edit.quantity);
+          const qty = Number(edit.quantity) || 1;
+          const base = Number(edit.price || edit.editing_type_amount || 0);
+          const baseTotal = base * qty;
+          const addons = Array.isArray(edit.additional_services) ? edit.additional_services : [];
+          const addonsTotal = addons.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+          const recordedTotal = Number(edit.total || 0);
+          const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+            ? recordedTotal
+            : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+          return editSum + effectiveTotal;
         },
         0
       ),
@@ -1717,13 +1725,7 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
       : Number(e.editing_type_amount || e.price || 0) * Number(e.quantity || 1);
     return sum + Number(amount || 0);
   }, 0);
-  const additionalServicesTotal = graphicData
-    .flatMap((s) => s.editingTypes)
-    .reduce((sum, e) => {
-      const addons = Array.isArray(e.additional_services) ? e.additional_services : [];
-      return sum + addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
-    }, 0);
-  const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal + additionalServicesTotal;
+  const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
 
   // Apply discount percentage only for display
   // Compute discounted amount based on type
@@ -2466,8 +2468,13 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
                                 return visibleEditingTypes.map((edit, eidx) => {
                                   const qty = Number(edit.quantity || 1);
                                   const base = Number(edit.price || 0);
-                                  const addonsTotal = (edit.additional_services || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
-                                  const totalBase = (base * qty) + addonsTotal;
+                                  const addons = Array.isArray(edit.additional_services) ? edit.additional_services : [];
+                                  const addonsTotal = addons.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+                                  const baseTotal = base * qty;
+                                  const recordedTotal = Number(edit.total || 0);
+                                  const totalBase = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+                                    ? recordedTotal
+                                    : baseTotal + addonsTotal;
 
                                   return (
                                     <tr
@@ -2564,8 +2571,8 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
                         <table className="w-full border text-xs">
                           <thead className="bg-green-100">
                             <tr>
-                              <th className="border px-2 py-1 text-left w-[10rem] text-green-900 font-bold">Category Name</th>
-                              <th className="border px-2 py-1 text-left w-[20rem] text-green-900 font-bold">Service Name</th>
+                              <th className="border px-2 py-1 text-left w-[12rem] text-green-900 font-bold">Complimentary Service Name</th>
+                              <th className="border px-2 py-1 text-left w-[18rem] text-green-900 font-bold">Category Name</th>
                               <th className="border px-2 py-1 text-right text-green-900 font-bold">Qty</th>
                               <th className="border px-2 py-1 text-right text-green-900 font-bold">Price (₹)</th>
                               <th className="border px-2 py-1 text-right text-green-900 font-bold">Total (₹)</th>
@@ -2619,8 +2626,8 @@ export default function InvoicePage({ publicMode = false, publicData = null, pub
 
                               return (
                                 <tr key={ `comp-${idx}` } className="bg-white">
-                                  <td className="border px-2 py-1 font-medium">{ finalCategory }</td>
-                                  <td className="border px-2 py-1">{ finalService }</td>
+                                  <td className="border px-2 py-1 font-medium">{ finalService }</td>
+                                  <td className="border px-2 py-1">{ finalCategory }</td>
                                   <td className="border px-2 py-1 text-right">{ qty }</td>
                                   <td className="border px-2 py-1 text-right">₹{ formatAmount(price) }</td>
                                   <td className="border px-2 py-1 text-right">₹{ formatAmount(price * qty) }</td>

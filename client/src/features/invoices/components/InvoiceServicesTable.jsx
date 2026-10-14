@@ -87,8 +87,13 @@ export default function InvoiceServicesTable({
             return visibleEditingTypes.map((edit, eidx) => {
               const qty = Number(edit.quantity || 1);
               const base = Number(edit.price || 0);
-              const addonsTotal = (edit.additional_services || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
-              const totalBase = (base * qty) + addonsTotal;
+              const addons = Array.isArray(edit.additional_services) ? edit.additional_services : [];
+              const addonsTotal = addons.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+              const baseTotal = base * qty;
+              const recordedTotal = Number(edit.total || 0);
+              const totalBase = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+                ? recordedTotal
+                : baseTotal + addonsTotal;
 
               return (
                 <tr

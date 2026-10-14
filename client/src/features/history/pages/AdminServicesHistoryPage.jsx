@@ -682,7 +682,7 @@ const AdminServicesHistoryPage = () => {
                               className="inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
                             >
                               <Pencil className="h-3.5 w-3.5" />
-                              Edit Amount
+                              Edit 
                             </button>
                             <button
                               onClick={() => handleDeleteAddon(item)}

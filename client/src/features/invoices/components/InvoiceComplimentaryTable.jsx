@@ -11,11 +11,11 @@ export default function InvoiceComplimentaryTable({
       <table className="w-full border text-xs">
         <thead className="bg-green-100">
           <tr>
-            <th className="border px-2 py-1 text-left w-[10rem] text-green-900 font-bold">
-              Category Name
+            <th className="border px-2 py-1 text-left w-[12rem] text-green-900 font-bold">
+              Complimentary Service Name
             </th>
-            <th className="border px-2 py-1 text-left w-[20rem] text-green-900 font-bold">
-              Service Name
+            <th className="border px-2 py-1 text-left w-[18rem] text-green-900 font-bold">
+              Category Name
             </th>
             <th className="border px-2 py-1 text-right text-green-900 font-bold">
               Qty
@@ -79,10 +79,10 @@ export default function InvoiceComplimentaryTable({
             return (
               <tr key={`comp-${idx}`} className="bg-white">
                 <td className="border px-2 py-1 font-medium">
-                  {finalCategory}
+                  {finalService}
                 </td>
                 <td className="border px-2 py-1">
-                  {finalService}
+                  {finalCategory}
                 </td>
                 <td className="border px-2 py-1 text-right">{qty}</td>
                 <td className="border px-2 py-1 text-right">

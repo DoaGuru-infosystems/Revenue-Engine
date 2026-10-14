@@ -255,14 +255,54 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     setEditId(entry.id);
     setSelectedService(entry.service_name);
     setSelectedCategory(entry.category_name);
-    setSelectedEditingType({
-      editing_type_id: entry.editing_type_id,
-      editing_type_name: entry.editing_type_name,
-      amount: parseFloat(entry.editing_type_amount),
-    });
-    console.log(selectedEditingType);
 
-    setQuantity(parseInt(entry.quantity));
+    // Resolve editing type from data if entry.editing_type_id is missing or doesn't match
+    const serviceObj = data.find((s) => s.service_name === entry.service_name);
+    const categoryObj = serviceObj?.categories?.find(
+      (c) => c.category_name === entry.category_name
+    );
+
+    let matchedEt = null;
+    if (categoryObj?.editing_types?.length > 0) {
+      if (entry.editing_type_id) {
+        matchedEt = categoryObj.editing_types.find(
+          (et) => et.editing_type_id === Number(entry.editing_type_id)
+        );
+      }
+      if (!matchedEt && entry.editing_type_name) {
+        matchedEt = categoryObj.editing_types.find(
+          (et) =>
+            et.editing_type_name &&
+            et.editing_type_name.trim().toLowerCase() ===
+              entry.editing_type_name.trim().toLowerCase()
+        );
+      }
+      if (!matchedEt && (entry.editing_type_amount || entry.unit_price)) {
+        const targetAmt = Number(entry.editing_type_amount || entry.unit_price);
+        matchedEt = categoryObj.editing_types.find(
+          (et) => Number(et.amount) === targetAmt
+        );
+      }
+      if (!matchedEt && categoryObj.editing_types.length === 1) {
+        matchedEt = categoryObj.editing_types[0];
+      }
+    }
+
+    if (matchedEt) {
+      setSelectedEditingType({
+        editing_type_id: matchedEt.editing_type_id,
+        editing_type_name: matchedEt.editing_type_name,
+        amount: parseFloat(matchedEt.amount),
+      });
+    } else {
+      setSelectedEditingType({
+        editing_type_id: entry.editing_type_id || null,
+        editing_type_name: entry.editing_type_name || null,
+        amount: parseFloat(entry.editing_type_amount || entry.unit_price || 0),
+      });
+    }
+
+    setQuantity(parseInt(entry.quantity) || 1);
 
     // Dynamically map optional services from entry
     const updatedAddons = {};
@@ -327,7 +367,20 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
           et.editing_type_name !== "N/A"
       ) || (getSelectedCategory?.editing_types?.length > 1);
 
-    if (hasEditingTypesToSelect && (!selectedEditingType || !selectedEditingType.editing_type_id)) {
+    let effectiveEditingType = selectedEditingType;
+    if (getSelectedCategory && (!effectiveEditingType?.editing_type_id || !effectiveEditingType?.amount)) {
+      if (effectiveEditingType?.editing_type_name) {
+        const found = getSelectedCategory.editing_types?.find(
+          (et) => et.editing_type_name && et.editing_type_name.trim().toLowerCase() === effectiveEditingType.editing_type_name.trim().toLowerCase()
+        );
+        if (found) effectiveEditingType = found;
+      }
+      if (!effectiveEditingType && getSelectedCategory.editing_types?.length === 1 && !hasEditingTypesToSelect) {
+        effectiveEditingType = getSelectedCategory.editing_types[0];
+      }
+    }
+
+    if (hasEditingTypesToSelect && (!effectiveEditingType || !effectiveEditingType.editing_type_id)) {
       Swal.fire({
         icon: "warning",
         title: "Editing Type Required",
@@ -337,7 +390,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
       return;
     }
 
-    if (!selectedEditingType) {
+    if (!effectiveEditingType) {
       Swal.fire({
         icon: "warning",
         title: "Validation",
@@ -362,7 +415,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     setLoading(true);
 
     // Base amount
-    let baseAmount = selectedEditingType.amount * quantity;
+    let baseAmount = (Number(effectiveEditingType.amount) || 0) * quantity;
 
     // Optional addon values
     let optionalTotal = 0;
@@ -394,6 +447,10 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     );
     const finalAmount = baseAmount + optionalTotal + additionalServicesTotal;
 
+    const formattedServiceTitle = (effectiveEditingType?.editing_type_name && effectiveEditingType.editing_type_name !== "null" && effectiveEditingType.editing_type_name !== "N/A")
+      ? `${selectedService} - ${selectedCategory} (${effectiveEditingType.editing_type_name})`
+      : `${selectedService} - ${selectedCategory}`;
+
     // ── IN-MEMORY MODE (embedded inside ProposalBuilder/Proforma) ──────────────────────
     // Jab onServiceAdded prop ho, DB call skip karo — sirf row return karo
     if (onServiceAdded) {
@@ -404,13 +461,13 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
           (r) =>
             r.service_name === selectedService &&
             r.category_name === selectedCategory &&
-            r.editing_type_name === selectedEditingType.editing_type_name
+            r.editing_type_name === effectiveEditingType.editing_type_name
         );
         if (dupRow) {
           Swal.fire({
             icon: "error",
             title: "Already Exists!",
-            text: `"${selectedService} → ${selectedCategory} (${selectedEditingType.editing_type_name})" already exists. Please edit/update the existing entry.`,
+            text: `"${selectedService} → ${selectedCategory} (${effectiveEditingType.editing_type_name})" already exists. Please edit/update the existing entry.`,
             showConfirmButton: true,
             confirmButtonText: "OK",
           });
@@ -423,10 +480,11 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
         id: editId || Date.now(), // update existing id if editing
         service_name: selectedService,
         category_name: selectedCategory,
-        editing_type_name: selectedEditingType.editing_type_name,
-        editing_type_amount: selectedEditingType.amount,
+        editing_type_id: effectiveEditingType.editing_type_id,
+        editing_type_name: effectiveEditingType.editing_type_name,
+        editing_type_amount: effectiveEditingType.amount,
         quantity,
-        unit_price: selectedEditingType.amount,
+        unit_price: effectiveEditingType.amount,
         total_price: finalAmount,
         total_amount: finalAmount,
         include_content_posting,
@@ -435,12 +493,13 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
         additional_services: selectedAdditionalServices,
         include_in_total: true,
         source: 'custom_graphic',
+        service: formattedServiceTitle,
       };
       onServiceAdded(row);
       Swal.fire({
         icon: "success",
-        title: "Added!",
-        text: "Service added to proposal. Click Save to save everything.",
+        title: editId ? "Updated!" : "Added!",
+        text: editId ? "Service updated in proposal. Click Save to save everything." : "Service added to proposal. Click Save to save everything.",
         showConfirmButton: false,
         timer: 1200,
       });
@@ -455,15 +514,20 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
       client_id: id,
       service_name: selectedService,
       category_name: selectedCategory,
-      editing_type_id: selectedEditingType.editing_type_id,
-      editing_type_name: selectedEditingType.editing_type_name,
-      editing_type_amount: selectedEditingType.amount,
+      editing_type_id: effectiveEditingType.editing_type_id,
+      editing_type_name: effectiveEditingType.editing_type_name,
+      editing_type_amount: effectiveEditingType.amount,
       quantity,
+      unit_price: effectiveEditingType.amount,
+      total_price: finalAmount,
+      total_amount: finalAmount,
       include_content_posting,
       include_thumbnail_creation,
       include_youtube_video_posting,
       additional_services: selectedAdditionalServices,
-      total_amount: finalAmount,
+      service: formattedServiceTitle,
+      include_in_total: true,
+      source: "custom_graphic",
       employee: userName,
     };
 
@@ -1348,7 +1412,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                   </div>
                   <div>
                     <label className={ labelCls }>Category</label>
-                    <select value={ selectedCategory } disabled={ !!editId || !getSelectedService } className={ selectCls }
+                    <select value={ selectedCategory } disabled={ !getSelectedService } className={ selectCls }
                       onChange={ (e) => { 
                         const catName = e.target.value;
                         setSelectedCategory(catName);
@@ -1373,8 +1437,21 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                   { (getSelectedCategory?.editing_types?.some(et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A") || (getSelectedCategory?.editing_types?.length > 1)) && (
                     <div>
                       <label className={ labelCls }>Editing Type <span className="text-red-500 font-bold">*</span></label>
-                      <select value={ selectedEditingType?.editing_type_id || "" } disabled={ !!editId || !getSelectedCategory } className={ selectCls }
-                        onChange={ (e) => { const ed = getSelectedCategory?.editing_types.find((et) => et.editing_type_id === parseInt(e.target.value)); setSelectedEditingType(ed || null); } }>
+                      <select
+                        value={ (() => {
+                          if (selectedEditingType?.editing_type_id) return selectedEditingType.editing_type_id;
+                          if (selectedEditingType?.editing_type_name && getSelectedCategory?.editing_types) {
+                            const found = getSelectedCategory.editing_types.find(
+                              (et) => et.editing_type_name && et.editing_type_name.trim().toLowerCase() === selectedEditingType.editing_type_name.trim().toLowerCase()
+                            );
+                            if (found) return found.editing_type_id;
+                          }
+                          return "";
+                        })() }
+                        disabled={ !getSelectedCategory }
+                        className={ selectCls }
+                        onChange={ (e) => { const ed = getSelectedCategory?.editing_types.find((et) => et.editing_type_id === parseInt(e.target.value)); setSelectedEditingType(ed || null); } }
+                      >
                         <option value="">-- Choose Editing Type (Required) --</option>
                         { getSelectedCategory?.editing_types.map((ed) => <option key={ ed.editing_type_id } value={ ed.editing_type_id }>{ ed.editing_type_name || "Standard" } — ₹{ ed.amount }</option>) }
                       </select>
@@ -1382,7 +1459,7 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                   ) }
                   <div>
                     <label className={ labelCls }>Quantity</label>
-                    <input type="number" min={ 1 } value={ quantity } onChange={ (e) => setQuantity(parseInt(e.target.value)) }
+                    <input type="number" min={ 1 } value={ quantity } onChange={ (e) => setQuantity(parseInt(e.target.value) || 1) }
                       className={ selectCls } />
                   </div>
                 </div>
@@ -1407,10 +1484,10 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
                               <span className="text-sm text-white font-medium">{ getServiceDisplayName(opt.editing_type_name) }</span>
                               <span className="text-xs text-gray-400">₹{ opt.amount }</span>
                               <div className="flex gap-1 ml-2">
-                                <button type="button" disabled={ !!editId } onClick={ () => !editId && setAddons((p) => ({ ...p, [key]: true })) }
-                                  className={ `px-3 py-1 rounded-md text-xs font-bold transition ${addons[key] ? "bg-green-500 text-white" : "bg-gray-600 text-gray-300 hover:bg-green-900"} disabled:opacity-40` }>YES</button>
-                                <button type="button" disabled={ !!editId } onClick={ () => !editId && setAddons((p) => ({ ...p, [key]: false })) }
-                                  className={ `px-3 py-1 rounded-md text-xs font-bold transition ${!addons[key] ? "bg-red-500 text-white" : "bg-gray-600 text-gray-300 hover:bg-red-900"} disabled:opacity-40` }>NO</button>
+                                <button type="button" onClick={ () => setAddons((p) => ({ ...p, [key]: true })) }
+                                  className={ `px-3 py-1 rounded-md text-xs font-bold transition ${addons[key] ? "bg-green-500 text-white" : "bg-gray-600 text-gray-300 hover:bg-green-900"}` }>YES</button>
+                                <button type="button" onClick={ () => setAddons((p) => ({ ...p, [key]: false })) }
+                                  className={ `px-3 py-1 rounded-md text-xs font-bold transition ${!addons[key] ? "bg-red-500 text-white" : "bg-gray-600 text-gray-300 hover:bg-red-900"}` }>NO</button>
                               </div>
                             </div>
                           );

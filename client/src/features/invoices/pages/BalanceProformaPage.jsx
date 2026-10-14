@@ -1008,7 +1008,16 @@ export default function BalanceProformaPage() {
       sum +
       service.editingTypes.reduce(
         (editSum, edit) => {
-          return editSum + (edit.total || edit.price * edit.quantity);
+          const qty = Number(edit.quantity) || 1;
+          const base = Number(edit.price || edit.editing_type_amount || 0);
+          const baseTotal = base * qty;
+          const addons = Array.isArray(edit.additional_services) ? edit.additional_services : [];
+          const addonsTotal = addons.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+          const recordedTotal = Number(edit.total || 0);
+          const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+            ? recordedTotal
+            : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+          return editSum + effectiveTotal;
         },
         0
       ),
@@ -1750,10 +1759,15 @@ export default function BalanceProformaPage() {
                               if (visibleEditingTypes.length === 0) return null;
 
                               return visibleEditingTypes.map((edit, eidx) => {
-                                const qty = Number(edit.quantity);
-                                const base = Number(edit.price);
-                                const addonsTotal = (edit.additional_services || []).reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
-                                const totalBase = (base * qty) + addonsTotal;
+                                const qty = Number(edit.quantity) || 1;
+                                const base = Number(edit.price || 0);
+                                const addons = Array.isArray(edit.additional_services) ? edit.additional_services : [];
+                                const addonsTotal = addons.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+                                const baseTotal = base * qty;
+                                const recordedTotal = Number(edit.total || 0);
+                                const totalBase = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+                                  ? recordedTotal
+                                  : baseTotal + addonsTotal;
 
                                 return (
                                   <tr
@@ -1956,23 +1970,8 @@ export default function BalanceProformaPage() {
 
 
 
-                            {/* ================= DM SERVICE TOTAL ================= */ }
-                            { (() => {
-                              const graphicTotal = graphicData.reduce(
-                                (sum, service) =>
-                                  sum +
-                                  service.editingTypes.reduce(
-                                    (s, edit) => {
-                                      return (
-                                        s +
-                                        Number(edit.price) *
-                                        Number(edit.quantity)
-                                      );
-                                    },
-                                    0
-                                  ),
-                                0
-                              );
+                            {/* ================= DM SERVICE TOTAL ================= */}
+                            {(() => {
                               const thumbTotal = graphicData
                                 .flatMap((s) =>
                                   s.editingTypes.filter(
@@ -1984,7 +1983,7 @@ export default function BalanceProformaPage() {
                                   (sum, e) =>
                                     sum +
                                     Number(e.include_thumbnail_creation) *
-                                    Number(e.quantity),
+                                      Number(e.quantity),
                                   0
                                 );
                               const postTotal = graphicData
@@ -1997,47 +1996,42 @@ export default function BalanceProformaPage() {
                                   (sum, e) =>
                                     sum +
                                     Number(e.include_content_posting) *
-                                    Number(e.quantity),
+                                      Number(e.quantity),
                                   0
                                 );
 
                               const ytTotal = graphicData
                                 .flatMap((s) =>
                                   s.editingTypes.filter(
-                                    (e) => Number(e.include_youtube_video_posting) > 0
+                                    (e) =>
+                                      Number(e.include_youtube_video_posting) > 0
                                   )
                                 )
                                 .reduce(
                                   (sum, e) =>
                                     sum +
                                     Number(e.include_youtube_video_posting) *
-                                    Number(e.quantity),
+                                      Number(e.quantity),
                                   0
                                 );
 
-                              const addTotal = graphicData
-                                .flatMap((s) => s.editingTypes)
-                                .reduce((sum, e) => {
-                                  const addons = Array.isArray(e.additional_services) ? e.additional_services : [];
-                                  return sum + addons.reduce((as, a) => as + (Number(a.amount) || 0), 0);
-                                }, 0);
-
-                              const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
+                              const dmServiceTotal =
+                                graphicTotal + thumbTotal + postTotal + ytTotal;
 
                               return (
-                                <tr className=" font-semibold">
+                                <tr className="font-semibold">
                                   <td
                                     className="border px-2 py-1 text-right"
-                                    colSpan={ 4 }
+                                    colSpan={4}
                                   >
                                     Services Total
                                   </td>
                                   <td className="border px-2 py-1 text-right">
-                                    ₹{ dmServiceTotal }
+                                    ₹{dmServiceTotal.toLocaleString("en-IN")}
                                   </td>
                                 </tr>
                               );
-                            })() }
+                            })()}
 
                             {/* ================= DM SERVICE TOTAL ================= */ }
                           </tbody>
@@ -2052,11 +2046,11 @@ export default function BalanceProformaPage() {
                         <table className="w-full border text-xs">
                           <thead className="bg-orange-100">
                             <tr>
-                              <th className="border w-[10rem] px-2 py-1 text-left">
-                                Category Name
+                              <th className="border w-[12rem] px-2 py-1 text-left">
+                                Complimentary Service Name
                               </th>
-                              <th className="border w-[20rem] px-2 py-1 text-left">
-                                Service Name
+                              <th className="border w-[18rem] px-2 py-1 text-left">
+                                Category Name
                               </th>
                               <th className="border px-2 py-1 text-right">
                                 Quantity
@@ -2124,10 +2118,10 @@ export default function BalanceProformaPage() {
                                   className="bg-gray-50"
                                 >
                                   <td className="border px-2 py-1 font-medium">
-                                    { finalCategory }
+                                    { finalService }
                                   </td>
                                   <td className="border px-2 py-1">
-                                    { finalService }
+                                    { finalCategory }
                                   </td>
                                   <td className="border px-2 py-1 text-right">
                                     { qty }
@@ -2315,10 +2309,7 @@ export default function BalanceProformaPage() {
                           <button
                             type="button"
                             onClick={ handleShowDiscount }
-                            className={ `inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm ${selecteddiscount
-                              ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20"
-                              : "bg-white hover:bg-gray-100 !text-black dark:bg-gray-700 dark:!text-white dark:border-gray-600 dark:hover:bg-gray-600 border-gray-300 hover:border-gray-400"
-                              }` }
+                            className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border shadow-sm bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-amber-500/20"
                           >
                             🏷️ { selecteddiscount ? "Edit Discount" : "Set Discount" }
                           </button>
