@@ -12,7 +12,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const params = useParams();
   const id = params.id || params.clientId;
   const proposalId = proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
-  const searchParams = new URLSearchParams(useLocation().search);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const docTypeFromURL = searchParams.get("doc");
   const { currentUser, token } = useSelector((state) => state.user);
 
@@ -26,6 +27,30 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const [editingId, setEditingId] = useState(null); // For proforma edit mode
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (location.state?.editItem) {
+      const item = location.state.editItem;
+      const cat = item.category || item.category_name;
+      const amt = item.amount || item.budget;
+      if (cat && amt) {
+        setEnteredAmount((prev) => ({ ...prev, [cat]: amt }));
+        setEditingId(item.id);
+      }
+    } else if (docTypeFromURL === "proforma" && getData.length > 0 && Object.keys(enteredAmount).length === 0 && !editingId) {
+      const initialAmounts = {};
+      getData.forEach((item) => {
+        const cat = item.category || item.category_name;
+        const amt = item.amount || item.budget;
+        if (cat && amt) {
+          initialAmounts[cat] = amt;
+        }
+      });
+      if (Object.keys(initialAmounts).length > 0) {
+        setEnteredAmount(initialAmounts);
+      }
+    }
+  }, [location.state, getData, docTypeFromURL]);
 
   // Sync embeddedData
   useEffect(() => {
