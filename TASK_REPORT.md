@@ -60,3 +60,25 @@
   - **Safe UI Controls & Manual Bulk Notes:** User ke sath design alignment ke anusaar, Balance Proforma me unnecessary 'Edit' button ko hide rakha gaya taaki post-payment historical balance snapshot safe rahe. Sath hi notes ke liye manual bulk save workflow implement kiya gaya jisme staged notes ko review karke 'Save Notes' button ke dwara database me update kiya jata hai.
   - **Verification:** Vite production bundle build (`npm run build`) 0 errors ke sath 100% pass hua.
 
+---
+
+### Task 7: Invoice Architecture Modernization (4-Layer Modular Architecture - Phase 3)
+* **Description:**  
+  QuotationPage aur BalanceProformaPage ke baad, sabse bade aur critical document page `InvoicePage.jsx` (~3,159 lines) ko safaltapoorvak modern 4-layer architecture me refactor kiya gaya:
+  - **Codebase Streamlining:** Lagbhag 3,159 lines ke monolithic `InvoicePage.jsx` ko ghata kar lagbhag 430 lines ka modular page container banaya gaya (~86.3% code reduction).
+  - **Decoupled Architecture & Hooks (Layer 1 & 2):**
+    - `useInvoiceData`: Server data lifecycle (services history, client data, complimentary items, discounts, remaining payments, client notes, public mode snapshot data) ko handle karta hai.
+    - `useInvoiceCalculations`: Sabhi financial calculations, partial payment breakdowns, taxable value billed earlier, TDS deductions, GST (CGST/SGST), ad budget reimbursements (Rule 33), aur inrToWords ko centrally calculate karta hai.
+    - `useInvoiceModals`: Discount modal, remaining payment modal, aur client notes modal (add/edit/delete) ko manage karta hai.
+    - `useInvoicePrint`: Print window handling aur HTML2Canvas-based cloned PDF generation ko clean abstraction ke sath perform karta hai.
+  - **Component Layer (Layer 3):**
+    - `InvoiceCustomerInfoCard`: GST/Non-GST/Proforma header banners, client details, aur company info cards ko cleanly display karta hai.
+    - `InvoiceServicesTable` & `InvoiceComplimentaryTable`: Grouped services, dynamic category pricing, aur category-scoped additional deliverables ko render karte hain.
+    - `InvoiceDiscountSection`: Subtotals, discount deductions, aur dynamic adjustments ko present karta hai.
+    - `InvoiceSummaryRightSide`: Partial payment breakdowns, project base value, past taxable value, deferred contract value, TDS deductions, aur net bank amount ko accurately summarize karta hai.
+    - `InvoiceTermsConditions`: Rule 33 reimbursement clause, TDS clause, taxable value billed earlier clause, aur client-specific notes ko handle karta hai.
+    - `InvoiceModalsContainer`: Sabhi interactive modals ko encapsulate karta hai.
+  - **Document Parity & Print Reliability:** Full Tax Invoices, Partial Invoices (with payment history and TDS), Proforma Invoices, aur Public Client Invoices (`publicMode`) bina kisi feature loss ya visual difference ke fully functional hain. Header/footer alignment aur compact 1-page print layout rule intact rakha gaya hai.
+  - **Verification:** Vite production bundle build (`npm run build`) 0 errors ke sath 100% pass hua.
+
+

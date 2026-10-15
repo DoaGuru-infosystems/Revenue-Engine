@@ -345,6 +345,16 @@ export function useInvoiceModals({
     });
   };
 
+  const handleOpenEditNote = (note) => {
+    setSelectedNotesId(note);
+    setFormDataNote({
+      note_name: note.note_name,
+      plan: note.plan,
+    });
+    setIsEditingNote(true);
+    setShowModalNote(true);
+  };
+
   const handleSubmitNote = async (e) => {
     e.preventDefault();
     setModalLoading(true);
@@ -468,6 +478,7 @@ export function useInvoiceModals({
     setSelectedNotes,
     handleChangeNote,
     handleCloseNote,
+    handleOpenEditNote,
     handleSubmitNote,
     handleDeleteClientNote,
   };

@@ -103,7 +103,7 @@ export default function InvoiceCustomerInfoCard({
         </div>
 
         {/* Company Info */}
-        <DocumentCompanyFrom isGST={isGST} className="mt-1" />
+        <DocumentCompanyFrom isGST={isGST} />
       </div>
     </>
   );

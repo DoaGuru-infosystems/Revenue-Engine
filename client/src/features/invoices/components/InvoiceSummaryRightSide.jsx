@@ -121,62 +121,64 @@ export default function InvoiceSummaryRightSide({
             )}
           </>
         ) : (
-          isGST && (
-            <>
-              {adjustmentAmount > 0 && (
+          <>
+            {adjustmentAmount > 0 && (
+              <div
+                style={{
+                  background: "#faf5ff",
+                  color: "#7e22ce",
+                  fontWeight: 600,
+                }}
+                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+              >
+                <span>Adjustment</span>
+                <span className="font-semibold">-₹{formatAmount(adjustmentAmount)}</span>
+              </div>
+            )}
+            {isGST && (
+              <>
                 <div
                   style={{
-                    background: "#faf5ff",
-                    color: "#7e22ce",
-                    fontWeight: 600,
+                    background: "white",
+                    color: "#5f6b7a",
+                    fontWeight: "normal",
                   }}
                   className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
                 >
-                  <span>Adjustment</span>
-                  <span className="font-semibold">-₹{formatAmount(adjustmentAmount)}</span>
+                  <span className="text-gray-600">Taxable Amount</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹{formatAmount(invoiceSubtotal)}
+                  </span>
                 </div>
-              )}
-              <div
-                style={{
-                  background: "white",
-                  color: "#5f6b7a",
-                  fontWeight: "normal",
-                }}
-                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-              >
-                <span className="text-gray-600">Taxable Amount</span>
-                <span className="text-gray-900 font-medium">
-                  ₹{formatAmount(invoiceSubtotal)}
-                </span>
-              </div>
-              <div
-                style={{
-                  background: "white",
-                  color: "#5f6b7a",
-                  fontWeight: "normal",
-                }}
-                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-              >
-                <span className="text-gray-600">CGST @9%</span>
-                <span className="text-gray-900 font-medium">
-                  ₹{formatAmount(gstAmount / 2)}
-                </span>
-              </div>
-              <div
-                style={{
-                  background: "white",
-                  color: "#5f6b7a",
-                  fontWeight: "normal",
-                }}
-                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-              >
-                <span className="text-gray-600">SGST @9%</span>
-                <span className="text-gray-900 font-medium">
-                  ₹{formatAmount(gstAmount / 2)}
-                </span>
-              </div>
-            </>
-          )
+                <div
+                  style={{
+                    background: "white",
+                    color: "#5f6b7a",
+                    fontWeight: "normal",
+                  }}
+                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+                >
+                  <span className="text-gray-600">CGST @9%</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹{formatAmount(gstAmount / 2)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    background: "white",
+                    color: "#5f6b7a",
+                    fontWeight: "normal",
+                  }}
+                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+                >
+                  <span className="text-gray-600">SGST @9%</span>
+                  <span className="text-gray-900 font-medium">
+                    ₹{formatAmount(gstAmount / 2)}
+                  </span>
+                </div>
+              </>
+            )}
+          </>
         )}
 
         <div
