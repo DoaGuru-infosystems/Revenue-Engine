@@ -574,6 +574,7 @@ export function useQuotationData({
           total_amount: Number(bp.total_amount || 0),
           received_amount: Number(bp.received_amount || 0),
           current_balance: Number(bp.current_balance || 0),
+          previous_balance_amount: Number(bp.previous_balance_amount || 0),
         });
 
         setShowGoogleAd(Boolean(bp.show_google_ad));
@@ -642,6 +643,35 @@ export function useQuotationData({
           }
         } catch (e) {
           setSelecteddiscount(null);
+        }
+
+        try {
+          let adjAmt = Number(bp.adjustment_amount || 0);
+          if (!adjAmt && bp.adjustment_snapshot) {
+            try {
+              const parsedAdj =
+                typeof bp.adjustment_snapshot === "string"
+                  ? JSON.parse(bp.adjustment_snapshot)
+                  : bp.adjustment_snapshot;
+              adjAmt = Number(
+                parsedAdj?.amount || parsedAdj?.adjustment_amount || 0
+              );
+            } catch (e) {
+              adjAmt = 0;
+            }
+          }
+          if (adjAmt > 0) {
+            setSelectedAdjustment({
+              id: bp?.id,
+              amount: adjAmt,
+              adjustment_amount: adjAmt,
+            });
+          } else {
+            setSelectedAdjustment(null);
+          }
+        } catch (e) {
+          console.error("Error setting adjustment in Balance Proforma:", e);
+          setSelectedAdjustment(null);
         }
 
         try {

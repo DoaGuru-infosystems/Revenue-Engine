@@ -3385,6 +3385,7 @@ exports.createBalanceProforma = async (req, res) => {
       show_meta_ad = 1,
       total_amount: requestedTotalAmount,
       created_by,
+      previous_balance_amount: reqPreviousBalance,
     } = req.body;
 
     if (!proforma_id) {
@@ -3416,6 +3417,10 @@ exports.createBalanceProforma = async (req, res) => {
     // 4. Compute current_balance
     const current_balance = Math.max(0, finalTotal - received_amount);
 
+    const prevBalVal = reqPreviousBalance !== undefined && reqPreviousBalance !== null && !isNaN(reqPreviousBalance)
+      ? Number(reqPreviousBalance)
+      : Number(source.previous_balance_amount || 0);
+
     // 5. Concurrency-safe sequential balance proforma number
     const { balance_number, balance_proforma_number } = await getNextBalanceProformaNumber();
 
@@ -3445,8 +3450,9 @@ exports.createBalanceProforma = async (req, res) => {
         current_balance,
         created_by,
         adjustment_amount,
-        adjustment_snapshot
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        adjustment_snapshot,
+        previous_balance_amount
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const result = await runQuery(insertQuery, [
@@ -3471,7 +3477,8 @@ exports.createBalanceProforma = async (req, res) => {
       current_balance,
       created_by || req.user?.name || "System",
       source.adjustment_amount || 0,
-      source.adjustment_snapshot || null
+      source.adjustment_snapshot || null,
+      prevBalVal
     ]);
 
     const createdId = result.insertId;
@@ -3489,6 +3496,7 @@ exports.createBalanceProforma = async (req, res) => {
         total_amount: finalTotal,
         received_amount,
         current_balance,
+        previous_balance_amount: prevBalVal,
       }
     });
   } catch (error) {
@@ -3503,6 +3511,7 @@ exports.getBalanceProformaById = async (req, res) => {
     const rows = await runQuery(
       `SELECT 
          bp.*,
+         COALESCE(bp.previous_balance_amount, pp.previous_balance_amount, 0) AS previous_balance_amount,
          pp.proforma_number AS source_proforma_number,
          pp.proposal_id,
          c.client_name,
@@ -3536,6 +3545,7 @@ exports.getAllBalanceProformas = async (req, res) => {
     const rows = await runQuery(
       `SELECT 
          bp.*,
+         COALESCE(bp.previous_balance_amount, pp.previous_balance_amount, 0) AS previous_balance_amount,
          pp.proforma_number AS source_proforma_number,
          c.client_name,
          c.client_organization,
@@ -3563,6 +3573,7 @@ exports.getBalanceProformasBySourceId = async (req, res) => {
     const rows = await runQuery(
       `SELECT 
          bp.*,
+         COALESCE(bp.previous_balance_amount, pp.previous_balance_amount, 0) AS previous_balance_amount,
          pp.proforma_number AS source_proforma_number
        FROM re_balance_proforma bp
        LEFT JOIN re_proposal_proforma pp ON bp.source_proforma_id = pp.id

@@ -26,7 +26,8 @@ export default function QuotationSummaryRightSide({
     (discountAmount > 0 ||
       adjustmentAmount > 0 ||
       previousBalanceAmount > 0 ||
-      docTypeFromURL === "proforma");
+      docTypeFromURL === "proforma" ||
+      isBalanceProforma);
 
   return (
     <div className="w-1/2 pl-5 print:pl-3 border-l border-gray-200">

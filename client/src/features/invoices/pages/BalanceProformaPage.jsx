@@ -67,6 +67,7 @@ export default function BalanceProformaPage() {
     showModalDiscount,
     selectedAdjustment,
     adjustmentAmount,
+    previousBalanceAmount,
     formDataAdjustment,
     showModalAdjustment,
     dmTotalAfterDiscount,
@@ -206,6 +207,7 @@ export default function BalanceProformaPage() {
                           selecteddiscount={selecteddiscount}
                           discountAmount={discountAmount}
                           adjustmentAmount={adjustmentAmount}
+                          previousBalanceAmount={previousBalanceAmount}
                           displayedTaxable={displayedTaxable}
                           isGST={isGST}
                           displayedCgst={displayedCgst}
@@ -218,6 +220,7 @@ export default function BalanceProformaPage() {
                           isBalanceProforma={isBalanceProforma}
                           displayedReceived={displayedReceived}
                           displayedCurrentBalance={displayedCurrentBalance}
+                          docTypeFromURL={docTypeFromURL}
                         />
                       </div>
                     </section>
