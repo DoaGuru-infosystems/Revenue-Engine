@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useParams } from "react-router-dom";
@@ -21,6 +21,10 @@ import {
   Notebook,
   ChevronUp,
   ChevronDown,
+  Pencil,
+  Trash2,
+  CheckCircle2,
+  Gift,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
@@ -1008,367 +1012,480 @@ const dispatch = useDispatch();
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  const getServiceDisplayName = (name) => {
+    if (!name) return name;
+    const n = name.toLowerCase();
+    if (n.includes("content posting")) return "Meta Growth & Content Management";
+    if (n.includes("youtube video posting")) return "YouTube Channel Growth & Optimization";
+    if (n.includes("google ad")) return "Google Ads Campaign Management & Optimization";
+    if (n.includes("meta ad")) return "Meta Ads Campaign Management & Optimization";
+    return name;
+  };
+
+  const liveServiceValue = useMemo(() => {
+    if (!selectedEditingType) return 0;
+    const baseUnit = parseFloat(selectedEditingType.amount || 0);
+    const qty = parseInt(quantity) || 1;
+    let optionalTotal = 0;
+    if (shouldShowOptionalAddons && optionalServices?.length > 0) {
+      optionalServices.forEach((opt) => {
+        const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
+        if (addons[key]) {
+          optionalTotal += (parseFloat(opt.amount) || 0) * qty;
+        }
+      });
+    }
+    return baseUnit * qty + optionalTotal;
+  }, [selectedEditingType, quantity, shouldShowOptionalAddons, optionalServices, addons]);
+
   const uniquePredefinedNotes = predefinedNotes.filter(
-    (p) => !allClientNote.some((c) => c.note_name === p.note_text)
+    (p) =>
+      !allClientNote.some((c) => c.note_name === p.note_text) &&
+      !selectedNotes.some((s) => s.note_name === p.note_text)
   );
+
+  const selectCls =
+    "w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:bg-gray-800 disabled:text-gray-500";
+  const labelCls =
+    "block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1";
+  const cardCls = "bg-gray-800 rounded-xl border border-gray-700 shadow-sm p-5";
+
   return (
     <>
-      <div className="w-full max-w-2xl backdrop-blur rounded-xl px-10 py-8 space-y-6 shadow-2xl">
-        <div>
-          <label className="block font-semibold mb-1">Select Service</label>
-          <select
-            className="w-full p-2 border rounded bg-white text-black"
-            value={selectedService}
-            onChange={(e) => {
-              setSelectedService(e.target.value);
-              setSelectedCategory("");
-              setSelectedEditingType(null);
-            }}
-            disabled={!!editId}
-          >
-            <option value="">-- Choose Service --</option>
-            {data.map((service) => (
-              <option key={service.service_id} value={service.service_name}>
-                {service.service_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {getSelectedService && (
-          <div>
-            <label className="block font-semibold mb-1">Select Category</label>
-            <select
-              className="w-full p-2 border rounded bg-white text-black"
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setSelectedEditingType(null);
-              }}
-              disabled={!getSelectedService}
+      <div className="space-y-4 w-full">
+        {/* Form Card */}
+        <div className={cardCls + " space-y-4"}>
+          <div className="flex items-center justify-between">
+            <p
+              className={`text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 ${
+                editId ? "text-amber-400" : "text-emerald-400"
+              }`}
             >
-              <option value="">-- Choose Category --</option>
-              {getSelectedService.categories.map((category) => (
-                <option
-                  key={category.category_id}
-                  value={category.category_name}
-                >
-                  {category.category_name}
-                </option>
-              ))}
-            </select>
+              <Gift className="w-4 h-4" />
+              {editId
+                ? "✏️ Editing Complimentary Service"
+                : "🎁 Add Complimentary Service"}
+            </p>
+            <span className="text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+              100% Free / Value Add
+            </span>
           </div>
-        )}
 
-        {getSelectedCategory && (
-          <div>
-            <label className="block font-semibold mb-1">
-              Select Editing Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              className="w-full p-2 border rounded bg-white text-black"
-              value={(() => {
-                if (selectedEditingType?.editing_type_id) return selectedEditingType.editing_type_id;
-                if (selectedEditingType?.editing_type_name && getSelectedCategory?.editing_types) {
-                  const found = getSelectedCategory.editing_types.find(
-                    (et) => et.editing_type_name && et.editing_type_name.trim().toLowerCase() === selectedEditingType.editing_type_name.trim().toLowerCase()
+          {/* Row 1: Service + Category */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Service</label>
+              <select
+                className={selectCls}
+                value={selectedService}
+                onChange={(e) => {
+                  setSelectedService(e.target.value);
+                  setSelectedCategory("");
+                  setSelectedEditingType(null);
+                }}
+                disabled={!!editId}
+              >
+                <option value="">-- Choose Service --</option>
+                {data.map((service) => (
+                  <option key={service.service_id} value={service.service_name}>
+                    {service.service_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={labelCls}>Category</label>
+              <select
+                className={selectCls}
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setSelectedEditingType(null);
+                }}
+                disabled={!getSelectedService}
+              >
+                <option value="">-- Choose Category --</option>
+                {getSelectedService?.categories.map((category) => (
+                  <option
+                    key={category.category_id}
+                    value={category.category_name}
+                  >
+                    {category.category_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Row 2: Editing Type + Quantity */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>
+                Editing Type <span className="text-red-500 font-bold">*</span>
+              </label>
+              <select
+                className={selectCls}
+                value={(() => {
+                  if (selectedEditingType?.editing_type_id)
+                    return selectedEditingType.editing_type_id;
+                  if (
+                    selectedEditingType?.editing_type_name &&
+                    getSelectedCategory?.editing_types
+                  ) {
+                    const found = getSelectedCategory.editing_types.find(
+                      (et) =>
+                        et.editing_type_name &&
+                        et.editing_type_name.trim().toLowerCase() ===
+                          selectedEditingType.editing_type_name
+                            .trim()
+                            .toLowerCase()
+                    );
+                    if (found) return found.editing_type_id;
+                  }
+                  return "";
+                })()}
+                onChange={(e) => {
+                  const edit = getSelectedCategory?.editing_types.find(
+                    (et) => et.editing_type_id === parseInt(e.target.value)
                   );
-                  if (found) return found.editing_type_id;
+                  setSelectedEditingType(edit || null);
+                }}
+                disabled={!getSelectedCategory}
+              >
+                <option value="">-- Choose Editing Type (Required) --</option>
+                {getSelectedCategory?.editing_types.map((edit) => (
+                  <option
+                    key={edit.editing_type_id}
+                    value={edit.editing_type_id}
+                  >
+                    {edit.editing_type_name || "Standard"} — ₹{edit.amount}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={labelCls}>Quantity</label>
+              <input
+                type="number"
+                className={selectCls}
+                min={1}
+                value={quantity}
+                onChange={(e) =>
+                  setQuantity(parseInt(e.target.value) || 1)
                 }
-                return "";
-              })()}
-              onChange={(e) => {
-                const edit = getSelectedCategory.editing_types.find(
-                  (et) => et.editing_type_id === parseInt(e.target.value)
-                );
-                setSelectedEditingType(edit || null);
-              }}
-              disabled={!getSelectedCategory}
-            >
-              <option value="">-- Choose Editing Type (Required) --</option>
-              {getSelectedCategory.editing_types.map((edit) => (
-                <option key={edit.editing_type_id} value={edit.editing_type_id}>
-                  {edit.editing_type_name} - ₹{edit.amount}
-                </option>
-              ))}
-            </select>
+              />
+            </div>
           </div>
-        )}
 
-        <div>
-          <label className="block font-semibold mb-1">Quantity</label>
-          <input
-            type="number"
-            className="w-full p-2 border rounded bg-white text-black"
-            min={1}
-            value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-          />
-        </div>
+          {/* Optional Add-ons */}
+          {shouldShowOptionalAddons && optionalServices?.length > 0 && (
+            <div>
+              <label className={labelCls}>Optional Add-ons</label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {optionalServices
+                  .filter((opt) => {
+                    if (selectedService !== "Graphics Design") return true;
+                    const name = opt.editing_type_name?.toLowerCase() || "";
+                    return (
+                      name !== "youtube video posting" &&
+                      name !== "youtube channel growth & optimization" &&
+                      name !== "thumbnail creation"
+                    );
+                  })
+                  .map((opt) => {
+                    const key = opt.editing_type_name
+                      .toLowerCase()
+                      .replace(/\s+/g, "_");
 
-        {shouldShowOptionalAddons && optionalServices?.length > 0 && (
-          <div className="space-y-4">
-            {optionalServices.map((opt) => {
-              const key = opt.editing_type_name
-                .toLowerCase()
-                .replace(/\s+/g, "_");
-
-              return (
-                <div key={key}>
-                  <label className="block font-semibold">
-                    {opt.editing_type_name}?
-                  </label>
-                  <div className="flex gap-4 mt-2">
-                  <button
-                    type="button"
-                    className={`px-4 py-2 rounded ${
-                      addons[key]
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-300 text-black"
-                    }`}
-                    onClick={() =>
-                      setAddons((prev) => ({
-                        ...prev,
-                        [key]: true,
-                      }))
-                    }
-                  >
-                    YES
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 rounded ${
-                      !addons[key]
-                        ? "bg-red-600 text-white"
-                        : "bg-gray-300 text-black"
-                    }`}
-                    onClick={() =>
-                      setAddons((prev) => ({
-                        ...prev,
-                        [key]: false,
-                      }))
-                    }
-                  >
-                    NO
-                  </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Live Service Value Preview */}
-        {selectedEditingType && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-center font-semibold text-white text-sm mt-3">
-            Service Value:{" "}
-            <span className="text-green-400 font-bold text-base">
-              ₹
-              {(
-                parseFloat(selectedEditingType.amount || 0) * (parseInt(quantity) || 1) +
-                optionalServices.reduce((acc, opt) => {
-                  const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
-                  return acc + (addons[key] ? (parseFloat(opt.amount) || 0) * (parseInt(quantity) || 1) : 0);
-                }, 0)
-              ).toLocaleString()}
-            </span>{" "}
-            <span className="text-emerald-400 text-xs ml-1">(Complimentary / Free)</span>
-          </div>
-        )}
-
-        <button
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold p-3 rounded mt-4"
-          onClick={handleSave}
-          disabled={loading}
-        >
-          {loading ? "Save..." : editId ? "✔ Update Entry" : "💾 Calculate & Save"}
-        </button>
-        <button
-          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold p-3 rounded mt-2"
-          onClick={resetForm}
-        >
-          Reset Form
-        </button>
-
-        <div className="text-xl font-semibold text-center text-green-300 mt-4">
-          Total Complimentary Value: ₹{grandTotal.toLocaleString()}
-        </div>
-
-        {/* Client Orders */}
-
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Package className="w-5 h-5" />
-          Recent Client Orders
-        </h3>
-        <div className="space-y-4">
-          {getData.map((order) => (
-            <div
-              key={order.id}
-              className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-white">
-                {/* Left Section: Info */}
-                <div className="space-y-1 flex-1 min-w-0">
-                  <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
-                    <Megaphone className="w-5 h-5 text-yellow-400" />
-                    <span>
-                      {order.service_name} → {order.category_name}
-                    </span>
-                  </div>
-                  <div className="text-lg text-white/80">
-                    🎬 {order.editing_type_name} × {order.quantity}
-                  </div>
-                  {(Number(order.include_content_posting) > 0 ||
-                    Number(order.include_thumbnail_creation) > 0) && (
-                    <div className="text-base text-white/60 italic">
-                      {Number(order.include_content_posting) > 0 && (
-                        <>📢 Meta Growth & Content Management </>                      )}
-                      {Number(order.include_thumbnail_creation) > 0 && (
-                        <>🖼 Thumbnail Creation </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* <div className="text-xs text-white/50">
-                      🕒 {new Date(order.created_at).toLocaleString("en-IN")}
-                    </div> */}
-                </div>
-
-                {/* Right Section: Amount + Delete */}
-                <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
-                  <div className="text-green-400 font-bold text-xl">
-                    ₹{getOrderItemAmount(order).toLocaleString()}
-                  </div>
-                  <button
-                    onClick={() => handleEdit(order)}
-                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                    title="Edit"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={() => handleDelete(order.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                    title="Delete"
-                  >
-                    ×
-                  </button>
-                </div>
+                    return (
+                      <div
+                        key={key}
+                        className="flex items-center gap-1.5 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2"
+                      >
+                        <span className="text-sm text-white font-medium">
+                          {getServiceDisplayName(opt.editing_type_name)}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          ₹{opt.amount}
+                        </span>
+                        <div className="flex gap-1 ml-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAddons((p) => ({ ...p, [key]: true }))
+                            }
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition ${
+                              addons[key]
+                                ? "bg-green-500 text-white"
+                                : "bg-gray-600 text-gray-300 hover:bg-green-900"
+                            }`}
+                          >
+                            YES
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAddons((p) => ({ ...p, [key]: false }))
+                            }
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition ${
+                              !addons[key]
+                                ? "bg-red-500 text-white"
+                                : "bg-gray-600 text-gray-300 hover:bg-red-900"
+                            }`}
+                          >
+                            NO
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Live Service Value Preview */}
+          {selectedEditingType && (
+            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
+              <span className="text-gray-300 font-medium flex items-center gap-2">
+                <Gift className="w-4 h-4 text-emerald-400" />
+                Service Value:
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-emerald-400 font-bold text-base">
+                  ₹{liveServiceValue.toLocaleString()}
+                </span>
+                <span className="text-[11px] text-emerald-300/80">
+                  (Complimentary / Free)
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition shadow-sm text-sm flex items-center justify-center gap-2"
+            >
+              {loading
+                ? "Saving..."
+                : editId
+                ? "✔ Update Entry"
+                : "💾 Calculate & Save"}
+            </button>
+            <button
+              onClick={resetForm}
+              className="px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition text-sm font-medium"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
+        {/* Complimentary Summary Card */}
+        <div className={cardCls}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+              <Gift className="w-4 h-4 text-emerald-400" />
+              Complimentary Summary
+            </span>
+            <span className="text-xs bg-emerald-500/20 text-emerald-400 font-semibold px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3" />
+              Value Provided at Zero Cost
+            </span>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-gray-700">
+            <span className="text-sm text-gray-400">Total Complimentary Value</span>
+            <span className="text-2xl font-black text-emerald-400 tracking-tight">
+              ₹{grandTotal.toLocaleString()}
+            </span>
+          </div>
+        </div>
+
+        {/* Recent Client Orders */}
+        {getData.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+              <Package className="w-4 h-4 text-red-400" />
+              Recent Client Orders ({getData.length})
+            </h3>
+            {getData.map((order) => (
+              <div
+                key={order.id}
+                className={cardCls + " hover:border-red-500/50 transition"}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  {/* Left Section: Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white text-sm flex items-center gap-2">
+                      <Megaphone className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                      <span>
+                        {order.service_name} → {order.category_name}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      🎬 {order.editing_type_name} × {order.quantity}
+                    </p>
+                    {(Number(order.include_content_posting) > 0 ||
+                      Number(order.include_thumbnail_creation) > 0) && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {Number(order.include_content_posting) > 0 && (
+                          <span className="text-xs bg-red-500/20 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full">
+                            📢 Meta Growth & Content Mgmt
+                          </span>
+                        )}
+                        {Number(order.include_thumbnail_creation) > 0 && (
+                          <span className="text-xs bg-orange-500/20 border border-orange-500/30 text-orange-400 px-2 py-0.5 rounded-full">
+                            🖼 Thumbnail Creation
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Section: Amount + Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="font-bold text-emerald-400 text-base">
+                      ₹{getOrderItemAmount(order).toLocaleString()}
+                    </span>
+                    <button
+                      onClick={() => handleEdit(order)}
+                      className="w-8 h-8 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition"
+                      title="Edit"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(order.id)}
+                      className="w-8 h-8 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Notes Section */}
         {!hideNotes && (
           <>
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Notes Section
-            </h3>
+            <div className={cardCls + " space-y-3"}>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <StickyNote className="w-4 h-4 text-orange-400" />
+                Notes Section
+              </h3>
 
-            <div className="space-y-4">
-              <div className="relative w-full" ref={dropdownRef}>
-                {/* Button to open dropdown */}
+              {/* Predefined Note Dropdown */}
+              <div className="relative" ref={dropdownRef}>
                 <div
-                  className="flex items-center justify-between w-full p-2 bg-white rounded-lg border border-gray-300 text-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
                   onClick={() => setIsOpen(!isOpen)}
+                  className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg border border-gray-600 bg-gray-700 text-sm cursor-pointer hover:border-gray-500 transition"
                 >
-                  <span className="truncate">
+                  <span className="text-gray-300 truncate">
                     {selectedNote
                       ? selectedNote.note_text
                       : "-- Select Predefined Note --"}
                   </span>
                   {isOpen ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                    <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   )}
                 </div>
-                {/* Dropdown menu */}
                 {isOpen && (
-                  <div className="absolute z-10 bg-white w-full mt-1 max-h-60 overflow-auto border rounded-lg text-black focus:ring-2 focus:ring-orange-500">
-                    {uniquePredefinedNotes.map((note) => (
-                      <div
-                        key={note.id}
-                        onClick={() => handleSelect(note)}
-                        className="p-2 m-1 border rounded-lg bg-gray-100 hover:bg-orange-100 cursor-pointer break-words"
-                      >
-                        {note.note_text}
-                      </div>
-                    ))}
+                  <div className="absolute z-20 w-full mt-1 max-h-56 overflow-auto rounded-lg border border-gray-600 bg-gray-800 shadow-2xl">
+                    {uniquePredefinedNotes.length === 0 ? (
+                      <p className="text-center text-gray-500 text-sm py-4">
+                        No more predefined notes
+                      </p>
+                    ) : (
+                      uniquePredefinedNotes.map((note) => (
+                        <div
+                          key={note.id}
+                          onClick={() => handleSelect(note)}
+                          className="px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0 transition"
+                        >
+                          {note.note_text}
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
 
               {/* Manual Note Input */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex gap-2">
                 <textarea
-                  type="text"
+                  rows={1}
                   value={manualNote}
                   onChange={(e) => setManualNote(e.target.value)}
-                  placeholder="Enter custom note"
-                  rows={1}
-                  className="flex-1 p-2 rounded-lg border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Enter custom note..."
+                  className="flex-1 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/30 resize-none"
                 />
                 <button
                   onClick={handleAddManualNote}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition"
+                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition flex items-center gap-1"
                 >
                   + Add
                 </button>
               </div>
 
               {/* Selected Notes List */}
-              <div className="space-y-2">
-                {selectedNotes.map((note) => (
-                  <div
-                    key={note.id}
-                    className="p-3 bg-gray-100 rounded-lg flex justify-between items-start gap-3 border border-gray-300"
-                  >
-                    <span className="text-gray-800 font-medium break-words whitespace-pre-wrap leading-relaxed flex-1">
-                      {note.note_name}
-                    </span>
-                    <div className="flex-shrink-0">
+              {selectedNotes.length > 0 && (
+                <div className="space-y-1.5">
+                  {selectedNotes.map((note) => (
+                    <div
+                      key={note.id}
+                      className="flex items-start gap-2 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2"
+                    >
+                      <span className="flex-1 text-sm text-gray-300 leading-relaxed">
+                        {note.note_name}
+                      </span>
                       <button
                         onClick={() => handleRemoveNote(note.id)}
-                        className="bg-red-500 mx-2 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold transition"
+                        className="w-5 h-5 rounded-full bg-red-100 hover:bg-red-200 text-red-500 flex items-center justify-center flex-shrink-0 text-xs font-bold transition"
                         title="Remove"
                       >
                         ×
                       </button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
 
               {/* Save Button */}
               <button
                 onClick={handleSaveNotes}
-                className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+                className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold transition shadow-sm flex items-center justify-center gap-2"
               >
                 💾 Save Notes
               </button>
             </div>
 
-            <div className="space-y-4">
-              {allClientNote.map((notes) => (
-                <div
-                  key={notes.id}
-                  className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 text-white">
-                    {/* Left Section: Info */}
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <div className="flex items-start gap-2 font-semibold text-lg break-words whitespace-pre-wrap leading-relaxed">
-                        <span>→ {notes.note_name}</span>
-                      </div>
-                    </div>
-
-                    {/* Right Section: Amount + Delete */}
-                    <div className="flex items-start gap-2 sm:gap-4 flex-shrink-0">
+            {/* Saved Notes List */}
+            {allClientNote.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  Saved Notes ({allClientNote.length})
+                </h3>
+                {allClientNote.map((notes) => (
+                  <div
+                    key={notes.id}
+                    className="flex items-start gap-3 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 hover:border-gray-600 transition"
+                  >
+                    <span className="flex-1 text-sm text-gray-300 leading-relaxed">
+                      → {notes.note_name}
+                    </span>
+                    <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // prevent card onClick
+                          e.stopPropagation();
                           setSelectedNotesId(notes);
                           setFormData({
                             note_name: notes.note_name,
@@ -1377,92 +1494,73 @@ const dispatch = useDispatch();
                           setIsEditing(true);
                           setShowModal(true);
                         }}
-                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                        className="w-7 h-7 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition"
                         title="Edit"
                       >
-                        ✎
+                        <Pencil className="w-3 h-3" />
                       </button>
                       <button
                         onClick={() => handleDeleteClientNote(notes.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
+                        className="w-7 h-7 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition"
                         title="Delete"
                       >
-                        ×
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
+            {/* Note Edit Modal */}
             {showModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                {/* Backdrop */}
                 <div
-                  className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity"
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                   onClick={handleClose}
                 />
-
-                {/* Modal */}
-                <div className="relative bg-white w-full max-w-md rounded-xl shadow-2xl transform transition-all animate-in fade-in-0 zoom-in-95 duration-200">
-                  {/* Header */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <div className="relative w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
+                  <div className="h-1 w-full bg-gradient-to-r from-orange-500 to-red-500" />
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <StickyNote className="w-5 h-5 text-red-600" />
+                      <div className="w-9 h-9 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                        <StickyNote className="w-4 h-4 text-orange-400" />
                       </div>
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        {isEditing ? "Edit Note" : "Add New Note"}
+                      <h2 className="font-bold text-white">
+                        {isEditing ? "Edit Note" : "Add Note"}
                       </h2>
                     </div>
                     <button
                       onClick={handleClose}
-                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="w-8 h-8 rounded-lg hover:bg-gray-700 text-gray-400 flex items-center justify-center transition"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
-
-                  {/* Form */}
-                  <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {/* Note */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Notebook className="w-4 h-4 inline mr-2" />
-                        Note
-                      </label>
-                      <textarea
-                        name="note_name"
-                        value={formData.note_name}
-                        onChange={handleChange}
-                        className="w-full text-black px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors resize-none"
-                        placeholder="Enter note details"
-                        rows={4}
-                        required
-                      ></textarea>
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex justify-end gap-3 pt-4">
+                  <form onSubmit={handleSubmit} className="p-5 space-y-4">
+                    <textarea
+                      name="note_name"
+                      value={formData.note_name}
+                      onChange={handleChange}
+                      rows={4}
+                      required
+                      placeholder="Enter note..."
+                      className="w-full rounded-xl border border-gray-600 bg-gray-700 px-4 py-3 text-sm text-white placeholder-gray-500 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/30 resize-none"
+                    />
+                    <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={handleClose}
-                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                        className="flex-1 py-2.5 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-xl text-sm font-medium transition"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={loading}
-                        className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm"
+                        className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white rounded-xl text-sm font-bold transition"
                       >
-                        {loading
-                          ? isEditing
-                            ? "Updating..."
-                            : "Saving..."
-                          : isEditing
-                          ? "Update Note"
-                          : "Save Note"}
+                        {loading ? "Saving..." : isEditing ? "Update" : "Save"}
                       </button>
                     </div>
                   </form>
@@ -1471,48 +1569,6 @@ const dispatch = useDispatch();
             )}
           </>
         )}
-
-        {/* <div className="space-y-3">
-            {getData.map((order) => (
-              <div
-                key={order.id}
-                className="flex items-center justify-between p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/15 transition-colors"
-              >
-                <div className="flex flex-wrap gap-6 text-white items-center">
-                  <div className="flex items-center gap-1">
-                    <Megaphone className="w-4 h-4 text-yellow-400" />
-                    <span className="font-medium">
-                      {order.service_name} → {order.category_name}
-                    </span>
-                  </div>
-                  <div className="text-sm">
-                    🎬 {order.editing_type_name} × {order.quantity}
-                  </div>
-                  <div className="text-xs italic text-white/70">
-                    {order.include_content_posting === "1" &&
-                      "📢 Meta Growth & Content Management"}
-                    {order.include_thumbnail_creation === "1" &&
-                      " 🖼 Thumbnail Creation"}
-                  </div>
-                  <div className="text-xs text-white/50">
-                    🕒 {new Date(order.created_at).toLocaleString("en-IN")}
-                  </div>
-                  <div className="ml-auto text-green-400 font-bold text-lg">
-                    <div className="text-green-400 font-bold text-lg">
-                      ₹{parseFloat(order.total_amount).toLocaleString()}
-                    </div>
-                    <button
-                      onClick={() => handleDelete(order.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div> */}
       </div>
     </>
   );
