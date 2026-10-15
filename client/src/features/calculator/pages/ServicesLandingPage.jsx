@@ -817,7 +817,16 @@ export default function ServicesLandingPage() {
         <div className="flex items-center gap-3 flex-shrink-0">
           {/* Back */}
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                const fallback = docTypeFromURL === "proforma"
+                  ? `${basePath}/balance-proforma/${id}/${proposalId}`
+                  : `${basePath}/quotation/${id}/${proposalId}`;
+                navigate(fallback);
+              }
+            }}
             className="inline-flex items-center gap-1.5 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl px-3 py-2 transition-all duration-200 group shrink-0"
           >
             <ArrowLeft className="w-4 h-4 transform transition-transform group-hover:-translate-x-1" />

@@ -176,14 +176,13 @@ const GraphicCalculator = ({
   const cardCls = "bg-gray-800 rounded-xl border border-gray-700 shadow-sm p-5";
 
   const handleBack = () => {
-    if (id && proposalId) {
-      navigate(
-        `/admin/ServicesLanding/${id}/${proposalId}${
-          docTypeFromURL ? `?doc=${docTypeFromURL}` : ""
-        }`
-      );
-    } else {
+    if (window.history.length > 1) {
       navigate(-1);
+    } else {
+      const fallbackUrl = docTypeFromURL === "proforma"
+        ? `/admin/ServicesLanding/${id}/${proposalId}?doc=proforma`
+        : `/admin/ServicesLanding/${id}/${proposalId}`;
+      navigate(fallbackUrl);
     }
   };
 
