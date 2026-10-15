@@ -30,7 +30,7 @@ export default function QuotationNotesDropdown({
     };
   }, []);
 
-  if (docTypeFromURL === "proforma") return null;
+  const isProforma = docTypeFromURL === "proforma";
 
   const uniquePredefinedNotes = predefinedNotes.filter(
     (p) =>
@@ -51,6 +51,8 @@ export default function QuotationNotesDropdown({
       <h3 className="font-bold mb-2 text-gray-800">
         {isBalanceProforma
           ? "Add Notes for Balance Proforma"
+          : isProforma
+          ? "Add Notes for Proforma"
           : "Add Notes"}
       </h3>
 
@@ -85,6 +87,8 @@ export default function QuotationNotesDropdown({
                 ? selectedNote.note_text
                 : isBalanceProforma
                 ? "Select a predefined balance proforma note..."
+                : isProforma
+                ? "Select a predefined proforma note to add..."
                 : "Select a predefined note to add..."}
             </span>
           </div>
@@ -108,6 +112,8 @@ export default function QuotationNotesDropdown({
                 <span className="text-2xl block mb-1">✅</span>
                 {isBalanceProforma
                   ? "All balance proforma notes are already added"
+                  : isProforma
+                  ? "All proforma notes are already added"
                   : "All notes are already added"}
               </div>
             ) : (
@@ -143,6 +149,8 @@ export default function QuotationNotesDropdown({
           placeholder={
             isBalanceProforma
               ? "Enter custom note for this balance proforma"
+              : isProforma
+              ? "Enter custom note for this proforma"
               : "Enter custom note"
           }
           rows={1}

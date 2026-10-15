@@ -390,3 +390,21 @@ export const updateBalanceProformaNotes = async (txnId, notes, token) => {
   return response.data;
 };
 
+/**
+ * Update regular proforma notes (saved in re_proposal_proforma.notes_snapshot)
+ */
+export const updateProformaNotes = async (proformaId, notes, token) => {
+  const response = await axios.put(
+    `${API_BASE_URL}/auth/api/re_calculator/proformas/snapshot`,
+    {
+      proformaId,
+      action: "set",
+      snapshotType: "notes",
+      item: notes,
+    },
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+

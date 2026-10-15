@@ -97,6 +97,14 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   };
 
   const openPaymentModal = (proforma) => {
+    if (proforma.status === 'carried_forward' || proforma.is_carried_forward === 1) {
+      Swal.fire({
+        icon: "warning",
+        title: "Payment Recording Frozen",
+        text: `This proforma's balance was carried forward to a renewal proforma (ID: ${proforma.carried_into_proforma_id || 'Renewal'}). Please record payment on the renewal proforma.`
+      });
+      return;
+    }
     setSelectedProforma(proforma);
     setPaymentForm({
       amount: "",
@@ -590,12 +598,23 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               const approvedPayments = proformaPayments.filter(p => p.status === 'approved');
               const totalReceived = approvedPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
               const totalAmount = Number(proforma.total_amount || 0);
+              const isCarriedForward = proforma.status === 'carried_forward' || proforma.is_carried_forward === 1;
               const isPaid = totalReceived >= totalAmount - 0.05 && totalAmount > 0;
               const isPartial = totalReceived > 0 && !isPaid;
 
-              // 3 payment statuses: pending, partial, fully-paid
-              const paymentStatus = isPaid ? 'fully-paid' : (isPartial ? 'partial' : (proforma.payment_status || 'pending'));
+              // 4 payment statuses: carried_forward, fully-paid, partial, pending
+              const paymentStatus = isCarriedForward
+                ? 'carried_forward'
+                : isPaid
+                ? 'fully-paid'
+                : (isPartial ? 'partial' : (proforma.payment_status || 'pending'));
+
               const statusBadgeMap = {
+                'carried_forward': {
+                  label: 'Carried Forward (Frozen)',
+                  badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+                  dot: 'bg-purple-400',
+                },
                 'fully-paid': {
                   label: 'Fully Paid',
                   badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
@@ -676,7 +695,11 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                         >
                           <Trash className="w-4 h-4" /> Delete Proforma
                         </button>
-                        { !isPaid && (
+                        { isCarriedForward ? (
+                          <span className="px-3 py-1.5 bg-purple-950/60 text-purple-300 border border-purple-800/60 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                            🔒 Balance Carried to Renewal (Frozen)
+                          </span>
+                        ) : !isPaid && (
                           <button
                             onClick={ () => openPaymentModal(proforma) }
                             className="px-4 py-2 bg-yellow-600/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-500/30 rounded-xl hover:bg-yellow-600/30 transition text-sm font-semibold flex items-center gap-2"

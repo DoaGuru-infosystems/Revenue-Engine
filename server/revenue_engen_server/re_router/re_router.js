@@ -228,6 +228,7 @@ const {
   sendProposalToClient,
   getProposalPreviewToken,
   createProforma,
+  getClientPreviousBalance,
   getProformasByClient,
   getAllProformas,
   recordProposalPayment,
@@ -725,6 +726,11 @@ router.get(
   "/proforma/client/:clientId",
   authenticateToken,
   getProformasByClient,
+);
+router.get(
+  "/client-previous-balance/:clientId",
+  authenticateToken,
+  getClientPreviousBalance,
 );
 router.get(
   "/proforma/proposal/:proposalId",

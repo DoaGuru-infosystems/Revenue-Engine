@@ -742,6 +742,7 @@ exports.createProforma = async (req, res) => {
       created_by,
       duration_start_date,
       duration_end_date,
+      previous_balance_amount,
     } = req.body;
 
     // Fetch parent proposal to snapshot data
@@ -794,6 +795,7 @@ exports.createProforma = async (req, res) => {
       }
     } catch(e) {}
 
+    const prevBal = Number(previous_balance_amount) || 0;
     let finalBaseAmount = base_amount;
     let finalGstAmount = gst_amount;
     let finalTotalAmount = total_amount;
@@ -831,7 +833,7 @@ exports.createProforma = async (req, res) => {
           }
         } catch(e) {}
       }
-      const dmAfterDisc = Math.max(0, dmTotal - discAmt);
+      const dmAfterDisc = Math.max(0, dmTotal - discAmt) + prevBal;
       finalBaseAmount = dmAfterDisc + adsTotal;
       const rate = Number(gst_rate) || 18;
       finalGstAmount = is_gst ? Number(((dmAfterDisc * rate) / 100).toFixed(2)) : 0;
@@ -848,8 +850,8 @@ exports.createProforma = async (req, res) => {
       INSERT INTO re_proposal_proforma 
       (proposal_id, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
        pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
-       duration_start_date, duration_end_date, discount_snapshot)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       duration_start_date, duration_end_date, discount_snapshot, previous_balance_amount)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
       proposal_id,
@@ -871,7 +873,34 @@ exports.createProforma = async (req, res) => {
       duration_start_date || null,
       duration_end_date || null,
       discountSnapshot,
+      prevBal,
     ]);
+
+    // If previous_balance_amount was carried forward into this new proforma,
+    // mark earlier pending proformas as carried_forward and freeze payment recording on them
+    if (prevBal > 0) {
+      try {
+        const pendingPfs = await runQuery(`
+          SELECT p.id, p.total_amount,
+                 COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) as paid
+          FROM re_proposal_proforma p
+          WHERE p.client_id = ? AND p.id != ? AND (p.is_carried_forward IS NULL OR p.is_carried_forward = 0) AND p.status != 'carried_forward'
+        `, [client_id, result.insertId]);
+
+        for (const pf of pendingPfs) {
+          const pend = Number(pf.total_amount || 0) - Number(pf.paid || 0);
+          if (pend > 0.05) {
+            await runQuery(`
+              UPDATE re_proposal_proforma 
+              SET status = 'carried_forward', is_carried_forward = 1, carried_into_proforma_id = ?
+              WHERE id = ?
+            `, [result.insertId, pf.id]);
+          }
+        }
+      } catch (cfErr) {
+        console.error("Error updating carried_forward status on previous proformas:", cfErr);
+      }
+    }
 
     // Update proposal status and billing dates
     let updateFields = ["status = 'proforma_generated'"];
@@ -898,6 +927,56 @@ exports.createProforma = async (req, res) => {
     });
   } catch (error) {
     console.error("createProforma error:", error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
+  }
+};
+
+exports.getClientPreviousBalance = async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    if (!clientId) {
+      return res.status(400).json({ status: "Failure", message: "clientId is required" });
+    }
+    const q = `
+      SELECT p.id, p.proforma_number, p.client_id, p.total_amount, p.base_amount, p.is_gst, p.status, p.created_at,
+             COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid
+      FROM re_proposal_proforma p
+      WHERE p.client_id = ? 
+        AND (p.is_carried_forward IS NULL OR p.is_carried_forward = 0)
+        AND p.status NOT IN ('carried_forward', 'cancelled', 'superseded', 'draft')
+      ORDER BY p.id ASC
+    `;
+    const rows = await runQuery(q, [clientId]);
+    let totalPending = 0;
+    const pendingProformas = [];
+
+    rows.forEach(r => {
+      const tot = Number(r.total_amount || 0);
+      const paid = Number(r.total_paid || 0);
+      const pending = Math.max(0, tot - paid);
+      if (pending > 0.05) {
+        totalPending += pending;
+        pendingProformas.push({
+          id: r.id,
+          proforma_number: r.proforma_number,
+          total_amount: tot,
+          total_paid: paid,
+          pending: Math.round(pending * 100) / 100,
+          is_gst: r.is_gst,
+          created_at: r.created_at,
+        });
+      }
+    });
+
+    res.status(200).json({
+      status: "Success",
+      data: {
+        totalPending: Math.round(totalPending * 100) / 100,
+        pendingProformas,
+      }
+    });
+  } catch (error) {
+    console.error("getClientPreviousBalance error:", error);
     res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };
@@ -1117,6 +1196,14 @@ exports.recordProposalPayment = async (req, res) => {
         .status(404)
         .json({ status: "Failure", message: "Proforma not found" });
     const proforma = proformaRows[0];
+
+    // Freeze payment recording if proforma balance was carried forward to renewal
+    if (proforma.status === 'carried_forward' || proforma.is_carried_forward === 1) {
+      return res.status(400).json({
+        status: "Failure",
+        message: `Payment cannot be recorded on this proforma because its pending balance was carried forward to a renewal proforma (ID: ${proforma.carried_into_proforma_id || 'Renewal'}). Please record payment on the renewal proforma.`
+      });
+    }
 
     // Validate that the payment amount does not exceed the pending amount
     const existingPayments = await runQuery(
@@ -1542,8 +1629,8 @@ exports.approvePayment = async (req, res) => {
           payment_mode, payment_date, payment_reference, client_gst_no, client_pan_no,
           tag_received_amt, received_amt, current_amt, previous_amt, tds_amount,
           created_at, invoice_source, proforma_id, base_amount, gst_rate, gst_amount, realized_ad_budget, realized_google_budget, realized_meta_budget,
-          pricing_snapshot, notes_snapshot, terms_snapshot
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          pricing_snapshot, notes_snapshot, terms_snapshot, previous_balance_amount
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       // 4.1 Prepare pricing snapshot ensuring Service Charge items are included
       let items = [];
@@ -1618,6 +1705,7 @@ exports.approvePayment = async (req, res) => {
         finalPricingSnapshot || proforma.pricing_snapshot || null,
         proforma.notes_snapshot || null,
         proforma.terms_snapshot || null,
+        proforma.previous_balance_amount || 0,
       ]);
 
       // 5. PARSE pricing_snapshot JSON and copy to graphic/ads/comp
@@ -2893,6 +2981,8 @@ exports.getRevenueHistory = async (req, res) => {
          pp.proforma_number,
          pp.total_amount,
          pp.status           AS proforma_status,
+         pp.is_carried_forward,
+         pp.carried_into_proforma_id,
          c.client_name,
          IFNULL((
            SELECT SUM(ppr.amount)
@@ -2940,11 +3030,13 @@ exports.getRevenueHistory = async (req, res) => {
       const cid = pf.client_id;
       const tot = Number(pf.total_amount || 0);
       const rec = Number(pf.total_received_for_proforma || 0);
-      const pend = Number(pf.current_pending_for_proforma || 0);
+      const isCarriedForward = pf.proforma_status === 'carried_forward' || pf.is_carried_forward === 1;
+      const pend = isCarriedForward ? 0 : Number(pf.current_pending_for_proforma || 0);
+      const effectiveTot = isCarriedForward ? rec : tot;
       const tds = Number(pf.total_tds_for_proforma || 0);
       const invCount = invoiceCountMap[pf.proforma_id] || 0;
 
-      totalAmount += tot;
+      totalAmount += effectiveTot;
       totalReceived += rec;
       totalPending += pend;
       totalTds += tds;
@@ -2961,7 +3053,7 @@ exports.getRevenueHistory = async (req, res) => {
         };
       }
 
-      clientMap[cid].total_amount += tot;
+      clientMap[cid].total_amount += effectiveTot;
       clientMap[cid].total_received += rec;
       clientMap[cid].total_pending += pend;
       clientMap[cid].invoices_count += invCount;
@@ -3009,7 +3101,7 @@ exports.getProformaSnapshot = async (req, res) => {
   try {
     const { id } = req.params;
     const results = await runQuery(
-      `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, is_gst, gst_rate, base_amount, gst_amount, total_amount, adjustment_amount, adjustment_snapshot FROM re_proposal_proforma WHERE id = ?`,
+      `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, is_gst, gst_rate, base_amount, gst_amount, total_amount, adjustment_amount, adjustment_snapshot, previous_balance_amount, is_carried_forward, carried_into_proforma_id FROM re_proposal_proforma WHERE id = ?`,
       [id]
     );
     if (results.length === 0) {

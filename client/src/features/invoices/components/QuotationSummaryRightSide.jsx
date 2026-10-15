@@ -6,6 +6,7 @@ export default function QuotationSummaryRightSide({
   selecteddiscount = null,
   discountAmount = 0,
   adjustmentAmount = 0,
+  previousBalanceAmount = 0,
   displayedTaxable = 0,
   isGST = false,
   displayedCgst = 0,
@@ -18,29 +19,38 @@ export default function QuotationSummaryRightSide({
   isBalanceProforma = false,
   displayedReceived = 0,
   displayedCurrentBalance = 0,
+  docTypeFromURL = "",
 }) {
+  const showTopSubtotal =
+    graphicTotal > 0 &&
+    (discountAmount > 0 ||
+      adjustmentAmount > 0 ||
+      previousBalanceAmount > 0 ||
+      docTypeFromURL === "proforma");
+
   return (
     <div className="w-1/2 pl-5 print:pl-3 border-l border-gray-200">
       <div className="space-y-1 print:space-y-0 text-xs print:text-[11px] text-gray-700">
+        {showTopSubtotal && (
+          <div className="flex justify-between items-center text-gray-600 py-0.5">
+            <span>Subtotal</span>
+            <span className="font-semibold text-gray-900">
+              ₹{graphicTotal.toLocaleString("en-IN")}
+            </span>
+          </div>
+        )}
+
         {discountAmount > 0 && (
-          <>
-            <div className="flex justify-between items-center text-gray-600 py-0.5">
-              <span>Subtotal</span>
-              <span className="font-semibold text-gray-900">
-                ₹{graphicTotal.toLocaleString("en-IN")}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-red-600 font-semibold py-0.5">
-              <span>
-                Discount (
-                {selecteddiscount?.discount_type === "percent"
-                  ? `${selecteddiscount?.discount_per}%`
-                  : `₹${selecteddiscount?.discount_amt}`}
-                )
-              </span>
-              <span>-₹{discountAmount.toLocaleString("en-IN")}</span>
-            </div>
-          </>
+          <div className="flex justify-between items-center text-red-600 font-semibold py-0.5">
+            <span>
+              Discount (
+              {selecteddiscount?.discount_type === "percent"
+                ? `${selecteddiscount?.discount_per}%`
+                : `₹${selecteddiscount?.discount_amt}`}
+              )
+            </span>
+            <span>-₹{discountAmount.toLocaleString("en-IN")}</span>
+          </div>
         )}
 
         {adjustmentAmount > 0 && (
@@ -50,8 +60,15 @@ export default function QuotationSummaryRightSide({
           </div>
         )}
 
+        {previousBalanceAmount > 0 && (
+          <div className="flex justify-between items-center text-blue-700 font-semibold py-0.5">
+            <span>Previous Balance </span>
+            <span>+₹{previousBalanceAmount.toLocaleString("en-IN")}</span>
+          </div>
+        )}
+
         <div className="flex justify-between items-center text-gray-600 py-0.5">
-          <span>Taxable Amount</span>
+          <span>{previousBalanceAmount > 0 ? "Taxable Service Amount" : "Taxable Amount"}</span>
           <span className="font-semibold text-gray-900">
             ₹
             {displayedTaxable.toLocaleString("en-IN", {

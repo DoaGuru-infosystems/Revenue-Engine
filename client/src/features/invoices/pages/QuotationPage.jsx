@@ -69,6 +69,7 @@ export default function QuotationPage() {
     formDataAdjustment,
     showModalAdjustment,
     dmTotalAfterDiscount,
+    previousBalanceAmount,
     graphicTotal,
     grandTotal,
     displayedTaxable,
@@ -207,6 +208,7 @@ export default function QuotationPage() {
                           selecteddiscount={selecteddiscount}
                           discountAmount={discountAmount}
                           adjustmentAmount={adjustmentAmount}
+                          previousBalanceAmount={previousBalanceAmount}
                           displayedTaxable={displayedTaxable}
                           isGST={isGST}
                           displayedCgst={displayedCgst}
@@ -219,6 +221,7 @@ export default function QuotationPage() {
                           isBalanceProforma={isBalanceProforma}
                           displayedReceived={displayedReceived}
                           displayedCurrentBalance={displayedCurrentBalance}
+                          docTypeFromURL={docTypeFromURL}
                         />
                       </div>
                     </section>

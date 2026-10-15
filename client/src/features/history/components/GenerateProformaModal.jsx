@@ -46,6 +46,42 @@ const GenerateProformaModal = ({
   const [quotationServicesPreview, setQuotationServicesPreview] = useState([]);
   const [quotationPreviewLoading, setQuotationPreviewLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [previousBalance, setPreviousBalance] = useState({
+    totalPending: 0,
+    include: true,
+    customAmount: "",
+    pendingProformas: [],
+    loading: false,
+  });
+
+  const fetchPreviousBalance = async (clientId) => {
+    if (!clientId) return;
+    try {
+      setPreviousBalance((prev) => ({ ...prev, loading: true }));
+      const res = await axios.get(
+        `${baseURL}/auth/api/re_calculator/client-previous-balance/${clientId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (res.data.status === "Success" && res.data.data) {
+        const { totalPending, pendingProformas } = res.data.data;
+        const tot = Number(totalPending || 0);
+        setPreviousBalance({
+          totalPending: tot,
+          include: tot > 0,
+          customAmount: tot > 0 ? String(tot) : "",
+          pendingProformas: pendingProformas || [],
+          loading: false,
+        });
+      } else {
+        setPreviousBalance((prev) => ({ ...prev, loading: false }));
+      }
+    } catch (e) {
+      console.error("Error fetching previous balance:", e);
+      setPreviousBalance((prev) => ({ ...prev, loading: false }));
+    }
+  };
 
   const qtStartRef = useRef(null);
   const qtEndRef = useRef(null);
@@ -82,6 +118,11 @@ const GenerateProformaModal = ({
           bill_type: "NON_GST",
         });
         setQuotationServicesPreview([]);
+
+        const effectiveCid = clientData?.id || clientData?.client_id || (proposalsList[0] && proposalsList[0].client_id);
+        if (effectiveCid) {
+          fetchPreviousBalance(effectiveCid);
+        }
 
         if (initialSelectedProposalId) {
           const prop = proposalsList.find((p) => String(p.id) === String(initialSelectedProposalId));
@@ -120,6 +161,11 @@ const GenerateProformaModal = ({
         phone: prev.phone || proposal.phone || "",
         address: prev.address || proposal.address || "",
       }));
+
+      const cid = proposal.client_id || clientData?.id || clientData?.client_id;
+      if (cid) {
+        fetchPreviousBalance(cid);
+      }
     }
 
     let previewData = [];
@@ -204,7 +250,8 @@ const GenerateProformaModal = ({
         }
 
         const isGST = formData.bill_type === "GST";
-        const dmTotalAfterDiscount = Math.max(0, dmTotal - discountAmt);
+        const prevBalToApply = previousBalance.include ? Number(previousBalance.customAmount || 0) : 0;
+        const dmTotalAfterDiscount = Math.max(0, dmTotal - discountAmt) + prevBalToApply;
         const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
 
         const adsTotalBudget = adsServices.reduce((sum, svc) => sum + Number(svc.budget || svc.amount || 0), 0);
@@ -224,6 +271,7 @@ const GenerateProformaModal = ({
           gst_rate: 18,
           duration_start_date: formData.duration_start_date,
           duration_end_date: formData.duration_end_date,
+          previous_balance_amount: prevBalToApply,
         };
         const res = await axios.post(`${baseURL}/auth/api/re_calculator/proforma`, payload, {
           headers: { Authorization: `Bearer ${token}` }
@@ -745,6 +793,64 @@ const GenerateProformaModal = ({
               </div>
             ) }
 
+            {/* Previous Balance Section (Only visible if client has outstanding balance > 0) */}
+            {previousBalance.totalPending > 0 && (
+              <div
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: "10px",
+                  background: theme === "dark" ? "rgba(245, 158, 11, 0.08)" : "#fffbeb",
+                  border: theme === "dark" ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid #fde68a",
+                  marginBottom: 16,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={previousBalance.include}
+                      onChange={(e) => setPreviousBalance(prev => ({ ...prev, include: e.target.checked }))}
+                      style={{ width: 16, height: 16, accentColor: "#f59e0b", cursor: "pointer" }}
+                    />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: theme === "dark" ? "#fbbf24" : "#b45309" }}>
+                      Include Previous Balance 
+                    </span>
+                  </label>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: theme === "dark" ? "#fcd34d" : "#92400e" }}>
+                    Total Pending: ₹{Number(previousBalance.totalPending).toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                {previousBalance.include && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, color: theme === "dark" ? "#d1d5db" : "#4b5563" }}>
+                      Carry Forward Amount (₹):
+                    </span>
+                    <input
+                      type="number"
+                      value={previousBalance.customAmount}
+                      onChange={(e) => setPreviousBalance(prev => ({ ...prev, customAmount: e.target.value }))}
+                      style={{
+                        width: 130,
+                        padding: "4px 8px",
+                        fontSize: 13,
+                        borderRadius: 6,
+                        border: "1px solid rgba(245, 158, 11, 0.4)",
+                        background: theme === "dark" ? "#1f2937" : "#ffffff",
+                        color: theme === "dark" ? "#ffffff" : "#111827",
+                        fontWeight: 600,
+                      }}
+                    />
+                    {previousBalance.pendingProformas.length > 0 && (
+                      <span style={{ fontSize: 11, color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
+                        From {previousBalance.pendingProformas.map(p => `${p.proforma_number || '#' + p.id} (₹${Number(p.pending).toLocaleString("en-IN")})`).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <label className="ci-label">Quotation Services Preview</label>
               { quotationPreviewLoading && (
@@ -816,7 +922,8 @@ const GenerateProformaModal = ({
                 }
 
                 const isGST = formData.bill_type === "GST";
-                const dmTotalAfterDiscount = Math.max(0, dmTotal - discountAmt);
+                const prevBalToApply = previousBalance.include ? Number(previousBalance.customAmount || 0) : 0;
+                const dmTotalAfterDiscount = Math.max(0, dmTotal - discountAmt) + prevBalToApply;
                 const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
                 const dmSubtotalWithGst = dmTotalAfterDiscount + dmGstAmount;
 
@@ -1075,18 +1182,23 @@ const GenerateProformaModal = ({
                     })() }
 
                     <div style={ { textAlign: "right", paddingTop: 4 } }>
+                      { (discountAmt > 0 || (previousBalance.include && prevBalToApply > 0)) && (
+                        <div className="ci-summary-sub">
+                          Subtotal: ₹{ dmTotal.toLocaleString("en-IN") }
+                        </div>
+                      ) }
                       { discountAmt > 0 && (
-                        <>
-                          <div className="ci-summary-sub">
-                            Subtotal: ₹{ dmTotal.toLocaleString("en-IN") }
-                          </div>
-                          <div className="ci-summary-disc">
-                            Discount: -₹{ discountAmt.toLocaleString("en-IN") }
-                          </div>
-                        </>
+                        <div className="ci-summary-disc">
+                          Discount: -₹{ discountAmt.toLocaleString("en-IN") }
+                        </div>
+                      ) }
+                      { previousBalance.include && prevBalToApply > 0 && (
+                        <div style={{ fontSize: 12, color: "#38bdf8", fontWeight: 600, marginBottom: 2 }}>
+                          Previous Balance (बकाया): +₹{ prevBalToApply.toLocaleString("en-IN") }
+                        </div>
                       ) }
                       <div className="ci-summary-taxable">
-                        Taxable Amount: ₹{ dmTotalAfterDiscount.toLocaleString("en-IN") }
+                        Taxable Service Amount: ₹{ dmTotalAfterDiscount.toLocaleString("en-IN") }
                       </div>
                       { isGST && (
                         <div className="ci-summary-gst">

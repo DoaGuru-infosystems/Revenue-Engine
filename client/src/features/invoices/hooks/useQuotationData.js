@@ -22,6 +22,7 @@ import {
   updatePlanClientNoteById,
   deletePlanClientNotes,
   updateBalanceProformaNotes,
+  updateProformaNotes,
 } from "../api";
 
 export function useQuotationData({
@@ -251,6 +252,9 @@ export function useQuotationData({
             proforma_number: proforma.proforma_number,
             duration_start_date: proforma.duration_start_date,
             duration_end_date: proforma.duration_end_date,
+            previous_balance_amount: Number(proforma.previous_balance_amount || 0),
+            is_carried_forward: proforma.is_carried_forward,
+            carried_into_proforma_id: proforma.carried_into_proforma_id,
           });
 
           let clientSnap = null;
@@ -346,18 +350,36 @@ export function useQuotationData({
             });
 
             try {
-              const notesSource =
-                docTypeFromURL === "proforma"
-                  ? proforma.notes_snapshot
-                  : p.notes_json ||
-                    proforma.notes_snapshot ||
-                    p.terms_notes_json;
-              const liveNotes = JSON.parse(notesSource || "[]");
-              const formattedNotes = liveNotes.map((note, idx) => ({
-                id: idx + 1,
-                note_name:
-                  typeof note === "string" ? note : note.note_name || "",
-              }));
+              let liveNotes = [];
+              if (proforma.notes_snapshot) {
+                try {
+                  const parsed = JSON.parse(proforma.notes_snapshot);
+                  if (Array.isArray(parsed) && parsed.length > 0) {
+                    liveNotes = parsed;
+                  }
+                } catch (e) {
+                  liveNotes = [];
+                }
+              }
+
+              // If proforma notes_snapshot has no notes, fallback to proposal notes
+              if (liveNotes.length === 0 && p) {
+                try {
+                  const propNotesSource = p.notes_json || p.terms_notes_json;
+                  const parsedProp = JSON.parse(propNotesSource || "[]");
+                  if (Array.isArray(parsedProp) && parsedProp.length > 0) {
+                    liveNotes = parsedProp;
+                  }
+                } catch (e) {}
+              }
+
+              const formattedNotes = (Array.isArray(liveNotes) ? liveNotes : []).map(
+                (note, idx) => ({
+                  id: note.id || idx + 1,
+                  note_name:
+                    typeof note === "string" ? note : note.note_name || "",
+                })
+              );
               setNotesData(formattedNotes);
             } catch (e) {
               setNotesData([]);
@@ -836,8 +858,11 @@ export function useQuotationData({
     dmTotalAfterDiscount - adjustmentAmount
   );
 
-  const dmGstAmount = isGST ? dmTotalAfterAdjustment * 0.18 : 0;
-  const dmSubtotalWithGst = dmTotalAfterAdjustment + dmGstAmount;
+  const previousBalanceAmount = Number(proformaMeta?.previous_balance_amount || 0);
+  const dmTotalWithPreviousBalance = dmTotalAfterAdjustment + previousBalanceAmount;
+
+  const dmGstAmount = isGST ? dmTotalWithPreviousBalance * 0.18 : 0;
+  const dmSubtotalWithGst = dmTotalWithPreviousBalance + dmGstAmount;
   const adsTotalWithGst = adsTotalBudget;
   const grandTotal = dmSubtotalWithGst + adsTotalWithGst;
 
@@ -875,7 +900,7 @@ export function useQuotationData({
       ? displayedSubtotal + activeAdsBudget
       : grandTotal;
 
-  let displayedTaxable = dmTotalAfterAdjustment;
+  let displayedTaxable = dmTotalWithPreviousBalance;
   let displayedCgst = dmGstAmount / 2;
   let displayedSgst = dmGstAmount / 2;
 
@@ -1469,6 +1494,40 @@ export function useQuotationData({
         return;
       }
 
+      if (docTypeFromURL === "proforma" && isEditingNote && selectedNotesId) {
+        const updated = notesData.map((item) =>
+          item.id === selectedNotesId.id
+            ? { ...item, note_name: formDataNote.note_name }
+            : item
+        );
+        const res = await updateProformaNotes(
+          parseInt(txn_id),
+          updated.map((n) => ({ id: n.id, note_name: n.note_name })),
+          token
+        );
+
+        if (res.status === "Success") {
+          setNotesData(updated);
+          setShowModalNote(false);
+          Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: "Note updated successfully!",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: res.message || "Failed to update note",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        }
+        return;
+      }
+
       let response;
       if (isEditingNote && selectedNotesId) {
         response = await updatePlanClientNoteById(
@@ -1626,6 +1685,55 @@ export function useQuotationData({
       return;
     }
 
+    if (docTypeFromURL === "proforma") {
+      try {
+        const combined = [
+          ...notesData,
+          ...selectedNotes.map((item, idx) => ({
+            id: item.id || Date.now() + idx,
+            note_name: item.note_name,
+          })),
+        ];
+
+        const res = await updateProformaNotes(
+          parseInt(txn_id),
+          combined.map((n) => ({ id: n.id, note_name: n.note_name })),
+          token
+        );
+
+        if (res.status === "Success") {
+          setNotesData(combined);
+          setSelectedNotes([]);
+          setManualNote("");
+          Swal.fire({
+            icon: "success",
+            title: "Notes Saved",
+            text: "Notes saved to proforma successfully!",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: res.message || "Failed to save notes to proforma.",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        }
+      } catch (err) {
+        console.error("Error saving proforma notes:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "An error occurred while saving notes.",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+      }
+      return;
+    }
+
     try {
       const planNotes = selectedNotes.map((item) => ({
         note_name: item.note_name,
@@ -1732,6 +1840,46 @@ export function useQuotationData({
       return;
     }
 
+    if (docTypeFromURL === "proforma") {
+      const updated = notesData.filter((item) => item.id !== noteId);
+      try {
+        const res = await updateProformaNotes(
+          parseInt(txn_id),
+          updated.map((n) => ({ id: n.id, note_name: n.note_name })),
+          token
+        );
+
+        if (res.status === "Success") {
+          setNotesData(updated);
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Note has been deleted.",
+            timer: 1000,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: res.message || "Failed to delete note.",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting note:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "An error occurred while deleting note.",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+      }
+      return;
+    }
+
     try {
       const result = await deletePlanClientNotes(noteId, token);
       if (result.status === "Success") {
@@ -1783,6 +1931,7 @@ export function useQuotationData({
     formDataAdjustment,
     showModalAdjustment,
     dmTotalAfterDiscount,
+    previousBalanceAmount,
     graphicTotal,
     complimentaryTotal,
     grandTotal,
