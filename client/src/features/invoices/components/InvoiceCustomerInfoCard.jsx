@@ -9,6 +9,17 @@ export default function InvoiceCustomerInfoCard({
   isQuotation = false,
   isGST = false,
 }) {
+  const isGstActive =
+    Boolean(isGST) ||
+    isGST > 0 ||
+    clientData?.is_gst === 1 ||
+    clientData?.is_gst === "1" ||
+    clientData?.bill_type === "GST";
+
+  const refProforma =
+    clientData?.proforma_number ||
+    (clientData?.proforma_id ? `PROF-${clientData.proforma_id}` : "");
+
   return (
     <>
       <div className="mb-1 text-center">
@@ -19,7 +30,9 @@ export default function InvoiceCustomerInfoCard({
               : "PROFORMA INVOICE"
             : isQuotation
               ? "QUOTATION"
-              : "INVOICE"}
+              : isGstActive
+                ? "TAX INVOICE"
+                : "INVOICE"}
         </p>
       </div>
 
@@ -52,13 +65,23 @@ export default function InvoiceCustomerInfoCard({
               <>
                 <strong>Quotation: </strong> {clientData?.bill_number || clientData?.id}
               </>
-            ) : isGST > 0 ? (
+            ) : isGstActive ? (
               <>
                 <strong>GST Invoice No: </strong> {clientData?.bill_number}
+                {refProforma && (
+                  <div className="text-gray-600 font-semibold text-[11px] mt-0.5">
+                    Ref Proforma No: {refProforma}
+                  </div>
+                )}
               </>
             ) : (
               <>
                 <strong>N-GST Invoice No: </strong> {clientData?.bill_number}
+                {refProforma && (
+                  <div className="text-gray-600 font-semibold text-[11px] mt-0.5">
+                    Ref Proforma No: {refProforma}
+                  </div>
+                )}
               </>
             )}
           </p>

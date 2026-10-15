@@ -90,5 +90,16 @@
   - **Data Fetch Optimization:** `useInvoiceData.js` me `onSessionExpired` handler ko stable ref me encapsulate kiya gaya aur data fetching dependency loop ko optimize kiya gaya.
   - **Verification:** Vite production build 0 errors ke sath verified.
 
+---
+
+### Task 9: Invoice History Ordering, Reference Proforma Display, & GST Tax Invoice Heading
+* **Description:**  
+  User ke teen specific business requirements implement kiye gaye:
+  1. **Latest Invoices First in Invoice History:** `InvoiceHistoryPage.jsx` me backend se aane wale invoices par lage `.reverse()` ko hata kar explicit date/id descending sort (`(b.created_at || b.id) - (a.created_at || a.id)`) lagaya gaya taaki latest invoices sabse pehle dikhein.
+  2. **Display Reference Proforma Number:** Server side par `re_getController.js` (`getInvoiceClientDetailsById`) aur `re_publicController.js` (`getPublicInvoiceData`) me invoice ke linked proforma ka number resolve karke return kiya gaya. Client side par `InvoiceCustomerInfoCard.jsx` me invoice number ke niche `Ref Proforma No: {proforma_number}` render kiya gaya.
+  3. **GST Heading as 'TAX INVOICE':** `InvoiceCustomerInfoCard.jsx` me GST invoices ke liye header title ko `"INVOICE"` se update karke `"TAX INVOICE"` kar diya gaya.
+  - **Verification:** Vite production build 0 errors ke sath pass hua aur graphify updated.
+
+
 
 

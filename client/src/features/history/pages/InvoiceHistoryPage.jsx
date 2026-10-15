@@ -46,7 +46,12 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
         }
       );
       if (res.data.status === "Success") {
-        setFetchServices(res.data.data.reverse());
+        const sorted = (res.data.data || []).sort((a, b) => {
+          const dateDiff = new Date(b.created_at || 0) - new Date(a.created_at || 0);
+          if (dateDiff !== 0) return dateDiff;
+          return Number(b.id || 0) - Number(a.id || 0);
+        });
+        setFetchServices(sorted);
       }
     } catch (error) {
       console.log(error);

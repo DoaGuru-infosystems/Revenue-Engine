@@ -2327,6 +2327,35 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
       }
     }
 
+    // Fetch proforma_number if available for reference
+    let targetProformaId = invoice.proforma_id;
+    if (!targetProformaId && invoice.txn_id) {
+      try {
+        const payRecord = await query(
+          "SELECT proforma_id FROM re_proposal_payment_records WHERE txn_id = ? LIMIT 1",
+          [invoice.txn_id]
+        );
+        if (payRecord.length > 0 && payRecord[0].proforma_id) {
+          targetProformaId = payRecord[0].proforma_id;
+          invoice.proforma_id = targetProformaId;
+        }
+      } catch (err) {}
+    }
+
+    if (targetProformaId) {
+      try {
+        const pf = await query(
+          "SELECT id, proforma_number FROM re_proposal_proforma WHERE id = ?",
+          [targetProformaId]
+        );
+        if (pf.length > 0) {
+          invoice.proforma_number = pf[0].proforma_number || `PROF-${pf[0].id}`;
+        } else {
+          invoice.proforma_number = `PROF-${targetProformaId}`;
+        }
+      } catch (err) {}
+    }
+
     if (invoice.proforma_id && !invoice.discount_snapshot) {
       try {
         const pf = await query("SELECT discount_snapshot FROM re_proposal_proforma WHERE id = ?", [invoice.proforma_id]);

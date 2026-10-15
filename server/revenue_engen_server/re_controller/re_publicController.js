@@ -251,13 +251,28 @@ exports.getPublicInvoiceData = async (req, res) => {
     }
 
     const clientData = clientDataRows[0];
-    if (clientData.proforma_id) {
+    let targetProformaId = clientData.proforma_id;
+    if (!targetProformaId && clientData.txn_id) {
+      try {
+        const payRecord = await queryDb(
+          "SELECT proforma_id FROM re_proposal_payment_records WHERE txn_id = ? LIMIT 1",
+          [clientData.txn_id]
+        );
+        if (payRecord.length > 0 && payRecord[0].proforma_id) {
+          targetProformaId = payRecord[0].proforma_id;
+          clientData.proforma_id = targetProformaId;
+        }
+      } catch (err) {}
+    }
+
+    if (targetProformaId) {
       try {
         const proformaRows = await queryDb(
-          "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot FROM re_proposal_proforma WHERE id = ?",
-          [clientData.proforma_id]
+          "SELECT id, proforma_number, pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot FROM re_proposal_proforma WHERE id = ?",
+          [targetProformaId]
         );
         if (proformaRows.length > 0) {
+          clientData.proforma_number = proformaRows[0].proforma_number || `PROF-${proformaRows[0].id}`;
           if (!clientData.pricing_snapshot && proformaRows[0].pricing_snapshot) {
             clientData.pricing_snapshot = proformaRows[0].pricing_snapshot;
           }
@@ -269,7 +284,7 @@ exports.getPublicInvoiceData = async (req, res) => {
           }
         }
       } catch (e) {
-        console.error("Error backfilling pricing_snapshot in getPublicInvoiceData:", e);
+        console.error("Error backfilling in getPublicInvoiceData:", e);
       }
     }
 
