@@ -192,15 +192,11 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   };
 
   const handleEdit = (item) => {
-    // Pre-fill the input form with existing values
-    setEnteredAmount((prev) => ({
-      ...prev,
-      [item.category]: item.amount,
-    }));
-    // In proforma mode, track which entry we are updating
-    if (docTypeFromURL === "proforma") {
-      setEditingId(item.id);
-    }
+    const cat = item.category || item.category_name;
+    const amt = item.amount || item.budget;
+    setEnteredAmount({ [cat]: amt });
+    setEditingId(item.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const resetEditingState = () => {
@@ -259,7 +255,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           const charge = roundCurrency((amount * percent) / 100);
           const total = roundCurrency(amount + charge);
 
-          const existingItem = adsItems.find(item => item.category === category)
+          const existingItem = (editingId && getData.find(item => String(item.id) === String(editingId)))
+            || adsItems.find(item => item.category === category)
             || getData.find(item => (item.category || item.category_name) === category);
           
           results.push({
@@ -586,27 +583,45 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                   </span>
                 )}
               </div>
-              {categories.map((category) => (
-                <div
-                  key={category}
-                  className={`backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4 ${
-                    editingId ? 'bg-yellow-500/10 border border-yellow-400/30' : 'bg-white/10'
-                  }`}
-                >
-                  <label className="sm:w-48 font-medium">{category}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter Amount (₹)"
-                    value={enteredAmount[category] || ""}
-                    onChange={(e) =>
-                      handleAmountChange(category, e.target.value)
-                    }
-                    className="w-full px-4 py-2 rounded-lg border border-white/20 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  />
-                </div>
-              ))}
+              {categories.map((category) => {
+                const isThisEditing = editingId && (
+                  (enteredAmount[category] !== undefined && enteredAmount[category] !== "") ||
+                  (getData.find(d => String(d.id) === String(editingId))?.category === category)
+                );
+                return (
+                  <div
+                    key={category}
+                    className={`backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4 transition-all ${
+                      isThisEditing
+                        ? 'bg-yellow-500/15 border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/10'
+                        : 'bg-white/10 border border-transparent'
+                    }`}
+                  >
+                    <label className="sm:w-48 font-medium flex items-center justify-between">
+                      <span>{category}</span>
+                      {isThisEditing && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300">
+                          ✏️ Editing
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Enter Amount (₹)"
+                      value={enteredAmount[category] || ""}
+                      onChange={(e) =>
+                        handleAmountChange(category, e.target.value)
+                      }
+                      className={`w-full px-4 py-2 rounded-lg border bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all ${
+                        isThisEditing ? 'border-yellow-400/50 focus:ring-yellow-400' : 'border-white/20'
+                      }`}
+                      autoFocus={Boolean(isThisEditing)}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
 

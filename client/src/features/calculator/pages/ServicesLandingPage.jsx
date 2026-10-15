@@ -49,10 +49,6 @@ export default function ServicesLandingPage() {
   const [clientData, setClientData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [notesData, setNotesData] = useState([]);
-  const [adsConfigData, setAdsConfigData] = useState([]);
-  const [editingAd, setEditingAd] = useState(null);
-  const [editAdBudget, setEditAdBudget] = useState("");
-  const [showEditAdModal, setShowEditAdModal] = useState(false);
   const { currentUser, token } = useSelector((state) => state.user);
   const { theme } = useTheme();
   const isLight = theme === "light";
@@ -351,19 +347,6 @@ export default function ServicesLandingPage() {
     }
   };
 
-  const fetchAdsConfig = async () => {
-    try {
-      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/getAdsServices`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (data?.status === "Success" && data?.data) {
-        setAdsConfigData(data.data);
-      }
-    } catch (err) {
-      console.error("fetchAdsConfig error:", err);
-    }
-  };
-
   useEffect(() => {
     fetchClient();
     fetchData();
@@ -372,7 +355,6 @@ export default function ServicesLandingPage() {
     fetchClientNotes();
     fetchComplimenatryData();
     fetchDiscountSettings();
-    fetchAdsConfig();
   }, [id, proposalId, docTypeFromURL]);
 
   // Close dropdown on outside click
@@ -810,109 +792,7 @@ export default function ServicesLandingPage() {
     }
   };
 
-  const getMatchingAdsRange = (category, amount) => {
-    const num = Number(amount || 0);
-    if (!num || !adsConfigData || adsConfigData.length === 0) return null;
-    return adsConfigData
-      .filter((ad) => (ad.ads_category || "").trim().toLowerCase() === (category || "").trim().toLowerCase())
-      .find((range) => {
-        const start = parseInt(range.amt_range_start);
-        const end = range.amt_range_end === "Above" ? Infinity : parseInt(range.amt_range_end);
-        if (isNaN(start)) return false;
-        if (range.amt_range_end !== "Above" && isNaN(end)) return false;
-        return num >= start && num <= end;
-      });
-  };
 
-  const handleOpenEditAdModal = (order) => {
-    setEditingAd(order);
-    setEditAdBudget(String(order.amount || order.budget || ""));
-    setShowEditAdModal(true);
-  };
-
-  const handleUpdateAdBudget = async (e) => {
-    e.preventDefault();
-    if (!editingAd) return;
-    const budgetNum = Number(editAdBudget);
-    if (!budgetNum || budgetNum <= 0) {
-      Swal.fire({ icon: "warning", title: "Invalid Budget", text: "Please enter a valid budget amount." });
-      return;
-    }
-
-    const matched = getMatchingAdsRange(editingAd.category, budgetNum);
-    const percent = matched ? parseFloat(matched.percentage) : Number(editingAd.percent || 0);
-    const charge = Math.round((budgetNum * percent) / 100);
-    const total = budgetNum + charge;
-
-    const updatedItem = {
-      ...editingAd,
-      amount: budgetNum,
-      budget: budgetNum,
-      percent,
-      charge,
-      total,
-      total_amount: total,
-      unit_price: total,
-      total_price: total,
-    };
-
-    try {
-      setLoading(true);
-      if (docTypeFromURL === "proforma") {
-        const res = await axios.put(
-          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
-          {
-            proformaId: proposalId,
-            action: "update",
-            editId: String(editingAd.id),
-            item: updatedItem,
-            snapshotType: "ads",
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.data.status === "Success") {
-          setShowEditAdModal(false);
-          setGetAdsData((prev) =>
-            prev.map((item) => (String(item.id) === String(editingAd.id) ? updatedItem : item))
-          );
-          Swal.fire({ icon: "success", title: "Updated!", text: "Ads campaign budget updated successfully.", timer: 1200, showConfirmButton: false });
-          fetchAdsData();
-        } else {
-          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Could not update budget." });
-        }
-      } else {
-        const res = await axios.post(
-          `${baseURL}/auth/api/re_calculator/saveAdsCampaign`,
-          {
-            adsItems: [{
-              txn_id: proposalId,
-              client_id: id,
-              id: editingAd.id,
-              category: editingAd.category,
-              amount: budgetNum,
-              percent,
-              charge,
-              total,
-              employee: userName,
-            }],
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.data.status === "Success") {
-          setShowEditAdModal(false);
-          Swal.fire({ icon: "success", title: "Updated!", text: "Ads campaign budget updated.", timer: 1200, showConfirmButton: false });
-          fetchAdsData();
-        } else {
-          Swal.fire({ icon: "error", title: "Failed!", text: res.data.message || "Could not update budget." });
-        }
-      }
-    } catch (err) {
-      console.error("Error updating ad budget:", err);
-      Swal.fire({ icon: "error", title: "Error", text: "An error occurred while updating the campaign." });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div
@@ -1337,7 +1217,7 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
-                                  onClick={() => handleOpenEditAdModal(order)}>Edit</button>
+                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/Adscalculator/${id}/${proposalId}?doc=proforma` : `${basePath}/Adscalculator/${id}/${proposalId}`, { state: { editItem: order } })}>Edit</button>
                                 <button onClick={() => handleDeleteads(order.id)} className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">Delete</button>
                               </div>
                             </td>
@@ -1616,93 +1496,6 @@ export default function ServicesLandingPage() {
         discountDataSet={discountSettings[0]}
       />
 
-      {/* ── Edit Ads Campaign Modal ────────────────────────────────────────── */}
-      {showEditAdModal && editingAd && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="relative bg-gray-900 border border-white/20 p-6 sm:p-7 rounded-2xl shadow-2xl w-full max-w-md text-white">
-            <button
-              onClick={() => setShowEditAdModal(false)}
-              className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
-            >
-              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20">✕</div>
-            </button>
-
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400">
-                <Megaphone className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Edit Campaign Budget</h3>
-                <p className="text-white/50 text-xs">{editingAd.category}</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleUpdateAdBudget} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1.5">
-                  Budget Amount (₹)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 font-bold">₹</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    required
-                    value={editAdBudget}
-                    onChange={(e) => setEditAdBudget(e.target.value)}
-                    placeholder="Enter budget (e.g. 5000)"
-                    className="w-full bg-white/[0.08] border border-white/20 rounded-xl pl-8 pr-4 py-2.5 text-white placeholder-white/30 text-sm outline-none focus:border-red-400 focus:bg-white/[0.12] transition-all"
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              {/* Real-time Calculation Breakdown */}
-              {(() => {
-                const bVal = Number(editAdBudget) || 0;
-                const matched = getMatchingAdsRange(editingAd.category, bVal);
-                const pct = matched ? parseFloat(matched.percentage) : Number(editingAd.percent || 0);
-                const chg = Math.round((bVal * pct) / 100);
-                const tot = bVal + chg;
-                return (
-                  <div className="bg-white/[0.04] border border-white/10 rounded-xl p-3.5 space-y-2 text-xs">
-                    <div className="flex justify-between text-white/60">
-                      <span>Service Charge ({pct}%):</span>
-                      <span className="font-semibold text-white">₹{chg.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-white/60">
-                      <span>Campaign Budget:</span>
-                      <span className="font-semibold text-white">₹{bVal.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t border-white/10 text-sm font-bold text-yellow-400">
-                      <span>Total Amount:</span>
-                      <span>₹{tot.toLocaleString()}</span>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className="flex gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEditAdModal(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white/70 hover:text-white text-xs font-semibold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading || !editAdBudget || Number(editAdBudget) <= 0}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/30"
-                >
-                  {loading ? "Updating..." : "Update Budget"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
