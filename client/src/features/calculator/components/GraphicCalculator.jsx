@@ -30,1383 +30,135 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
-import { clearUser } from "../../../redux/user/userSlice";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import DiscountCard from "../../../shared/invoice-calculator/DiscountCard";
 import DiscountModal from "../../../shared/invoice-calculator/DiscountModal";
 import ComplimentaryCalculator from "./ComplimentaryCalculator";
+import {
+  useGraphicCalculatorData,
+  useGraphicCalculatorDiscount,
+  useGraphicCalculatorNotes,
+  isComplimentaryItem,
+} from "../hooks";
 
-import API_BASE_URL from "../../../config/apiBaseUrl";
-
-const isComplimentaryItem = (item) => {
-  if (!item) return false;
-  if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
-    return Boolean(item.is_complimentary);
-  }
-  if (item.source === "custom_complimentary" || item.source === "complimentary") return true;
-  if (item.include_in_total === false) return true;
-  const s = String(item.service_name || item.service || "").toLowerCase();
-  return (
-    s.includes("(complimentary)") ||
-    s.includes("(complimntory)") ||
-    s === "complimentary"
-  );
-};
-
-const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
+const GraphicCalculator = ({
+  hideNotes,
+  onSaveComplete,
+  proposalIdOverride,
+  onServiceAdded,
+  onServiceDeleted,
+  embeddedData,
+}) => {
   const location = useLocation();
-  const [serviceType, setServiceType] = useState("paid");
-  const baseURL = API_BASE_URL;
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
   const params = useParams();
   const id = params.id || params.clientId;
-  // Use override if provided (when embedded in ProposalBuilder), else fall back to URL param
-  const proposalId = proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
-  const searchParams = new URLSearchParams(useLocation().search);
+  const proposalId =
+    proposalIdOverride !== undefined ? proposalIdOverride : params.proposalId;
+  const searchParams = new URLSearchParams(location.search);
   const docTypeFromURL = searchParams.get("doc");
-  const [data, setData] = useState([]);
-  const [selectedService, setSelectedService] = useState("");
-  const [selecteddiscount, setSelecteddiscount] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedEditingType, setSelectedEditingType] = useState(null);
-  const [getData, setGetData] = useState([]);
-  const [optionalServices, setOptionalServices] = useState([]);
-  const [selectedAdditionalServices, setSelectedAdditionalServices] = useState([]);
-  const [quantity, setQuantity] = useState(1);
 
-  const [addons, setAddons] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState(null);
-
-  // console.log(data);
-  const navigate = useNavigate();
-  console.log(id, proposalId);
-  const [editId, setEditId] = useState(null);
-  const [allClientNote, setAllClientNote] = useState([]);
-  const [discountDataSet, setDiscountDataSet] = useState(null);
-  const [formData, setFormData] = useState({
-    note_name: "",
-    plan: "Customise",
+  // ── Layer 2: Custom Hooks ────────────────────────────────────────────────
+  const {
+    data,
+    optionalServices,
+    getData,
+    serviceType,
+    setServiceType,
+    selectedService,
+    setSelectedService,
+    selectedCategory,
+    setSelectedCategory,
+    selectedEditingType,
+    setSelectedEditingType,
+    quantity,
+    setQuantity,
+    addons,
+    setAddons,
+    selectedAdditionalServices,
+    setSelectedAdditionalServices,
+    editId,
+    loading: loadingData,
+    getSelectedService,
+    getSelectedCategory,
+    availableAddons,
+    grandTotal,
+    handleEdit,
+    handleSave,
+    handleDelete,
+    resetForm,
+  } = useGraphicCalculatorData({
+    id,
+    proposalId,
+    token,
+    userName,
+    docTypeFromURL,
+    onServiceAdded,
+    onServiceDeleted,
+    onSaveComplete,
+    embeddedData,
+    locationState: location.state,
   });
-  const [formDataDiscount, setFormDataDiscount] = useState({
-    discount_type: "amount",
-    discount_per: "",
-    discount_amt: "",
+
+  const {
+    selecteddiscount,
+    discountDataSet,
+    discountAmount,
+    totalAfterDiscount,
+    showModalDiscount,
+    loadingDiscount,
+    formDataDiscount,
+    handleShowDiscount,
+    handleCloseDiscount,
+    handleChangeDiscount,
+    handleSaveDiscount,
+    handleDeleteDiscount,
+  } = useGraphicCalculatorDiscount({
+    id,
+    proposalId,
+    grandTotal,
+    token,
   });
 
-  const [selectedNotesId, setSelectedNotesId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showModalDiscount, setShowModalDiscount] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [predefinedNotes, setPredefinedNotes] = useState([]); // fetched from API
-  const [selectedNotes, setSelectedNotes] = useState([]); // selected + manual
-  const [manualNote, setManualNote] = useState("");
-  const dropdownRef = useRef(null);
+  const {
+    allClientNote,
+    selectedNotes,
+    manualNote,
+    setManualNote,
+    selectedNote,
+    isOpen,
+    setIsOpen,
+    dropdownRef,
+    uniquePredefinedNotes,
+    showModal,
+    setShowModal,
+    isEditing,
+    setIsEditing,
+    selectedNotesId,
+    setSelectedNotesId,
+    loadingNotes,
+    formData,
+    setFormData,
+    handleSelect,
+    handleAddManualNote,
+    handleRemoveNote,
+    handleSaveNotes,
+    handleDeleteClientNote,
+    handleCloseModal: handleClose,
+    handleChangeFormData: handleChange,
+    handleSubmitModal: handleSubmit,
+  } = useGraphicCalculatorNotes({
+    id,
+    proposalId,
+    token,
+    hideNotes,
+  });
+
+  const loading = loadingData || loadingDiscount || loadingNotes;
 
-  // Default notes that should appear automatically
-  const defaultNotes = [
-    {
-      id: 1,
-      note_name:
-        "The client pays for the Meta ad budget, and ad service charges will apply only if the client wants to run the ad.",
-    },
-    {
-      id: 2,
-      note_name:
-        "All amounts need to be paid in advance. Only the ad budget will be paid upon request of the client or immediately after the service is started.",
-    },
-    {
-      id: 3,
-      note_name:
-        "Please note that service charges are non-refundable but may be adjusted against another service.",
-    },
-    {
-      id: 4,
-      note_name:
-        "One dedicated SPOC (single point of contact) is required from the client side to approve the posts, contents, videos changes, etc.",
-    },
-    {
-      id: 5,
-      note_name:
-        "Required details like credentials and other details are needed to share timely.",
-    },
-  ];
-
-  // Initialize with default notes
-  useEffect(() => {
-    setSelectedNotes(defaultNotes);
-  }, []);
-
-  useEffect(() => {
-    if (location.state?.servicetype) {
-      setServiceType(location.state.servicetype);
-    }
-  }, [location.state]);
-  useEffect(() => {
-    axios
-      .get(`${baseURL}/auth/api/re_calculator/services/category/editing`)
-      .then((res) => {
-        // Filter out "Complimentary" service
-        const filteredServices = res.data.data.filter(
-          (service) => service.service_name.toLowerCase() !== "complimentary"
-        );
-        setData(filteredServices);
-      })
-      .catch((err) => console.error(err));
-  }, []);
-
-  useEffect(() => {
-    axios
-      .get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`)
-      .then((res) => {
-        if (res.data.status === "success") {
-          const services = res.data.data;
-          setOptionalServices(services);
-
-          const initialAddons = {};
-          services.forEach((item) => {
-            const key = item.editing_type_name
-              .toLowerCase()
-              .replace(/\s+/g, "_");
-            initialAddons[key] = false;
-          });
-          setAddons(initialAddons);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, []);
-
-
-  // useEffect(() => {
-  //   if (data.length && optionalServices.length) {
-  //     const filtered = filterOptionalServices(data);
-  //     setData(filtered);
-  //   }
-  // }, [data, optionalServices]);
-
-  const fetchPredefinedNotes = async () => {
-    try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getNoteData`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setPredefinedNotes(data.data || []);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  const fetchDiscount = async () => {
-    try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getByIDDiscountData/${id}/${proposalId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (data.data && data.data.length > 0) {
-        setSelecteddiscount(data.data[0]);
-      } else {
-        setSelecteddiscount(null);
-      }
-    } catch (error) {
-      console.error(error);
-      setSelecteddiscount(null);
-    }
-  };
-  const fetchDiscountSetting = async () => {
-    try {
-      const { data } = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getDiscountSetting`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (data.data && data.data.length > 0) {
-        setDiscountDataSet(data.data[0]);
-      } else {
-        setDiscountDataSet(null);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    fetchPredefinedNotes();
-    fetchDiscount();
-    fetchDiscountSetting();
-  }, [id, proposalId]);
-
-  const lastProcessedEditIdRef = useRef(null);
-
-  const handleEdit = (entry) => {
-    if (!entry) return;
-    setEditId(entry.id);
-
-    // Case-insensitive match service and category from data so <select> options match perfectly
-    const entryService = (entry.service_name || "").trim().toLowerCase();
-    const serviceObj = data.find(
-      (s) => (s.service_name || "").trim().toLowerCase() === entryService
-    );
-    const resolvedServiceName = serviceObj ? serviceObj.service_name : entry.service_name;
-    setSelectedService(resolvedServiceName);
-
-    const entryCategory = (entry.category_name || "").trim().toLowerCase();
-    const categoryObj = serviceObj?.categories?.find(
-      (c) => (c.category_name || "").trim().toLowerCase() === entryCategory
-    );
-    const resolvedCategoryName = categoryObj ? categoryObj.category_name : entry.category_name;
-    setSelectedCategory(resolvedCategoryName);
-
-    // Resolve editing type from data if entry.editing_type_id is missing or doesn't match
-    let matchedEt = null;
-    if (categoryObj?.editing_types?.length > 0) {
-      if (entry.editing_type_id) {
-        matchedEt = categoryObj.editing_types.find(
-          (et) => et.editing_type_id === Number(entry.editing_type_id)
-        );
-      }
-      if (!matchedEt && entry.editing_type_name) {
-        matchedEt = categoryObj.editing_types.find(
-          (et) =>
-            et.editing_type_name &&
-            et.editing_type_name.trim().toLowerCase() ===
-              entry.editing_type_name.trim().toLowerCase()
-        );
-      }
-      if (!matchedEt && (entry.editing_type_amount || entry.unit_price)) {
-        const targetAmt = Number(entry.editing_type_amount || entry.unit_price);
-        matchedEt = categoryObj.editing_types.find(
-          (et) => Number(et.amount) === targetAmt
-        );
-      }
-      if (!matchedEt && categoryObj.editing_types.length === 1) {
-        matchedEt = categoryObj.editing_types[0];
-      }
-    }
-
-    if (matchedEt) {
-      setSelectedEditingType({
-        editing_type_id: matchedEt.editing_type_id,
-        editing_type_name: matchedEt.editing_type_name,
-        amount: parseFloat(matchedEt.amount),
-      });
-    } else {
-      setSelectedEditingType({
-        editing_type_id: entry.editing_type_id || null,
-        editing_type_name: entry.editing_type_name || null,
-        amount: parseFloat(entry.editing_type_amount || entry.unit_price || 0),
-      });
-    }
-
-    setQuantity(parseInt(entry.quantity) || 1);
-
-    // Dynamically map optional services from entry
-    const updatedAddons = {};
-    optionalServices.forEach((opt) => {
-      const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
-      const entryKey = `include_${key}`;
-      updatedAddons[key] = parseFloat(entry[entryKey]) > 0;
-    });
-
-    setAddons(updatedAddons);
-
-    let initialSelectedAddons = [];
-    if (entry.additional_services) {
-      try {
-        initialSelectedAddons = typeof entry.additional_services === "string"
-          ? JSON.parse(entry.additional_services)
-          : entry.additional_services;
-        if (!Array.isArray(initialSelectedAddons)) initialSelectedAddons = [];
-      } catch {
-        initialSelectedAddons = [];
-      }
-    }
-    setSelectedAdditionalServices(initialSelectedAddons);
-  };
-
-  useEffect(() => {
-    const item = location.state?.editItem;
-    if (item && data.length > 0 && lastProcessedEditIdRef.current !== item.id) {
-      lastProcessedEditIdRef.current = item.id;
-      handleEdit(item);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [location.state, data, optionalServices]);
-
-  const getSelectedService = data.find(
-    (s) => s.service_name === selectedService
-  );
-  const getSelectedCategory = getSelectedService?.categories?.find(
-    (c) => c.category_name === selectedCategory
-  );
-
-  const availableAddons = useMemo(() => {
-    if (!getSelectedCategory) return [];
-    if (Array.isArray(getSelectedCategory.additional_services) && getSelectedCategory.additional_services.length > 0) {
-      return getSelectedCategory.additional_services;
-    }
-    if (Array.isArray(getSelectedService?.additional_services)) {
-      return getSelectedService.additional_services.filter((a) => {
-        if (a.category_id && getSelectedCategory.category_id) {
-          return String(a.category_id) === String(getSelectedCategory.category_id);
-        }
-        if (a.category_name && getSelectedCategory.category_name) {
-          return a.category_name.trim().toLowerCase() === getSelectedCategory.category_name.trim().toLowerCase();
-        }
-        return false;
-      });
-    }
-    return [];
-  }, [getSelectedCategory, getSelectedService]);
-
-  const handleSave = () => {
-    if (!selectedService) {
-      Swal.fire({
-        icon: "warning",
-        title: "Validation",
-        text: "Please select a service.",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      return;
-    }
-
-    if (!selectedCategory) {
-      Swal.fire({
-        icon: "warning",
-        title: "Validation",
-        text: "Please select a category.",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      return;
-    }
-
-    const hasEditingTypesToSelect =
-      getSelectedCategory?.editing_types?.some(
-        (et) =>
-          et.editing_type_name &&
-          et.editing_type_name.trim() !== "" &&
-          et.editing_type_name !== "null" &&
-          et.editing_type_name !== "N/A"
-      ) || (getSelectedCategory?.editing_types?.length > 1);
-
-    let effectiveEditingType = selectedEditingType;
-    if (getSelectedCategory && (!effectiveEditingType?.editing_type_id || !effectiveEditingType?.amount)) {
-      if (effectiveEditingType?.editing_type_name) {
-        const found = getSelectedCategory.editing_types?.find(
-          (et) => et.editing_type_name && et.editing_type_name.trim().toLowerCase() === effectiveEditingType.editing_type_name.trim().toLowerCase()
-        );
-        if (found) effectiveEditingType = found;
-      }
-      if (!effectiveEditingType && getSelectedCategory.editing_types?.length === 1 && !hasEditingTypesToSelect) {
-        effectiveEditingType = getSelectedCategory.editing_types[0];
-      }
-    }
-
-    if (hasEditingTypesToSelect && (!effectiveEditingType || !effectiveEditingType.editing_type_id)) {
-      Swal.fire({
-        icon: "warning",
-        title: "Editing Type Required",
-        text: "Is service category ke liye Editing Type chunna anivarya (mandatory) hai.",
-        showConfirmButton: true,
-      });
-      return;
-    }
-
-    if (!effectiveEditingType) {
-      Swal.fire({
-        icon: "warning",
-        title: "Validation",
-        text: "Please select an editing type or pricing tier.",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      return;
-    }
-
-    if (!quantity || quantity <= 0 || isNaN(quantity)) {
-      Swal.fire({
-        icon: "warning",
-        title: "Validation",
-        text: "Please enter a valid quantity of at least 1.",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    // Base amount
-    let baseAmount = (Number(effectiveEditingType.amount) || 0) * quantity;
-
-    // Optional addon values
-    let optionalTotal = 0;
-    let include_content_posting = 0;
-    let include_thumbnail_creation = 0;
-    let include_youtube_video_posting = 0;
-
-    optionalServices.forEach((opt) => {
-      const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
-      if (addons[key]) {
-        const amount = parseFloat(opt.amount);
-        const totalForThisAddon = amount * quantity;
-        optionalTotal += totalForThisAddon;
-
-        const lowerKey = key.toLowerCase();
-        if (lowerKey === "content_posting" || lowerKey === "meta_growth_&_content_management") {
-          include_content_posting = amount;
-        } else if (lowerKey === "thumbnail_creation") {
-          include_thumbnail_creation = amount;
-        } else if (lowerKey === "youtube_video_posting" || lowerKey === "youtube_channel_growth_&_optimization") {
-          include_youtube_video_posting = amount;
-        }
-      }
-    });
-
-    const additionalServicesTotal = selectedAdditionalServices.reduce(
-      (sum, item) => sum + (Number(item.amount || item.unit_price) || 0) * quantity,
-      0
-    );
-    const finalAmount = baseAmount + optionalTotal + additionalServicesTotal;
-
-    const formattedAdditionalServices = selectedAdditionalServices.map((addon) => {
-      const addonName = addon.name || addon.additional_service_name;
-      const unitAmt = Number(addon.amount || addon.unit_price) || 0;
-      return {
-        ...addon,
-        id: addon.id,
-        name: addonName,
-        additional_service_name: addonName,
-        amount: unitAmt,
-        unit_price: unitAmt,
-        quantity: quantity,
-        total: unitAmt * quantity,
-        total_amount: unitAmt * quantity,
-        category_id: addon.category_id || getSelectedCategory?.category_id,
-        category_name: addon.category_name || selectedCategory,
-        service_name: selectedService,
-      };
-    });
-
-    const formattedServiceTitle = (effectiveEditingType?.editing_type_name && effectiveEditingType.editing_type_name !== "null" && effectiveEditingType.editing_type_name !== "N/A")
-      ? `${selectedService} - ${selectedCategory} (${effectiveEditingType.editing_type_name})`
-      : `${selectedService} - ${selectedCategory}`;
-
-    // ── IN-MEMORY MODE (embedded inside ProposalBuilder/Proforma) ──────────────────────
-    // Jab onServiceAdded prop ho, DB call skip karo — sirf row return karo
-    if (onServiceAdded) {
-      // Duplicate check in in-memory mode (edit mode mein skip karo)
-      if (!editId && embeddedData && embeddedData.length > 0) {
-        const paidItems = embeddedData.filter(r => !isComplimentaryItem(r));
-        const dupRow = paidItems.find(
-          (r) =>
-            r.service_name === selectedService &&
-            r.category_name === selectedCategory &&
-            r.editing_type_name === effectiveEditingType.editing_type_name
-        );
-        if (dupRow) {
-          Swal.fire({
-            icon: "error",
-            title: "Already Exists!",
-            text: `"${selectedService} → ${selectedCategory} (${effectiveEditingType.editing_type_name})" already exists. Please edit/update the existing entry.`,
-            showConfirmButton: true,
-            confirmButtonText: "OK",
-          });
-          setLoading(false);
-          return;
-        }
-      }
-
-      const row = {
-        id: editId || Date.now(), // update existing id if editing
-        service_name: selectedService,
-        category_name: selectedCategory,
-        editing_type_id: effectiveEditingType.editing_type_id,
-        editing_type_name: effectiveEditingType.editing_type_name,
-        editing_type_amount: effectiveEditingType.amount,
-        quantity,
-        unit_price: effectiveEditingType.amount,
-        total_price: finalAmount,
-        total_amount: finalAmount,
-        include_content_posting,
-        include_thumbnail_creation,
-        include_youtube_video_posting,
-        additional_services: formattedAdditionalServices,
-        include_in_total: true,
-        source: 'custom_graphic',
-        service: formattedServiceTitle,
-      };
-      onServiceAdded(row);
-      Swal.fire({
-        icon: "success",
-        title: editId ? "Updated!" : "Added!",
-        text: editId ? "Service updated in proposal. Click Save to save everything." : "Service added to proposal. Click Save to save everything.",
-        showConfirmButton: false,
-        timer: 1200,
-      });
-      resetForm();
-      setLoading(false);
-      return;
-    }
-
-    // ── DB MODE (standalone calculator, not embedded) ─────────────────────────
-    const payload = {
-      txn_id: proposalId,
-      client_id: id,
-      service_name: selectedService,
-      category_name: selectedCategory,
-      editing_type_id: effectiveEditingType.editing_type_id,
-      editing_type_name: effectiveEditingType.editing_type_name,
-      editing_type_amount: effectiveEditingType.amount,
-      quantity,
-      unit_price: effectiveEditingType.amount,
-      total_price: finalAmount,
-      total_amount: finalAmount,
-      include_content_posting,
-      include_thumbnail_creation,
-      include_youtube_video_posting,
-      additional_services: formattedAdditionalServices,
-      service: formattedServiceTitle,
-      include_in_total: true,
-      source: "custom_graphic",
-      employee: userName,
-    };
-
-    let quotationRequest;
-    if (docTypeFromURL === "proforma") {
-      quotationRequest = axios.put(
-        `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
-        {
-          proformaId: proposalId,
-          action: editId ? "update" : "add",
-          editId,
-          item: payload,
-          snapshotType: 'services',
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } else {
-      quotationRequest = editId
-        ? axios.put(
-          `${baseURL}/auth/api/re_calculator/updateGraphicEntryById/${editId}`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        : axios.post(
-          `${baseURL}/auth/api/re_calculator/saveCalculatorData`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-    }
-
-    quotationRequest
-      .then((res) => {
-        if (res.data.status === "Success") {
-          Swal.fire({
-            icon: "success",
-            title: editId ? "Updated!" : "Saved!",
-            text: editId
-              ? "Quotation updated successfully"
-              : "Quotation saved successfully",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-          resetForm();
-          fetchData();
-          if (onSaveComplete) onSaveComplete();
-        } else if (res.data.status === "Alert") {
-          Swal.fire({
-            icon: "warning",
-            title: "Already Exists",
-            text: res.data.message || "This service already exists",
-            showConfirmButton: false,
-            timer: 1000,
-          });
-          resetForm();
-          fetchData();
-        }
-      })
-      .catch((err) => {
-        console.error("Save error:", err);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text:
-            err.response?.data?.message ||
-            "Failed to save quotation. Please try again.",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
-
-
-  const resetForm = () => {
-    setEditId(null);
-    setSelectedService("");
-    setSelectedCategory("");
-    setSelectedEditingType(null);
-    setQuantity(1);
-    setSelectedAdditionalServices([]);
-    const initialAddons = {};
-    optionalServices.forEach((item) => {
-      const key = item.editing_type_name.toLowerCase().replace(/\s+/g, "_");
-      initialAddons[key] = false;
-    });
-    setAddons(initialAddons);
-  };
-
-  const handleClose = () => {
-    setShowModal(false);
-    setFormData({
-      note_name: "",
-      plan: "",
-    });
-  };
-  const handleShowDiscount = () => {
-    if (selecteddiscount) {
-      setFormDataDiscount({
-        discount_type: selecteddiscount.discount_type || "amount",
-        discount_per: selecteddiscount.discount_per || "",
-        discount_amt: selecteddiscount.discount_amt || "",
-      });
-    } else {
-      setFormDataDiscount({
-        discount_type: "amount",
-        discount_per: "",
-        discount_amt: "",
-      });
-    }
-    setShowModalDiscount(true);
-  };
-
-  const handleCloseDiscount = () => {
-    setShowModalDiscount(false);
-    setFormDataDiscount({
-      discount_type: "amount",
-      discount_per: "",
-      discount_amt: "",
-    });
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-  const handleChangeDiscount = (e) => {
-    const { name, value } = e.target;
-    setFormDataDiscount((prev) => {
-      if (name === "discount_type") {
-        return {
-          ...prev,
-          discount_type: value,
-          discount_per: "",
-          discount_amt: "",
-        };
-      }
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
-
-  const handleSaveDiscount = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const resetAndClose = () => {
-      setShowModalDiscount(false);
-      setFormDataDiscount({
-        discount_type: "amount",
-        discount_per: "",
-        discount_amt: "",
-      });
-    };
-
-    try {
-      if (grandTotal <= 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Invalid Total!",
-          text: "Grand total should be greater than 0 before setting discount.",
-          showConfirmButton: false,
-          timer: 1200,
-        });
-        setLoading(false);
-        return;
-      }
-
-      const isAmountType = formDataDiscount.discount_type === "amount";
-      const enteredValue = isAmountType
-        ? Number(formDataDiscount.discount_amt)
-        : Number(formDataDiscount.discount_per);
-
-      if (!enteredValue || enteredValue < 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Required!",
-          text: `Please enter a valid discount ${isAmountType ? "amount (₹)" : "percentage (%)"
-            }`,
-          showConfirmButton: false,
-          timer: 1000,
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (!isAmountType && enteredValue > 100) {
-        Swal.fire({
-          icon: "warning",
-          title: "Invalid!",
-          text: "Percentage cannot exceed 100%",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (isAmountType) {
-        const maxAmt = discountDataSet?.discount_amt
-          ? Number(discountDataSet.discount_amt)
-          : grandTotal;
-        if (enteredValue > maxAmt) {
-          Swal.fire({
-            icon: "warning",
-            title: "Limit Exceeded!",
-            text: `Max discount amount is ₹${maxAmt.toLocaleString()} (set in settings)`,
-            showConfirmButton: false,
-            timer: 2000,
-          });
-          setLoading(false);
-          return;
-        }
-      }
-
-      if (!isAmountType) {
-        const maxPer = discountDataSet?.discount_per
-          ? Number(discountDataSet.discount_per)
-          : 100;
-        if (enteredValue > maxPer) {
-          Swal.fire({
-            icon: "warning",
-            title: "Limit Exceeded!",
-            text: `Max discount percentage is ${maxPer}% (set in settings)`,
-            showConfirmButton: false,
-            timer: 2000,
-          });
-          setLoading(false);
-          return;
-        }
-
-        if (discountDataSet?.discount_amt) {
-          const calculatedRupee = (grandTotal * enteredValue) / 100;
-          const maxAmt = Number(discountDataSet.discount_amt);
-          if (calculatedRupee > maxAmt) {
-            Swal.fire({
-              icon: "warning",
-              title: "Limit Exceeded!",
-              text: `This % gives ₹${calculatedRupee.toFixed(
-                0
-              )} discount which exceeds max ₹${maxAmt.toLocaleString()}`,
-              showConfirmButton: false,
-              timer: 2000,
-            });
-            setLoading(false);
-            return;
-          }
-        }
-      }
-
-      const payload = isAmountType
-        ? {
-          discount_type: "amount",
-          discount_per: parseFloat(
-            ((enteredValue / grandTotal) * 100).toFixed(4)
-          ),
-          discount_amt: enteredValue,
-          client_id: id,
-          txn_id: proposalId,
-        }
-        : {
-          discount_type: "percent",
-          discount_per: enteredValue,
-          discount_amt: parseFloat(
-            ((grandTotal * enteredValue) / 100).toFixed(2)
-          ),
-          client_id: id,
-          txn_id: proposalId,
-        };
-
-      const response = selecteddiscount
-        ? await axios.put(
-          `${baseURL}/auth/api/re_calculator/updateDiscountDataById/${selecteddiscount.id}`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        : await axios.post(
-          `${baseURL}/auth/api/re_calculator/saveDiscountData`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-      if (response.data.status === "Success") {
-        Swal.fire({
-          icon: "success",
-          title: selecteddiscount ? "Updated!" : "Saved!",
-          text: selecteddiscount
-            ? "Discount updated successfully"
-            : "Discount saved successfully",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-        fetchDiscount();
-        resetAndClose();
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: response.data.message || "Failed to save discount.",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-      }
-    } catch (err) {
-      console.error("Save error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text:
-          err.response?.data?.message ||
-          "Something went wrong while saving discount.",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    setLoading(true);
-
-    try {
-      console.log("Submitting form data:", formData);
-      let response;
-
-      if (isEditing && selectedNotesId) {
-        response = await axios.put(
-          `${baseURL}/auth/api/re_calculator/updateClientNoteDataById/${selectedNotesId.id}`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log(response.data);
-      } else {
-        response = await axios.post(
-          `${baseURL}/auth/api/re_calculator/addNotebyplan`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log(response.data);
-      }
-
-      console.log("API response:", response.data);
-
-      if (response.data.status === "Success") {
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: isEditing
-            ? "Note updated successfully!"
-            : "Note added successfully!",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        }).then(() => {
-          setShowModal(false);
-          getAllPlanNotes();
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text:
-            response.data.message || "Failed to save Note. Please try again.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error saving Note:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Status:", error.response.status);
-        Swal.fire({
-          icon: "error",
-          title: `Error ${error.response.status}`,
-          text:
-            error.response.data.message ||
-            "Failed to save note. Please try again.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to save note. Please try again.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleAddPredefinedNote = (note) => {
-    if (!selectedNotes.find((n) => n.id === note.id)) {
-      setSelectedNotes([
-        ...selectedNotes,
-        { id: note.id, note_name: note.note_text, type: "predefined" },
-      ]);
-    }
-  };
-  const handleAddManualNote = () => {
-    if (manualNote.trim() !== "") {
-      setSelectedNotes([
-        ...selectedNotes,
-        { id: Date.now(), note_name: manualNote, type: "manual" },
-      ]);
-      setManualNote("");
-    }
-  };
-
-  const handleRemoveNote = (id) => {
-    setSelectedNotes(selectedNotes.filter((note) => note.id !== id));
-  };
-  const handleSaveNotes = async () => {
-    if (selectedNotes.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "No Notes",
-        text: "Please add at least one note before saving.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-      return;
-    }
-
-    try {
-      const planNotes = selectedNotes.map((item) => ({
-        note_name: item.note_name,
-      }));
-
-      const payload = {
-        txn_id: proposalId,
-        client_id: id,
-        planNotes,
-      };
-
-      const res = await axios.post(
-        `${baseURL}/auth/api/re_calculator/saveClientIdwiseNotes`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.data.status === "Success") {
-        Swal.fire({
-          icon: "success",
-          title: "Notes Created",
-          text: res.data.message,
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-
-        getAllPlanNotes();
-        setManualNote("");
-        setPredefinedNotes([]);
-        setSelectedNotes([]);
-        fetchPredefinedNotes();
-      } else if (res.data.status === "Alert") {
-        Swal.fire({
-          icon: "warning",
-          title: "Duplicate Notes",
-          text: res.data.message,
-
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-        getAllPlanNotes();
-        setManualNote("");
-        setPredefinedNotes([]);
-        setSelectedNotes([]);
-        fetchPredefinedNotes();
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text:
-            res.data.message || "Something went wrong while saving the notes.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } catch (err) {
-      console.error("Save error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Something went wrong while saving the notes.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-    }
-  };
-
-  const handleDeleteClientNote = async (noteId) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to delete this note ?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e11d48", // red
-      cancelButtonColor: "#6b7280", // gray
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    try {
-      const res = await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deletePlanClientNotes/${noteId}`
-      );
-
-      const result = res.data;
-
-      if (result.status === "Success") {
-        setAllClientNote((prev) => prev.filter((item) => item.id !== noteId));
-
-        Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "note has been deleted.",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-
-        getAllPlanNotes();
-      }
-    } catch (error) {
-      console.error("Error deleting note:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while deleting entry.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-    }
-  };
-  const handleDeleteDiscount = async () => {
-    if (!selecteddiscount?.id) return;
-
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you want to delete this discount?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    setLoading(true);
-    try {
-      await axios.delete(
-        `${baseURL}/auth/api/re_calculator/deleteDiscountById/${selecteddiscount.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSelecteddiscount(null);
-      setShowModalDiscount(false);
-      setFormDataDiscount({
-        discount_type: "amount",
-        discount_per: "",
-        discount_amt: "",
-      });
-      Swal.fire({
-        icon: "success",
-        title: "Deleted!",
-        text: "Discount has been deleted.",
-        timer: 1000,
-        showConfirmButton: false,
-      });
-      fetchDiscount();
-    } catch (err) {
-      console.error("Delete error:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text:
-          err.response?.data?.message ||
-          "Something went wrong while deleting discount.",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchData = async () => {
-    if (embeddedData) {
-      setGetData(embeddedData.filter(r => !isComplimentaryItem(r)));
-      return;
-    }
-    if (!id || !proposalId) return;
-    try {
-      let endpoint = `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`;
-      if (docTypeFromURL === "proforma") {
-        endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`;
-      }
-      const { data } = await axios.get(endpoint, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (docTypeFromURL === "proforma") {
-        const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
-        // In Paid Service tab, show only paid services (exclude complimentary)
-        setGetData(parsed.filter(r => !isComplimentaryItem(r)));
-      } else {
-        setGetData((data.data || []).filter(r => !isComplimentaryItem(r)));
-      }
-    } catch (error) {
-      console.log(error);
-      if (error.response && error.response.status === 401) {
-        // Token is invalid or expired
-        Swal.fire({
-          title: "Session Expired",
-          text: "Please login again.",
-          icon: "warning",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        }).then(() => {
-          dispatch(clearUser());
-          localStorage.removeItem("token");
-          navigate("/");
-        });
-      }
-    }
-  };
-  const getAllPlanNotes = async () => {
-    if (!id || !proposalId) return;
-    try {
-      const response = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getClientNotesbyId/${id}/${proposalId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const notes = response.data.data;
-
-      setAllClientNote(notes);
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        Swal.fire({
-          title: "Session Expired",
-          text: "Please login again.",
-          icon: "warning",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        }).then(() => {
-          dispatch(clearUser());
-          localStorage.removeItem("token");
-          navigate("/");
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (embeddedData) {
-      setGetData(embeddedData.filter(r => !isComplimentaryItem(r)));
-    } else {
-      fetchData();
-    }
-    getAllPlanNotes();
-  }, [id, proposalId, embeddedData]);
-
-  console.log(getData);
-
-  const handleDelete = async (entryId) => {
-    const confirm = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to delete this entry?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e11d48", // red
-      cancelButtonColor: "#6b7280", // gray
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    if (onServiceDeleted) {
-      onServiceDeleted(entryId);
-      Swal.fire({
-        icon: "success",
-        title: "Deleted!",
-        text: "Service removed from proposal.",
-        showConfirmButton: false,
-        timer: 1000,
-      });
-      return;
-    }
-
-    try {
-      let res;
-      if (docTypeFromURL === "proforma") {
-        res = await axios.put(
-          `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
-          {
-            proformaId: proposalId,
-            action: "delete",
-            entryId: entryId,
-            snapshotType: 'services',
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        res = await axios.delete(
-          `${baseURL}/auth/api/re_calculator/deleteGraphicEntryById/${entryId}`
-        );
-      }
-
-      const result = res.data;
-
-      if (result.status === "Success") {
-        setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
-
-        Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "Entry has been deleted.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: result.message || "Failed to delete entry.",
-          showConfirmButton: false,
-          timer: 1000,
-          // timerProgressBar: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error deleting entry:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while deleting entry.",
-        showConfirmButton: false,
-        timer: 1000,
-        // timerProgressBar: true,
-      });
-    }
-  };
-  const grandTotal = getData
-    .filter(order => !isComplimentaryItem(order))
-    .reduce(
-      (acc, order) => acc + parseFloat(order.total_amount || 0),
-      0
-    );
-
-  const discountAmount = selecteddiscount
-    ? selecteddiscount.discount_type === "percent"
-      ? (grandTotal * Number(selecteddiscount.discount_per)) / 100
-      : selecteddiscount.discount_type === "amount"
-        ? Number(selecteddiscount.discount_amt)
-        : 0
-    : 0;
-
-  const totalAfterDiscount = grandTotal - discountAmount;
-
-  const handleSelect = (note) => {
-    handleAddPredefinedNote(note);
-    setSelectedNote(null);
-    setIsOpen(false);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
   const getServiceDisplayName = (name) => {
     if (!name) return name;
     const n = name.toLowerCase();
@@ -1417,12 +169,23 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     return name;
   };
 
-  const uniquePredefinedNotes = predefinedNotes.filter(
-    (p) => !allClientNote.some((c) => c.note_name === p.note_text) && !selectedNotes.some((s) => s.note_name === p.note_text)
-  );
-  const selectCls = "w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:bg-gray-800 disabled:text-gray-500";
-  const labelCls = "block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1";
+  const selectCls =
+    "w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:bg-gray-800 disabled:text-gray-500";
+  const labelCls =
+    "block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1";
   const cardCls = "bg-gray-800 rounded-xl border border-gray-700 shadow-sm p-5";
+
+  const handleBack = () => {
+    if (id && proposalId) {
+      navigate(
+        `/admin/ServicesLanding/${id}/${proposalId}${
+          docTypeFromURL ? `?doc=${docTypeFromURL}` : ""
+        }`
+      );
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <>
@@ -1431,6 +194,17 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
 
           {/* Header */ }
           <div className="flex items-center gap-3">
+            {!onServiceAdded && (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 hover:text-white flex items-center gap-1.5 transition shadow-sm"
+                title="Go Back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="text-xs font-semibold pr-1 hidden sm:inline">Back</span>
+              </button>
+            )}
             <div>
               <h1 className="text-xl font-bold text-white">Service Calculator</h1>
               <p className="text-xs text-gray-500">Build &amp; save service quotations</p>
