@@ -361,6 +361,12 @@ function ProformaServices() {
 
     const qty = Math.max(1, toNumber(compQuantity || 1));
     const compServiceName = (selectedCompServiceObj.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
+    const unitPrice = toNumber(
+      selectedCompEditingType.amount ||
+      selectedCompEditingType.editing_type_amount ||
+      selectedCompEditingType.price ||
+      0
+    );
 
     const newRow = {
       row_id: generateRowId(),
@@ -371,7 +377,7 @@ function ProformaServices() {
       category_name: selectedCompCategoryObj.category_name,
       editing_type_id: selectedCompEditingType.editing_type_id,
       editing_type_name: selectedCompEditingType.editing_type_name,
-      unit_price: 0,
+      unit_price: unitPrice,
       quantity: qty,
       optional_total_per_unit: 0,
       include_content_posting: 0,
@@ -542,13 +548,14 @@ function ProformaServices() {
           category_name: item.category_name || "Complimentary Service",
           editing_type_id: null,
           editing_type_name: item.editing_type_name || "",
-          unit_price: 0,
+          unit_price: Number(item.editing_type_amount || item.price || item.amount || item.unit_price || 0),
           quantity: Number(item.quantity || 1),
           optional_total_per_unit: 0,
           include_content_posting: 0,
           include_thumbnail_creation: 0,
           addon_labels: [],
-          total: 0
+          total: 0,
+          is_complimentary: true,
         };
       }
 
@@ -595,6 +602,7 @@ function ProformaServices() {
     const qty = Math.max(1, toNumber(qtyValue || 1));
     setSelectedItems((prev) => prev.map((item) => {
       if (item.row_id !== rowId || (item.source !== "graphic" && item.source !== "complimentary")) return item;
+      const isComp = item.source === "complimentary" || Boolean(item.is_complimentary);
       const updatedAddons = Array.isArray(item.additional_services)
         ? item.additional_services.map((a) => {
             const unit = Number(a.unit_price || a.amount || 0);
@@ -603,17 +611,20 @@ function ProformaServices() {
               quantity: qty,
               unit_price: unit,
               amount: unit,
-              total: unit * qty,
-              total_amount: unit * qty,
+              total: isComp ? 0 : unit * qty,
+              total_amount: isComp ? 0 : unit * qty,
             };
           })
         : [];
       const addTotal = updatedAddons.reduce((s, a) => s + (Number(a.total) || 0), 0);
+      const rowTotal = isComp
+        ? 0
+        : Number((((toNumber(item.unit_price) + toNumber(item.optional_total_per_unit)) * qty) + addTotal).toFixed(2));
       return {
         ...item,
         quantity: qty,
         additional_services: updatedAddons,
-        total: Number((((toNumber(item.unit_price) + toNumber(item.optional_total_per_unit)) * qty) + addTotal).toFixed(2))
+        total: rowTotal
       };
     }));
   };
@@ -749,8 +760,10 @@ function ProformaServices() {
           service_name: (item.service_name || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim(),
           category_name: item.category_name,
           editing_type_name: item.editing_type_name,
-          editing_type_amount: 0,
-          unit_price: 0,
+          editing_type_amount: Number(item.unit_price || 0),
+          unit_price: Number(item.unit_price || 0),
+          price: Number(item.unit_price || 0),
+          amount: Number(item.unit_price || 0),
           quantity: item.quantity,
           include_content_posting: 0,
           include_thumbnail_creation: 0,
@@ -1721,11 +1734,19 @@ function ProformaServices() {
                 </div>
 
                 <div className="is-preview">
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
-                    <Sparkles size={13} style={{ color: "#a855f7" }} /> Preview Total
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>Rate / Price</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#e8e8f0" }}>
+                      {formatRs(selectedCompEditingType?.amount || selectedCompEditingType?.editing_type_amount || 0)}
+                    </span>
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#a855f7" }}>
-                    Rs. 0.00 (Free)
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
+                      <Sparkles size={13} style={{ color: "#a855f7" }} /> Preview Total
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#a855f7" }}>
+                      Rs. 0.00 (Free)
+                    </div>
                   </div>
                 </div>
 
@@ -1860,16 +1881,29 @@ function ProformaServices() {
                             ? <input type="number" min="1" value={ item.quantity } onChange={ (e) => updateGraphicQuantity(item.row_id, e.target.value) } className="is-table-input" style={ { width: 90 } } />
                             : <input type="text" value={ item.budget } onChange={ (e) => updateAdsBudget(item.row_id, e.target.value) } className="is-table-input" style={ { width: 120 } } /> }
                         </td>
-                        <td className="right" style={ { color: "rgba(255,255,255,0.5)", fontSize: 12 } }>
+                        <td className="right" style={ { color: item.source === "complimentary" ? "#e8e8f0" : "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: item.source === "complimentary" ? 600 : 400 } }>
                           { item.source === "graphic" || item.source === "complimentary" ? formatRs(item.unit_price) : `${toNumber(item.percent).toFixed(2)}%` }
                         </td>
                         <td className="right" style={ { fontSize: 12, color: "rgba(255,255,255,0.45)" } }>
-                          { item.source === "graphic" || item.source === "complimentary"
+                          { item.source === "graphic"
                             ? formatRs(toNumber(item.optional_total_per_unit) * toNumber(item.quantity))
-                            : formatRs(item.charge) }
+                            : item.source === "complimentary"
+                              ? "—"
+                              : formatRs(item.charge) }
                         </td>
                         <td className="right">
-                          <span style={ { fontSize: 13.5, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#d4a940" } }>{ formatRs(item.total) }</span>
+                          { item.source === "complimentary" ? (
+                            <div style={ { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 } }>
+                              <span style={ { fontSize: 13.5, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#10b981" } }>
+                                Rs. 0.00
+                              </span>
+                              <span style={ { fontSize: 9.5, fontWeight: 600, color: "rgba(16, 185, 129, 0.8)", textTransform: "uppercase", letterSpacing: "0.05em" } }>
+                                Free
+                              </span>
+                            </div>
+                          ) : (
+                            <span style={ { fontSize: 13.5, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#d4a940" } }>{ formatRs(item.total) }</span>
+                          ) }
                         </td>
                         <td style={ { textAlign: "right" } }>
                           <button type="button" onClick={ () => removeRow(item.row_id) } className="is-btn-remove" title="Remove row">
