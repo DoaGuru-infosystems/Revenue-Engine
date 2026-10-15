@@ -698,22 +698,27 @@ function ProformaServices() {
           employee: employeeName,
         }));
 
-      // ── Ads Campaign items ──
+      // ── Ads Campaign items (standard ads_snapshot schema) ──
       const adsServicesItems = selectedItems
         .filter((item) => item.source === "ads")
         .map((item) => ({
-          source: "custom_ads",
+          id: item.row_id || String(Date.now() + Math.random().toString(36).substring(2, 6)),
           service_name: "Ads Campaign",
           category_name: item.ads_category,
-          budget: item.budget,
-          amount: item.budget,
-          percent: item.percent,
-          charge: item.charge,
-          total: item.total,
-          total_amount: item.total,
-          unit_price: item.total,
+          category: item.ads_category,
           quantity: 1,
+          unit_price: Number(item.total || 0),
+          total_price: Number(item.total || 0),
+          total_amount: Number(item.total || 0),
+          total: Number(item.total || 0),
+          include_in_total: true,
+          source: "custom_ads",
+          budget: Number(item.budget || 0),
+          amount: Number(item.budget || 0),
+          percent: Number(item.percent || 0),
+          charge: Number(item.charge || 0),
           employee: employeeName,
+          created_at: moment().format("YYYY-MM-DD HH:mm:ss"),
         }));
 
       // ── Complimentary items ──
@@ -739,15 +744,25 @@ function ProformaServices() {
           employee: employeeName,
         }));
 
-      const combinedPricingSnapshot = [...graphicServicesItems, ...adsServicesItems, ...complimentaryServicesItems];
+      // Clean pricing snapshot: ONLY graphic and complimentary services
+      const pricingSnapshotItems = [...graphicServicesItems, ...complimentaryServicesItems];
 
       // ── Amount logic per spec ──
-      // discountBase = graphicTotal only (already computed as `discountedGraphic` useMemo)
       const gstRate = isGSTBill ? 18 : 0;
-      // base_amount = discounted service total (no ads, no GST)
-      const baseAmt   = Number(discountedGraphic.toFixed(2));
+      const adsBudgetTotal = adsServicesItems.reduce((sum, item) => sum + Number(item.budget || 0), 0);
+      const baseAmt   = Number((discountedGraphic + adsBudgetTotal).toFixed(2));
       const gstAmt    = Number(gstAmount.toFixed(2));
-      const totalAmt  = Number(grandTotal.toFixed(2)); // discountedGraphic + gst + adsTotal
+      const totalAmt  = Number((baseAmt + gstAmt).toFixed(2));
+
+      // ── Discount payload ──
+      const isDiscountApplied = discountAmount > 0;
+      const discountSnapshotObj = isDiscountApplied ? {
+        type: discountType === "percent" ? "Percentage" : "Amount",
+        value: discountType === "percent" ? discountValue : discountAmount,
+        discount_type: discountType === "percent" ? "percent" : "amount",
+        discount_per: discountType === "percent" ? discountValue : parseFloat(((discountAmount / (graphicTotal || 1)) * 100).toFixed(2)),
+        discount_amt: Number(discountAmount.toFixed(2)),
+      } : null;
 
       const proformaPayload = {
         txn_id,
@@ -764,7 +779,9 @@ function ProformaServices() {
         client_gst_no: draft?.client_gst_no || "",
         client_pan_no: draft?.client_pan_no || "",
         bill_type: clientContext.bill_type || "NON_GST",
-        pricing_snapshot: JSON.stringify(combinedPricingSnapshot),
+        pricing_snapshot: JSON.stringify(pricingSnapshotItems),
+        ads_snapshot: adsServicesItems.length > 0 ? JSON.stringify(adsServicesItems) : null,
+        discount_snapshot: discountSnapshotObj ? JSON.stringify(discountSnapshotObj) : null,
         notes_snapshot: Array.isArray(draft?.notes_snapshot)
           ? JSON.stringify(draft.notes_snapshot)
           : (draft?.notes_snapshot ? JSON.stringify([{ id: 1, note_name: draft.notes_snapshot }]) : "[]"),
@@ -775,13 +792,11 @@ function ProformaServices() {
         gst_rate: gstRate,
       };
 
-      // ── Discount payload (same txn_id, sent in parallel) ──
-      const isDiscountApplied = discountAmount > 0;
       const discountPayload = isDiscountApplied ? {
         txn_id,
         client_id: clientContext.id || null,
         discount_type: discountType === "percent" ? "percent" : "amount",
-        discount_per: discountType === "percent" ? discountValue : parseFloat(((discountAmount / graphicTotal) * 100).toFixed(2)),
+        discount_per: discountType === "percent" ? discountValue : parseFloat(((discountAmount / (graphicTotal || 1)) * 100).toFixed(2)),
         discount_amt: Number(discountAmount.toFixed(2)),
       } : null;
 

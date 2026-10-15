@@ -4025,7 +4025,10 @@ exports.saveDirectProforma = async (req, res) => {
     gst_amount,
     total_amount,
     pricing_snapshot,
+    ads_snapshot,
+    discount_snapshot,
     notes_snapshot,
+    terms_snapshot,
     duration_start_date,
     duration_end_date,
   } = req.body;
@@ -4054,26 +4057,45 @@ exports.saveDirectProforma = async (req, res) => {
       client_pan_no: client_pan_no || "",
     });
 
+    let finalBase = base_amount;
+    let finalGst = gst_amount;
+    let finalTotal = total_amount;
+    try {
+      const { calculateProformaTotals } = require("./re_proformaSyncHelper");
+      const pItems = typeof pricing_snapshot === "string" ? JSON.parse(pricing_snapshot || "[]") : (pricing_snapshot || []);
+      const aItems = typeof ads_snapshot === "string" ? JSON.parse(ads_snapshot || "[]") : (ads_snapshot || []);
+      const dObj = typeof discount_snapshot === "string" ? JSON.parse(discount_snapshot || "null") : (discount_snapshot || null);
+      const computed = calculateProformaTotals(pItems, aItems, dObj, 0, is_gst, gst_rate);
+      finalBase = computed.baseAmount;
+      finalGst = computed.gstAmount;
+      finalTotal = computed.totalAmount;
+    } catch (calcErr) {
+      console.warn("Could not recalculate proforma totals in saveDirectProforma:", calcErr.message);
+    }
+
     const query = `
       INSERT INTO re_proposal_proforma (
         client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
-        created_at, pricing_snapshot, notes_snapshot, source_type, duration_start_date, duration_end_date,
-        client_instructions_snapshot
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?)
+        created_at, pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, terms_snapshot,
+        source_type, duration_start_date, duration_end_date, client_instructions_snapshot
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?)
     `;
 
     const values = [
       effectiveClientId,
       proformaTxnId,
       proformaNumber,
-      is_gst,
-      gst_rate,
-      base_amount,
-      gst_amount,
-      total_amount,
+      is_gst ? 1 : 0,
+      gst_rate || 0,
+      finalBase,
+      finalGst || 0,
+      finalTotal,
       createdAt,
-      pricing_snapshot || "[]",
-      notes_snapshot || "[]",
+      typeof pricing_snapshot === "string" ? pricing_snapshot : JSON.stringify(pricing_snapshot || []),
+      ads_snapshot ? (typeof ads_snapshot === "string" ? ads_snapshot : JSON.stringify(ads_snapshot)) : null,
+      discount_snapshot ? (typeof discount_snapshot === "string" ? discount_snapshot : JSON.stringify(discount_snapshot)) : null,
+      notes_snapshot ? (typeof notes_snapshot === "string" ? notes_snapshot : JSON.stringify(notes_snapshot)) : "[]",
+      terms_snapshot ? (typeof terms_snapshot === "string" ? terms_snapshot : JSON.stringify(terms_snapshot)) : "[]",
       duration_start_date || null,
       duration_end_date || null,
       clientSnapshot,
