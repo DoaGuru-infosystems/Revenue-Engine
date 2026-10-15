@@ -2883,29 +2883,102 @@ exports.generateProposalPdf = async (req, res) => {
 
 exports.getRevenueHistory = async (req, res) => {
   try {
-    const invoices = await runQuery(
-      "SELECT txn_id, proforma_id, bill_number, client_name, received_amt, current_amt, base_amount, gst_amount, tds_amount, created_at, bill_type FROM re_invoice ORDER BY created_at DESC",
-      [],
+    // ── Step 1: Fetch all active Proformas (excluding cancelled/superseded/draft)
+    //           with their total received (approved payments only) calculated directly.
+    //           This ensures unpaid Proformas are also included in pending balances.
+    const proformaRows = await runQuery(
+      `SELECT
+         pp.id               AS proforma_id,
+         pp.client_id,
+         pp.proforma_number,
+         pp.total_amount,
+         pp.status           AS proforma_status,
+         c.client_name,
+         IFNULL((
+           SELECT SUM(ppr.amount)
+           FROM re_proposal_payment_records ppr
+           WHERE ppr.proforma_id = pp.id AND ppr.status = 'approved'
+         ), 0) AS total_received_for_proforma,
+         IFNULL((
+           SELECT SUM(ppr.tds_amount)
+           FROM re_proposal_payment_records ppr
+           WHERE ppr.proforma_id = pp.id AND ppr.status = 'approved'
+         ), 0) AS total_tds_for_proforma,
+         GREATEST(0, pp.total_amount - IFNULL((
+           SELECT SUM(ppr.amount)
+           FROM re_proposal_payment_records ppr
+           WHERE ppr.proforma_id = pp.id AND ppr.status = 'approved'
+         ), 0)) AS current_pending_for_proforma
+       FROM re_proposal_proforma pp
+       LEFT JOIN re_revenue_engine_client_details c ON c.id = pp.client_id
+       WHERE pp.status NOT IN ('cancelled', 'superseded', 'draft')
+       ORDER BY pp.client_id, pp.id`,
+      []
     );
 
+    // ── Step 2: Fetch invoice count per proforma (for display in Client Ledger table)
+    const invoiceCounts = await runQuery(
+      `SELECT proforma_id, COUNT(*) AS invoice_count
+       FROM re_invoice
+       WHERE proforma_id IS NOT NULL
+       GROUP BY proforma_id`,
+      []
+    );
+    const invoiceCountMap = {};
+    invoiceCounts.forEach((r) => {
+      invoiceCountMap[r.proforma_id] = Number(r.invoice_count || 0);
+    });
+
+    // ── Step 3: Aggregate totals and client-wise ledger by client_id
     let totalReceived = 0;
     let totalPending = 0;
     let totalTds = 0;
-    const seenProformas = new Set();
+    let totalAmount = 0;
+    const clientMap = {};
 
-    invoices.forEach((inv) => {
-      totalReceived += Number(inv.received_amt || 0);
-      totalTds += Number(inv.tds_amount || 0);
+    proformaRows.forEach((pf) => {
+      const cid = pf.client_id;
+      const tot = Number(pf.total_amount || 0);
+      const rec = Number(pf.total_received_for_proforma || 0);
+      const pend = Number(pf.current_pending_for_proforma || 0);
+      const tds = Number(pf.total_tds_for_proforma || 0);
+      const invCount = invoiceCountMap[pf.proforma_id] || 0;
 
-      const pid = inv.proforma_id || inv.client_name;
+      totalAmount += tot;
+      totalReceived += rec;
+      totalPending += pend;
+      totalTds += tds;
 
-      if (!seenProformas.has(pid)) {
-        seenProformas.add(pid);
-        totalPending += Number(inv.current_amt || 0);
+      if (!clientMap[cid]) {
+        clientMap[cid] = {
+          client_id: cid,
+          client_name: pf.client_name || `Client #${cid}`,
+          invoices_count: 0,
+          proformas_count: 0,
+          total_amount: 0,
+          total_received: 0,
+          total_pending: 0,
+        };
       }
+
+      clientMap[cid].total_amount += tot;
+      clientMap[cid].total_received += rec;
+      clientMap[cid].total_pending += pend;
+      clientMap[cid].invoices_count += invCount;
+      clientMap[cid].proformas_count += 1;
     });
 
-    const totalInvoiced = totalReceived + totalPending;
+    const totalInvoiced = totalAmount > 0 ? totalAmount : (totalReceived + totalPending);
+
+    // ── Step 4: Also return raw invoice rows (sorted newest-first) for any legacy usage
+    const invoices = await runQuery(
+      `SELECT txn_id, proforma_id, client_id, bill_number, client_name,
+              received_amt, current_amt, base_amount, gst_amount, tds_amount,
+              created_at, bill_type
+       FROM re_invoice
+       ORDER BY created_at DESC, id DESC`,
+      []
+    );
 
     res.status(200).json({
       status: "Success",
@@ -2915,6 +2988,9 @@ exports.getRevenueHistory = async (req, res) => {
         totalPending,
         totalTds,
       },
+      // New: client-wise ledger keyed by client_id
+      clientLedger: Object.values(clientMap),
+      // Legacy: raw invoice rows (still used if needed)
       invoices,
     });
 

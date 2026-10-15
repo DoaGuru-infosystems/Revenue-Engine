@@ -5,15 +5,18 @@ import API_BASE_URL from "../../../config/apiBaseUrl";
 import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
 import { Banknote, Hourglass, Search } from "lucide-react";
+
 const RevenueHistoryPage = () => {
   const baseURL = API_BASE_URL;
   const { token } = useSelector((state) => state.user);
   const [data, setData] = useState({
-    totals: { totalPayment: 0, totalReceived: 0, totalPending: 0 },
+    totals: { totalPayment: 0, totalReceived: 0, totalPending: 0, totalTds: 0 },
+    clientLedger: [],
     invoices: []
   });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     const fetchRevenue = async () => {
       try {
@@ -40,18 +43,62 @@ const RevenueHistoryPage = () => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   if (loading) {
     return <div className="p-8 text-center text-white">Loading Revenue Data...</div>;
   }
 
-  const { totals, invoices } = data;
+  const { totals, clientLedger, invoices } = data;
+
+  // ── Build client rows from the new clientLedger (grouped by client_id).
+  //    Falls back to legacy invoice-based grouping if clientLedger is absent/empty.
+  let clientRows = [];
+
+  if (clientLedger && clientLedger.length > 0) {
+    // New path: every active proforma is included (even unpaid ones).
+    // Grouping is by client_id — immune to client_name spelling differences.
+    clientRows = clientLedger;
+  } else {
+    // Legacy fallback: derive from raw invoices (only invoiced proformas visible).
+    const legacyMap = {};
+    (invoices || []).forEach((inv) => {
+      const cid = inv.client_id || inv.client_name || "unknown";
+      const pid = inv.proforma_id || `inv_${inv.txn_id}`;
+
+      if (!legacyMap[cid]) {
+        legacyMap[cid] = {
+          client_id: cid,
+          client_name: inv.client_name || "Unknown Client",
+          invoices_count: 0,
+          total_received: 0,
+          total_pending: 0,
+          seen_proformas: new Set(),
+        };
+      }
+
+      legacyMap[cid].invoices_count += 1;
+      legacyMap[cid].total_received += Number(inv.received_amt || 0);
+
+      // For pending: take only the latest current_amt per proforma (API sorts DESC)
+      if (!legacyMap[cid].seen_proformas.has(pid)) {
+        legacyMap[cid].seen_proformas.add(pid);
+        legacyMap[cid].total_pending += Number(inv.current_amt || 0);
+      }
+      legacyMap[cid].proformas_count = legacyMap[cid].seen_proformas.size;
+      legacyMap[cid].total_amount = legacyMap[cid].total_received + legacyMap[cid].total_pending;
+    });
+    clientRows = Object.values(legacyMap);
+  }
+
+  // Apply search filter on client_name
+  const filteredClients = clientRows.filter(
+    (c) => (c.client_name || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="font-body selection:bg-primary/30 antialiased overflow-x-hidden min-h-screen text-[#dee2f3]">
-      {/* Styles copied from generated design */ }
       <style>{ `
         .glass-card {
           background: rgba(48, 53, 65, 0.4);
@@ -148,44 +195,23 @@ const RevenueHistoryPage = () => {
           </div>
 
           <div className="overflow-x-auto pb-4">
-            <div className="min-w-[800px] space-y-3">
+            <div className="min-w-[900px] space-y-3">
               <div className="grid grid-cols-12 px-8 py-4 font-label uppercase tracking-widest text-[0.6875rem] text-[#c2c6d6]/50">
-                <div className="col-span-4">Client</div>
-                <div className="col-span-2 text-center">Invoices</div>
+                <div className="col-span-3">Client</div>
+                <div className="col-span-1 text-center">Proformas</div>
+                <div className="col-span-2 text-right">Total Amount</div>
                 <div className="col-span-2 text-right">Received</div>
                 <div className="col-span-2 text-right">Pending</div>
                 <div className="col-span-2 text-right">Status</div>
               </div>
 
-              { Object.values(
-                invoices.reduce((acc, inv) => {
-                  const client = inv.client_name || "Unknown Client";
-                  const pid = inv.proforma_id || `invoice_${inv.txn_id || Math.random()}`;
-                  
-                  if (!acc[client]) {
-                    acc[client] = {
-                      client_name: client,
-                      invoices_count: 0,
-                      total_received: 0,
-                      total_pending: 0,
-                      seen_proformas: new Set(),
-                    };
-                  }
-                  
-                  acc[client].invoices_count += 1;
-                  acc[client].total_received += Number(inv.received_amt || 0);
-                  
-                  if (!acc[client].seen_proformas.has(pid)) {
-                    acc[client].seen_proformas.add(pid);
-                    acc[client].total_pending += Number(inv.current_amt || 0);
-                  }
-                  
-                  return acc;
-                }, {})
-              ).filter(client => client.client_name.toLowerCase().includes(searchQuery.toLowerCase()))
-               .map((client, idx) => {
-                const received = client.total_received;
-                const pending = client.total_pending;
+              { filteredClients.map((client, idx) => {
+                const totalAmt = client.total_amount !== undefined && client.total_amount !== null
+                  ? Number(client.total_amount)
+                  : (Number(client.total_received || 0) + Number(client.total_pending || 0));
+                const received = Number(client.total_received || 0);
+                const pending = Number(client.total_pending || 0);
+                const proformasCount = client.proformas_count || client.invoices_count || 0;
 
                 let statusBadge = null;
                 if (pending <= 0 && received > 0) {
@@ -199,22 +225,41 @@ const RevenueHistoryPage = () => {
                 }
 
                 return (
-                  <div key={ idx } className="grid grid-cols-12 items-center px-8 py-5 glass-card rounded-2xl border border-white/5 hover:border-[#31e193]/20 transition-all group">
-                    <div className="col-span-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#303541] flex items-center justify-center text-[12px] font-bold text-[#dee2f3] border border-gray-600/50">{ client.client_name ? client.client_name.substring(0, 2).toUpperCase() : 'C' }</div>
-                      <span className="text-[#dee2f3] font-semibold text-sm">{ client.client_name }</span>
+                  <div key={ client.client_id || idx } className="grid grid-cols-12 items-center px-8 py-5 glass-card rounded-2xl border border-white/5 hover:border-[#31e193]/20 transition-all group">
+                    <div className="col-span-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#303541] flex items-center justify-center text-[12px] font-bold text-[#dee2f3] border border-gray-600/50 flex-shrink-0">
+                        { client.client_name ? client.client_name.substring(0, 2).toUpperCase() : 'C' }
+                      </div>
+                      <span className="text-[#dee2f3] font-semibold text-sm truncate" title={ client.client_name }>
+                        { client.client_name }
+                      </span>
                     </div>
-                    <div className="col-span-2 text-center text-[#c2c6d6] text-sm font-medium">
-                      <span className="bg-[#303541] px-3 py-1 rounded-full text-xs border border-gray-700/50">{ client.invoices_count }</span>
+                    <div className="col-span-1 text-center text-[#c2c6d6] text-sm font-medium">
+                      <span className="bg-[#303541] px-2.5 py-1 rounded-full text-xs border border-gray-700/50">
+                        { proformasCount }
+                      </span>
                     </div>
-                    <div className="col-span-2 text-[#31e193] font-bold text-right">{ formatCurrency(received) }</div>
-                    <div className="col-span-2 text-[#ffb786] font-bold text-right">{ formatCurrency(pending) }</div>
+                    <div className="col-span-2 text-[#dee2f3] font-bold text-right">
+                      { formatCurrency(totalAmt) }
+                    </div>
+                    <div className="col-span-2 text-[#31e193] font-bold text-right">
+                      { formatCurrency(received) }
+                    </div>
+                    <div className="col-span-2 text-[#ffb786] font-bold text-right">
+                      { formatCurrency(pending) }
+                    </div>
                     <div className="col-span-2 flex justify-end">
                       { statusBadge }
                     </div>
                   </div>
                 );
               }) }
+
+              { filteredClients.length === 0 && (
+                <div className="text-center text-[#c2c6d6]/60 py-12 glass-card rounded-2xl">
+                  No clients found matching &quot;{ searchQuery }&quot;
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -226,3 +271,5 @@ const RevenueHistoryPage = () => {
 };
 
 export default RevenueHistoryPage;
+
+
