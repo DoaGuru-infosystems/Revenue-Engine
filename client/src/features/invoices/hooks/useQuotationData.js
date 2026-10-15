@@ -113,8 +113,12 @@ export function useQuotationData({
   ];
 
   useEffect(() => {
-    setSelectedNotes(defaultNotes);
-  }, []);
+    if (!isBalanceProforma && docTypeFromURL !== "proforma") {
+      setSelectedNotes(defaultNotes);
+    } else {
+      setSelectedNotes([]);
+    }
+  }, [isBalanceProforma, docTypeFromURL]);
 
   const handleAuthError = useCallback(
     (error) => {
@@ -1543,71 +1547,16 @@ export function useQuotationData({
     }
   };
 
-  const handleSelectPredefinedNote = async (note) => {
-    if (isBalanceProforma) {
-      const newNote = {
-        id: Date.now(),
-        note_name: note.note_text,
-      };
-      const updatedNotes = [...notesData, newNote];
-      setNotesData(updatedNotes);
-
-      try {
-        await updateBalanceProformaNotes(
-          txn_id,
-          updatedNotes.map((n) => ({ note_name: n.note_name })),
-          token
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Note Added",
-          text: "Note added to balance proforma",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        console.error("Error saving note to balance proforma:", err);
-      }
-      return;
-    }
-
+  const handleSelectPredefinedNote = (note) => {
     handleAddPredefinedNote(note);
   };
 
-  const handleAddManualNote = async () => {
+  const handleAddManualNote = () => {
     if (manualNote.trim() === "") return;
-
-    if (isBalanceProforma) {
-      const newNote = {
-        id: Date.now(),
-        note_name: manualNote.trim(),
-      };
-      const updatedNotes = [...notesData, newNote];
-      setNotesData(updatedNotes);
-      setManualNote("");
-
-      try {
-        await updateBalanceProformaNotes(
-          txn_id,
-          updatedNotes.map((n) => ({ note_name: n.note_name })),
-          token
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Note Added",
-          text: "Custom note added to balance proforma",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        console.error("Error saving note to balance proforma:", err);
-      }
-      return;
-    }
 
     setSelectedNotes([
       ...selectedNotes,
-      { id: Date.now(), note_name: manualNote, type: "manual" },
+      { id: Date.now(), note_name: manualNote.trim(), type: "manual" },
     ]);
     setManualNote("");
   };
@@ -1625,6 +1574,55 @@ export function useQuotationData({
         showConfirmButton: false,
         timer: 1000,
       });
+      return;
+    }
+
+    if (isBalanceProforma) {
+      try {
+        const combined = [
+          ...notesData,
+          ...selectedNotes.map((item, idx) => ({
+            id: Date.now() + idx,
+            note_name: item.note_name,
+          })),
+        ];
+
+        const res = await updateBalanceProformaNotes(
+          txn_id,
+          combined.map((n) => ({ note_name: n.note_name })),
+          token
+        );
+
+        if (res.status === "Success") {
+          setNotesData(combined);
+          setSelectedNotes([]);
+          setManualNote("");
+          Swal.fire({
+            icon: "success",
+            title: "Notes Saved",
+            text: "Notes saved to balance proforma successfully!",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: res.message || "Failed to save notes to balance proforma.",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        }
+      } catch (err) {
+        console.error("Error saving balance proforma notes:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "An error occurred while saving notes.",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+      }
       return;
     }
 

@@ -156,8 +156,8 @@ export default function QuotationNotesDropdown({
         </button>
       </div>
 
-      {/* Selected Notes List for regular quotation */}
-      {!isBalanceProforma && selectedNotes.length > 0 && (
+      {/* Staged Notes List */}
+      {selectedNotes.length > 0 && (
         <div className="space-y-2">
           {selectedNotes.map((note) => (
             <div

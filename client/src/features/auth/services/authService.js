@@ -6,7 +6,8 @@ const baseURL = API_BASE_URL;
 export async function loginUser(credentials) {
   const response = await axios.post(
     `${baseURL}/auth/api/re_calculator/login`,
-    credentials
+    credentials,
+    { timeout: 15000 }
   );
   return response.data;
 }

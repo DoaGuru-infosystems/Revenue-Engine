@@ -25,10 +25,16 @@ function handleDisconnect() {
 
   connection.on("error", function (err) {
     console.log("db error", err);
-    if (err.code === "PROTOCOL_CONNECTION_LOST" || err.code === "ECONNRESET") {
+    if (
+      err.code === "PROTOCOL_CONNECTION_LOST" ||
+      err.code === "ECONNRESET" ||
+      err.code === "ECONNREFUSED" ||
+      err.code === "PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR" ||
+      err.fatal
+    ) {
       handleDisconnect();
     } else {
-      throw err;
+      console.error("Database connection error:", err);
     }
   });
 }
