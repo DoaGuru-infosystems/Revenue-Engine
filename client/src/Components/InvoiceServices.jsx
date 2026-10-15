@@ -209,6 +209,10 @@ function ProformaServices() {
   }, [adsServices]);
   const adsOptionMap = useMemo(() => { const m = {}; adsOptions.forEach((i) => { m[i.category] = i; }); return m; }, [adsOptions]);
   const selectedAdsOption = useMemo(() => adsOptionMap[selectedAdsCategory] || null, [adsOptionMap, selectedAdsCategory]);
+  const isAddonApplicable = useMemo(() => {
+    const n = String(selectedGraphicService || "").toLowerCase();
+    return n === "video services" || n === "graphics design";
+  }, [selectedGraphicService]);
   const availableAdditionalServices = useMemo(() => {
     if (!selectedGraphicCategoryObj) return [];
     if (Array.isArray(selectedGraphicCategoryObj.additional_services) && selectedGraphicCategoryObj.additional_services.length > 0) {
