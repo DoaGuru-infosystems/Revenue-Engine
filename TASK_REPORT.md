@@ -81,4 +81,14 @@
   - **Document Parity & Print Reliability:** Full Tax Invoices, Partial Invoices (with payment history and TDS), Proforma Invoices, aur Public Client Invoices (`publicMode`) bina kisi feature loss ya visual difference ke fully functional hain. Header/footer alignment aur compact 1-page print layout rule intact rakha gaya hai.
   - **Verification:** Vite production bundle build (`npm run build`) 0 errors ke sath 100% pass hua.
 
+---
+
+### Task 8: Services Table Column Alignment Standardization
+* **Description:**  
+  Quotation, Balance Proforma aur Invoice pages par Services table column alignment ko Complimentary Services table ke anusaar harmonize kiya gaya:
+  - **Left Alignment:** `QuotationServicesTable.jsx` aur `InvoiceServicesTable.jsx` me service name column cells se `text-center` hata kar `text-left` (`className="border px-2 py-1 align-middle text-left"`) apply kiya gaya taaki Complimentary Service Name ki tarah sabhi parent service names (`gmb profileupdate`, `website developmet`, `video editing`, `Ads Service Charge` ityadi) table column ke left side par neatly aligned rahein.
+  - **Data Fetch Optimization:** `useInvoiceData.js` me `onSessionExpired` handler ko stable ref me encapsulate kiya gaya aur data fetching dependency loop ko optimize kiya gaya.
+  - **Verification:** Vite production build 0 errors ke sath verified.
+
+
 

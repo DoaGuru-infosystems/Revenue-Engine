@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   fetchInvoiceServices,
   fetchInvoiceClientDetails,
@@ -51,11 +51,16 @@ export const useInvoiceData = ({
   const [showMetaAd, setShowMetaAd] = useState(true);
   const [showGoogleAd, setShowGoogleAd] = useState(true);
 
-  const handleAuthError = useCallback((error) => {
-    if (error?.response?.status === 401 && typeof onSessionExpired === "function") {
-      onSessionExpired();
-    }
+  const onSessionExpiredRef = useRef(onSessionExpired);
+  useEffect(() => {
+    onSessionExpiredRef.current = onSessionExpired;
   }, [onSessionExpired]);
+
+  const handleAuthError = useCallback((error) => {
+    if (error?.response?.status === 401 && typeof onSessionExpiredRef.current === "function") {
+      onSessionExpiredRef.current();
+    }
+  }, []);
 
   // 1. Fetch Services
   const fetchServices = useCallback(async () => {
@@ -789,26 +794,14 @@ export const useInvoiceData = ({
     }
   }, [
     id,
+    activeTxnId,
     txn_id,
     docTypeFromURL,
     sourceFromURL,
     txnIdFromURL,
     isBalanceProforma,
     publicMode,
-    publicData,
-    fetchBalanceProformaData,
-    fetchPredefinedNotes,
-    fetchProformaData,
-    fetchProposalInvoiceData,
-    fetchProformaPayments,
-    fetchServices,
-    fetchClient,
-    fetchClientNotes,
-    fetchComplimentaryData,
-    fetchDiscount,
-    fetchDiscountSetting,
-    fetchRemainingAmount,
-    fetchAdditionservice,
+    token,
   ]);
 
   // Group Graphic and Ads whenever serviceData updates

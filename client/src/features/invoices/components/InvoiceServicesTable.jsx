@@ -110,7 +110,7 @@ export default function InvoiceServicesTable({
                     <tr key={`graphic-${idx}-${eidx}`} className="bg-white">
                       {eidx === 0 && (
                         <td
-                          className="border px-2 py-1 align-middle text-center"
+                          className="border px-2 py-1 align-middle text-left"
                           rowSpan={visibleEditingTypes.length}
                         >
                           {parentServiceTitle}
