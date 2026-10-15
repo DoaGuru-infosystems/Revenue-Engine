@@ -29,17 +29,6 @@ import API_BASE_URL from "../config/apiBaseUrl";
 const toNumber = (value) => Number(value || 0);
 const formatRs = (value) => `Rs. ${toNumber(value).toFixed(2)}`;
 
-const normalizeAddonKey = (label = "") =>
-  String(label).toLowerCase().trim().replace(/\s+/g, "_");
-
-const createInitialAddonState = (addons = []) => {
-  const next = {};
-  addons.forEach((item) => {
-    const key = normalizeAddonKey(item.editing_type_name);
-    if (key) next[key] = false;
-  });
-  return next;
-};
 
 const generateRowId = () => {
   if (typeof globalThis?.crypto?.randomUUID === "function") return globalThis.crypto.randomUUID();
@@ -72,7 +61,6 @@ function ProformaServices() {
 
   const [graphicServices, setGraphicServices] = useState([]);
   const [adsServices, setAdsServices] = useState([]);
-  const [optionalServices, setOptionalServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pricingMode, setPricingMode] = useState("custom");
@@ -88,7 +76,6 @@ function ProformaServices() {
   const [selectedGraphicCategory, setSelectedGraphicCategory] = useState("");
   const [selectedGraphicEditId, setSelectedGraphicEditId] = useState("");
   const [graphicQuantity, setGraphicQuantity] = useState("1");
-  const [graphicAddons, setGraphicAddons] = useState({});
   const [selectedAdditionalServices, setSelectedAdditionalServices] = useState([]);
   const [plansData, setPlansData] = useState([]);
 
@@ -132,7 +119,7 @@ function ProformaServices() {
     if (!token) { setLoading(false); return; }
     setLoading(true);
     try {
-      let graphicRes, adsRes, optionalRes, plansRes;
+      let graphicRes, adsRes, plansRes;
 
       try {
         graphicRes = await axios.get(`${baseURL}/auth/api/re_calculator/services/category/editing`);
@@ -143,22 +130,15 @@ function ProformaServices() {
       } catch (e) { console.error("Error fetching ads services:", e); }
 
       try {
-        optionalRes = await axios.get(`${baseURL}/auth/api/re_calculator/optional-service-amounts`);
-      } catch (e) { console.error("Error fetching optional amounts:", e); }
-
-      try {
         plansRes = await axios.get(`${baseURL}/auth/api/re_calculator/getAllPlanData`, { headers: { Authorization: `Bearer ${token}` } });
       } catch (e) { console.error("Error fetching plans data:", e); }
 
       const graphicData = Array.isArray(graphicRes?.data?.data) ? graphicRes.data.data : [];
       const adsData = Array.isArray(adsRes?.data?.data) ? adsRes.data.data : [];
-      const optionalData = Array.isArray(optionalRes?.data?.data) ? optionalRes.data.data : [];
       const plansRawData = Array.isArray(plansRes?.data?.data) ? plansRes.data.data : [];
 
       setGraphicServices(graphicData.filter((s) => String(s.service_name || "").toLowerCase() !== "complimentary"));
       setAdsServices(adsData);
-      setOptionalServices(optionalData);
-      setGraphicAddons(createInitialAddonState(optionalData));
       setPlansData(plansRawData);
 
       if (!graphicRes && !adsRes && !plansRes) {
@@ -197,7 +177,6 @@ function ProformaServices() {
       .find((e) => String(e.editing_type_id) === selectedGraphicEditId) || null;
   }, [selectedGraphicCategoryObj, selectedGraphicEditId]);
 
-  const optionalAddonList = useMemo(() => optionalServices.map((item) => ({ ...item, key: normalizeAddonKey(item.editing_type_name), amount_num: toNumber(item.amount) })), [optionalServices]);
   const adsOptions = useMemo(() => {
     const grouped = {};
     adsServices.forEach((item) => {
@@ -209,10 +188,6 @@ function ProformaServices() {
   }, [adsServices]);
   const adsOptionMap = useMemo(() => { const m = {}; adsOptions.forEach((i) => { m[i.category] = i; }); return m; }, [adsOptions]);
   const selectedAdsOption = useMemo(() => adsOptionMap[selectedAdsCategory] || null, [adsOptionMap, selectedAdsCategory]);
-  const isAddonApplicable = useMemo(() => {
-    const n = String(selectedGraphicService || "").toLowerCase();
-    return n === "video services" || n === "graphics design";
-  }, [selectedGraphicService]);
   const availableAdditionalServices = useMemo(() => {
     if (!selectedGraphicCategoryObj) return [];
     if (Array.isArray(selectedGraphicCategoryObj.additional_services) && selectedGraphicCategoryObj.additional_services.length > 0) {
@@ -236,13 +211,12 @@ function ProformaServices() {
     const qty = Math.max(1, toNumber(graphicQuantity || 1));
     return selectedAdditionalServices.reduce((sum, item) => sum + ((Number(item.amount || item.unit_price) || 0) * qty), 0);
   }, [selectedAdditionalServices, graphicQuantity]);
-  const selectedGraphicAddonPerUnit = useMemo(() => optionalAddonList.reduce((sum, a) => graphicAddons[a.key] ? sum + a.amount_num : sum, 0), [graphicAddons, optionalAddonList]);
   const selectedGraphicPreviewTotal = useMemo(() => {
     if (!selectedGraphicEditingType) return 0;
     const qty = Math.max(1, toNumber(graphicQuantity || 1));
     const unit = toNumber(selectedGraphicEditingType.amount || selectedGraphicEditingType.editing_type_amount);
-    return (unit + selectedGraphicAddonPerUnit) * qty + additionalServicesTotal;
-  }, [graphicQuantity, selectedGraphicAddonPerUnit, selectedGraphicEditingType, additionalServicesTotal]);
+    return unit * qty + additionalServicesTotal;
+  }, [graphicQuantity, selectedGraphicEditingType, additionalServicesTotal]);
 
   const groupedPlans = useMemo(() => {
     if (!Array.isArray(plansData)) return [];
@@ -269,7 +243,6 @@ function ProformaServices() {
     setSelectedGraphicCategory("");
     setSelectedGraphicEditId("");
     setGraphicQuantity("1");
-    setGraphicAddons(createInitialAddonState(optionalServices));
     setSelectedAdditionalServices([]);
   };
   const handleGraphicCategoryChange = (val) => {
@@ -430,15 +403,7 @@ function ProformaServices() {
 
     const qty = Math.max(1, toNumber(graphicQuantity || 1));
     const unitPrice = toNumber(selectedGraphicEditingType.amount || selectedGraphicEditingType.editing_type_amount);
-    let includeContentPosting = 0, includeThumbnailCreation = 0;
-    const selectedAddonLabels = [];
-    optionalAddonList.forEach((addon) => {
-      if (!graphicAddons[addon.key]) return;
-      selectedAddonLabels.push(`${addon.editing_type_name} (+${formatRs(addon.amount_num)})`);
-      if (addon.key === "content_posting") includeContentPosting = addon.amount_num;
-      if (addon.key === "thumbnail_creation") includeThumbnailCreation = addon.amount_num;
-    });
-    const rowTotal = (unitPrice + selectedGraphicAddonPerUnit) * qty + additionalServicesTotal;
+    const rowTotal = unitPrice * qty + additionalServicesTotal;
 
     const newRow = {
       row_id: generateRowId(),
@@ -451,10 +416,10 @@ function ProformaServices() {
       editing_type_name: selectedGraphicEditingType.editing_type_name,
       unit_price: unitPrice,
       quantity: qty,
-      optional_total_per_unit: selectedGraphicAddonPerUnit,
-      include_content_posting: includeContentPosting,
-      include_thumbnail_creation: includeThumbnailCreation,
-      addon_labels: selectedAddonLabels,
+      optional_total_per_unit: 0,
+      include_content_posting: 0,
+      include_thumbnail_creation: 0,
+      addon_labels: [],
       additional_services: selectedAdditionalServices.map((ad) => ({
         ...ad,
         category_id: selectedGraphicCategoryObj?.category_id || selectedGraphicCategoryObj?.id || ad.category_id || null,
@@ -483,7 +448,6 @@ function ProformaServices() {
     setSelectedGraphicCategory("");
     setSelectedGraphicEditId("");
     setGraphicQuantity("1");
-    setGraphicAddons(createInitialAddonState(optionalServices));
     setSelectedAdditionalServices([]);
   };
 
@@ -619,7 +583,7 @@ function ProformaServices() {
       const addTotal = updatedAddons.reduce((s, a) => s + (Number(a.total) || 0), 0);
       const rowTotal = isComp
         ? 0
-        : Number((((toNumber(item.unit_price) + toNumber(item.optional_total_per_unit)) * qty) + addTotal).toFixed(2));
+        : Number(((toNumber(item.unit_price) * qty) + addTotal).toFixed(2));
       return {
         ...item,
         quantity: qty,
@@ -1459,7 +1423,7 @@ function ProformaServices() {
                 <div className="is-panel-icon cyan"><ListChecks size={ 17 } /></div>
                 <div>
                   <div style={ { fontSize: 14, fontWeight: 600, color: "#fff" } }>Graphic & SEO Services</div>
-                  <div style={ { fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 1 } }>Select type, category and optional add-ons</div>
+                  <div style={ { fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 1 } }>Select service, category and additional services</div>
                 </div>
               </div>
 
@@ -1504,28 +1468,6 @@ function ProformaServices() {
                   <label className="is-label">Quantity</label>
                   <input type="number" min="1" value={ graphicQuantity } onChange={ (e) => setGraphicQuantity(e.target.value) } placeholder="1" className="is-input" disabled={ !hasClientContext } />
                 </div>
-
-                { isAddonApplicable && optionalAddonList.length > 0 && (
-                  <div>
-                    <div className="is-section-title" style={ { marginTop: 4 } }>Optional Add-ons</div>
-                    <div style={ { background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 11, padding: "6px 14px" } }>
-                      { optionalAddonList.filter((addon) => {
-                        // Hide Thumbnail Creation when Graphics Design is selected
-                        const isGraphicsDesign = String(selectedGraphicService || "").toLowerCase() === "graphics design";
-                        if (isGraphicsDesign && addon.key === "thumbnail_creation") return false;
-                        return true;
-                      }).map((addon) => (
-                        <div key={ addon.key } className="is-addon-row">
-                          <span style={ { fontSize: 12.5, color: "#c8c8d8" } }>{ addon.editing_type_name }</span>
-                          <div style={ { display: "flex", alignItems: "center", gap: 10 } }>
-                            <span style={ { fontSize: 11.5, fontWeight: 600, color: "rgba(184,150,46,0.75)" } }>+{ formatRs(addon.amount_num) }</span>
-                            <input type="checkbox" checked={ Boolean(graphicAddons[addon.key]) } onChange={ (e) => setGraphicAddons((prev) => ({ ...prev, [addon.key]: e.target.checked })) } className="is-checkbox" />
-                          </div>
-                        </div>
-                      )) }
-                    </div>
-                  </div>
-                ) }
 
                 {/* Dynamic Additional Services */}
                 { availableAdditionalServices.length > 0 && (
@@ -1886,7 +1828,9 @@ function ProformaServices() {
                         </td>
                         <td className="right" style={ { fontSize: 12, color: "rgba(255,255,255,0.45)" } }>
                           { item.source === "graphic"
-                            ? formatRs(toNumber(item.optional_total_per_unit) * toNumber(item.quantity))
+                            ? (Array.isArray(item.additional_services) && item.additional_services.length > 0
+                                ? formatRs(item.additional_services.reduce((s, a) => s + (Number(a.total || a.total_amount) || 0), 0))
+                                : "—")
                             : item.source === "complimentary"
                               ? "—"
                               : formatRs(item.charge) }
