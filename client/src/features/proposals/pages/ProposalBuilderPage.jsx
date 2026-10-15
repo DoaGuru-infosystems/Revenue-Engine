@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Target,
   IndianRupee,
+  Eye,
 } from "lucide-react";
 import { PROPOSAL_SECTIONS, PROPOSAL_TYPES, BILLING_TYPES } from "../../../config/proposalDefaults";
 import { useProposalBuilder, getClientDisplayName } from "../hooks/useProposalBuilder";
@@ -78,6 +79,9 @@ export default function ProposalBuilderPage() {
     setSendChannel,
     sending,
     isReadOnly,
+    proposalStatus,
+    isApproved,
+    viewProposal,
     saveProposal,
     downloadPdf,
     sendToClient,
@@ -119,22 +123,36 @@ export default function ProposalBuilderPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
           {proposalId && (
             <>
+              <button
+                onClick={() => viewProposal()}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-xl hover:bg-blue-600/30 transition text-sm font-semibold shadow-sm"
+                title="Preview client proposal (Public View)"
+              >
+                <Eye className="w-4 h-4" /> View Proposal
+              </button>
               <button
                 onClick={() => sendToClient()}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl hover:bg-red-600/30 transition text-sm font-semibold"
               >
                 <Send className="w-4 h-4" /> Send to Client
               </button>
-              {isAdmin && (
-                <button
-                  onClick={() => markAsApproved()}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold"
-                >
-                  <CheckCircle className="w-4 h-4" /> Mark Approved
-                </button>
+              {isApproved ? (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-xl text-sm font-semibold shadow-sm">
+                  <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  <span>Approved</span>
+                </div>
+              ) : (
+                isAdmin && (
+                  <button
+                    onClick={() => markAsApproved()}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600/20 text-green-400 border border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Mark Approved
+                  </button>
+                )
               )}
               <button
                 onClick={() => downloadPdf()}
@@ -638,7 +656,9 @@ export default function ProposalBuilderPage() {
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
             Status:{" "}
-            <span className="text-red-400">{proposalId ? "Draft / Saved" : "Unsaved"}</span>
+            <span className="text-orange-400 font-semibold capitalize">
+              {proposalStatus ? proposalStatus.replace(/_/g, " ") : (proposalId ? "Draft / Saved" : "Unsaved")}
+            </span>
           </div>
           <div className="flex gap-3">
             {!isReadOnly && (

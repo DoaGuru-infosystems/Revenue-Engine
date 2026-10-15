@@ -666,6 +666,44 @@ exports.sendProposalToClient = async (req, res) => {
   }
 };
 
+exports.getProposalPreviewToken = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const q = `SELECT p.*, c.client_name, c.client_organization AS company_name, c.client_organization, c.email, c.phone AS phone_no, c.address 
+               FROM re_proposals p
+               LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
+               WHERE p.id = ?`;
+    const results = await runQuery(q, [id]);
+    if (results.length === 0) {
+      return res
+        .status(404)
+        .json({ status: "Failure", message: "Proposal not found" });
+    }
+
+    const proposal = results[0];
+    const { generatePublicAccessToken } = require("./re_publicController");
+    const snapshotJson = JSON.stringify(proposal);
+    const token = await generatePublicAccessToken(
+      proposal.client_id,
+      proposal.id,
+      "proposal",
+      snapshotJson,
+    );
+
+    res.status(200).json({
+      status: "Success",
+      token,
+      url: `/#/public/proposal/${token}`,
+    });
+  } catch (error) {
+    console.error("getProposalPreviewToken error:", error);
+    res.status(500).json({
+      status: "Failure",
+      message: "Server error while generating preview token",
+    });
+  }
+};
+
 // Helper: Concurrency-safe sequential proforma number generator using dedicated counter table + mutex queue
 let counterLock = Promise.resolve();
 

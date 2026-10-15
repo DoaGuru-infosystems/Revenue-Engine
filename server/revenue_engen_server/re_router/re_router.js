@@ -226,6 +226,7 @@ const {
   generateProposalPdf,
   getAllProposals,
   sendProposalToClient,
+  getProposalPreviewToken,
   createProforma,
   getProformasByClient,
   getAllProformas,
@@ -685,6 +686,7 @@ router.delete("/proposal/:id", authenticateToken, deleteProposal);
 router.put("/proposal/:id/status", authenticateToken, updateProposalStatus);
 router.post("/proposal/:id/pdf", authenticateToken, generateProposalPdf);
 router.post("/proposal/:id/send", authenticateToken, sendProposalToClient);
+router.get("/proposal/:id/preview-token", authenticateToken, getProposalPreviewToken);
 router.put(
   "/proposal/:id/mark-payment-received",
   authenticateToken,

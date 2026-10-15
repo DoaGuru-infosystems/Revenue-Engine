@@ -244,3 +244,11 @@ export const generatePublicProposalPdf = async (token) => {
   );
   return data;
 };
+
+export const getProposalPreviewToken = async (proposalId, token) => {
+  const { data } = await axios.get(
+    `${API_BASE_URL}/auth/api/re_calculator/proposal/${proposalId}/preview-token`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return data;
+};

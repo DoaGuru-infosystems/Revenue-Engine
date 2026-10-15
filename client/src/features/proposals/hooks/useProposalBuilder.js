@@ -24,6 +24,7 @@ import {
   deleteGraphicEntryById,
   deleteAdsCampaignEntryById,
   deleteComplimentaryById,
+  getProposalPreviewToken,
 } from "../services/proposalService";
 
 const getClientRecord = (payload) => (Array.isArray(payload) ? payload[0] : payload);
@@ -539,7 +540,7 @@ export function useProposalBuilder() {
     handleSectionChange("notes_selection", currentNotes.filter((_, i) => i !== index));
   };
 
-  const saveProposalAction = async (generatePdf = false) => {
+  const saveProposalAction = async (generatePdf = false, silent = false) => {
     try {
       setLoading(true);
       const { dmTotal, adsTotal } = getBillableTotals(pricingTable);
@@ -589,13 +590,15 @@ export function useProposalBuilder() {
       }
 
       if (res.data.status === "Success") {
-        Swal.fire({
-          icon: "success",
-          title: "Saved!",
-          text: "Proposal saved successfully.",
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        if (!silent) {
+          Swal.fire({
+            icon: "success",
+            title: "Saved!",
+            text: "Proposal saved successfully.",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+        }
 
         const draftKey = `proposal_draft_${clientId}_${proposalId}`;
         localStorage.removeItem(draftKey);
@@ -701,6 +704,7 @@ export function useProposalBuilder() {
       const res = await updateProposalStatus(proposalId, "approved", token);
 
       if (res.status === "Success") {
+        setProposalStatus("approved");
         Swal.fire({ icon: "success", title: "Approved!", text: "Proposal has been marked as approved manually." });
       }
     } catch (err) {
@@ -710,6 +714,49 @@ export function useProposalBuilder() {
       setLoading(false);
     }
   };
+
+  const viewProposalAction = async () => {
+    if (!proposalId) {
+      Swal.fire({
+        icon: "warning",
+        title: "Unsaved Proposal",
+        text: "Please save the proposal first before previewing.",
+      });
+      return;
+    }
+    try {
+      setLoading(true);
+      if (!isReadOnly) {
+        await saveProposalAction(false, true);
+      }
+      const res = await getProposalPreviewToken(proposalId, token);
+      if (res.status === "Success" && res.token) {
+        window.open(`/#/public/proposal/${res.token}`, "_blank");
+      } else {
+        throw new Error(res.message || "Failed to generate preview token");
+      }
+    } catch (err) {
+      console.error("Error opening proposal preview:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Preview Error",
+        text: err.response?.data?.message || "Failed to open proposal preview.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isApproved = [
+    "approved",
+    "client_approved",
+    "proforma_generated",
+    "proforma_sent",
+    "payment_awaited",
+    "payment_received",
+    "partially_paid",
+    "invoiced",
+  ].includes(String(proposalStatus || "").toLowerCase());
 
   const isReadOnly = ["invoiced", "payment_received", "partially_paid"].includes(proposalStatus);
 
@@ -774,6 +821,9 @@ export function useProposalBuilder() {
     setSendChannel,
     sending,
     isReadOnly,
+    proposalStatus,
+    isApproved,
+    viewProposal: viewProposalAction,
     saveProposal: saveProposalAction,
     downloadPdf: downloadPdfAction,
     sendToClient: sendToClientAction,
