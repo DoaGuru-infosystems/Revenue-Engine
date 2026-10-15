@@ -239,6 +239,17 @@ const dispatch = useDispatch();
     setAddons(updatedAddons);
   };
 
+  const lastProcessedEditIdRef = useRef(null);
+
+  useEffect(() => {
+    const item = location.state?.editItem;
+    if (item && data.length > 0 && lastProcessedEditIdRef.current !== item.id) {
+      lastProcessedEditIdRef.current = item.id;
+      handleEdit(item);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.state, data, optionalServices]);
+
   const getSelectedService = data.find(
     (s) => s.service_name === selectedService
   );

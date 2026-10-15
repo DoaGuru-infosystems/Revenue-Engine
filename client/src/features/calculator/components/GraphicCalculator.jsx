@@ -249,19 +249,28 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     fetchDiscountSetting();
   }, [id, proposalId]);
 
-  const handleEdit = (entry) => {
-    console.log(entry);
+  const lastProcessedEditIdRef = useRef(null);
 
+  const handleEdit = (entry) => {
+    if (!entry) return;
     setEditId(entry.id);
-    setSelectedService(entry.service_name);
-    setSelectedCategory(entry.category_name);
+
+    // Case-insensitive match service and category from data so <select> options match perfectly
+    const entryService = (entry.service_name || "").trim().toLowerCase();
+    const serviceObj = data.find(
+      (s) => (s.service_name || "").trim().toLowerCase() === entryService
+    );
+    const resolvedServiceName = serviceObj ? serviceObj.service_name : entry.service_name;
+    setSelectedService(resolvedServiceName);
+
+    const entryCategory = (entry.category_name || "").trim().toLowerCase();
+    const categoryObj = serviceObj?.categories?.find(
+      (c) => (c.category_name || "").trim().toLowerCase() === entryCategory
+    );
+    const resolvedCategoryName = categoryObj ? categoryObj.category_name : entry.category_name;
+    setSelectedCategory(resolvedCategoryName);
 
     // Resolve editing type from data if entry.editing_type_id is missing or doesn't match
-    const serviceObj = data.find((s) => s.service_name === entry.service_name);
-    const categoryObj = serviceObj?.categories?.find(
-      (c) => c.category_name === entry.category_name
-    );
-
     let matchedEt = null;
     if (categoryObj?.editing_types?.length > 0) {
       if (entry.editing_type_id) {
@@ -327,6 +336,15 @@ const GraphicCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onSe
     }
     setSelectedAdditionalServices(initialSelectedAddons);
   };
+
+  useEffect(() => {
+    const item = location.state?.editItem;
+    if (item && data.length > 0 && lastProcessedEditIdRef.current !== item.id) {
+      lastProcessedEditIdRef.current = item.id;
+      handleEdit(item);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.state, data, optionalServices]);
 
   const getSelectedService = data.find(
     (s) => s.service_name === selectedService

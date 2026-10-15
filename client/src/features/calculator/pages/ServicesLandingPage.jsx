@@ -1164,7 +1164,7 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
-                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "paid" } })}>Edit</button>
+                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "paid", editItem: order } })}>Edit</button>
                                 <button onClick={() => handleDelete(order.id)} className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">Delete</button>
                               </div>
                             </td>
@@ -1264,7 +1264,7 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
-                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "complimentary" } })}>Edit</button>
+                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "complimentary", editItem: order } })}>Edit</button>
                                 <button onClick={() => handleDeleteComplimenatry(order.id)} className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">Delete</button>
                               </div>
                             </td>
