@@ -12,24 +12,24 @@ export default function QuotationCustomerInfoCard({
   return (
     <>
       {isBalanceProforma && (
-        <div className="mb-2 text-center">
-          <p className="text-sm font-bold tracking-wide text-gray-800 uppercase">
+        <div className="mb-2 print:mb-1 text-center">
+          <p className="text-sm print:text-xs font-bold tracking-wide text-gray-800 uppercase">
             BALANCE PROFORMA INVOICE
           </p>
         </div>
       )}
       {docTypeFromURL === "proforma" && !isBalanceProforma && (
-        <div className="mb-2 text-center">
-          <p className="text-sm font-bold tracking-wide text-gray-800 uppercase">
+        <div className="mb-2 print:mb-1 text-center">
+          <p className="text-sm print:text-xs font-bold tracking-wide text-gray-800 uppercase">
             PROFORMA INVOICE
           </p>
         </div>
       )}
 
       {/* Client Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 print:grid-cols-2">
-        <div className="break-words text-xs">
-          <h3 className="text-md font-bold">Client Details</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 print:grid-cols-2 print:gap-1 print:mb-1">
+        <div className="break-words text-xs print:text-[11px] print:leading-tight">
+          <h3 className="text-md print:text-xs font-bold">Client Details</h3>
           <p className="break-words">
             <strong>Name:</strong> {clientData?.client_name}
           </p>
@@ -48,7 +48,7 @@ export default function QuotationCustomerInfoCard({
           </p>
         </div>
 
-        <div className="text-end text-xs">
+        <div className="text-end text-xs print:text-[11px] print:leading-tight">
           <p className="font-bold">
             {sourceFromURL === "proposal" ||
             docTypeFromURL === "proforma" ||
@@ -58,7 +58,7 @@ export default function QuotationCustomerInfoCard({
               </span>
             )}
             {isBalanceProforma
-              ? "Proforma Invoice No: "
+              ? "Balance  Proforma Invoice No: "
               : docTypeFromURL === "proforma"
               ? "Proforma Invoice: "
               : "Quotation: "}{" "}

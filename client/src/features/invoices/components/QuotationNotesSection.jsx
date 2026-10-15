@@ -12,7 +12,13 @@ export default function QuotationNotesSection({
   const isReceived = clientData?.tag_received_amt === "received";
 
   return (
-    <div className={isProforma ? "mt-4 border-t pt-4 border-gray-300" : "mt-2"}>
+    <div
+      className={`notes-section ${
+        isProforma
+          ? "mt-4 print:mt-2 border-t pt-4 print:pt-2 border-gray-300"
+          : "mt-2 print:mt-1"
+      }`}
+    >
       <p className="text-sm font-bold text-gray-800">Notes</p>
 
       <ul className="list-disc pl-5 mt-1 space-y-1">

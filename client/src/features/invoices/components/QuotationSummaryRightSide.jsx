@@ -20,8 +20,8 @@ export default function QuotationSummaryRightSide({
   displayedCurrentBalance = 0,
 }) {
   return (
-    <div className="w-1/2 pl-5 border-l border-gray-200">
-      <div className="space-y-1 text-xs text-gray-700">
+    <div className="w-1/2 pl-5 print:pl-3 border-l border-gray-200">
+      <div className="space-y-1 print:space-y-0 text-xs print:text-[11px] text-gray-700">
         {discountAmount > 0 && (
           <>
             <div className="flex justify-between items-center text-gray-600 py-0.5">
@@ -113,23 +113,23 @@ export default function QuotationSummaryRightSide({
             );
           })}
 
-        <div className="flex justify-between items-center py-1 px-2.5 bg-gray-50/80 rounded border border-gray-200 mt-1">
-          <span className="text-sm font-bold text-gray-900">Grand Total</span>
-          <span className="text-base font-bold text-green-700">
+        <div className="flex justify-between items-center py-1 print:py-0.5 px-2.5 print:px-1.5 bg-gray-50/80 rounded border border-gray-200 mt-1 print:mt-0.5">
+          <span className="text-sm print:text-xs font-bold text-gray-900">Grand Total</span>
+          <span className="text-base print:text-sm font-bold text-green-700">
             ₹{Math.round(displayedGrandTotal).toLocaleString("en-IN")}
           </span>
         </div>
 
         {isBalanceProforma && (
-          <div className="pt-2 border-t border-gray-300 space-y-1">
-            <div className="flex justify-between items-center px-2 py-0.5 text-gray-700">
-              <span className="font-medium text-xs">Received</span>
-              <span className="font-semibold text-gray-900 text-xs">
+          <div className="pt-2 print:pt-1 border-t border-gray-300 space-y-1 print:space-y-0.5">
+            <div className="flex justify-between items-center px-2 py-0.5 print:py-0 text-gray-700">
+              <span className="font-medium text-xs print:text-[11px]">Received</span>
+              <span className="font-semibold text-gray-900 text-xs print:text-[11px]">
                 ₹{Math.round(displayedReceived).toLocaleString("en-IN")}
               </span>
             </div>
-            <div className="flex justify-between items-center px-2.5 py-1 bg-green-50/70 rounded border border-green-200">
-              <span className="text-xs font-bold text-green-900">
+            <div className="flex justify-between items-center px-2.5 print:px-1.5 py-1 print:py-0.5 bg-green-50/70 rounded border border-green-200">
+              <span className="text-xs print:text-[11px] font-bold text-green-900">
                 Current Balance
               </span>
               {displayedCurrentBalance <= 0 ? (
@@ -137,7 +137,7 @@ export default function QuotationSummaryRightSide({
                   Fully Paid
                 </span>
               ) : (
-                <span className="text-sm font-bold text-green-700">
+                <span className="text-sm print:text-xs font-bold text-green-700">
                   ₹{Math.round(displayedCurrentBalance).toLocaleString("en-IN")}
                 </span>
               )}
@@ -145,11 +145,11 @@ export default function QuotationSummaryRightSide({
           </div>
         )}
 
-        <div className="mt-2 pt-2 border-t border-gray-200 text-right">
-          <p className="text-[10px] text-gray-500 italic block leading-tight">
+        <div className="mt-2 print:mt-1 pt-2 print:pt-0.5 border-t border-gray-200 text-right">
+          <p className="text-[10px] print:text-[9px] text-gray-500 italic block leading-tight">
             Total Amount (in words):
           </p>
-          <p className="font-semibold text-gray-800 text-xs capitalize leading-tight">
+          <p className="font-semibold text-gray-800 text-xs print:text-[11px] capitalize leading-tight">
             {inrToWords(displayedGrandTotal)}
           </p>
         </div>

@@ -127,18 +127,55 @@ export const InvoicePrintWrapper = styled.div`
       break-after: auto;
     }
 
-    /* terms-bank-section: natural flow */
+    /* Compact inner table styling for print to fit on single page */
+    .page-wrapper table.border {
+      margin-top: 2px !important;
+      margin-bottom: 2px !important;
+    }
+
+    .page-wrapper table.border th,
+    .page-wrapper table.border td {
+      padding: 2.5px 5px !important;
+      font-size: 11px !important;
+      line-height: 1.25 !important;
+    }
+
+    .page-wrapper section {
+      margin-top: 3px !important;
+      margin-bottom: 3px !important;
+    }
+
+    /* terms-bank-section: keep bank details and totals together on same page */
     .terms-bank-section {
-      page-break-inside: auto !important;
-      break-inside: auto !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      margin-top: 3px !important;
+      padding-top: 3px !important;
+      padding-bottom: 3px !important;
     }
 
     /* Bank Details div */
     .bank-details-section {
-      page-break-inside: auto;
-      break-inside: auto;
-      page-break-after: avoid;
-      break-after: avoid;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      page-break-after: auto !important;
+      break-after: auto !important;
+      margin-bottom: 0 !important;
+    }
+
+    .bank-details-section ul {
+      margin-top: 1px !important;
+      margin-bottom: 1px !important;
+    }
+
+    .bank-details-section ul li {
+      font-size: 11px !important;
+      line-height: 1.25 !important;
+    }
+
+    .bank-details-section img {
+      height: 30px !important;
+      width: auto !important;
     }
 
     /* Amount in words orphan fix for browser print */
@@ -149,10 +186,13 @@ export const InvoicePrintWrapper = styled.div`
       break-inside: avoid !important;
     }
 
-    /* Terms & Conditions: natural flow */
-    .terms-conditions-section {
+    /* Terms & Conditions / Notes: natural flow to next page if needed */
+    .terms-conditions-section,
+    .notes-section {
       page-break-inside: auto;
       break-inside: auto;
+      margin-top: 4px !important;
+      padding-top: 4px !important;
     }
   }
 `;

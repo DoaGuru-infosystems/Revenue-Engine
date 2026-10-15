@@ -154,8 +154,8 @@ export default function QuotationPage() {
           <tbody className="print:table-row-group">
             <tr>
               <td className="p-0 m-0 align-top">
-                <div className="flex flex-col justify-between h-full px-6 py-1 print:px-4">
-                  <div className="flex-grow">
+                <div className="flex flex-col justify-between h-full px-6 py-1 print:px-4 print:block print:h-auto">
+                  <div className="flex-grow print:block">
                     {/* Header & Client Info */}
                     <QuotationCustomerInfoCard
                       clientData={clientData}
@@ -196,8 +196,8 @@ export default function QuotationPage() {
                     />
 
                     {/* Terms & Bank Details Section */}
-                    <section className="terms-bank-section print:block px-6 py-2 text-sm text-gray-800 border-t mt-2">
-                      <div className="bank-details-section flex justify-between w-full mb-2">
+                    <section className="terms-bank-section print:block px-6 py-2 text-sm text-gray-800 border-t mt-2 print:px-0 print:py-1 print:mt-1">
+                      <div className="bank-details-section flex justify-between w-full mb-2 print:mb-0">
                         {/* LEFT SIDE: Bank Details */}
                         <DocumentBankDetails isGST={isGST} variant="quotation" />
 
