@@ -71,6 +71,25 @@ const db = new Proxy({}, {
     if (connection && typeof connection[prop] === "function") {
       return (...args) => connection[prop](...args);
     }
+    // Safe fallbacks if database is temporarily disconnected/reconnecting
+    if (prop === "query") {
+      return (sql, values, cb) => {
+        const callback = typeof values === "function" ? values : cb;
+        const err = new Error("Database connection lost. Attempting to reconnect...");
+        err.code = "PROTOCOL_CONNECTION_LOST";
+        if (typeof callback === "function") {
+          return callback(err);
+        }
+        return Promise.reject(err);
+      };
+    }
+    if (prop === "beginTransaction" || prop === "commit" || prop === "rollback") {
+      return (cb) => {
+        const err = new Error("Database connection lost. Attempting to reconnect...");
+        err.code = "PROTOCOL_CONNECTION_LOST";
+        if (typeof cb === "function") cb(err);
+      };
+    }
     return connection ? connection[prop] : undefined;
   }
 });
