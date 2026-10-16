@@ -2675,6 +2675,14 @@ exports.saveComplimentaryData = async (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
+  const additionalServicesStr = req.body.additional_services
+    ? (typeof req.body.additional_services === 'object' ? JSON.stringify(req.body.additional_services) : String(req.body.additional_services))
+    : null;
+
+  const safeEditingTypeId = editing_type_id || null;
+  const safeEditingTypeName = editing_type_name || "";
+  const safeEditingTypeAmount = editing_type_amount || 0;
+
   try {
     const { checkInvoiceGenerated } = require("./re_invoiceHelper");
     const isInvoiceGenerated = await checkInvoiceGenerated(txn_id);
@@ -2686,16 +2694,16 @@ exports.saveComplimentaryData = async (req, res) => {
     return res.status(500).json({ status: "Failure", message: "Error checking invoice status." });
   }
 
-
-  // ? Step 0: Check if service already exists for this txn_id + editing_type_id
+  // ? Step 0: Check if service already exists for this txn_id + category
   const checkDuplicate = `
     SELECT id FROM re_complimentary 
-    WHERE txn_id = ? AND client_id = ? AND service_name = ? AND category_name = ? AND editing_type_id = ?
+    WHERE txn_id = ? AND client_id = ? AND service_name = ? AND category_name = ? 
+      AND ((editing_type_id = ? AND ? IS NOT NULL) OR (editing_type_id IS NULL AND ? IS NULL))
   `;
 
   db.query(
     checkDuplicate,
-    [txn_id, client_id, service_name, category_name, editing_type_id],
+    [txn_id, client_id, service_name, category_name, safeEditingTypeId, safeEditingTypeId, safeEditingTypeId],
     (dupErr, dupResult) => {
       if (dupErr) {
         console.error("Duplicate Check Error:", dupErr);
@@ -2703,7 +2711,6 @@ exports.saveComplimentaryData = async (req, res) => {
       }
 
       if (dupResult.length > 0) {
-        // Already exists ? stop here
         return res.status(200).json({
           status: "Alert",
           message: "This complimentary service already exists",
@@ -2723,10 +2730,11 @@ exports.saveComplimentaryData = async (req, res) => {
           quantity,
           include_content_posting,
           include_thumbnail_creation,
+          additional_services,
           total_amount,
           employee,
           created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       const values = [
@@ -2734,12 +2742,13 @@ exports.saveComplimentaryData = async (req, res) => {
         client_id,
         service_name,
         category_name,
-        editing_type_id,
-        editing_type_name,
-        editing_type_amount,
+        safeEditingTypeId,
+        safeEditingTypeName,
+        safeEditingTypeAmount,
         quantity,
-        include_content_posting,
-        include_thumbnail_creation,
+        include_content_posting || 0,
+        include_thumbnail_creation || 0,
+        additionalServicesStr,
         total_amount,
         employee,
         createdAt,
@@ -2777,10 +2786,11 @@ exports.saveComplimentaryData = async (req, res) => {
                 quantity,
                 include_content_posting,
                 include_thumbnail_creation,
+                additional_services,
                 total_amount,
                 employee,
                 created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
 
             db.query(invoiceQuery, values, (err3) => {

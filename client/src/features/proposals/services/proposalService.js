@@ -129,20 +129,47 @@ export const getCustomServicesFromDB = async (proposalId, clientId, token) => {
       percent: Number(item.percent),
       charge: Number(item.charge),
     })),
-    ...compData.map((item) => ({
-      id: item.id,
-      service: (item.editing_type_name && item.editing_type_name !== "null")
-        ? `${item.service_name} - ${item.category_name} (${item.editing_type_name})`
-        : `${item.service_name} - ${item.category_name}`,
-      service_name: item.service_name,
-      category_name: item.category_name,
-      editing_type_name: item.editing_type_name,
-      quantity: item.quantity,
-      unit_price: Number(item.editing_type_amount),
-      total_price: Number(item.total_amount),
-      include_in_total: false,
-      source: "custom_complimentary",
-    })),
+    ...compData.map((item) => {
+      let additional_services = [];
+      if (item.additional_services) {
+        try {
+          additional_services =
+            typeof item.additional_services === "string"
+              ? JSON.parse(item.additional_services)
+              : item.additional_services;
+          if (!Array.isArray(additional_services)) additional_services = [];
+        } catch {
+          additional_services = [];
+        }
+      }
+      const qty = Number(item.quantity) || 1;
+      const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+      const baseTotal = base * qty;
+      const addonsTotal = additional_services.reduce(
+        (sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)),
+        0
+      );
+      const recordedTotal = Number(item.total_amount || 0);
+      const displayTotal = recordedTotal > 0 ? recordedTotal : (baseTotal + addonsTotal);
+
+      return {
+        id: item.id,
+        service:
+          item.editing_type_name && item.editing_type_name !== "null"
+            ? `${item.service_name} - ${item.category_name} (${item.editing_type_name})`
+            : `${item.service_name} - ${item.category_name}`,
+        service_name: item.service_name,
+        category_name: item.category_name,
+        editing_type_name: item.editing_type_name,
+        quantity: qty,
+        unit_price: base,
+        total_price: displayTotal,
+        total_amount: displayTotal,
+        additional_services,
+        include_in_total: false,
+        source: "custom_complimentary",
+      };
+    }),
   ];
 };
 

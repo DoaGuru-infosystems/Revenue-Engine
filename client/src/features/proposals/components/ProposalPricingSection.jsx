@@ -254,7 +254,14 @@ export default function ProposalPricingSection({
                       </td>
                       <td className="p-3 text-center text-gray-300">{addonQty}</td>
                       <td className="p-3 text-right font-semibold text-yellow-400">
-                        ₹{addonTotal.toLocaleString("en-IN")}
+                        {isRowComplimentary ? (
+                          <span>
+                            ₹{addonTotal.toLocaleString("en-IN")}{" "}
+                            <span className="text-emerald-400 text-xs font-semibold">(Free)</span>
+                          </span>
+                        ) : (
+                          `₹${addonTotal.toLocaleString("en-IN")}`
+                        )}
                       </td>
                       <td className="p-3 text-center text-gray-500">-</td>
                     </tr>

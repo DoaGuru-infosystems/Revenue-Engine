@@ -549,7 +549,14 @@ export default function PublicProposalPage() {
                                   </td>
                                   <td className="px-6 py-3 text-center text-slate-600">{addonQty}</td>
                                   <td className="px-6 py-3 text-right font-medium text-slate-700">
-                                    ₹ {addonTotal.toLocaleString("en-IN")}
+                                    {isComp ? (
+                                      <span>
+                                        ₹ {addonTotal.toLocaleString("en-IN")}{" "}
+                                        <span className="text-emerald-600 font-semibold text-xs">(Free)</span>
+                                      </span>
+                                    ) : (
+                                      `₹ ${addonTotal.toLocaleString("en-IN")}`
+                                    )}
                                   </td>
                                 </tr>
                               );

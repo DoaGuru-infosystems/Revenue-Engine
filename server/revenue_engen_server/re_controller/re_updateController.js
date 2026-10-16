@@ -727,31 +727,43 @@ exports.updateComplimenatryDataById = async (req, res) => {
   }
 
 
+  const additionalServicesStr = req.body.additional_services
+    ? (typeof req.body.additional_services === 'object' ? JSON.stringify(req.body.additional_services) : String(req.body.additional_services))
+    : null;
+
+  const safeEditingTypeName = editing_type_name || "";
+
   // --- First Update Quotation (re_complimentary) ---
   const updateQuotationQuery = `
     UPDATE re_complimentary
     SET
       quantity = ?,
+      additional_services = ?,
       total_amount = ?,
       employee = ?,
       created_at = ?
-    WHERE txn_id = ? 
+    WHERE id = ? OR (
+      txn_id = ? 
       AND client_id = ? 
       AND service_name = ? 
       AND category_name = ? 
-      AND editing_type_name = ?
+      AND (editing_type_name = ? OR (editing_type_name IS NULL AND ? = ''))
+    )
   `;
 
   const quotationValues = [
     quantity,
+    additionalServicesStr,
     total_amount,
     employee,
     updatedAt,
+    id,
     txn_id,
     client_id,
     service_name,
     category_name,
-    editing_type_name,
+    safeEditingTypeName,
+    safeEditingTypeName,
   ];
 
   db.query(updateQuotationQuery, quotationValues, (err, result) => {
@@ -775,7 +787,7 @@ exports.updateComplimenatryDataById = async (req, res) => {
         AND client_id = ? 
         AND service_name = ? 
         AND category_name = ? 
-        AND editing_type_name = ?
+        AND (editing_type_name = ? OR (editing_type_name IS NULL AND ? = ''))
       LIMIT 1
     `;
 
@@ -784,7 +796,8 @@ exports.updateComplimenatryDataById = async (req, res) => {
       client_id,
       service_name,
       category_name,
-      editing_type_name,
+      safeEditingTypeName,
+      safeEditingTypeName,
     ];
 
     db.query(checkInvoiceQuery, checkValues, (checkErr, checkResult) => {
@@ -801,6 +814,7 @@ exports.updateComplimenatryDataById = async (req, res) => {
           UPDATE re_complimentary_invoice
           SET
             quantity = ?,
+            additional_services = ?,
             total_amount = ?,
             employee = ?,
             created_at = ?
@@ -808,11 +822,12 @@ exports.updateComplimenatryDataById = async (req, res) => {
             AND client_id = ? 
             AND service_name = ? 
             AND category_name = ? 
-            AND editing_type_name = ?
+            AND (editing_type_name = ? OR (editing_type_name IS NULL AND ? = ''))
         `;
 
         const invoiceValues = [
           quantity,
+          additionalServicesStr,
           total_amount,
           employee,
           updatedAt,
@@ -820,7 +835,8 @@ exports.updateComplimenatryDataById = async (req, res) => {
           client_id,
           service_name,
           category_name,
-          editing_type_name,
+          safeEditingTypeName,
+          safeEditingTypeName,
         ];
 
         db.query(updateInvoiceQuery, invoiceValues, (invErr) => {
@@ -837,7 +853,6 @@ exports.updateComplimenatryDataById = async (req, res) => {
           });
         });
       } else {
-        // --- re_invoice does NOT exist → Only Quotation updated ---
         return res.status(200).json({
           status: "Success",
           message: "Quotation updated successfully (No re_invoice found)",

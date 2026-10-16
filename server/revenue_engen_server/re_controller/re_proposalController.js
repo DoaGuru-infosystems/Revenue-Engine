@@ -1801,23 +1801,27 @@ exports.approvePayment = async (req, res) => {
           item.include_in_total === false;
 
         if (isComplimentary) {
+          const addStr = item.additional_services
+            ? (typeof item.additional_services === 'object' ? JSON.stringify(item.additional_services) : String(item.additional_services))
+            : null;
           const compQ = `
             INSERT INTO re_complimentary_invoice (
               client_id, txn_id, service_name, category_name, editing_type_id, editing_type_name, editing_type_amount,
-              quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              quantity, include_content_posting, include_thumbnail_creation, additional_services, total_amount, employee, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `;
           await runQuery(compQ, [
             client_id,
             invoice_txn_id,
             item.service_name || "re_complimentary",
             item.category_name || "",
-            null,
+            item.editing_type_id || null,
             item.editing_type_name || "",
             item.editing_type_amount || item.price || item.amount || item.unit_price || 0,
             item.quantity || 1,
             "0",
             "0",
+            addStr,
             item.total_price || 0,
             proposal.created_by || "",
             createdAt,

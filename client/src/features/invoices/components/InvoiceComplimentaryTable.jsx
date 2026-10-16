@@ -76,40 +76,97 @@ export default function InvoiceComplimentaryTable({
             const finalCategory = String(catName).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
             const finalService = String(serviceName).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() || "-";
 
+            let rowAddons = [];
+            if (svc.additional_services) {
+              try {
+                rowAddons =
+                  typeof svc.additional_services === "string"
+                    ? JSON.parse(svc.additional_services)
+                    : svc.additional_services;
+                if (!Array.isArray(rowAddons)) rowAddons = [];
+              } catch {
+                rowAddons = [];
+              }
+            }
+
             return (
-              <tr key={`comp-${idx}`} className="bg-white">
-                <td className="border px-2 py-1 font-medium">
-                  {finalService}
-                </td>
-                <td className="border px-2 py-1">
-                  {finalCategory}
-                </td>
-                <td className="border px-2 py-1 text-right">{qty}</td>
-                <td className="border px-2 py-1 text-right">
-                  ₹{formatAmount(price)}
-                </td>
-                <td className="border px-2 py-1 text-right">
-                  ₹{formatAmount(price * qty)}
-                </td>
-              </tr>
+              <React.Fragment key={`comp-${idx}`}>
+                <tr className="bg-white">
+                  <td className="border px-2 py-1 font-medium">
+                    {finalService}
+                  </td>
+                  <td className="border px-2 py-1">
+                    {finalCategory}
+                  </td>
+                  <td className="border px-2 py-1 text-right">{qty}</td>
+                  <td className="border px-2 py-1 text-right">
+                    ₹{formatAmount(price)}
+                  </td>
+                  <td className="border px-2 py-1 text-right">
+                    ₹{formatAmount(price * qty)}
+                  </td>
+                </tr>
+                {rowAddons.map((addon, aIdx) => {
+                  const addonAmt = Number(addon.amount || addon.unit_price || 0);
+                  const addonQty = Number(addon.quantity) || qty;
+                  const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                  return (
+                    <tr key={`comp-${idx}-addon-${aIdx}`} className="bg-emerald-50/40 text-gray-700">
+                      <td className="border px-2 py-1 font-medium pl-4">
+                        + {addonName}
+                      </td>
+                      <td className="border px-2 py-1 text-gray-500 italic">
+                        Additional Service ({finalService})
+                      </td>
+                      <td className="border px-2 py-1 text-right">{addonQty}</td>
+                      <td className="border px-2 py-1 text-right">
+                        ₹{formatAmount(addonAmt)}
+                      </td>
+                      <td className="border px-2 py-1 text-right">
+                        ₹{formatAmount(addonAmt * addonQty)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </React.Fragment>
             );
           })}
         </tbody>
         <tfoot>
           <tr className="bg-green-50">
             <td colSpan={4} className="border px-2 py-1 text-right font-semibold">
-              Total
+              Total Complimentary Value
             </td>
             <td className="border px-2 py-1 text-right font-semibold">
               ₹
               {formatAmount(
                 complimentaryData.reduce(
-                  (sum, svc) =>
-                    sum +
-                    Number(
-                      svc.editing_type_amount || svc.price || svc.amount || 0
-                    ) *
-                      Number(svc.quantity || 1),
+                  (sum, svc) => {
+                    const basePrice =
+                      Number(
+                        svc.editing_type_amount || svc.price || svc.amount || 0
+                      ) * Number(svc.quantity || 1);
+                    let rowAddons = [];
+                    if (svc.additional_services) {
+                      try {
+                        rowAddons =
+                          typeof svc.additional_services === "string"
+                            ? JSON.parse(svc.additional_services)
+                            : svc.additional_services;
+                        if (!Array.isArray(rowAddons)) rowAddons = [];
+                      } catch {
+                        rowAddons = [];
+                      }
+                    }
+                    const addonsSum = rowAddons.reduce(
+                      (s, a) =>
+                        s +
+                        (Number(a.amount || a.unit_price) || 0) *
+                          (Number(a.quantity) || Number(svc.quantity || 1)),
+                      0
+                    );
+                    return sum + basePrice + addonsSum;
+                  },
                   0
                 )
               )}

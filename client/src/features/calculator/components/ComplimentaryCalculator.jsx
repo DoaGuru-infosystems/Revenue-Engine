@@ -54,6 +54,7 @@ const dispatch = useDispatch();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedEditingType, setSelectedEditingType] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [selectedAdditionalServices, setSelectedAdditionalServices] = useState([]);
   const [getData, setGetData] = useState([]);
   const [allClientNote, setAllClientNote] = useState([]);
   const [optionalServices, setOptionalServices] = useState([]);
@@ -241,6 +242,20 @@ const dispatch = useDispatch();
     });
 
     setAddons(updatedAddons);
+
+    let initialSelectedAddons = [];
+    if (entry.additional_services) {
+      try {
+        initialSelectedAddons =
+          typeof entry.additional_services === "string"
+            ? JSON.parse(entry.additional_services)
+            : entry.additional_services;
+        if (!Array.isArray(initialSelectedAddons)) initialSelectedAddons = [];
+      } catch {
+        initialSelectedAddons = [];
+      }
+    }
+    setSelectedAdditionalServices(initialSelectedAddons);
   };
 
   const lastProcessedEditIdRef = useRef(null);
@@ -257,7 +272,7 @@ const dispatch = useDispatch();
   const getSelectedService = data.find(
     (s) => s.service_name === selectedService
   );
-  const getSelectedCategory = getSelectedService?.categories.find(
+  const getSelectedCategory = getSelectedService?.categories?.find(
     (c) => c.category_name === selectedCategory
   );
   const normalizeSelection = (value) => String(value || "").trim().toLowerCase();
@@ -269,6 +284,68 @@ const dispatch = useDispatch();
       normalizeSelection(selectedCategory)
     );
 
+  const availableAddons = useMemo(() => {
+    if (!getSelectedCategory) return [];
+    if (
+      Array.isArray(getSelectedCategory.additional_services) &&
+      getSelectedCategory.additional_services.length > 0
+    ) {
+      return getSelectedCategory.additional_services;
+    }
+    if (Array.isArray(getSelectedService?.additional_services)) {
+      return getSelectedService.additional_services.filter((a) => {
+        if (a.category_id && getSelectedCategory.category_id) {
+          return String(a.category_id) === String(getSelectedCategory.category_id);
+        }
+        if (a.category_name && getSelectedCategory.category_name) {
+          return (
+            a.category_name.trim().toLowerCase() ===
+            getSelectedCategory.category_name.trim().toLowerCase()
+          );
+        }
+        return false;
+      });
+    }
+    return [];
+  }, [getSelectedCategory, getSelectedService]);
+
+  const hasEditingTypesToSelect = useMemo(() => {
+    if (!getSelectedCategory) return false;
+    return (
+      getSelectedCategory.editing_types?.some(
+        (et) =>
+          et.editing_type_name &&
+          et.editing_type_name.trim() !== "" &&
+          et.editing_type_name !== "null" &&
+          et.editing_type_name !== "N/A"
+      ) || (getSelectedCategory.editing_types?.length > 1)
+    );
+  }, [getSelectedCategory]);
+
+  const handleServiceChange = (svcName) => {
+    setSelectedService(svcName);
+    setSelectedCategory("");
+    setSelectedEditingType(null);
+    setSelectedAdditionalServices([]);
+  };
+
+  const handleCategoryChange = (catName) => {
+    setSelectedCategory(catName);
+    setSelectedAdditionalServices([]);
+    const category = getSelectedService?.categories?.find(c => c.category_name === catName);
+    const hasRealEditingTypes = category?.editing_types?.some(
+      et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A"
+    ) || (category?.editing_types?.length > 1);
+
+    if (category && category.editing_types && category.editing_types.length === 1 && !hasRealEditingTypes) {
+      setSelectedEditingType(category.editing_types[0]);
+    } else if (category && (!category.editing_types || category.editing_types.length === 0)) {
+      setSelectedEditingType({ editing_type_id: null, editing_type_name: "", amount: 0 });
+    } else {
+      setSelectedEditingType(null);
+    }
+  };
+
   const handleSave = () => {
     if (!selectedService) {
       Swal.fire({ icon: "warning", title: "Validation", text: "Please select a service." });
@@ -278,6 +355,7 @@ const dispatch = useDispatch();
       Swal.fire({ icon: "warning", title: "Validation", text: "Please select a category." });
       return;
     }
+
     let effectiveEditingType = selectedEditingType;
     if (getSelectedCategory && (!effectiveEditingType?.editing_type_id || !effectiveEditingType?.amount)) {
       if (effectiveEditingType?.editing_type_name) {
@@ -286,15 +364,23 @@ const dispatch = useDispatch();
         );
         if (found) effectiveEditingType = found;
       }
-      if (!effectiveEditingType && getSelectedCategory.editing_types?.length === 1) {
+      if (!effectiveEditingType && getSelectedCategory.editing_types?.length === 1 && !hasEditingTypesToSelect) {
         effectiveEditingType = getSelectedCategory.editing_types[0];
+      }
+      if (!effectiveEditingType && (!getSelectedCategory.editing_types || getSelectedCategory.editing_types.length === 0)) {
+        effectiveEditingType = { editing_type_id: null, editing_type_name: "", amount: 0 };
       }
     }
 
-    if (!effectiveEditingType || !effectiveEditingType.editing_type_id) {
-      Swal.fire({ icon: "warning", title: "Editing Type Required", text: "Please select an editing type." });
+    if (hasEditingTypesToSelect && (!effectiveEditingType || !effectiveEditingType.editing_type_id)) {
+      Swal.fire({ icon: "warning", title: "Editing Type Required", text: "Is service category ke liye Editing Type chunna anivarya (mandatory) hai." });
       return;
     }
+
+    if (!effectiveEditingType) {
+      effectiveEditingType = { editing_type_id: null, editing_type_name: "", amount: 0 };
+    }
+
     if (!quantity || quantity <= 0) {
       Swal.fire({ icon: "warning", title: "Validation", text: "Please enter a valid quantity of at least 1." });
       return;
@@ -316,7 +402,7 @@ const dispatch = useDispatch();
           optionalTotal += totalForThisAddon;
 
           if (key === "content_posting") {
-            include_content_posting = amount; // send unit amount
+            include_content_posting = amount;
           } else if (key === "thumbnail_creation") {
             include_thumbnail_creation = amount;
           }
@@ -324,9 +410,33 @@ const dispatch = useDispatch();
       });
     }
 
+    const additionalServicesTotal = selectedAdditionalServices.reduce(
+      (sum, item) => sum + (Number(item.amount || item.unit_price) || 0) * quantity,
+      0
+    );
+
     const baseUnit = parseFloat(effectiveEditingType?.amount || 0);
     const baseAmount = baseUnit * quantity;
-    const finalAmount = baseAmount + optionalTotal;
+    const finalAmount = baseAmount + optionalTotal + additionalServicesTotal;
+
+    const formattedAdditionalServices = selectedAdditionalServices.map((addon) => {
+      const addonName = addon.name || addon.additional_service_name;
+      const unitAmt = Number(addon.amount || addon.unit_price) || 0;
+      return {
+        ...addon,
+        id: addon.id,
+        name: addonName,
+        additional_service_name: addonName,
+        amount: unitAmt,
+        unit_price: unitAmt,
+        quantity,
+        total: unitAmt * quantity,
+        total_amount: unitAmt * quantity,
+        category_id: addon.category_id || getSelectedCategory?.category_id,
+        category_name: addon.category_name || selectedCategory,
+        service_name: selectedService,
+      };
+    });
 
     const cleanBase = selectedService.replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
     const finalServiceName = cleanBase;
@@ -334,7 +444,6 @@ const dispatch = useDispatch();
     // ── IN-MEMORY MODE (embedded inside ProposalBuilder) ──────────────────────
     if (onServiceAdded) {
       if (!editId && embeddedData && embeddedData.length > 0) {
-        // ONLY compare against OTHER complimentary items (Addition #1 & #2)
         const isComp = (r) => {
           if (r.is_complimentary !== undefined && r.is_complimentary !== null) {
             return Boolean(r.is_complimentary);
@@ -351,7 +460,7 @@ const dispatch = useDispatch();
             return (
               rClean === cleanBase.toLowerCase() &&
               String(r.category_name || "").trim().toLowerCase() === String(selectedCategory || "").trim().toLowerCase() &&
-              String(r.editing_type_name || "").trim().toLowerCase() === String(selectedEditingType.editing_type_name || "").trim().toLowerCase()
+              String(r.editing_type_name || "").trim().toLowerCase() === String(effectiveEditingType.editing_type_name || "").trim().toLowerCase()
             );
           }
         );
@@ -371,18 +480,20 @@ const dispatch = useDispatch();
       const row = {
         id: editId || Date.now(),
         service_name: finalServiceName,
-        service: (selectedEditingType?.editing_type_name && selectedEditingType?.editing_type_name !== "null")
-          ? `${finalServiceName} - ${selectedCategory} (${selectedEditingType.editing_type_name})`
+        service: (effectiveEditingType?.editing_type_name && effectiveEditingType?.editing_type_name !== "null" && effectiveEditingType?.editing_type_name !== "N/A")
+          ? `${finalServiceName} - ${selectedCategory} (${effectiveEditingType.editing_type_name})`
           : `${finalServiceName} - ${selectedCategory}`,
         category_name: selectedCategory,
-        editing_type_name: selectedEditingType?.editing_type_name,
-        editing_type_amount: selectedEditingType?.amount || 0,
+        editing_type_name: effectiveEditingType?.editing_type_name || null,
+        editing_type_amount: effectiveEditingType?.amount || 0,
         quantity,
         unit_price: baseUnit,
         total_price: finalAmount,
         total_amount: finalAmount,
         include_content_posting,
         include_thumbnail_creation,
+        additional_services: formattedAdditionalServices,
+        additional_services_amount: additionalServicesTotal,
         include_in_total: false,
         is_complimentary: true,
         source: 'custom_complimentary',
@@ -406,17 +517,19 @@ const dispatch = useDispatch();
       client_id: effectiveClientId,
       service_name: finalServiceName,
       category_name: selectedCategory,
-      editing_type_id: selectedEditingType.editing_type_id,
-      editing_type_name: selectedEditingType.editing_type_name,
-      editing_type_amount: selectedEditingType.amount,
+      editing_type_id: effectiveEditingType.editing_type_id || null,
+      editing_type_name: effectiveEditingType.editing_type_name || "",
+      editing_type_amount: effectiveEditingType.amount || 0,
       quantity,
       include_content_posting,
       include_thumbnail_creation,
+      additional_services: formattedAdditionalServices,
       total_amount: finalAmount,
       total_price: finalAmount,
       unit_price: baseUnit,
       include_in_total: false,
       is_complimentary: true,
+      source: 'custom_complimentary',
       employee: userName,
     };
 
@@ -493,6 +606,7 @@ const dispatch = useDispatch();
     setSelectedCategory("");
     setSelectedEditingType(null);
     setQuantity(1);
+    setSelectedAdditionalServices([]);
     const initialAddons = {};
     optionalServices.forEach((item) => {
       const key = item.editing_type_name.toLowerCase().replace(/\s+/g, "_");
@@ -974,14 +1088,25 @@ const dispatch = useDispatch();
   };
 
   const getOrderItemAmount = (order) => {
-    const rawTotal = Number(order.total_amount || order.total_price || 0);
-    if (rawTotal > 0) return rawTotal;
     const qty = Number(order.quantity || 1);
     const unit = Number(order.editing_type_amount || order.unit_price || order.price || 0);
     const thumb = Number(order.include_thumbnail_creation || 0);
     const post = Number(order.include_content_posting || 0);
     const yt = Number(order.include_youtube_video_posting || 0);
-    return (unit * qty) + (thumb * qty) + (post * qty) + (yt * qty);
+    let addonsTotal = 0;
+    if (order.additional_services) {
+      try {
+        const parsed = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
+        if (Array.isArray(parsed)) {
+          addonsTotal = parsed.reduce((sum, a) => sum + (Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty), 0);
+        }
+      } catch {}
+    }
+    const rawTotal = Number(order.total_amount || order.total_price || 0);
+    if (rawTotal > 0 && rawTotal >= (unit * qty + thumb * qty + post * qty + yt * qty + addonsTotal)) {
+      return rawTotal;
+    }
+    return (unit * qty) + (thumb * qty) + (post * qty) + (yt * qty) + addonsTotal;
   };
 
   const grandTotal = getData.reduce(
@@ -1023,8 +1148,7 @@ const dispatch = useDispatch();
   };
 
   const liveServiceValue = useMemo(() => {
-    if (!selectedEditingType) return 0;
-    const baseUnit = parseFloat(selectedEditingType.amount || 0);
+    const baseUnit = parseFloat(selectedEditingType?.amount || 0);
     const qty = parseInt(quantity) || 1;
     let optionalTotal = 0;
     if (shouldShowOptionalAddons && optionalServices?.length > 0) {
@@ -1035,8 +1159,12 @@ const dispatch = useDispatch();
         }
       });
     }
-    return baseUnit * qty + optionalTotal;
-  }, [selectedEditingType, quantity, shouldShowOptionalAddons, optionalServices, addons]);
+    const additionalServicesVal = selectedAdditionalServices.reduce(
+      (sum, item) => sum + (Number(item.amount || item.unit_price) || 0) * qty,
+      0
+    );
+    return baseUnit * qty + optionalTotal + additionalServicesVal;
+  }, [selectedEditingType, quantity, shouldShowOptionalAddons, optionalServices, addons, selectedAdditionalServices]);
 
   const uniquePredefinedNotes = predefinedNotes.filter(
     (p) =>
@@ -1078,11 +1206,7 @@ const dispatch = useDispatch();
               <select
                 className={selectCls}
                 value={selectedService}
-                onChange={(e) => {
-                  setSelectedService(e.target.value);
-                  setSelectedCategory("");
-                  setSelectedEditingType(null);
-                }}
+                onChange={(e) => handleServiceChange(e.target.value)}
                 disabled={!!editId}
               >
                 <option value="">-- Choose Service --</option>
@@ -1099,14 +1223,11 @@ const dispatch = useDispatch();
               <select
                 className={selectCls}
                 value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setSelectedEditingType(null);
-                }}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 disabled={!getSelectedService}
               >
                 <option value="">-- Choose Category --</option>
-                {getSelectedService?.categories.map((category) => (
+                {getSelectedService?.categories?.map((category) => (
                   <option
                     key={category.category_id}
                     value={category.category_name}
@@ -1120,52 +1241,54 @@ const dispatch = useDispatch();
 
           {/* Row 2: Editing Type + Quantity */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>
-                Editing Type <span className="text-red-500 font-bold">*</span>
-              </label>
-              <select
-                className={selectCls}
-                value={(() => {
-                  if (selectedEditingType?.editing_type_id)
-                    return selectedEditingType.editing_type_id;
-                  if (
-                    selectedEditingType?.editing_type_name &&
-                    getSelectedCategory?.editing_types
-                  ) {
-                    const found = getSelectedCategory.editing_types.find(
-                      (et) =>
-                        et.editing_type_name &&
-                        et.editing_type_name.trim().toLowerCase() ===
-                          selectedEditingType.editing_type_name
-                            .trim()
-                            .toLowerCase()
+            {hasEditingTypesToSelect && (
+              <div>
+                <label className={labelCls}>
+                  Editing Type <span className="text-red-500 font-bold">*</span>
+                </label>
+                <select
+                  className={selectCls}
+                  value={(() => {
+                    if (selectedEditingType?.editing_type_id)
+                      return selectedEditingType.editing_type_id;
+                    if (
+                      selectedEditingType?.editing_type_name &&
+                      getSelectedCategory?.editing_types
+                    ) {
+                      const found = getSelectedCategory.editing_types.find(
+                        (et) =>
+                          et.editing_type_name &&
+                          et.editing_type_name.trim().toLowerCase() ===
+                            selectedEditingType.editing_type_name
+                              .trim()
+                              .toLowerCase()
+                      );
+                      if (found) return found.editing_type_id;
+                    }
+                    return "";
+                  })()}
+                  onChange={(e) => {
+                    const edit = getSelectedCategory?.editing_types.find(
+                      (et) => et.editing_type_id === parseInt(e.target.value)
                     );
-                    if (found) return found.editing_type_id;
-                  }
-                  return "";
-                })()}
-                onChange={(e) => {
-                  const edit = getSelectedCategory?.editing_types.find(
-                    (et) => et.editing_type_id === parseInt(e.target.value)
-                  );
-                  setSelectedEditingType(edit || null);
-                }}
-                disabled={!getSelectedCategory}
-              >
-                <option value="">-- Choose Editing Type (Required) --</option>
-                {getSelectedCategory?.editing_types.map((edit) => (
-                  <option
-                    key={edit.editing_type_id}
-                    value={edit.editing_type_id}
-                  >
-                    {edit.editing_type_name || "Standard"} — ₹{edit.amount}
-                  </option>
-                ))}
-              </select>
-            </div>
+                    setSelectedEditingType(edit || null);
+                  }}
+                  disabled={!getSelectedCategory}
+                >
+                  <option value="">-- Choose Editing Type (Required) --</option>
+                  {getSelectedCategory?.editing_types?.map((edit) => (
+                    <option
+                      key={edit.editing_type_id}
+                      value={edit.editing_type_id}
+                    >
+                      {edit.editing_type_name || "Standard"} — ₹{edit.amount}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            <div>
+            <div className={hasEditingTypesToSelect ? "" : "sm:col-span-2"}>
               <label className={labelCls}>Quantity</label>
               <input
                 type="number"
@@ -1178,6 +1301,89 @@ const dispatch = useDispatch();
               />
             </div>
           </div>
+
+          {/* Additional Services (Checkboxes) */}
+          {selectedCategory && availableAddons.length > 0 && (
+            <div className="bg-gray-700/50 rounded-xl p-3 border border-gray-600 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className={labelCls}>Additional Services</label>
+                <span className="text-[11px] text-gray-400">
+                  (Qty: {quantity})
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                {availableAddons.map((addon) => {
+                  const addonName = addon.name || addon.additional_service_name;
+                  const isChecked = selectedAdditionalServices.some(
+                    (item) =>
+                      String(item.id) === String(addon.id) ||
+                      (item.name || item.additional_service_name) === addonName
+                  );
+                  return (
+                    <label
+                      key={addon.id}
+                      className={`flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition select-none ${
+                        isChecked
+                          ? "bg-emerald-500/15 border-emerald-500/50 text-white"
+                          : "bg-gray-800/60 border-gray-600 text-gray-300 hover:bg-gray-700/70"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedAdditionalServices((prev) => [
+                                ...prev,
+                                {
+                                  id: addon.id,
+                                  name: addonName,
+                                  additional_service_name: addonName,
+                                  amount: Number(addon.amount) || 0,
+                                  category_id:
+                                    addon.category_id ||
+                                    getSelectedCategory?.category_id,
+                                  category_name:
+                                    addon.category_name ||
+                                    getSelectedCategory?.category_name,
+                                  service_name: selectedService,
+                                },
+                              ]);
+                            } else {
+                              setSelectedAdditionalServices((prev) =>
+                                prev.filter(
+                                  (item) =>
+                                    String(item.id) !== String(addon.id) &&
+                                    (item.name || item.additional_service_name) !==
+                                      addonName
+                                )
+                              );
+                            }
+                          }}
+                          className="w-4 h-4 rounded text-emerald-600 bg-gray-700 border-gray-500 focus:ring-emerald-500 focus:ring-offset-gray-800"
+                        />
+                        <span className="text-sm font-medium truncate">
+                          {addonName}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          + ₹{Number(addon.amount).toLocaleString()} (Free)
+                        </span>
+                        {quantity > 1 && (
+                          <span className="text-[10px] text-gray-400 mt-0.5">
+                            ₹{(Number(addon.amount) * quantity).toLocaleString()}{" "}
+                            value
+                          </span>
+                        )}
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Optional Add-ons */}
           {shouldShowOptionalAddons && optionalServices?.length > 0 && (
@@ -1246,7 +1452,7 @@ const dispatch = useDispatch();
           )}
 
           {/* Live Service Value Preview */}
-          {selectedEditingType && (
+          {(selectedEditingType || selectedAdditionalServices.length > 0 || liveServiceValue > 0) && (
             <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-sm">
               <span className="text-gray-300 font-medium flex items-center gap-2">
                 <Gift className="w-4 h-4 text-emerald-400" />
@@ -1327,8 +1533,32 @@ const dispatch = useDispatch();
                       </span>
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      🎬 {order.editing_type_name} × {order.quantity}
+                      {order.editing_type_name && order.editing_type_name !== "null" && order.editing_type_name !== "N/A"
+                        ? `🎬 ${order.editing_type_name} × ${order.quantity}`
+                        : `📦 Qty: ${order.quantity}`}
                     </p>
+                    {/* Additional services badges */}
+                    {(() => {
+                      let parsedAddons = [];
+                      if (order.additional_services) {
+                        try {
+                          parsedAddons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
+                          if (!Array.isArray(parsedAddons)) parsedAddons = [];
+                        } catch {
+                          parsedAddons = [];
+                        }
+                      }
+                      if (parsedAddons.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {parsedAddons.map((addon, aIdx) => (
+                            <span key={aIdx} className="text-xs bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full">
+                              ✨ {addon.name || addon.additional_service_name} (+₹{addon.amount || addon.unit_price})
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                     {(Number(order.include_content_posting) > 0 ||
                       Number(order.include_thumbnail_creation) > 0) && (
                       <div className="flex flex-wrap gap-1 mt-1.5">

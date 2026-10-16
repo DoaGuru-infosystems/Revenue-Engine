@@ -93,14 +93,43 @@ export default function QuotationComplimentaryTable({
                 .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
                 .trim() || "-";
 
+            let rowAddons = [];
+            if (edit.additional_services) {
+              try {
+                rowAddons =
+                  typeof edit.additional_services === "string"
+                    ? JSON.parse(edit.additional_services)
+                    : edit.additional_services;
+                if (!Array.isArray(rowAddons)) rowAddons = [];
+              } catch {
+                rowAddons = [];
+              }
+            }
+
             return (
-              <tr key={`compl-${eidx}`} className="bg-gray-50">
-                <td className="border px-2 py-1 font-medium">{finalService}</td>
-                <td className="border px-2 py-1">{finalCategory}</td>
-                <td className="border px-2 py-1 text-right">{qty}</td>
-                <td className="border px-2 py-1 text-right">₹{base}</td>
-                <td className="border px-2 py-1 text-right">₹{totalBase}</td>
-              </tr>
+              <React.Fragment key={`compl-${eidx}`}>
+                <tr className="bg-gray-50">
+                  <td className="border px-2 py-1 font-medium">{finalService}</td>
+                  <td className="border px-2 py-1">{finalCategory}</td>
+                  <td className="border px-2 py-1 text-right">{qty}</td>
+                  <td className="border px-2 py-1 text-right">₹{base.toLocaleString("en-IN")}</td>
+                  <td className="border px-2 py-1 text-right">₹{totalBase.toLocaleString("en-IN")}</td>
+                </tr>
+                {rowAddons.map((addon, aIdx) => {
+                  const addonAmt = Number(addon.amount || addon.unit_price || 0);
+                  const addonQty = Number(addon.quantity) || qty;
+                  const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                  return (
+                    <tr key={`compl-${eidx}-addon-${aIdx}`} className="bg-orange-50/40 text-gray-700">
+                      <td className="border px-2 py-1 font-medium pl-4">+ {addonName}</td>
+                      <td className="border px-2 py-1 text-gray-500 italic">Additional Service ({finalService})</td>
+                      <td className="border px-2 py-1 text-right">{addonQty}</td>
+                      <td className="border px-2 py-1 text-right">₹{addonAmt.toLocaleString("en-IN")}</td>
+                      <td className="border px-2 py-1 text-right">₹{(addonAmt * addonQty).toLocaleString("en-IN")}</td>
+                    </tr>
+                  );
+                })}
+              </React.Fragment>
             );
           })}
 
@@ -216,12 +245,31 @@ export default function QuotationComplimentaryTable({
               const base = Number(
                 item.editing_type_amount || item.price || item.amount || 0
               );
+              let rowAddons = [];
+              if (item.additional_services) {
+                try {
+                  rowAddons =
+                    typeof item.additional_services === "string"
+                      ? JSON.parse(item.additional_services)
+                      : item.additional_services;
+                  if (!Array.isArray(rowAddons)) rowAddons = [];
+                } catch {
+                  rowAddons = [];
+                }
+              }
+              const addonsSum = rowAddons.reduce(
+                (s, a) =>
+                  s +
+                  (Number(a.amount || a.unit_price) || 0) *
+                    (Number(a.quantity) || qty),
+                0
+              );
               const thumb =
                 (Number(item.include_thumbnail_creation) || 0) * qty;
               const post = (Number(item.include_content_posting) || 0) * qty;
               const yt =
                 (Number(item.include_youtube_video_posting) || 0) * qty;
-              return sum + base * qty + thumb + post + yt;
+              return sum + base * qty + thumb + post + yt + addonsSum;
             }, 0);
             return (
               <tr className="font-semibold">
