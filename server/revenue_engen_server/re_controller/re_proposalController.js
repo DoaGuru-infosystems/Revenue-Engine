@@ -833,11 +833,11 @@ exports.createProforma = async (req, res) => {
           }
         } catch(e) {}
       }
-      const dmAfterDisc = Math.max(0, dmTotal - discAmt) + prevBal;
+      const dmAfterDisc = Math.max(0, dmTotal - discAmt);
       finalBaseAmount = dmAfterDisc + adsTotal;
       const rate = Number(gst_rate) || 18;
       finalGstAmount = is_gst ? Number(((dmAfterDisc * rate) / 100).toFixed(2)) : 0;
-      finalTotalAmount = finalBaseAmount + finalGstAmount;
+      finalTotalAmount = finalBaseAmount + finalGstAmount + prevBal;
     }
 
     // Generate a unique txn_id for this proforma so each proforma has its own distinct identity
@@ -931,12 +931,44 @@ exports.createProforma = async (req, res) => {
   }
 };
 
+const healOrphanedCarriedForwardProformas = async (clientId = null) => {
+  try {
+    let whereClause = "WHERE p.carried_into_proforma_id IS NOT NULL AND target.id IS NULL";
+    let params = [];
+    if (clientId) {
+      whereClause += " AND p.client_id = ?";
+      params.push(clientId);
+    }
+    const sql = `
+      UPDATE re_proposal_proforma p
+      LEFT JOIN re_proposal_proforma target ON p.carried_into_proforma_id = target.id
+      SET p.status = CASE 
+        WHEN (SELECT COALESCE(SUM(amount), 0) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved') >= (p.total_amount - 0.05) AND p.total_amount > 0 THEN 'paid'
+        WHEN (SELECT COALESCE(SUM(amount), 0) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved') > 0 THEN 'partially_paid'
+        ELSE 'proforma_generated'
+      END,
+      p.payment_status = CASE 
+        WHEN (SELECT COALESCE(SUM(amount), 0) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved') >= (p.total_amount - 0.05) AND p.total_amount > 0 THEN 'fully-paid'
+        WHEN (SELECT COALESCE(SUM(amount), 0) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved') > 0 THEN 'partial'
+        ELSE 'pending'
+      END,
+      p.is_carried_forward = 0,
+      p.carried_into_proforma_id = NULL
+      ${whereClause}
+    `;
+    await runQuery(sql, params);
+  } catch (err) {
+    console.error("healOrphanedCarriedForwardProformas error:", err);
+  }
+};
+
 exports.getClientPreviousBalance = async (req, res) => {
   try {
     const { clientId } = req.params;
     if (!clientId) {
       return res.status(400).json({ status: "Failure", message: "clientId is required" });
     }
+    await healOrphanedCarriedForwardProformas(clientId);
     const q = `
       SELECT p.id, p.proforma_number, p.client_id, p.total_amount, p.base_amount, p.is_gst, p.status, p.created_at,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid
@@ -984,6 +1016,7 @@ exports.getClientPreviousBalance = async (req, res) => {
 exports.getProformasByClient = async (req, res) => {
   try {
     const { clientId } = req.params;
+    await healOrphanedCarriedForwardProformas(clientId);
     const q = `
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
@@ -1009,6 +1042,7 @@ exports.getProformasByClient = async (req, res) => {
 
 exports.getAllProformas = async (req, res) => {
   try {
+    await healOrphanedCarriedForwardProformas();
     const q = `
       SELECT p.*, c.client_name, c.client_organization,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
@@ -1052,6 +1086,7 @@ exports.getFinalInvoices = async (req, res) => {
 exports.getProformasByProposal = async (req, res) => {
   try {
     const { proposalId } = req.params;
+    await healOrphanedCarriedForwardProformas();
     const q = `
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
@@ -1084,6 +1119,49 @@ exports.deleteProforma = async (req, res) => {
       `DELETE FROM re_proposal_payment_records WHERE proforma_id = ?`,
       [id],
     );
+
+    // Also delete any milestone invoices generated for this proforma
+    try {
+      await runQuery(`DELETE FROM re_invoice WHERE proforma_id = ?`, [id]);
+    } catch (invErr) {
+      console.warn("Could not delete associated re_invoice records:", invErr.message);
+    }
+
+    // Unfreeze earlier proformas that were carried forward into this deleted proforma
+    try {
+      const carriedEarlierPfs = await runQuery(
+        `SELECT id, total_amount FROM re_proposal_proforma WHERE carried_into_proforma_id = ?`,
+        [id],
+      );
+
+      for (const oldPf of carriedEarlierPfs) {
+        const pfPayments = await runQuery(
+          `SELECT SUM(amount) as paid FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+          [oldPf.id],
+        );
+        const paid = Number(pfPayments[0]?.paid || 0);
+        const tot = Number(oldPf.total_amount || 0);
+
+        let restoredStatus = "proforma_generated";
+        let restoredPaymentStatus = "pending";
+        if (paid >= tot - 0.05 && tot > 0) {
+          restoredStatus = "paid";
+          restoredPaymentStatus = "fully-paid";
+        } else if (paid > 0) {
+          restoredStatus = "partially_paid";
+          restoredPaymentStatus = "partial";
+        }
+
+        await runQuery(
+          `UPDATE re_proposal_proforma 
+           SET status = ?, payment_status = ?, is_carried_forward = 0, carried_into_proforma_id = NULL 
+           WHERE id = ?`,
+          [restoredStatus, restoredPaymentStatus, oldPf.id],
+        );
+      }
+    } catch (unfreezeErr) {
+      console.error("Error unfreezing earlier proforma on deletion:", unfreezeErr);
+    }
 
     const proforma = await runQuery(
       "SELECT proposal_id FROM re_proposal_proforma WHERE id = ?",
@@ -1148,6 +1226,8 @@ exports.deleteProforma = async (req, res) => {
     } else {
       await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
     }
+
+    await healOrphanedCarriedForwardProformas();
 
     res.status(200).json({ status: "Success", message: "Proforma deleted" });
   } catch (error) {

@@ -207,13 +207,13 @@ export const useInvoiceCalculations = ({
     const gstAmount = isGST
       ? isPartialPayment && currentBillGrossReceived > 0
         ? activeTaxableSubtotal * 0.18
-        : totalWithPreviousBalance * 0.18
+        : totalAfterAdjustment * 0.18
       : 0;
 
-    const totalgstamount = gstAmount + totalWithPreviousBalance;
+    const totalgstamount = totalAfterAdjustment + gstAmount + previousBalanceAmount;
     const currentTotalAmount = totalgstamount + Number(clientData?.previous_amt || 0);
-    const invoiceSubtotal = Math.max(totalWithPreviousBalance, 0);
-    const invoiceTotal = invoiceSubtotal + gstAmount;
+    const invoiceSubtotal = Math.max(totalAfterAdjustment, 0);
+    const invoiceTotal = invoiceSubtotal + gstAmount + previousBalanceAmount;
 
     const activeInvoiceTotal =
       isPartialPayment && currentBillGrossReceived > 0

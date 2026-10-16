@@ -142,6 +142,9 @@ export default function InvoicePage({
     visibleMetaBudget,
     hasReceivedAmount,
     receivedAmountForSummary,
+    totalProformaReceivedAmount,
+    summaryCurrentBalance,
+    invoiceTotal,
     hasPayment,
     tdsAmountToShow,
     amountInWords,
@@ -298,6 +301,7 @@ export default function InvoicePage({
                       adjustmentAmount={adjustmentAmount}
                       totalAfterAdjustment={totalAfterAdjustment}
                       invoiceSubtotal={invoiceSubtotal}
+                      previousBalanceAmount={previousBalanceAmount}
                       clientData={clientData}
                       publicMode={publicMode}
                       isProforma={isProforma}
@@ -327,6 +331,9 @@ export default function InvoicePage({
                         gstAmount={gstAmount}
                         invoiceSubtotal={invoiceSubtotal}
                         activeInvoiceTotal={activeInvoiceTotal}
+                        invoiceTotal={invoiceTotal}
+                        totalProformaReceivedAmount={totalProformaReceivedAmount}
+                        summaryCurrentBalance={summaryCurrentBalance}
                         hasReceivedAmount={hasReceivedAmount}
                         receivedAmountForSummary={receivedAmountForSummary}
                         clientData={clientData}

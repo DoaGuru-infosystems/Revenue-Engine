@@ -251,7 +251,7 @@ const GenerateProformaModal = ({
 
         const isGST = formData.bill_type === "GST";
         const prevBalToApply = previousBalance.include ? Number(previousBalance.customAmount || 0) : 0;
-        const dmTotalAfterDiscount = Math.max(0, dmTotal - discountAmt) + prevBalToApply;
+        const dmTotalAfterDiscount = Math.max(0, dmTotal - discountAmt);
         const dmGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
 
         const adsTotalBudget = adsServices.reduce((sum, svc) => sum + Number(svc.budget || svc.amount || 0), 0);
@@ -259,7 +259,7 @@ const GenerateProformaModal = ({
 
         const finalBaseAmount = dmTotalAfterDiscount + adsTotalBudget;
         const finalGstAmount = dmGstAmount + adsGstAmount;
-        const finalTotalAmount = finalBaseAmount + finalGstAmount;
+        const finalTotalAmount = finalBaseAmount + finalGstAmount + prevBalToApply;
 
         const payload = {
           proposal_id: selectedProposalForProforma.id,
