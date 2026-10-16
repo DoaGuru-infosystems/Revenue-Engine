@@ -26,11 +26,11 @@ export default function InvoiceTermsConditions({
   if (!shouldShow) return null;
 
   return (
-    <div className="terms-conditions-section w-full text-left pt-2 border-t border-gray-300">
-      <h2 className="font-bold mb-1 text-gray-800">Terms &amp; Conditions</h2>
-      <ul className="list-decimal ml-5 space-y-0.5 text-gray-700">
+    <div className="terms-conditions-section w-full text-left pt-2 print:pt-1 border-t border-gray-300">
+      <h2 className="font-bold mb-1 print:mb-0.5 text-gray-800 print:text-xs">Terms &amp; Conditions</h2>
+      <ul className="list-decimal ml-5 space-y-0.5 print:space-y-0 text-gray-700 print:text-[10.5px] print:leading-tight">
         {visibleAdBudget > 0 && (
-          <li className="leading-relaxed mt-1 text-gray-700">
+          <li className="leading-relaxed print:leading-tight mt-1 print:mt-0.5 text-gray-700">
             The advertising budget shown in this invoice represents third-party
             media spend incurred on behalf of the client. This amount is a
             reimbursement only and does not form part of our service charges or
@@ -38,7 +38,7 @@ export default function InvoiceTermsConditions({
           </li>
         )}
         {tdsAmountToShow > 0 && (
-          <li className="leading-relaxed mt-1 text-gray-700">
+          <li className="leading-relaxed print:leading-tight mt-1 print:mt-0.5 text-gray-700">
             TDS, wherever applicable, has been deducted in accordance with the
             applicable provisions of the Income-tax Act, 1961, and the
             corresponding Form 16A shall be provided after the prescribed
@@ -46,14 +46,14 @@ export default function InvoiceTermsConditions({
           </li>
         )}
         {pastReceivedAmount > 0 && previousInvoiceNo && (
-          <li className="leading-relaxed mt-1 text-gray-700">
+          <li className="leading-relaxed print:leading-tight mt-1 print:mt-0.5 text-gray-700">
             The taxable value already billed has been excluded from this
             invoice to avoid duplicate billing. This invoice covers only the
             remaining taxable value of the contract.
           </li>
         )}
         {projectValueDeferred > 0 && (
-          <li className="leading-relaxed mt-1 text-gray-700">
+          <li className="leading-relaxed print:leading-tight mt-1 print:mt-0.5 text-gray-700">
             A portion of the contract value has been excluded from this invoice
             and will be billed separately in accordance with the agreed project
             scope and payment terms. GST shall be applicable at the time of such

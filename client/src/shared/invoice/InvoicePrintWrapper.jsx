@@ -149,9 +149,11 @@ export const InvoicePrintWrapper = styled.div`
     .terms-bank-section {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
-      margin-top: 3px !important;
-      padding-top: 3px !important;
-      padding-bottom: 3px !important;
+      page-break-after: auto !important;
+      break-after: auto !important;
+      margin-top: 2px !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
     }
 
     /* Bank Details div */
@@ -161,6 +163,7 @@ export const InvoicePrintWrapper = styled.div`
       page-break-after: auto !important;
       break-after: auto !important;
       margin-bottom: 0 !important;
+      font-size: 10.5px !important;
     }
 
     .bank-details-section ul {
@@ -168,14 +171,41 @@ export const InvoicePrintWrapper = styled.div`
       margin-bottom: 1px !important;
     }
 
-    .bank-details-section ul li {
-      font-size: 11px !important;
+    .bank-details-section ul li,
+    .bank-details-section p,
+    .bank-details-section span {
+      font-size: 10.5px !important;
+      line-height: 1.25 !important;
+    }
+
+    .bank-details-section .flex.justify-between {
+      padding-top: 1.5px !important;
+      padding-bottom: 1.5px !important;
+      padding-left: 6px !important;
+      padding-right: 6px !important;
+      font-size: 10.5px !important;
       line-height: 1.25 !important;
     }
 
     .bank-details-section img {
-      height: 30px !important;
+      height: 22px !important;
+      max-height: 22px !important;
       width: auto !important;
+    }
+
+    /* Client info compact */
+    .invoice-client-card {
+      margin-bottom: 2px !important;
+    }
+
+    .invoice-client-card p {
+      font-size: 10.5px !important;
+      line-height: 1.25 !important;
+      margin: 0.5px 0 !important;
+    }
+
+    .invoice-client-card .border {
+      padding: 3px 6px !important;
     }
 
     /* Amount in words orphan fix for browser print */
@@ -184,15 +214,36 @@ export const InvoicePrintWrapper = styled.div`
       break-before: avoid !important;
       page-break-inside: avoid !important;
       break-inside: avoid !important;
+      margin-top: 1px !important;
+      margin-bottom: 2px !important;
     }
 
     /* Terms & Conditions / Notes: natural flow to next page if needed */
     .terms-conditions-section,
-    .notes-section {
-      page-break-inside: auto;
-      break-inside: auto;
-      margin-top: 4px !important;
-      padding-top: 4px !important;
+    .notes-section,
+    .payment-history-section {
+      page-break-before: auto !important;
+      break-before: auto !important;
+      page-break-inside: auto !important;
+      break-inside: auto !important;
+      margin-top: 3px !important;
+      padding-top: 3px !important;
+    }
+
+    .terms-conditions-section ul,
+    .notes-section ul {
+      margin-top: 1px !important;
+      margin-bottom: 1px !important;
+    }
+
+    .terms-conditions-section ul li,
+    .notes-section ul li {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      font-size: 10.5px !important;
+      line-height: 1.25 !important;
+      margin-top: 1px !important;
+      margin-bottom: 1px !important;
     }
   }
 `;

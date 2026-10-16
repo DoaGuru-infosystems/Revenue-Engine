@@ -35,8 +35,8 @@ export default function InvoiceDiscountSection({
   return (
     <>
       {hasAnyServices && (
-        <section className="mb-2 text-sm mt-2">
-          <table className="w-full border text-xs">
+        <section className="mb-2 print:mb-1 text-sm mt-2 print:mt-0.5">
+          <table className="w-full border text-xs print:text-[11px]">
             <tbody>
               {selecteddiscount && discountAmount > 0 && (
                 <tr
@@ -46,10 +46,10 @@ export default function InvoiceDiscountSection({
                     fontWeight: 700,
                   }}
                 >
-                  <td className="border px-2 py-1 text-right" colSpan={4}>
+                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
                     Discount
                   </td>
-                  <td className="border px-2 py-1 text-right w-[15%]">
+                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
                     -₹{formatAmountNoDecimals(discountAmount)}
                   </td>
                 </tr>
@@ -62,10 +62,10 @@ export default function InvoiceDiscountSection({
                     fontWeight: 700,
                   }}
                 >
-                  <td className="border px-2 py-1 text-right" colSpan={4}>
+                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
                     Adjustment
                   </td>
-                  <td className="border px-2 py-1 text-right w-[15%]">
+                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
                     -₹{formatAmountNoDecimals(adjustmentAmount)}
                   </td>
                 </tr>
@@ -73,10 +73,10 @@ export default function InvoiceDiscountSection({
               {prevBal > 0 ? (
                 <>
                   <tr className="bg-orange-50 font-semibold">
-                    <td className="border px-2 py-1 text-right" colSpan={4}>
+                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
                       Current Services Subtotal
                     </td>
-                    <td className="border px-2 py-1 text-right w-[15%]">
+                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
                       ₹{formatAmountNoDecimals(baseServicesSubtotal)}
                     </td>
                   </tr>
@@ -87,28 +87,28 @@ export default function InvoiceDiscountSection({
                       fontWeight: 700,
                     }}
                   >
-                    <td className="border px-2 py-1 text-right" colSpan={4}>
+                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
                       Add: Previous Balance (Pichla Bakaya)
                     </td>
-                    <td className="border px-2 py-1 text-right w-[15%]">
+                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
                       +₹{formatAmountNoDecimals(prevBal)}
                     </td>
                   </tr>
                   <tr className="bg-green-50 font-bold" style={{ color: "#166534" }}>
-                    <td className="border px-2 py-1 text-right" colSpan={4}>
+                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
                       Total Project Base Value
                     </td>
-                    <td className="border px-2 py-1 text-right w-[15%]">
+                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
                       ₹{formatAmountNoDecimals(baseServicesSubtotal + prevBal)}
                     </td>
                   </tr>
                 </>
               ) : (
                 <tr className="bg-orange-50 font-semibold">
-                  <td className="border px-2 py-1 text-right" colSpan={4}>
+                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
                     Subtotal
                   </td>
-                  <td className="border px-2 py-1 text-right w-[15%]">
+                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
                     ₹{formatAmountNoDecimals(baseServicesSubtotal)}
                   </td>
                 </tr>

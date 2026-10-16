@@ -265,7 +265,7 @@ export default function InvoicePage({
             <tr>
               <td className="p-0 m-0 align-top">
                 <div className="flex flex-col justify-between h-full px-6 py-1 print:px-4 print:block print:h-auto">
-                  <div className="w-full">
+                  <div className="w-full print:block">
                     {/* Layer 3 — Client Info Card */}
                     <InvoiceCustomerInfoCard
                       clientData={clientData}

@@ -22,8 +22,8 @@ export default function InvoiceCustomerInfoCard({
 
   return (
     <>
-      <div className="mb-1 text-center">
-        <p className="text-sm font-bold tracking-wide uppercase">
+      <div className="mb-1 print:mb-0.5 text-center">
+        <p className="text-sm print:text-xs font-bold tracking-wide uppercase">
           {isProforma
             ? isBalanceProforma
               ? "BALANCE PROFORMA INVOICE"
@@ -37,8 +37,8 @@ export default function InvoiceCustomerInfoCard({
       </div>
 
       {/* Client Details */}
-      <div className="flex justify-between text-xs mb-1">
-        <div className="space-y-1">
+      <div className="flex justify-between text-xs mb-1 print:mb-0.5 print:text-[11px] print:leading-tight">
+        <div className="space-y-1 print:space-y-0.5">
           <p>
             <strong>Payment Mode:</strong> {clientData?.payment_mode}
           </p>
@@ -50,15 +50,15 @@ export default function InvoiceCustomerInfoCard({
           </p>
         </div>
 
-        <div className="space-y-1 text-xs">
+        <div className="space-y-1 print:space-y-0.5 text-xs print:text-[11px]">
           <p>
             {isProforma ? (
               <>
                 <strong>Proforma Invoice No: </strong> {clientData?.bill_number}
                 {isBalanceProforma && clientData?.source_proforma_number && (
-                  <div className="text-gray-500 font-semibold text-[11px] mt-0.5">
+                  <span className="text-gray-500 font-semibold text-[11px] print:text-[10px] ml-1">
                     Ref: {clientData.source_proforma_number}
-                  </div>
+                  </span>
                 )}
               </>
             ) : isQuotation ? (
@@ -69,18 +69,18 @@ export default function InvoiceCustomerInfoCard({
               <>
                 <strong>GST Invoice No: </strong> {clientData?.bill_number}
                 {refProforma && (
-                  <div className="text-gray-600 font-semibold text-[11px] mt-0.5">
-                    Ref Proforma No: {refProforma}
-                  </div>
+                  <span className="text-gray-600 font-semibold text-[11px] print:text-[10px] ml-1">
+                    Ref: {refProforma}
+                  </span>
                 )}
               </>
             ) : (
               <>
                 <strong>N-GST Invoice No: </strong> {clientData?.bill_number}
                 {refProforma && (
-                  <div className="text-gray-600 font-semibold text-[11px] mt-0.5">
-                    Ref Proforma No: {refProforma}
-                  </div>
+                  <span className="text-gray-600 font-semibold text-[11px] print:text-[10px] ml-1">
+                    Ref: {refProforma}
+                  </span>
                 )}
               </>
             )}
@@ -92,9 +92,9 @@ export default function InvoiceCustomerInfoCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
+      <div className="grid grid-cols-2 gap-2 mb-2 print:gap-1.5 print:mb-1 text-xs print:text-[11px] print:leading-tight invoice-client-card">
         {/* Client Info */}
-        <div className="border p-2 rounded-lg">
+        <div className="border p-2 print:p-1.5 rounded-lg print:rounded">
           <p>
             <strong>BILL TO:</strong> {clientData?.client_organization}
           </p>
@@ -126,7 +126,7 @@ export default function InvoiceCustomerInfoCard({
         </div>
 
         {/* Company Info */}
-        <DocumentCompanyFrom isGST={isGST} />
+        <DocumentCompanyFrom isGST={isGST} className="print:p-1.5 print:rounded" />
       </div>
     </>
   );

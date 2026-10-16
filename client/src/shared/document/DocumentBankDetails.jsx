@@ -45,35 +45,35 @@ export default function DocumentBankDetails({
 
   // Default: Invoice layout
   return (
-    <div className={ `w-[45%] flex flex-col p-2.5 border-r border-gray-300 bg-white ${className}` }>
+    <div className={ `w-[45%] flex flex-col p-2.5 print:p-1.5 border-r border-gray-300 bg-white ${className}` }>
       <div>
-        <h2 className="text-[13px] font-bold text-[#1e3a8a] mb-1.5">Bank Details:</h2>
+        <h2 className="text-[13px] print:text-xs font-bold text-[#1e3a8a] mb-1.5 print:mb-0.5">Bank Details:</h2>
         { isGST ? (
-          <div className="text-[11px] space-y-1 text-gray-800">
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Name:</span> <span>DOAGuru InfoSystems</span></p>
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">IFSC:</span> <span>SBIN0004677</span></p>
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Account No:</span> <span>38666325192</span></p>
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Bank:</span> <span>SBI Bank, Jabalpur</span></p>
+          <div className="text-[11px] print:text-[10px] space-y-1 print:space-y-0.5 text-gray-800">
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">Name:</span> <span>DOAGuru InfoSystems</span></p>
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">IFSC:</span> <span>SBIN0004677</span></p>
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">Account No:</span> <span>38666325192</span></p>
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">Bank:</span> <span>SBI Bank, Jabalpur</span></p>
           </div>
         ) : (
-          <div className="text-[11px] space-y-1 text-gray-800">
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Name:</span> <span>DOAGuru IT Solutions</span></p>
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">IFSC:</span> <span>HDFC0000224</span></p>
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Account No:</span> <span>50200074931981</span></p>
-            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px]">Bank:</span> <span>HDFC Bank, Jabalpur</span></p>
+          <div className="text-[11px] print:text-[10px] space-y-1 print:space-y-0.5 text-gray-800">
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">Name:</span> <span>DOAGuru IT Solutions</span></p>
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">IFSC:</span> <span>HDFC0000224</span></p>
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">Account No:</span> <span>50200074931981</span></p>
+            <p className="flex"><span className="font-bold text-[#1e3a8a] w-[80px] print:w-[65px]">Bank:</span> <span>HDFC Bank, Jabalpur</span></p>
           </div>
         ) }
       </div>
 
       {/* Signature */ }
-      <div className="mt-3 border border-gray-300 rounded-lg p-2 w-[160px] bg-white">
+      <div className="mt-3 print:mt-1 border border-gray-300 rounded-lg print:rounded p-2 print:p-1 w-[160px] print:w-[130px] bg-white">
         <img
           src={ isGST ? img4 : img3 }
           alt="Authorized Signature"
-          className="w-auto object-contain mx-auto mb-1"
+          className="w-auto h-[35px] print:h-[22px] max-h-[35px] print:max-h-[22px] object-contain mx-auto mb-1 print:mb-0.5"
         />
-        <p className="text-[10px] font-bold text-gray-800">Signature</p>
-        <p className="text-[9px] text-gray-500">
+        <p className="text-[10px] print:text-[9px] font-bold text-gray-800">Signature</p>
+        <p className="text-[9px] print:text-[8px] text-gray-500">
           { isGST ? "DOAGuru InfoSystems" : "DOAGuru IT Solutions" }
         </p>
       </div>
