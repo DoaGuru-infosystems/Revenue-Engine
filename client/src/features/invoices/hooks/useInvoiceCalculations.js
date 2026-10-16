@@ -199,7 +199,7 @@ export const useInvoiceCalculations = ({
       : pastServicesIncGst;
 
     const projectValueDeferred = Math.max(
-      totalAfterAdjustment - activeTaxableSubtotal - pastActiveTaxableSubtotal,
+      totalWithPreviousBalance - activeTaxableSubtotal - pastActiveTaxableSubtotal,
       0
     );
 
