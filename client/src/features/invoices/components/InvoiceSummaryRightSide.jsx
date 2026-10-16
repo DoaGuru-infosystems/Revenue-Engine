@@ -422,53 +422,7 @@ export default function InvoiceSummaryRightSide({
             </>
           )}
 
-          {/* Proforma Ledger / Remaining Balance Block */}
-          {!isBalanceProforma && (isPartialPayment || isProforma || previousBalanceAmount > 0) && (totalProformaReceivedAmount > 0 || previousBalanceAmount > 0 || hasPayment) && (
-            <div className="flex flex-col border-t-2 border-gray-200 mt-1 pt-1 bg-white">
-              <div
-                style={{ background: "#f8fafc", color: "#334155" }}
-                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-              >
-                <span className="font-semibold text-xs text-gray-700">
-                  Total Payable Amount {previousBalanceAmount > 0 ? "(Current + Pichla)" : ""}
-                </span>
-                <span className="font-bold text-xs text-gray-900">
-                  ₹{formatAmountNoDecimals(invoiceTotal + visibleAdBudget)}
-                </span>
-              </div>
-              {totalProformaReceivedAmount > 0 && (
-                <div
-                  style={{ background: "#f0fdf4", color: "#166534" }}
-                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-                >
-                  <span className="font-semibold text-xs text-green-800">
-                    Less: Total Received Till Date
-                  </span>
-                  <span className="font-bold text-xs text-green-700">
-                    -₹{formatAmountNoDecimals(totalProformaReceivedAmount)}
-                  </span>
-                </div>
-              )}
-              <div
-                style={{ background: "#eff6ff", color: "#1e40af" }}
-                className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100"
-              >
-                <span className="font-extrabold text-xs text-blue-900">
-                  Remaining Outstanding Balance
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-sm text-blue-800">
-                    ₹{formatAmountNoDecimals(summaryCurrentBalance)}
-                  </span>
-                  {Number(summaryCurrentBalance || 0) <= 0.05 && totalProformaReceivedAmount > 0 && (
-                    <span className="bg-green-200 text-green-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-green-400">
-                      Fully Paid
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {isBalanceProforma && (
             <div className="flex flex-col border-t border-gray-200 mt-1 pt-1 bg-white">
