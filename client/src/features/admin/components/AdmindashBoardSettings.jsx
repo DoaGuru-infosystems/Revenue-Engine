@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   FileText,
   PercentDiamond,
+  BellRing,
 } from "lucide-react";
 
 const AdminAddPlan = lazy(() => import("../pages/AdminAddPlanPage"));
@@ -20,6 +21,7 @@ const AdminServicesHistory = lazy(() => import("../../history/pages/AdminService
 const AdminAdsCampign = lazy(() => import("./AdminAdsCampaign"));
 const NoteSection = lazy(() => import("../../../shared/NoteSection"));
 const DiscountSetting = lazy(() => import("../../../shared/DiscountSetting"));
+const ReminderSetting = lazy(() => import("./ReminderSetting"));
 
 function AdmindashBoardSettings() {
   const [activeTab, setActiveTab] = useState("");
@@ -34,6 +36,7 @@ function AdmindashBoardSettings() {
     { id: "createteam", label: "Create Team", description: "Set up and manage internal teams", icon: Users, color: "from-red-500 to-red-600" },
     { id: "notes", label: "Notes Settings", description: "Manage essential quotation remarks and conditions.", icon: FileText, color: "from-fuchsia-500 to-orange-600" },
     { id: "discount", label: "Discount Setting", description: "Configure global percentage and amount limits.", icon: PercentDiamond, color: "from-yellow-500 to-amber-600" },
+    { id: "remindersettings", label: "Reminder Setting", description: "Configure Owner, Manager, and Team Lead meeting alerts", icon: BellRing, color: "from-amber-500 to-orange-600" },
   ];
 
   const activeTabData = settingsTabs.find((t) => t.id === activeTab);
@@ -114,6 +117,7 @@ function AdmindashBoardSettings() {
               { activeTab === "createteam" && <CreateTeam /> }
               { activeTab === "notes" && <NoteSection /> }
               { activeTab === "discount" && <DiscountSetting /> }
+              { activeTab === "remindersettings" && <ReminderSetting /> }
             </React.Suspense>
           </div>
         </div>

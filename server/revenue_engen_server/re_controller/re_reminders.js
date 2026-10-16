@@ -5,11 +5,18 @@ const { db } = require("../../connect");
 const moment = require("moment-timezone");
 const {
   sendDailyPaymentSummaryEmail,
+  sendMeetingReminderEmail,
   TZ,
 } = require("./re_sendEmails");
 const {
   sendPeriodicPaymentSummaryWA,
+  sendMeetingReminderWA,
 } = require("./re_sendWhatsApp");
+const {
+  getOwnerContact,
+  getManagerContact,
+  getTeamLeadByTeam,
+} = require("./re_reminderSettingsController");
 
 
 
@@ -114,5 +121,160 @@ cron.schedule("30 10 */5 * *", runPeriodicPaymentSummary, {
   timezone: TZ || "Asia/Kolkata",
 });
 
-// Optional: for manual testing uncomment this
-// setTimeout(runPeriodicPaymentSummary, 10000);
+// ─────────────────────────────────────────────────────────────
+// MEETING REMINDER DISPATCHER
+// ─────────────────────────────────────────────────────────────
+async function runMeetingReminders() {
+  const now = moment().tz(TZ || "Asia/Kolkata");
+  console.log(`[MEETING CRON] Running Meeting Reminders at ${now.format("YYYY-MM-DD HH:mm:ss")}`);
+
+  try {
+    const q = `
+      SELECT p.id, p.proforma_number, p.client_id, p.assigned_team, p.duration_end_date,
+             p.meeting_status, p.meeting_rescheduled_date, p.last_meeting_reminder_sent_at,
+             c.client_name, c.client_organization
+      FROM re_proposal_proforma p
+      LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
+      WHERE (p.meeting_status IS NULL OR p.meeting_status NOT IN ('done', 'cancelled'))
+        AND (
+          (p.meeting_status = 'rescheduled' AND p.meeting_rescheduled_date IS NOT NULL)
+          OR (p.duration_end_date IS NOT NULL)
+        )
+    `;
+
+    const proformas = await runQuery(q, []);
+    if (!proformas || proformas.length === 0) {
+      console.log("[MEETING CRON] No active proformas with duration dates found.");
+      return;
+    }
+
+    // Fetch Owner & Manager contacts
+    const owner = await getOwnerContact();
+    const manager = await getManagerContact();
+
+    let reminderCount = 0;
+
+    for (const pf of proformas) {
+      const isRescheduled = pf.meeting_status === "rescheduled" && pf.meeting_rescheduled_date;
+      const targetDateStr = isRescheduled ? pf.meeting_rescheduled_date : pf.duration_end_date;
+      if (!targetDateStr) continue;
+
+      const targetDate = moment.tz(targetDateStr, TZ || "Asia/Kolkata").startOf("day");
+      const today = now.clone().startOf("day");
+      const diffDays = targetDate.diff(today, "days");
+
+      // Requirement: Within 7 days prior up to and including the exact End Date (0 to 7 days)
+      if (diffDays >= 0 && diffDays <= 7) {
+        reminderCount++;
+        const proformaNo = pf.proforma_number || `PROF-${pf.id}`;
+        const clientName = pf.client_name || "Valued Client";
+        const assignedTeam = pf.assigned_team || "General";
+        const meetingDateFormatted = targetDate.format("DD MMMM YYYY");
+        const daysLeftText = diffDays === 0 ? "Today (Final Date)" : `${diffDays} Day${diffDays > 1 ? "s" : ""} Left`;
+
+        // 1. Send to Owner
+        if (owner) {
+          if (owner.email) {
+            await sendMeetingReminderEmail({
+              to: owner.email,
+              recipientName: owner.name,
+              roleLabel: "Company Owner",
+              clientName,
+              proformaNo,
+              assignedTeam,
+              meetingDate: meetingDateFormatted,
+              daysLeft: daysLeftText,
+            });
+          }
+          if (owner.phone) {
+            await sendMeetingReminderWA({
+              toPhone: owner.phone,
+              recipientName: owner.name,
+              clientName,
+              proformaNo,
+              assignedTeam,
+              meetingDate: meetingDateFormatted,
+              daysLeft: daysLeftText,
+            });
+          }
+        }
+
+        // 2. Send to Manager (if configured)
+        if (manager) {
+          if (manager.email) {
+            await sendMeetingReminderEmail({
+              to: manager.email,
+              recipientName: manager.name,
+              roleLabel: "Project Manager",
+              clientName,
+              proformaNo,
+              assignedTeam,
+              meetingDate: meetingDateFormatted,
+              daysLeft: daysLeftText,
+            });
+          }
+          if (manager.phone) {
+            await sendMeetingReminderWA({
+              toPhone: manager.phone,
+              recipientName: manager.name,
+              clientName,
+              proformaNo,
+              assignedTeam,
+              meetingDate: meetingDateFormatted,
+              daysLeft: daysLeftText,
+            });
+          }
+        }
+
+        // 3. Send to Assigned Team Lead (if assigned)
+        if (assignedTeam) {
+          const tl = await getTeamLeadByTeam(assignedTeam);
+          if (tl) {
+            if (tl.email) {
+              await sendMeetingReminderEmail({
+                to: tl.email,
+                recipientName: tl.name,
+                roleLabel: `Team Lead (${tl.team_name})`,
+                clientName,
+                proformaNo,
+                assignedTeam: tl.team_name,
+                meetingDate: meetingDateFormatted,
+                daysLeft: daysLeftText,
+              });
+            }
+            if (tl.phone) {
+              await sendMeetingReminderWA({
+                toPhone: tl.phone,
+                recipientName: tl.name,
+                clientName,
+                proformaNo,
+                assignedTeam: tl.team_name,
+                meetingDate: meetingDateFormatted,
+                daysLeft: daysLeftText,
+              });
+            }
+          }
+        }
+
+        // Update timestamp on proforma
+        await runQuery("UPDATE re_proposal_proforma SET last_meeting_reminder_sent_at = NOW() WHERE id = ?", [pf.id]);
+      }
+    }
+
+    console.log(`[MEETING CRON] Completed meeting reminder dispatch. ${reminderCount} proformas processed.`);
+  } catch (err) {
+    console.error("[MEETING CRON ERROR] Failed meeting reminder dispatch:", err.message);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// CRON SCHEDULES: 10:00 AM, 12:00 PM, 03:00 PM (Daily)
+// ─────────────────────────────────────────────────────────────
+cron.schedule("0 10 * * *", runMeetingReminders, { timezone: TZ || "Asia/Kolkata" });
+cron.schedule("0 12 * * *", runMeetingReminders, { timezone: TZ || "Asia/Kolkata" });
+cron.schedule("0 15 * * *", runMeetingReminders, { timezone: TZ || "Asia/Kolkata" });
+
+module.exports = {
+  runPeriodicPaymentSummary,
+  runMeetingReminders,
+};

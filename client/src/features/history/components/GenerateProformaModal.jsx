@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { ChevronDown, CalendarDays, FilePlus2, X, Hash, Building2, Phone, CreditCard, Loader2 } from "lucide-react";
+import { ChevronDown, CalendarDays, FilePlus2, X, Hash, Building2, Phone, CreditCard, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTheme } from "../../../context/ThemeContext";
@@ -36,11 +36,14 @@ const GenerateProformaModal = ({
     dg_employee: userName,
     duration_start_date: "",
     duration_end_date: "",
+    assigned_team: "",
     payment_mode: "",
     client_gst_no: "",
     client_pan_no: "",
     bill_type: "NON_GST",
   });
+
+  const [availableTeams, setAvailableTeams] = useState([]);
 
   const [selectedProposalForProforma, setSelectedProposalForProforma] = useState(null);
   const [quotationServicesPreview, setQuotationServicesPreview] = useState([]);
@@ -112,12 +115,25 @@ const GenerateProformaModal = ({
           dg_employee: userName,
           duration_start_date: "",
           duration_end_date: "",
+          assigned_team: "",
           payment_mode: "",
           client_gst_no: "",
           client_pan_no: "",
           bill_type: "NON_GST",
         });
         setQuotationServicesPreview([]);
+
+        // Load available teams for reminder assignment
+        axios
+          .get(`${baseURL}/auth/api/re_calculator/reminder-settings/teams`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((res) => {
+            if (res.data?.status === "Success") {
+              setAvailableTeams(res.data.data || []);
+            }
+          })
+          .catch(() => {});
 
         const effectiveCid = clientData?.id || clientData?.client_id || (proposalsList[0] && proposalsList[0].client_id);
         if (effectiveCid) {
@@ -271,6 +287,7 @@ const GenerateProformaModal = ({
           gst_rate: 18,
           duration_start_date: formData.duration_start_date,
           duration_end_date: formData.duration_end_date,
+          assigned_team: formData.assigned_team || null,
           previous_balance_amount: prevBalToApply,
         };
         const res = await axios.post(`${baseURL}/auth/api/re_calculator/proforma`, payload, {
@@ -758,6 +775,36 @@ const GenerateProformaModal = ({
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* Assign Team for Meeting Reminders */}
+            <div>
+              <label className="ci-label flex items-center justify-between">
+                <span>
+                  <Users size={14} style={{ marginRight: 4, verticalAlign: "middle", opacity: 0.7 }} />
+                  Assign Team (Meeting Reminder)
+                </span>
+                <span className="ci-label-optional" style={{ fontSize: "11px", opacity: 0.7 }}>
+                  (Team Lead will receive alerts)
+                </span>
+              </label>
+              <select
+                name="assigned_team"
+                value={formData.assigned_team}
+                onChange={handleChange}
+                className="ci-input ci-select"
+                style={{
+                  colorScheme: theme === "dark" ? "dark" : "light",
+                  backgroundColor: theme === "dark" ? "#1e293b" : "#ffffff",
+                }}
+              >
+                <option value="">-- Select Team (Optional) --</option>
+                {availableTeams.map((teamName) => (
+                  <option key={teamName} value={teamName}>
+                    {teamName}
+                  </option>
+                ))}
+              </select>
             </div>
 
             { formData.bill_type === "GST" && (

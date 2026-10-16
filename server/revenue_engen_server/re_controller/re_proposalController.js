@@ -743,6 +743,7 @@ exports.createProforma = async (req, res) => {
       duration_start_date,
       duration_end_date,
       previous_balance_amount,
+      assigned_team,
     } = req.body;
 
     // Fetch parent proposal to snapshot data
@@ -850,8 +851,8 @@ exports.createProforma = async (req, res) => {
       INSERT INTO re_proposal_proforma 
       (proposal_id, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
        pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
-       duration_start_date, duration_end_date, discount_snapshot, previous_balance_amount)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       duration_start_date, duration_end_date, discount_snapshot, previous_balance_amount, assigned_team)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
       proposal_id,
@@ -874,6 +875,7 @@ exports.createProforma = async (req, res) => {
       duration_end_date || null,
       discountSnapshot,
       prevBal,
+      assigned_team || null,
     ]);
 
     // If previous_balance_amount was carried forward into this new proforma,

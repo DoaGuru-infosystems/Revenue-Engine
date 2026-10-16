@@ -302,16 +302,60 @@ Invoice Link: {{5}}
 
 ---
 
-## 📌 Code Integration Status
+## Template 5: Meeting Reminder Alert
 
-| Template                   | Trigger                       | Server File             | Status       |
-| -------------------------- | ----------------------------- | ----------------------- | ------------ |
-| `final_invoice_admin_notify`| Upon auto-sending final invoice| `notificationService.js`| 🔜 Next Step |
-| `proposal_admin_notify`    | Upon sending a proposal       | `proposalController.js` | 🔜 Next Step |
-| `periodic_payment_summary` | Every 5 days 10:30 AM (cron)  | `reminders.js`          | 🔜 Next Step |
-| `payment_received_alert`   | Upon recording a payment      | `workflowController.js` | 🔜 Next Step |
+### When is it sent?
+
+**Three times a day (10:00 AM, 12:00 PM, 03:00 PM)** during the 1 week leading up to a client's service duration end date or rescheduled meeting date.
+Sent simultaneously to:
+1. **Company Owner**
+2. **Project Manager**
+3. **Assigned Team Lead**
+
+**Template Name (Register in Meta):** `meeting_reminder_alert`
+**Language:** `en`
+**Category:** `UTILITY`
+
+```text
+🔔 *[MEETING REMINDER] Client Service Deadline*
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dear *{{1}}*,
+
+This is a scheduled reminder for client *{{2}}*.
+
+📋 *Meeting & Project Details:*
+• Proforma No   : {{3}}
+• Assigned Team : {{4}}
+• Scheduled Date: {{5}}
+• Status        : {{6}}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+Please prepare project deliverables and conduct the client meeting.
+Mark the meeting as Done or Reschedule in Revenue Engine once updated.
+
+*— DOAGuru InfoSystems Automated Notification*
+```
+
+**Variables Mapping:**
+| Variable | Value | Example |
+|---|---|---|
+| {{1}} | Recipient Name | Ad Dubay |
+| {{2}} | Client Name | Amarpatan Multispeciality Hospital |
+| {{3}} | Proforma No | PROF-2 |
+| {{4}} | Assigned Team | Web Development |
+| {{5}} | Scheduled Date | 23 October 2026 |
+| {{6}} | Time Remaining / Status | 3 Days Left |
 
 ---
 
-> **NEXT STEP:** First, get these templates approved in Meta.
-> Once done, let me know and I will integrate them into the code! ✅
+## 📌 Code Integration Status
+
+| Template                   | Trigger                                  | Server File                      | Status       |
+| -------------------------- | ---------------------------------------- | -------------------------------- | ------------ |
+| `meeting_reminder_alert`   | Daily at 10 AM, 12 PM, 3 PM (7 days prior)| `re_reminders.js`                | ✅ Integrated |
+| `final_invoice_admin_notify`| Upon auto-sending final invoice         | `notificationService.js`         | ✅ Integrated |
+| `proposal_admin_notify`    | Upon sending a proposal                  | `re_proposalController.js`       | ✅ Integrated |
+| `periodic_payment_summary` | Every 5 days 10:30 AM (cron)             | `re_reminders.js`                | ✅ Integrated |
+| `payment_received_alert`   | Upon recording a payment                 | `re_workflowcontroller.JS`       | ✅ Integrated |
+

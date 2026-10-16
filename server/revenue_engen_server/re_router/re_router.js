@@ -256,6 +256,17 @@ const {
   updateBalanceProformaNotes,
 } = require("../re_controller/re_proposalController");
 const {
+  getReminderSettings,
+  saveOwnerSettings,
+  saveManagerSettings,
+  saveApiConfig,
+  saveTeamLead,
+  deleteTeamLead,
+  fetchExternalTeamLeads,
+  getAvailableTeams,
+  updateProformaMeetingStatus,
+} = require("../re_controller/re_reminderSettingsController");
+const {
   uploadAndConvert: genratecoatetion,
   generateInvoicePdf,
 } = require("../re_controller/re_genratecoatetion");
@@ -763,6 +774,17 @@ router.get(
   getPaymentRecordsByClient,
 );
 router.get("/proposal-payments/all", authenticateToken, getAllPaymentRecords);
+
+// ---- Reminder Settings & Meeting Routes ----
+router.get("/reminder-settings", authenticateToken, getReminderSettings);
+router.post("/reminder-settings/owner", authenticateToken, saveOwnerSettings);
+router.post("/reminder-settings/manager", authenticateToken, saveManagerSettings);
+router.post("/reminder-settings/api-config", authenticateToken, saveApiConfig);
+router.post("/reminder-settings/team-lead", authenticateToken, saveTeamLead);
+router.delete("/reminder-settings/team-lead/:id", authenticateToken, deleteTeamLead);
+router.post("/reminder-settings/fetch-team-leads", authenticateToken, fetchExternalTeamLeads);
+router.get("/reminder-settings/teams", authenticateToken, getAvailableTeams);
+router.patch("/proforma/:id/meeting-status", authenticateToken, updateProformaMeetingStatus);
 
 // router.get("/pagespeedReportpdf", pagespeedReportpdf);
 // router.get("/pagespeedReportpdf", fullSEOReport);

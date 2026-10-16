@@ -5,6 +5,15 @@ const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID; // e.g. 123456789012345
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 
+async function resolveOwnerMobile() {
+  try {
+    const { getOwnerContact } = require("./re_reminderSettingsController");
+    const owner = await getOwnerContact();
+    if (owner && owner.phone) return owner.phone;
+  } catch (_) {}
+  return process.env.OWNER_MOBILE_NUMBER || "7000102121";
+}
+
 // ─────────────────────────────────────────────────────────────
 // INVOICE WHATSAPP
 // ─────────────────────────────────────────────────────────────
@@ -223,11 +232,11 @@ async function sendProposalAdminNotifyWA({
   sentOn,
   proposalLink,
 }) {
-  const toPhone = process.env.OWNER_MOBILE_NUMBER;
+  const toPhone = await resolveOwnerMobile();
   if (!toPhone)
     return {
       ok: false,
-      error: new Error("OWNER_MOBILE_NUMBER not set in .env"),
+      error: new Error("OWNER_MOBILE_NUMBER not configured"),
     };
 
   const components = [
@@ -256,11 +265,11 @@ async function sendPeriodicPaymentSummaryWA({
   totalOutstanding,
   clientListStr,
 }) {
-  const toPhone = process.env.OWNER_MOBILE_NUMBER;
+  const toPhone = await resolveOwnerMobile();
   if (!toPhone)
     return {
       ok: false,
-      error: new Error("OWNER_MOBILE_NUMBER not set in .env"),
+      error: new Error("OWNER_MOBILE_NUMBER not configured"),
     };
 
   const components = [
@@ -299,11 +308,11 @@ async function sendPaymentReceivedAlertWA({
   totalReceivedTillDate,
   pendingOutstanding,
 }) {
-  const toPhone = process.env.OWNER_MOBILE_NUMBER;
+  const toPhone = await resolveOwnerMobile();
   if (!toPhone)
     return {
       ok: false,
-      error: new Error("OWNER_MOBILE_NUMBER not set in .env"),
+      error: new Error("OWNER_MOBILE_NUMBER not configured"),
     };
 
   const components = [
@@ -344,11 +353,11 @@ async function sendInvoiceAdminNotifyWA({
   timeStr,
   link,
 }) {
-  const toPhone = process.env.OWNER_MOBILE_NUMBER;
+  const toPhone = await resolveOwnerMobile();
   if (!toPhone)
     return {
       ok: false,
-      error: new Error("OWNER_MOBILE_NUMBER not set in .env"),
+      error: new Error("OWNER_MOBILE_NUMBER not configured"),
     };
 
   const components = [
@@ -372,6 +381,44 @@ async function sendInvoiceAdminNotifyWA({
   });
 }
 
+// ─────────────────────────────────────────────────────────────
+// MEETING REMINDER WHATSAPP
+// ─────────────────────────────────────────────────────────────
+async function sendMeetingReminderWA({
+  toPhone,
+  recipientName,
+  clientName,
+  proformaNo,
+  assignedTeam,
+  meetingDate,
+  daysLeft,
+}) {
+  if (!toPhone) {
+    return { ok: false, error: new Error("toPhone is required") };
+  }
+
+  const components = [
+    {
+      type: "body",
+      parameters: [
+        { type: "text", text: String(recipientName || "Team Member") },
+        { type: "text", text: String(clientName || "Client") },
+        { type: "text", text: String(proformaNo || "Proforma") },
+        { type: "text", text: String(assignedTeam || "General") },
+        { type: "text", text: String(meetingDate || "Scheduled Date") },
+        { type: "text", text: String(daysLeft || "Upcoming") },
+      ],
+    },
+  ];
+
+  return sendWhatsAppTemplate({
+    to: toPhone,
+    templateName: "meeting_reminder_alert",
+    components,
+    lang: "en",
+  });
+}
+
 module.exports = {
   sendWhatsAppTemplate,
   sendInvoiceWhatsApp,
@@ -380,4 +427,5 @@ module.exports = {
   sendPeriodicPaymentSummaryWA,
   sendPaymentReceivedAlertWA,
   sendInvoiceAdminNotifyWA,
+  sendMeetingReminderWA,
 };

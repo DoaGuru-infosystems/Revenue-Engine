@@ -1,5 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Calendar, Search, Eye, FileText, Hash, ChevronDown, IndianRupee, Trash, Plus } from "lucide-react";
+import {
+  Calendar,
+  Search,
+  Eye,
+  FileText,
+  Hash,
+  ChevronDown,
+  IndianRupee,
+  Trash,
+  Plus,
+  CheckCircle2,
+  CalendarPlus,
+  XCircle,
+  Clock,
+  Users,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
@@ -18,6 +34,11 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   const [fetchServices, setFetchServices] = useState([]);
   const { currentUser, token } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+
+  // Meeting Reschedule Modal State
+  const [rescheduleModalItem, setRescheduleModalItem] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [gstFilter, setGstFilter] = useState("all"); // "all" | "gst" | "nongst"
   const [currentPage, setCurrentPage] = useState(0);
@@ -246,6 +267,75 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
     });
   };
 
+  // Update Meeting Status
+  const handleUpdateMeetingStatus = async (item, status, newDate = null) => {
+    try {
+      const res = await axios.patch(
+        `${baseURL}/auth/api/re_calculator/proforma/${item.id}/meeting-status`,
+        {
+          meeting_status: status,
+          meeting_rescheduled_date: newDate,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data?.status === "Success") {
+        Swal.fire({
+          icon: "success",
+          title: "Meeting Status Updated!",
+          text: `Marked as '${status}'${newDate ? ` (Rescheduled to ${moment(newDate).format("DD MMM YYYY")})` : ""}. Reminders updated.`,
+          timer: 2000,
+          showConfirmButton: false,
+          background: "#1e293b",
+          color: "#fff",
+        });
+
+        // Update in local state
+        setFetchServices((prev) =>
+          prev.map((p) =>
+            p.id === item.id
+              ? { ...p, meeting_status: status, meeting_rescheduled_date: newDate }
+              : p
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Update meeting status error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: err.response?.data?.message || "Failed to update meeting status.",
+        background: "#1e293b",
+        color: "#fff",
+      });
+    }
+  };
+
+  // Submit Reschedule Modal
+  const handleConfirmReschedule = async (e) => {
+    e.preventDefault();
+    if (!rescheduleDate) {
+      Swal.fire({
+        icon: "warning",
+        title: "Date Required",
+        text: "Please select the next meeting date.",
+        background: "#1e293b",
+        color: "#fff",
+      });
+      return;
+    }
+
+    setRescheduleLoading(true);
+    await handleUpdateMeetingStatus(rescheduleModalItem, "rescheduled", rescheduleDate);
+    setRescheduleLoading(false);
+    setRescheduleModalItem(null);
+  };
+
   // Dropdown for Actions
   const ActionDropdown = ({ item }) => (
     <div className="relative action-dropdown-container">
@@ -295,6 +385,45 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
               <FileText size={15} className="text-amber-400" /> Balance Proforma
             </button>
           ) }
+
+          {/* Meeting Reminder Actions */}
+          <div className="border-t border-gray-700/60 my-1"></div>
+          <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+            <Clock size={11} className="text-orange-400" /> Meeting Status
+          </div>
+
+          <button
+            onClick={() => {
+              setOpenDropdownId(null);
+              handleUpdateMeetingStatus(item, "done");
+            }}
+            className="w-full flex items-center gap-2 px-4 py-2 text-xs text-emerald-400 hover:bg-gray-700/50 hover:text-emerald-300 transition-colors"
+          >
+            <CheckCircle2 size={14} /> Mark as Done
+          </button>
+
+          <button
+            onClick={() => {
+              setOpenDropdownId(null);
+              setRescheduleModalItem(item);
+              setRescheduleDate(item.meeting_rescheduled_date || item.duration_end_date || "");
+            }}
+            className="w-full flex items-center gap-2 px-4 py-2 text-xs text-sky-400 hover:bg-gray-700/50 hover:text-sky-300 transition-colors"
+          >
+            <CalendarPlus size={14} /> Reschedule Meeting
+          </button>
+
+          <button
+            onClick={() => {
+              setOpenDropdownId(null);
+              handleUpdateMeetingStatus(item, "cancelled");
+            }}
+            className="w-full flex items-center gap-2 px-4 py-2 text-xs text-slate-400 hover:bg-gray-700/50 hover:text-slate-300 transition-colors"
+          >
+            <XCircle size={14} /> Cancel Meeting
+          </button>
+
+          <div className="border-t border-gray-700/60 my-1"></div>
 
           <button
             onClick={() => {
@@ -538,6 +667,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Client Name</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Proposal ID</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Proforma No</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Meeting Status</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Type</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs whitespace-nowrap">Total Amount</th>
                   <th className="text-left py-4 px-6 font-semibold text-gray-300 uppercase tracking-wider text-xs">Payment Status</th>
@@ -574,6 +704,44 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                         <div className="flex items-center gap-1.5 text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg w-fit border border-amber-500/20 whitespace-nowrap">
                           <Hash className="w-3.5 h-3.5" />
                           <span className="font-bold text-xs font-mono">{item.proforma_number || `PROF-${item.id}`}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          {item.assigned_team && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/20 w-fit">
+                              <Users size={10} /> {item.assigned_team}
+                            </span>
+                          )}
+                          {(() => {
+                            const status = item.meeting_status || "pending";
+                            if (status === "done") {
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 w-fit">
+                                  <CheckCircle2 size={10} /> Done
+                                </span>
+                              );
+                            }
+                            if (status === "rescheduled") {
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30 w-fit">
+                                  <CalendarPlus size={10} /> {item.meeting_rescheduled_date ? moment(item.meeting_rescheduled_date).format("DD MMM") : "Rescheduled"}
+                                </span>
+                              );
+                            }
+                            if (status === "cancelled") {
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-600/30 text-gray-400 border border-gray-600/30 w-fit">
+                                  <XCircle size={10} /> Cancelled
+                                </span>
+                              );
+                            }
+                            return (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-300/80 border border-amber-500/20 w-fit">
+                                <Clock size={10} /> {item.duration_end_date ? `End: ${moment(item.duration_end_date).format("DD MMM")}` : "Pending"}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
@@ -658,6 +826,66 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
         onClose={() => setShowProformaModal(false)}
         proposalsList={proposalsList}
       />
+      {/* Reschedule Meeting Modal */}
+      {rescheduleModalItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <CalendarPlus className="w-4 h-4 text-sky-400" /> Reschedule Meeting
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {rescheduleModalItem.client_name} ({rescheduleModalItem.proforma_number || `PROF-${rescheduleModalItem.id}`})
+                </p>
+              </div>
+              <button
+                onClick={() => setRescheduleModalItem(null)}
+                className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmReschedule} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                  Select Next Meeting Date *
+                </label>
+                <input
+                  type="date"
+                  value={rescheduleDate}
+                  min={moment().format("YYYY-MM-DD")}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500 [color-scheme:dark]"
+                  required
+                />
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                  Meeting reminders (WhatsApp & Email) will begin 1 week prior to this new date.
+                </p>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setRescheduleModalItem(null)}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={rescheduleLoading}
+                  className="px-5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-sky-500/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                >
+                  {rescheduleLoading && <Clock className="w-3.5 h-3.5 animate-spin" />}
+                  Set Date & Reschedule
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

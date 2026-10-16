@@ -25,6 +25,15 @@ const getLogoAttachment = () => ({
   cid: 'logo'
 });
 
+async function resolveOwnerEmail() {
+  try {
+    const { getOwnerContact } = require("./re_reminderSettingsController");
+    const owner = await getOwnerContact();
+    if (owner && owner.email) return owner.email;
+  } catch (_) {}
+  return process.env.OWNER_EMAIL || "doaguruinfosystems@gmail.com";
+}
+
 // ----------------------------------------------------
 // 1. sendProposalEmail (Client Facing - Minimalist Orange Theme)
 // ----------------------------------------------------
@@ -127,7 +136,7 @@ async function sendFinalInvoiceEmail({ to, clientName, txnId, invoiceLink }) {
 // 3. sendProposalAdminNotifyEmail (Admin Alert - Dark Monospace Vibe)
 // ----------------------------------------------------
 async function sendProposalAdminNotifyEmail({ clientName, clientId, proposalId, sentOn, proposalLink, pdfBuffer }) {
-  const to = process.env.OWNER_EMAIL;
+  const to = await resolveOwnerEmail();
   if (!isEmail(to)) return { ok: false, error: "Invalid OWNER_EMAIL" };
 
   const subject = `[ADMIN ALERT] Proposal Sent - ${clientName}`;
@@ -185,7 +194,7 @@ async function sendProposalAdminNotifyEmail({ clientName, clientId, proposalId, 
 // 4. sendDailyPaymentSummaryEmail (Admin Report - Wide Light Blue Table Layout)
 // ----------------------------------------------------
 async function sendDailyPaymentSummaryEmail({ dateStr, totalOutstanding, clientListStr }) {
-  const to = process.env.OWNER_EMAIL;
+  const to = await resolveOwnerEmail();
   if (!isEmail(to)) return { ok: false, error: "Invalid OWNER_EMAIL" };
 
   const subject = `Daily Payment Summary - ${dateStr}`;
@@ -233,7 +242,7 @@ async function sendPaymentReceivedAlertEmail({
   clientName, orgName, clientId, invoiceNo, invoiceDate, paymentDate, amountReceived, paymentMode,
   invoiceTotal, previousBalance, tdsApplicable, tdsDeducted, netCredited, totalReceivedTillDate, pendingOutstanding
 }) {
-  const to = process.env.OWNER_EMAIL;
+  const to = await resolveOwnerEmail();
   if (!isEmail(to)) return { ok: false, error: "Invalid OWNER_EMAIL" };
 
   const subject = `Payment Received Alert - ${clientName}`;
@@ -307,7 +316,7 @@ async function sendPaymentReceivedAlertEmail({
 // 6. sendInvoiceAdminNotifyEmail (Admin Alert - Minimalist Status Motif)
 // ----------------------------------------------------
 async function sendInvoiceAdminNotifyEmail({ clientName, invoiceNo, amount, timeStr, link }) {
-  const to = process.env.OWNER_EMAIL;
+  const to = await resolveOwnerEmail();
   if (!to) return { ok: false, error: "OWNER_EMAIL not set" };
 
   const subject = `Auto-Sent Invoice • ${clientName}`;
@@ -417,6 +426,95 @@ async function sendRegistrationOtpEmail({ to, otp }) {
   }
 }
 
+// ----------------------------------------------------
+// 9. sendMeetingReminderEmail (Meeting Reminder Alert)
+// ----------------------------------------------------
+async function sendMeetingReminderEmail({
+  to,
+  recipientName,
+  roleLabel,
+  clientName,
+  proformaNo,
+  assignedTeam,
+  meetingDate,
+  daysLeft,
+}) {
+  if (!isEmail(to)) return { ok: false, error: "Invalid recipient email" };
+
+  const subject = `[MEETING REMINDER] ${clientName} • ${daysLeft} • ${meetingDate}`;
+  const html = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; padding: 40px 20px; color: #f8fafc;">
+      <div style="max-width: 600px; margin: 0 auto; background: #1e293b; border-radius: 16px; overflow: hidden; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);">
+        
+        <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 25px 30px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <h2 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;">MEETING REMINDER</h2>
+            <p style="margin: 4px 0 0; color: #ffedd5; font-size: 13px;">Service Deadline Approaching</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; color: #ffffff;">
+            ${daysLeft}
+          </div>
+        </div>
+
+        <div style="padding: 30px;">
+          <p style="font-size: 15px; color: #cbd5e1; margin-top: 0;">
+            Hello <b>${recipientName || "Team Member"}</b> <span style="color: #94a3b8; font-size: 13px;">(${roleLabel || "Assignee"})</span>,
+          </p>
+          <p style="font-size: 14px; line-height: 1.6; color: #94a3b8;">
+            This is an automated reminder that the scheduled meeting / service duration deadline for client <b>${clientName}</b> is on <b>${meetingDate}</b>. Please review the deliverables and prepare the client meeting.
+          </p>
+
+          <div style="background: #0f172a; border-radius: 12px; border: 1px solid #334155; padding: 20px; margin: 25px 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 8px 0; color: #64748b; width: 140px;">Client Name:</td>
+                <td style="padding: 8px 0; color: #f1f5f9; font-weight: 600;">${clientName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b;">Proforma No:</td>
+                <td style="padding: 8px 0; color: #f59e0b; font-weight: 600; font-family: monospace;">${proformaNo}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b;">Assigned Team:</td>
+                <td style="padding: 8px 0; color: #38bdf8; font-weight: 600;">${assignedTeam || "General"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b;">Scheduled Date:</td>
+                <td style="padding: 8px 0; color: #fb923c; font-weight: 600;">${meetingDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #64748b;">Time Left:</td>
+                <td style="padding: 8px 0; color: #4ade80; font-weight: 700;">${daysLeft}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background: #334155; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #cbd5e1; text-align: center;">
+            To mark this meeting as done or reschedule it, please navigate to Revenue Engine Proforma section.
+          </div>
+        </div>
+
+        <div style="background: #0f172a; padding: 18px; text-align: center; border-top: 1px solid #1e293b; font-size: 12px; color: #64748b;">
+          &copy; ${new Date().getFullYear()} Revenue Engine • DOAGuru InfoSystems Automated Notification
+        </div>
+      </div>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAILSENDER,
+      to,
+      subject,
+      html,
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error(`[MAIL ERROR] Meeting Reminder to ${to}:`, err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
 module.exports = {
   sendFinalInvoiceEmail,
   sendProposalEmail,
@@ -426,5 +524,6 @@ module.exports = {
   sendInvoiceAdminNotifyEmail,
   sendRegistrationOtpEmail,
   sendPasswordResetOtpEmail,
+  sendMeetingReminderEmail,
   TZ,
 };
