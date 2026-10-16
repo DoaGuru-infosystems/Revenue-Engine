@@ -9,7 +9,7 @@ export default function InvoiceDiscountSection({
   discountAmount = 0,
   selectedAdjustment = null,
   adjustmentAmount = 0,
-  previousBalanceAmount = 0,
+  totalAfterAdjustment = null,
   invoiceSubtotal = 0,
   clientData = {},
   publicMode = false,
@@ -23,6 +23,11 @@ export default function InvoiceDiscountSection({
     additionalServiceData.length > 0 ||
     adsData.length > 0 ||
     complimentaryData.length > 0;
+
+  const baseServicesSubtotal =
+    totalAfterAdjustment !== null && totalAfterAdjustment !== undefined
+      ? totalAfterAdjustment
+      : invoiceSubtotal;
 
   return (
     <>
@@ -62,28 +67,12 @@ export default function InvoiceDiscountSection({
                   </td>
                 </tr>
               )}
-              {previousBalanceAmount > 0 && (
-                <tr
-                  style={{
-                    color: "#1d4ed8",
-                    background: "#eff6ff",
-                    fontWeight: 700,
-                  }}
-                >
-                  <td className="border px-2 py-1 text-right" colSpan={4}>
-                    Previous Balance
-                  </td>
-                  <td className="border px-2 py-1 text-right w-[15%]">
-                    +₹{formatAmountNoDecimals(previousBalanceAmount)}
-                  </td>
-                </tr>
-              )}
               <tr className="bg-orange-50 font-semibold">
                 <td className="border px-2 py-1 text-right" colSpan={4}>
                   Subtotal
                 </td>
                 <td className="border px-2 py-1 text-right w-[15%]">
-                  ₹{formatAmountNoDecimals(invoiceSubtotal)}
+                  ₹{formatAmountNoDecimals(baseServicesSubtotal)}
                 </td>
               </tr>
             </tbody>

@@ -296,7 +296,7 @@ export default function InvoicePage({
                       discountAmount={discountAmount}
                       selectedAdjustment={null}
                       adjustmentAmount={adjustmentAmount}
-                      previousBalanceAmount={previousBalanceAmount}
+                      totalAfterAdjustment={totalAfterAdjustment}
                       invoiceSubtotal={invoiceSubtotal}
                       clientData={clientData}
                       publicMode={publicMode}
