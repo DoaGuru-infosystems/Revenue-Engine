@@ -889,10 +889,8 @@ export function useQuotationData({
   );
 
   const previousBalanceAmount = Number(proformaMeta?.previous_balance_amount || 0);
-  const dmTotalWithPreviousBalance = dmTotalAfterAdjustment + previousBalanceAmount;
-
-  const dmGstAmount = isGST ? dmTotalWithPreviousBalance * 0.18 : 0;
-  const dmSubtotalWithGst = dmTotalWithPreviousBalance + dmGstAmount;
+  const dmGstAmount = isGST ? Number((dmTotalAfterAdjustment * 0.18).toFixed(2)) : 0;
+  const dmSubtotalWithGst = dmTotalAfterAdjustment + dmGstAmount + previousBalanceAmount;
   const adsTotalWithGst = adsTotalBudget;
   const grandTotal = dmSubtotalWithGst + adsTotalWithGst;
 
@@ -930,18 +928,19 @@ export function useQuotationData({
       ? displayedSubtotal + activeAdsBudget
       : grandTotal;
 
-  let displayedTaxable = dmTotalWithPreviousBalance;
+  let displayedTaxable = dmTotalAfterAdjustment;
   let displayedCgst = dmGstAmount / 2;
   let displayedSgst = dmGstAmount / 2;
 
   if (isBalanceProforma && Math.abs(dmSubtotalWithGst - displayedSubtotal) > 1) {
+    const serviceSubtotalWithGst = Math.max(0, displayedSubtotal - previousBalanceAmount);
     if (isGST) {
-      displayedTaxable = Math.round((displayedSubtotal / 1.18) * 100) / 100;
-      const gstTotal = displayedSubtotal - displayedTaxable;
+      displayedTaxable = Math.round((serviceSubtotalWithGst / 1.18) * 100) / 100;
+      const gstTotal = serviceSubtotalWithGst - displayedTaxable;
       displayedCgst = gstTotal / 2;
       displayedSgst = gstTotal / 2;
     } else {
-      displayedTaxable = displayedSubtotal;
+      displayedTaxable = serviceSubtotalWithGst;
       displayedCgst = 0;
       displayedSgst = 0;
     }

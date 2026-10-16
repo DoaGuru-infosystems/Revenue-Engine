@@ -181,7 +181,7 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
     }
 
     const rows = await runQuery(
-      "SELECT id, pricing_snapshot, ads_snapshot, is_gst, gst_rate, adjustment_amount FROM re_proposal_proforma WHERE id = ?",
+      "SELECT id, pricing_snapshot, ads_snapshot, is_gst, gst_rate, adjustment_amount, previous_balance_amount FROM re_proposal_proforma WHERE id = ?",
       [proformaId]
     );
     if (rows.length === 0) return;
@@ -201,6 +201,9 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
       prof.gst_rate
     );
 
+    const prevBal = Number(prof.previous_balance_amount || 0);
+    const finalTotal = totalAmount + prevBal;
+
     const snapshotVal = (discountObj && Number(discountObj.value || discountObj.discount_amt || 0) > 0)
       ? JSON.stringify(discountObj)
       : null;
@@ -209,9 +212,9 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
       `UPDATE re_proposal_proforma 
        SET discount_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
        WHERE id = ?`,
-      [snapshotVal, baseAmount, gstAmount, totalAmount, proformaId]
+      [snapshotVal, baseAmount, gstAmount, finalTotal, proformaId]
     );
-    console.log(`[Proforma Sync] discount_snapshot synced for proforma_id: ${proformaId} (snapshot: ${snapshotVal}, total: ${totalAmount})`);
+    console.log(`[Proforma Sync] discount_snapshot synced for proforma_id: ${proformaId} (snapshot: ${snapshotVal}, total: ${finalTotal})`);
   } catch (err) {
     console.error("Error syncing proforma discount:", err);
   }
@@ -226,7 +229,7 @@ exports.syncProformaAdditionalService = async (txn_id, client_id, action, entryI
     }
 
     const rows = await runQuery(
-      "SELECT id, pricing_snapshot, ads_snapshot, discount_snapshot, adjustment_amount, is_gst, gst_rate FROM re_proposal_proforma WHERE id = ?",
+      "SELECT id, pricing_snapshot, ads_snapshot, discount_snapshot, adjustment_amount, is_gst, gst_rate, previous_balance_amount FROM re_proposal_proforma WHERE id = ?",
       [proformaId]
     );
     if (rows.length === 0) return;
@@ -292,11 +295,14 @@ exports.syncProformaAdditionalService = async (txn_id, client_id, action, entryI
       prof.gst_rate
     );
 
+    const prevBal = Number(prof.previous_balance_amount || 0);
+    const finalTotal = totalAmount + prevBal;
+
     await runQuery(
       "UPDATE re_proposal_proforma SET pricing_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? WHERE id = ?",
-      [JSON.stringify(snapshot), baseAmount, gstAmount, totalAmount, proformaId]
+      [JSON.stringify(snapshot), baseAmount, gstAmount, finalTotal, proformaId]
     );
-    console.log(`[Proforma Sync] pricing_snapshot (Additional Service: ${action}) synced for proforma_id: ${proformaId} (new total: ${totalAmount})`);
+    console.log(`[Proforma Sync] pricing_snapshot (Additional Service: ${action}) synced for proforma_id: ${proformaId} (new total: ${finalTotal})`);
   } catch (err) {
     console.error("Error syncing proforma additional service:", err);
   }

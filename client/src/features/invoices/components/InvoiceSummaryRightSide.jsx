@@ -7,6 +7,7 @@ export default function InvoiceSummaryRightSide({
   totalAfterAdjustment = 0,
   adjustmentAmount = 0,
   previousBalanceAmount = 0,
+  currentPrevBalPaid = 0,
   pastActiveTaxableSubtotal = 0,
   projectValueDeferred = 0,
   activeTaxableSubtotal = 0,
@@ -176,6 +177,19 @@ export default function InvoiceSummaryRightSide({
                   </span>
                 </div>
               </>
+            )}
+            {currentPrevBalPaid > 0 && (
+              <div
+                style={{
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  fontWeight: 600,
+                }}
+                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+              >
+                <span>Add: Previous Balance Settled</span>
+                <span className="font-semibold">+₹{formatAmount(currentPrevBalPaid)}</span>
+              </div>
             )}
           </>
         ) : (

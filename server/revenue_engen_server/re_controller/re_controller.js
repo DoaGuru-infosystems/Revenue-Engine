@@ -4029,10 +4029,12 @@ exports.saveDirectProforma = async (req, res) => {
     terms_snapshot,
     duration_start_date,
     duration_end_date,
+    previous_balance_amount: reqPreviousBalance,
   } = req.body;
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
   const proformaTxnId = txn_id || String(Date.now());
+  const prevBal = Number(reqPreviousBalance || 0);
 
   let proformaNumber = null;
   try {
@@ -4066,17 +4068,20 @@ exports.saveDirectProforma = async (req, res) => {
       const computed = calculateProformaTotals(pItems, aItems, dObj, 0, is_gst, gst_rate);
       finalBase = computed.baseAmount;
       finalGst = computed.gstAmount;
-      finalTotal = computed.totalAmount;
+      finalTotal = computed.totalAmount + prevBal;
     } catch (calcErr) {
       console.warn("Could not recalculate proforma totals in saveDirectProforma:", calcErr.message);
+      if (finalTotal !== undefined && finalTotal !== null) {
+        finalTotal = Number(finalTotal) + prevBal;
+      }
     }
 
     const query = `
       INSERT INTO re_proposal_proforma (
         client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
         created_at, pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, terms_snapshot,
-        source_type, duration_start_date, duration_end_date, client_instructions_snapshot
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?)
+        source_type, duration_start_date, duration_end_date, client_instructions_snapshot, previous_balance_amount
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?, ?)
     `;
 
     const values = [
@@ -4097,12 +4102,35 @@ exports.saveDirectProforma = async (req, res) => {
       duration_start_date || null,
       duration_end_date || null,
       clientSnapshot,
+      prevBal,
     ];
 
     db.query(query, values, (err, result) => {
       if (err) {
         console.error("Insert Error:", err);
         return res.status(500).json({ status: "Failure", message: "DB error" });
+      }
+
+      if (prevBal > 0) {
+        db.query(`
+          SELECT p.id, p.total_amount,
+                 COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) as paid
+          FROM re_proposal_proforma p
+          WHERE p.client_id = ? AND p.id != ? AND (p.is_carried_forward IS NULL OR p.is_carried_forward = 0) AND p.status != 'carried_forward'
+        `, [effectiveClientId, result.insertId], (cfErr, pendingPfs) => {
+          if (!cfErr && pendingPfs) {
+            for (const pf of pendingPfs) {
+              const pend = Number(pf.total_amount || 0) - Number(pf.paid || 0);
+              if (pend > 0.05) {
+                db.query(`
+                  UPDATE re_proposal_proforma 
+                  SET status = 'carried_forward', is_carried_forward = 1, carried_into_proforma_id = ?
+                  WHERE id = ?
+                `, [result.insertId, pf.id]);
+              }
+            }
+          }
+        });
       }
 
       res.status(200).json({

@@ -587,9 +587,7 @@ export const useInvoiceData = ({
       if (res.status === "Success") {
         const client = res.data;
         const received = Number(client.received_amt || 0);
-        const total = Number(client.current_amt || 0);
-        const current = Math.max(total - received, 0);
-        client.current_amt = current;
+        const current = Number(client.current_amt || 0);
 
         if (current <= 0 && received > 0) {
           client.tag_received_amt = "received";

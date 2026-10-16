@@ -1171,57 +1171,59 @@ exports.deleteProforma = async (req, res) => {
       const proposalId = proforma[0].proposal_id;
       await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
       
-      const remainingProformas = await runQuery(
-        `SELECT id, total_amount, status, payment_status FROM re_proposal_proforma WHERE proposal_id = ?`,
-        [proposalId],
-      );
-
-      if (remainingProformas.length === 0) {
-        await runQuery(
-          `UPDATE re_proposals SET status = 'client_approved' WHERE id = ?`,
+      if (proposalId) {
+        const remainingProformas = await runQuery(
+          `SELECT id, total_amount, status, payment_status FROM re_proposal_proforma WHERE proposal_id = ?`,
           [proposalId],
         );
-      } else {
-        let allPaid = true;
-        let anyPaymentReceived = false;
 
-        for (const pf of remainingProformas) {
-          const pfPayments = await runQuery(
-            `SELECT SUM(amount) as paid FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
-            [pf.id],
+        if (remainingProformas.length === 0) {
+          await runQuery(
+            `UPDATE re_proposals SET status = 'client_approved' WHERE id = ?`,
+            [proposalId],
           );
-          const paid = Number(pfPayments[0]?.paid || 0);
-          const pfTot = Number(pf.total_amount || 0);
-          const isPfPaid =
-            pf.status === "paid" ||
-            pf.payment_status === "fully-paid" ||
-            (paid >= pfTot - 0.05 && pfTot > 0);
+        } else {
+          let allPaid = true;
+          let anyPaymentReceived = false;
 
-          if (
-            paid > 0 ||
-            ["paid", "partially_paid", "payment_received", "invoiced"].includes(
-              pf.status,
-            ) ||
-            pf.payment_status === "partial" ||
-            pf.payment_status === "fully-paid"
-          ) {
-            anyPaymentReceived = true;
-          }
-          if (!isPfPaid) {
-            allPaid = false;
-          }
-        }
+          for (const pf of remainingProformas) {
+            const pfPayments = await runQuery(
+              `SELECT SUM(amount) as paid FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+              [pf.id],
+            );
+            const paid = Number(pfPayments[0]?.paid || 0);
+            const pfTot = Number(pf.total_amount || 0);
+            const isPfPaid =
+              pf.status === "paid" ||
+              pf.payment_status === "fully-paid" ||
+              (paid >= pfTot - 0.05 && pfTot > 0);
 
-        let nextStatus = "proforma_generated";
-        if (allPaid) {
-          nextStatus = "invoiced";
-        } else if (anyPaymentReceived) {
-          nextStatus = "partially_paid";
+            if (
+              paid > 0 ||
+              ["paid", "partially_paid", "payment_received", "invoiced"].includes(
+                pf.status,
+              ) ||
+              pf.payment_status === "partial" ||
+              pf.payment_status === "fully-paid"
+            ) {
+              anyPaymentReceived = true;
+            }
+            if (!isPfPaid) {
+              allPaid = false;
+            }
+          }
+
+          let nextStatus = "proforma_generated";
+          if (allPaid) {
+            nextStatus = "invoiced";
+          } else if (anyPaymentReceived) {
+            nextStatus = "partially_paid";
+          }
+          await runQuery(
+            `UPDATE re_proposals SET status = ? WHERE id = ?`,
+            [nextStatus, proposalId],
+          );
         }
-        await runQuery(
-          `UPDATE re_proposals SET status = ? WHERE id = ?`,
-          [nextStatus, proposalId],
-        );
       }
     } else {
       await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
@@ -3263,7 +3265,7 @@ exports.updateProformaSnapshot = async (req, res) => {
     const updatedSnapshot = JSON.stringify(parsed);
     if (column === 'pricing_snapshot' || column === 'ads_snapshot') {
       const fullProfRows = await runQuery(
-        `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, adjustment_amount, is_gst, gst_rate FROM re_proposal_proforma WHERE id = ?`,
+        `SELECT pricing_snapshot, ads_snapshot, discount_snapshot, adjustment_amount, is_gst, gst_rate, previous_balance_amount FROM re_proposal_proforma WHERE id = ?`,
         [proformaId]
       );
       if (fullProfRows.length > 0) {
@@ -3288,9 +3290,11 @@ exports.updateProformaSnapshot = async (req, res) => {
           fullProf.is_gst,
           fullProf.gst_rate
         );
+        const prevBal = Number(fullProf.previous_balance_amount || 0);
+        const finalTotal = totalAmount + prevBal;
         await runQuery(
           `UPDATE re_proposal_proforma SET ${column} = ?, base_amount = ?, gst_amount = ?, total_amount = ? WHERE id = ?`,
-          [updatedSnapshot, baseAmount, gstAmount, totalAmount, proformaId]
+          [updatedSnapshot, baseAmount, gstAmount, finalTotal, proformaId]
         );
       } else {
         await runQuery(`UPDATE re_proposal_proforma SET ${column} = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
@@ -3349,11 +3353,14 @@ exports.updateProformaDiscount = async (req, res) => {
       prof.gst_rate
     );
 
+    const prevBal = Number(prof.previous_balance_amount || 0);
+    const finalTotal = totalAmount + prevBal;
+
     await runQuery(
       `UPDATE re_proposal_proforma 
        SET discount_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
        WHERE id = ?`,
-      [discountObj ? JSON.stringify(discountObj) : null, baseAmount, gstAmount, totalAmount, id]
+      [discountObj ? JSON.stringify(discountObj) : null, baseAmount, gstAmount, finalTotal, id]
     );
 
     res.status(200).json({
@@ -3363,7 +3370,7 @@ exports.updateProformaDiscount = async (req, res) => {
         discount_snapshot: discountObj ? JSON.stringify(discountObj) : null,
         base_amount: baseAmount,
         gst_amount: gstAmount,
-        total_amount: totalAmount,
+        total_amount: finalTotal,
       }
     });
   } catch (error) {
@@ -3408,11 +3415,14 @@ exports.updateProformaAdjustment = async (req, res) => {
       prof.gst_rate
     );
 
+    const prevBal = Number(prof.previous_balance_amount || 0);
+    const finalTotal = totalAmount + prevBal;
+
     await runQuery(
       `UPDATE re_proposal_proforma 
        SET adjustment_amount = ?, adjustment_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
        WHERE id = ?`,
-      [adjAmt, adjustmentObj ? JSON.stringify(adjustmentObj) : null, baseAmount, gstAmount, totalAmount, id]
+      [adjAmt, adjustmentObj ? JSON.stringify(adjustmentObj) : null, baseAmount, gstAmount, finalTotal, id]
     );
 
     res.status(200).json({
@@ -3423,7 +3433,7 @@ exports.updateProformaAdjustment = async (req, res) => {
         adjustment_snapshot: adjustmentObj ? JSON.stringify(adjustmentObj) : null,
         base_amount: baseAmount,
         gst_amount: gstAmount,
-        total_amount: totalAmount,
+        total_amount: finalTotal,
       }
     });
   } catch (error) {

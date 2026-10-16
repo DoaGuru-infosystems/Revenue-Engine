@@ -791,6 +791,7 @@ function ProformaServices() {
         total_amount: totalAmt,
         is_gst: isGSTBill ? 1 : 0,
         gst_rate: gstRate,
+        previous_balance_amount: Number(draft?.previous_balance_amount || clientContext?.previous_balance_amount || 0),
       };
 
       const discountPayload = isDiscountApplied ? {

@@ -187,27 +187,36 @@ export const useInvoiceCalculations = ({
     const currentBillGrossReceived = Number(clientData?.received_amt || 0);
     const amountForServicesIncGst = Math.max(currentBillGrossReceived - realizedAdBudget, 0);
 
-    const activeTaxableSubtotal = isGST
-      ? Number((amountForServicesIncGst / 1.18).toFixed(2))
-      : amountForServicesIncGst;
-
     const pastReceivedAmountForCalc = Number(clientData?.total_past_received || 0);
     const pastAdBudgetForCalc = Number(clientData?.total_past_ad_budget || 0);
     const pastServicesIncGst = Math.max(pastReceivedAmountForCalc - pastAdBudgetForCalc, 0);
+
+    // Previous balance is settled first without compounding GST
+    const pastPrevBalPaid = Math.min(previousBalanceAmount, pastServicesIncGst);
+    const remainingPrevBalBeforeCurrent = Math.max(0, previousBalanceAmount - pastPrevBalPaid);
+    const currentPrevBalPaid = Math.min(remainingPrevBalBeforeCurrent, amountForServicesIncGst);
+
+    // The portion of current bill paying for current services (inclusive of GST)
+    const currentServicesIncGst = Math.max(0, amountForServicesIncGst - currentPrevBalPaid);
+    const activeTaxableSubtotal = isGST
+      ? Number((currentServicesIncGst / 1.18).toFixed(2))
+      : currentServicesIncGst;
+
+    const pastServicesNetOfPrevBal = Math.max(0, pastServicesIncGst - pastPrevBalPaid);
     const pastActiveTaxableSubtotal = isGST
-      ? Number((pastServicesIncGst / 1.18).toFixed(2))
-      : pastServicesIncGst;
+      ? Number((pastServicesNetOfPrevBal / 1.18).toFixed(2))
+      : pastServicesNetOfPrevBal;
 
     const projectValueDeferred = Math.max(
-      totalWithPreviousBalance - activeTaxableSubtotal - pastActiveTaxableSubtotal,
+      totalAfterAdjustment - activeTaxableSubtotal - pastActiveTaxableSubtotal,
       0
     );
 
     // 6. GST & Totals
     const gstAmount = isGST
       ? isPartialPayment && currentBillGrossReceived > 0
-        ? activeTaxableSubtotal * 0.18
-        : totalAfterAdjustment * 0.18
+        ? Number((activeTaxableSubtotal * 0.18).toFixed(2))
+        : Number((totalAfterAdjustment * 0.18).toFixed(2))
       : 0;
 
     const totalgstamount = totalAfterAdjustment + gstAmount + previousBalanceAmount;
@@ -217,7 +226,7 @@ export const useInvoiceCalculations = ({
 
     const activeInvoiceTotal =
       isPartialPayment && currentBillGrossReceived > 0
-        ? activeTaxableSubtotal + gstAmount
+        ? activeTaxableSubtotal + gstAmount + currentPrevBalPaid
         : invoiceTotal;
 
     const budgetAwareCurrentTotalAmount = currentTotalAmount + visibleAdBudget;
@@ -311,8 +320,8 @@ export const useInvoiceCalculations = ({
     // Quotation / Proforma / Balance Proforma specific totals
     const dmTotalAfterDiscount = Math.max(0, graphicTotal - discountAmount);
     const dmTotalAfterAdjustment = Math.max(0, dmTotalAfterDiscount - adjustmentAmount);
-    const dmGstAmount = isGST ? dmTotalAfterAdjustment * 0.18 : 0;
-    const dmSubtotalWithGst = dmTotalAfterAdjustment + dmGstAmount;
+    const dmGstAmount = isGST ? Number((dmTotalAfterAdjustment * 0.18).toFixed(2)) : 0;
+    const dmSubtotalWithGst = dmTotalAfterAdjustment + dmGstAmount + previousBalanceAmount;
 
     const googleAdItem = adsData.find((ad) =>
       (ad.category_name || "").toLowerCase().includes("google")
@@ -351,13 +360,14 @@ export const useInvoiceCalculations = ({
     let displayedSgst = dmGstAmount / 2;
 
     if (isBalProf && Math.abs(dmSubtotalWithGst - displayedSubtotal) > 1) {
+      const serviceSubtotalWithGst = Math.max(0, displayedSubtotal - previousBalanceAmount);
       if (isGST) {
-        displayedTaxable = Math.round((displayedSubtotal / 1.18) * 100) / 100;
-        const gstTotal = displayedSubtotal - displayedTaxable;
+        displayedTaxable = Math.round((serviceSubtotalWithGst / 1.18) * 100) / 100;
+        const gstTotal = serviceSubtotalWithGst - displayedTaxable;
         displayedCgst = gstTotal / 2;
         displayedSgst = gstTotal / 2;
       } else {
-        displayedTaxable = displayedSubtotal;
+        displayedTaxable = serviceSubtotalWithGst;
         displayedCgst = 0;
         displayedSgst = 0;
       }
@@ -437,6 +447,7 @@ export const useInvoiceCalculations = ({
       totalAfterAdjustment,
       previousBalanceAmount,
       totalWithPreviousBalance,
+      currentPrevBalPaid,
       dmTotalAfterAdjustment,
       dmGstAmount,
       dmSubtotalWithGst,
