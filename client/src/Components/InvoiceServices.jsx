@@ -89,6 +89,7 @@ function ProformaServices() {
   const [selectedCompCategory, setSelectedCompCategory] = useState("");
   const [selectedCompEditId, setSelectedCompEditId] = useState("");
   const [compQuantity, setCompQuantity] = useState("1");
+  const [selectedCompAdditionalServices, setSelectedCompAdditionalServices] = useState([]);
 
   const clientContext = useMemo(() => ({
     id: selectedClientFromState?.id || draft?.client_id || "",
@@ -100,6 +101,7 @@ function ProformaServices() {
     bill_type: draft?.bill_type || "",
     duration_start_date: draft?.duration_start_date || "",
     duration_end_date: draft?.duration_end_date || "",
+    previous_balance_amount: Number(draft?.previous_balance_amount || selectedClientFromState?.previous_balance_amount || 0),
   }), [draft, selectedClientFromState]);
 
   const hasClientContext = Boolean(clientContext.name || clientContext.phone || clientContext.id);
@@ -273,19 +275,53 @@ function ProformaServices() {
   }, [selectedCompCategory, selectedCompServiceObj]);
   const selectedCompEditingType = useMemo(() => {
     if (!selectedCompCategoryObj) return null;
-    return (Array.isArray(selectedCompCategoryObj.editing_types) ? selectedCompCategoryObj.editing_types : [])
-      .find((e) => String(e.editing_type_id) === selectedCompEditId) || null;
+    const list = Array.isArray(selectedCompCategoryObj.editing_types) ? selectedCompCategoryObj.editing_types : [];
+    if (list.length === 0) {
+      return {
+        editing_type_id: 0,
+        editing_type_name: "Standard",
+        amount: Number(selectedCompCategoryObj.amount || 0),
+      };
+    }
+    return list.find((e) => String(e.editing_type_id) === selectedCompEditId) || null;
   }, [selectedCompCategoryObj, selectedCompEditId]);
+
+  const availableCompAdditionalServices = useMemo(() => {
+    if (!selectedCompCategoryObj) return [];
+    if (Array.isArray(selectedCompCategoryObj.additional_services) && selectedCompCategoryObj.additional_services.length > 0) {
+      return selectedCompCategoryObj.additional_services;
+    }
+    const allAddons = Array.isArray(selectedCompServiceObj?.additional_services)
+      ? selectedCompServiceObj.additional_services
+      : [];
+    return allAddons.filter((ad) => {
+      if (!ad.category_id && !ad.category_name) return true;
+      if (selectedCompCategoryObj.category_id && ad.category_id) {
+        return String(ad.category_id) === String(selectedCompCategoryObj.category_id);
+      }
+      if (selectedCompCategoryObj.category_name && ad.category_name) {
+        return String(ad.category_name).trim().toLowerCase() === String(selectedCompCategoryObj.category_name).trim().toLowerCase();
+      }
+      return false;
+    });
+  }, [selectedCompServiceObj, selectedCompCategoryObj]);
+
+  const compAdditionalServicesTotal = useMemo(() => {
+    const qty = Math.max(1, toNumber(compQuantity || 1));
+    return selectedCompAdditionalServices.reduce((sum, item) => sum + ((Number(item.amount || item.unit_price) || 0) * qty), 0);
+  }, [selectedCompAdditionalServices, compQuantity]);
 
   const handleCompServiceChange = (val) => {
     setSelectedCompService(val);
     setSelectedCompCategory("");
     setSelectedCompEditId("");
     setCompQuantity("1");
+    setSelectedCompAdditionalServices([]);
   };
 
   const handleCompCategoryChange = (val) => {
     setSelectedCompCategory(val);
+    setSelectedCompAdditionalServices([]);
     if (selectedCompServiceObj && val) {
       const category = (Array.isArray(selectedCompServiceObj.categories) ? selectedCompServiceObj.categories : []).find(
         (c) => String(c.category_id) === val
@@ -357,6 +393,17 @@ function ProformaServices() {
       include_content_posting: 0,
       include_thumbnail_creation: 0,
       addon_labels: [],
+      additional_services: selectedCompAdditionalServices.map((ad) => ({
+        ...ad,
+        category_id: selectedCompCategoryObj?.category_id || selectedCompCategoryObj?.id || ad.category_id || null,
+        category_name: selectedCompCategoryObj?.category_name || ad.category_name || "",
+        service_name: selectedCompServiceObj?.service_name || ad.service_name || "",
+        quantity: qty,
+        unit_price: Number(ad.amount || ad.unit_price || 0),
+        amount: Number(ad.amount || ad.unit_price || 0),
+        total: 0,
+        total_amount: 0,
+      })),
       total: 0,
       is_complimentary: true,
     };
@@ -374,6 +421,7 @@ function ProformaServices() {
     setSelectedCompCategory("");
     setSelectedCompEditId("");
     setCompQuantity("1");
+    setSelectedCompAdditionalServices([]);
   };
 
   const addGraphicServiceRow = () => {
@@ -633,7 +681,8 @@ function ProformaServices() {
     [clientContext.bill_type, draft?.bill_type]
   );
   const gstAmount = useMemo(() => isGSTBill ? Number((discountedGraphic * 0.18).toFixed(2)) : 0, [isGSTBill, discountedGraphic]);
-  const grandTotal = useMemo(() => discountedGraphic + gstAmount + adsTotal, [discountedGraphic, gstAmount, adsTotal]);
+  const previousBalanceAmount = useMemo(() => Number(clientContext.previous_balance_amount || 0), [clientContext.previous_balance_amount]);
+  const grandTotal = useMemo(() => discountedGraphic + gstAmount + adsTotal + previousBalanceAmount, [discountedGraphic, gstAmount, adsTotal, previousBalanceAmount]);
 
   // ── Discount modal handlers ──
   const openDiscountModal = () => {
@@ -737,6 +786,7 @@ function ProformaServices() {
           quantity: item.quantity,
           include_content_posting: 0,
           include_thumbnail_creation: 0,
+          additional_services: Array.isArray(item.additional_services) ? item.additional_services : [],
           total_amount: 0,
           total_price: 0,
           is_complimentary: true,
@@ -753,7 +803,7 @@ function ProformaServices() {
       const adsBudgetTotal = adsServicesItems.reduce((sum, item) => sum + Number(item.budget || 0), 0);
       const baseAmt   = Number((discountedGraphic + adsBudgetTotal).toFixed(2));
       const gstAmt    = Number(gstAmount.toFixed(2));
-      const totalAmt  = Number((baseAmt + gstAmt).toFixed(2));
+      const totalAmt  = Number((baseAmt + gstAmt + previousBalanceAmount).toFixed(2));
 
       // ── Discount payload ──
       const isDiscountApplied = discountAmount > 0;
@@ -791,7 +841,7 @@ function ProformaServices() {
         total_amount: totalAmt,
         is_gst: isGSTBill ? 1 : 0,
         gst_rate: gstRate,
-        previous_balance_amount: Number(draft?.previous_balance_amount || clientContext?.previous_balance_amount || 0),
+        previous_balance_amount: previousBalanceAmount,
       };
 
       const discountPayload = isDiscountApplied ? {
@@ -1692,6 +1742,61 @@ function ProformaServices() {
                   />
                 </div>
 
+                {/* Dynamic Additional Services for Complimentary */}
+                { availableCompAdditionalServices.length > 0 && (
+                  <div>
+                    <div className="is-section-title" style={ { marginTop: 6, display: "flex", alignItems: "center", gap: 5 } }>
+                      <Sparkles size={ 12 } style={ { color: "#a855f7" } } />
+                      <span style={{ color: "#d8b4fe" }}>Additional Services</span>
+                    </div>
+                    <div style={ { background: "rgba(168,85,247,0.03)", border: "1px solid rgba(168,85,247,0.18)", borderRadius: 11, padding: "6px 14px" } }>
+                      { availableCompAdditionalServices.map((ad) => {
+                        const isChecked = selectedCompAdditionalServices.some((s) => s.id === ad.id);
+                        return (
+                          <div key={ ad.id } className="is-addon-row">
+                            <span style={ { fontSize: 12.5, color: "#e2e8f0" } }>{ ad.additional_service_name || ad.name }</span>
+                            <div style={ { display: "flex", alignItems: "center", gap: 10 } }>
+                              <span style={ { fontSize: 11.5, fontWeight: 600, color: "#c084fc" } }>
+                                +{ formatRs((Number(ad.amount || ad.unit_price) || 0) * Math.max(1, toNumber(compQuantity || 1))) } (Free)
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={ isChecked }
+                                onChange={ (e) => {
+                                  const currentQty = Math.max(1, toNumber(compQuantity || 1));
+                                  const unitAmt = Number(ad.amount || ad.unit_price) || 0;
+                                  if (e.target.checked) {
+                                    setSelectedCompAdditionalServices((prev) => [
+                                      ...prev,
+                                      {
+                                        id: ad.id,
+                                        service_id: ad.service_id,
+                                        category_id: ad.category_id || selectedCompCategoryObj?.id || null,
+                                        category_name: ad.category_name || selectedCompCategoryObj?.category_name || "",
+                                        service_name: selectedCompServiceObj?.service_name || "",
+                                        name: ad.additional_service_name || ad.name,
+                                        amount: unitAmt,
+                                        unit_price: unitAmt,
+                                        quantity: currentQty,
+                                        total: 0,
+                                        total_amount: 0,
+                                      },
+                                    ]);
+                                  } else {
+                                    setSelectedCompAdditionalServices((prev) => prev.filter((s) => s.id !== ad.id));
+                                  }
+                                } }
+                                className="is-checkbox"
+                                style={{ accentColor: "#a855f7" }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      }) }
+                    </div>
+                  </div>
+                ) }
+
                 <div className="is-preview">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                     <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>Rate / Price</span>
@@ -1699,6 +1804,14 @@ function ProformaServices() {
                       {formatRs(selectedCompEditingType?.amount || selectedCompEditingType?.editing_type_amount || 0)}
                     </span>
                   </div>
+                  {selectedCompAdditionalServices.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>Additional Services</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#c084fc" }}>
+                        +{formatRs(compAdditionalServicesTotal)} (Free)
+                      </span>
+                    </div>
+                  )}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "rgba(255,255,255,0.45)", fontWeight: 500 }}>
                       <Sparkles size={13} style={{ color: "#a855f7" }} /> Preview Total
@@ -1917,6 +2030,12 @@ function ProformaServices() {
                   <div style={ { display: "flex", justifyContent: "space-between", color: "rgba(255,255,255,0.45)" } }>
                     <span>Ads Budget (excl. discount)</span>
                     <span>+ { formatRs(adsTotal) }</span>
+                  </div>
+                ) }
+                { previousBalanceAmount > 0 && (
+                  <div style={ { display: "flex", justifyContent: "space-between", color: "#38bdf8", fontWeight: 600 } }>
+                    <span>Previous Balance (बकाया)</span>
+                    <span>+ { formatRs(previousBalanceAmount) }</span>
                   </div>
                 ) }
                 <div style={ { display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(184,150,46,0.25)", paddingTop: 7, fontWeight: 700, color: "#d4a940", fontSize: 14 } }>

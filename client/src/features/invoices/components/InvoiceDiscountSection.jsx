@@ -70,49 +70,14 @@ export default function InvoiceDiscountSection({
                   </td>
                 </tr>
               )}
-              {prevBal > 0 ? (
-                <>
-                  <tr className="bg-orange-50 font-semibold">
-                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
-                      Current Services Subtotal
-                    </td>
-                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
-                      ₹{formatAmountNoDecimals(baseServicesSubtotal)}
-                    </td>
-                  </tr>
-                  <tr
-                    style={{
-                      color: "#1d4ed8",
-                      background: "#eff6ff",
-                      fontWeight: 700,
-                    }}
-                  >
-                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
-                      Add: Previous Balance (Pichla Bakaya)
-                    </td>
-                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
-                      +₹{formatAmountNoDecimals(prevBal)}
-                    </td>
-                  </tr>
-                  <tr className="bg-green-50 font-bold" style={{ color: "#166534" }}>
-                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
-                      Total Project Base Value
-                    </td>
-                    <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
-                      ₹{formatAmountNoDecimals(baseServicesSubtotal + prevBal)}
-                    </td>
-                  </tr>
-                </>
-              ) : (
-                <tr className="bg-orange-50 font-semibold">
-                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
-                    Subtotal
-                  </td>
-                  <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
-                    ₹{formatAmountNoDecimals(baseServicesSubtotal)}
-                  </td>
-                </tr>
-              )}
+              <tr className="bg-orange-50 font-semibold">
+                <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
+                  {prevBal > 0 ? "Current Services Subtotal" : "Subtotal"}
+                </td>
+                <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right w-[15%]">
+                  ₹{formatAmountNoDecimals(baseServicesSubtotal)}
+                </td>
+              </tr>
             </tbody>
           </table>
         </section>

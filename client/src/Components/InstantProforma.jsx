@@ -91,6 +91,13 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   const [predefinedNotes, setPredefinedNotes] = useState([]);
   const [customNote, setCustomNote] = useState("");
   const [selectedPredefinedNote, setSelectedPredefinedNote] = useState("");
+  const [previousBalance, setPreviousBalance] = useState({
+    totalPending: 0,
+    include: true,
+    customAmount: "",
+    pendingProformas: [],
+    loading: false,
+  });
 
   const startRef = useRef(null);
   const endRef = useRef(null);
@@ -101,6 +108,47 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     setProformaForm((prev) => (prev.dg_employee ? prev : { ...prev, dg_employee: currentUser.name }));
     setClientForm((prev) => (prev.dg_employee ? prev : { ...prev, dg_employee: currentUser.name }));
   }, [currentUser?.name]);
+
+  const fetchPreviousBalance = useCallback(
+    async (clientId) => {
+      if (!clientId || !token) {
+        setPreviousBalance({
+          totalPending: 0,
+          include: true,
+          customAmount: "",
+          pendingProformas: [],
+          loading: false,
+        });
+        return;
+      }
+      try {
+        setPreviousBalance((prev) => ({ ...prev, loading: true }));
+        const res = await axios.get(
+          `${baseURL}/auth/api/re_calculator/client-previous-balance/${clientId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (res.data?.status === "Success" && res.data?.data) {
+          const { totalPending, pendingProformas } = res.data.data;
+          const tot = Number(totalPending || 0);
+          setPreviousBalance({
+            totalPending: tot,
+            include: tot > 0,
+            customAmount: tot > 0 ? String(tot) : "",
+            pendingProformas: pendingProformas || [],
+            loading: false,
+          });
+        } else {
+          setPreviousBalance((prev) => ({ ...prev, loading: false }));
+        }
+      } catch (e) {
+        console.error("Error fetching previous balance:", e);
+        setPreviousBalance((prev) => ({ ...prev, loading: false }));
+      }
+    },
+    [baseURL, token]
+  );
 
   const fetchClients = useCallback(async () => {
     if (!token) return [];
@@ -168,6 +216,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     (client) => {
       if (!client) return;
       setSelectedClientId(client.id);
+      fetchPreviousBalance(client.id);
       setProformaForm((prev) => ({
         ...prev,
         client_name: client.client_name || "",
@@ -178,7 +227,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
         dg_employee: client.dg_employee || prev.dg_employee || currentUser?.name || "",
       }));
     },
-    [currentUser?.name]
+    [currentUser?.name, fetchPreviousBalance]
   );
 
   const handleProformaChange = (e) => {
@@ -257,6 +306,13 @@ function InstantProforma({ onBack, handleSessionExpired }) {
       return;
     }
     setProformaForm({ ...baseProformaForm, dg_employee: currentUser?.name || "" });
+    setPreviousBalance({
+      totalPending: 0,
+      include: true,
+      customAmount: "",
+      pendingProformas: [],
+      loading: false,
+    });
   };
 
   const isFormInvalid =
@@ -286,10 +342,21 @@ function InstantProforma({ onBack, handleSessionExpired }) {
       }
     }
 
+    const prevBalToApply =
+      previousBalance.include && Number(previousBalance.totalPending) > 0
+        ? Number(previousBalance.customAmount || 0)
+        : 0;
+
     navigate("/admin/invoice-services", {
       state: {
-        proformaDraft: proformaForm,
-        selectedClient,
+        proformaDraft: {
+          ...proformaForm,
+          previous_balance_amount: prevBalToApply,
+        },
+        selectedClient: {
+          ...selectedClient,
+          previous_balance_amount: prevBalToApply,
+        },
       },
     });
   };
@@ -308,6 +375,9 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     { label: "Total Days", value: durationDays ? `${durationDays} days` : null },
     { label: "Payment", value: proformaForm.payment_mode },
     { label: "Client ID", value: selectedClient ? `#${selectedClient.id}` : null },
+    ...(previousBalance.include && Number(previousBalance.customAmount || 0) > 0
+      ? [{ label: "Prev Balance", value: `₹${Number(previousBalance.customAmount).toLocaleString("en-IN")}` }]
+      : []),
   ];
 
   return (
@@ -696,6 +766,52 @@ function InstantProforma({ onBack, handleSessionExpired }) {
                 </div>
               </div>
             </div>
+
+            {/* Previous Balance Section (Only visible if client has outstanding balance > 0) */}
+            {previousBalance.loading && (
+              <div className="mt-5 p-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.02] flex items-center gap-2 text-xs text-gray-500">
+                <span className="animate-spin text-orange-500">◌</span> Checking client previous balance...
+              </div>
+            )}
+            {!previousBalance.loading && previousBalance.totalPending > 0 && (
+              <div className="mt-5 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-950/20">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className="flex items-center gap-2.5 cursor-pointer m-0">
+                    <input
+                      type="checkbox"
+                      checked={previousBalance.include}
+                      onChange={(e) => setPreviousBalance((prev) => ({ ...prev, include: e.target.checked }))}
+                      className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer accent-amber-500"
+                    />
+                    <span className="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400">
+                      Include Previous Balance (पिछला बकाया जोड़ें)
+                    </span>
+                  </label>
+                  <span className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300">
+                    Total Pending: ₹{Number(previousBalance.totalPending).toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                {previousBalance.include && (
+                  <div className="mt-3 flex items-center gap-3 flex-wrap pt-2.5 border-t border-amber-500/20">
+                    <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                      Carry Forward Amount (₹):
+                    </span>
+                    <input
+                      type="number"
+                      value={previousBalance.customAmount}
+                      onChange={(e) => setPreviousBalance((prev) => ({ ...prev, customAmount: e.target.value }))}
+                      className="w-36 px-3 py-1 text-xs sm:text-sm rounded-lg border border-amber-500/40 bg-white dark:bg-slate-900 text-gray-900 dark:text-white font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                    {previousBalance.pendingProformas.length > 0 && (
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                        From {previousBalance.pendingProformas.map((p) => `${p.proforma_number || '#' + p.id} (₹${Number(p.pending).toLocaleString("en-IN")})`).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notes */}
             <div className="mt-6">

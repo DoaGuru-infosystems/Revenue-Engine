@@ -2345,13 +2345,36 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
     if (targetProformaId) {
       try {
         const pf = await query(
-          "SELECT id, proforma_number FROM re_proposal_proforma WHERE id = ?",
+          "SELECT id, proforma_number, duration_start_date, duration_end_date FROM re_proposal_proforma WHERE id = ?",
           [targetProformaId]
         );
         if (pf.length > 0) {
           invoice.proforma_number = pf[0].proforma_number || `PROF-${pf[0].id}`;
+          if (!invoice.duration_start_date && pf[0].duration_start_date) {
+            invoice.duration_start_date = pf[0].duration_start_date;
+          }
+          if (!invoice.duration_end_date && pf[0].duration_end_date) {
+            invoice.duration_end_date = pf[0].duration_end_date;
+          }
         } else {
           invoice.proforma_number = `PROF-${targetProformaId}`;
+        }
+      } catch (err) {}
+    }
+
+    if ((!invoice.duration_start_date || !invoice.duration_end_date) && invoice.proposal_id) {
+      try {
+        const prop = await query(
+          "SELECT billing_start_date, billing_end_date FROM re_proposal WHERE id = ?",
+          [invoice.proposal_id]
+        );
+        if (prop.length > 0) {
+          if (!invoice.duration_start_date && prop[0].billing_start_date) {
+            invoice.duration_start_date = prop[0].billing_start_date;
+          }
+          if (!invoice.duration_end_date && prop[0].billing_end_date) {
+            invoice.duration_end_date = prop[0].billing_end_date;
+          }
         }
       } catch (err) {}
     }

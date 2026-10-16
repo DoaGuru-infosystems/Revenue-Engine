@@ -4081,9 +4081,7 @@ exports.saveDirectProforma = async (req, res) => {
       finalTotal = computed.totalAmount + prevBal;
     } catch (calcErr) {
       console.warn("Could not recalculate proforma totals in saveDirectProforma:", calcErr.message);
-      if (finalTotal !== undefined && finalTotal !== null) {
-        finalTotal = Number(finalTotal) + prevBal;
-      }
+      finalTotal = Number(finalBase || 0) + Number(finalGst || 0) + prevBal;
     }
 
     const query = `

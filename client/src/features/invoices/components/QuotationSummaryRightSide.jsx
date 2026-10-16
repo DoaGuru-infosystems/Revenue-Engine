@@ -61,13 +61,6 @@ export default function QuotationSummaryRightSide({
           </div>
         )}
 
-        {previousBalanceAmount > 0 && (
-          <div className="flex justify-between items-center text-blue-700 font-semibold py-0.5">
-            <span>Previous Balance </span>
-            <span>+₹{previousBalanceAmount.toLocaleString("en-IN")}</span>
-          </div>
-        )}
-
         <div className="flex justify-between items-center text-gray-600 py-0.5">
           <span>{previousBalanceAmount > 0 ? "Taxable Service Amount" : "Taxable Amount"}</span>
           <span className="font-semibold text-gray-900">
@@ -102,6 +95,13 @@ export default function QuotationSummaryRightSide({
               </span>
             </div>
           </>
+        )}
+
+        {previousBalanceAmount > 0 && (
+          <div className="flex justify-between items-center text-blue-700 font-semibold py-0.5">
+            <span>Previous Balance</span>
+            <span>+₹{previousBalanceAmount.toLocaleString("en-IN")}</span>
+          </div>
         )}
 
         <div className="flex justify-between items-center font-bold text-gray-800 py-1 border-t border-gray-200">

@@ -3,12 +3,13 @@ import moment from "moment";
 import DocumentCompanyFrom from "../../../shared/document/DocumentCompanyFrom";
 
 export default function InvoiceCustomerInfoCard({
-  clientData = {},
+  clientData: rawClientData,
   isProforma = false,
   isBalanceProforma = false,
   isQuotation = false,
   isGST = false,
 }) {
+  const clientData = rawClientData || {};
   const isGstActive =
     Boolean(isGST) ||
     isGST > 0 ||
@@ -19,6 +20,20 @@ export default function InvoiceCustomerInfoCard({
   const refProforma =
     clientData?.proforma_number ||
     (clientData?.proforma_id ? `PROF-${clientData.proforma_id}` : "");
+
+  const isValidDate = (d) => {
+    if (!d) return false;
+    const str = String(d).trim().toLowerCase();
+    if (!str || str === "invalid date" || str === "0000-00-00" || str === "null" || str === "undefined") {
+      return false;
+    }
+    const m = moment(d);
+    return m.isValid() && m.year() > 1970;
+  };
+
+  const hasValidDuration =
+    isValidDate(clientData?.duration_start_date) &&
+    isValidDate(clientData?.duration_end_date);
 
   return (
     <>
@@ -39,55 +54,65 @@ export default function InvoiceCustomerInfoCard({
       {/* Client Details */}
       <div className="flex justify-between text-xs mb-1 print:mb-0.5 print:text-[11px] print:leading-tight">
         <div className="space-y-1 print:space-y-0.5">
-          <p>
-            <strong>Payment Mode:</strong> {clientData?.payment_mode}
-          </p>
-          <p>
-            <strong>Service From:</strong>{" "}
-            {moment(clientData?.duration_start_date).format("DD/MM/YYYY")}{" "}
-            to{" "}
-            {moment(clientData?.duration_end_date).format("DD/MM/YYYY")}
-          </p>
+          {clientData?.payment_mode && (
+            <p>
+              <strong>Payment Mode:</strong> {clientData?.payment_mode}
+            </p>
+          )}
+          {hasValidDuration && (
+            <p>
+              <strong>Service From:</strong>{" "}
+              {moment(clientData?.duration_start_date).format("DD/MM/YYYY")}{" "}
+              to{" "}
+              {moment(clientData?.duration_end_date).format("DD/MM/YYYY")}
+            </p>
+          )}
         </div>
 
         <div className="space-y-1 print:space-y-0.5 text-xs print:text-[11px]">
-          <p>
-            {isProforma ? (
-              <>
+          {isProforma ? (
+            <>
+              <p>
                 <strong>Proforma Invoice No: </strong> {clientData?.bill_number}
-                {isBalanceProforma && clientData?.source_proforma_number && (
-                  <span className="text-gray-500 font-semibold text-[11px] print:text-[10px] ml-1">
-                    Ref: {clientData.source_proforma_number}
-                  </span>
-                )}
-              </>
-            ) : isQuotation ? (
-              <>
-                <strong>Quotation: </strong> {clientData?.bill_number || clientData?.id}
-              </>
-            ) : isGstActive ? (
-              <>
+              </p>
+              {isBalanceProforma && clientData?.source_proforma_number && (
+                <p className="text-gray-500 font-semibold text-[11px] print:text-[10px]">
+                  Ref: {clientData.source_proforma_number}
+                </p>
+              )}
+            </>
+          ) : isQuotation ? (
+            <p>
+              <strong>Quotation: </strong> {clientData?.bill_number || clientData?.id}
+            </p>
+          ) : isGstActive ? (
+            <>
+              <p>
                 <strong>GST Invoice No: </strong> {clientData?.bill_number}
-                {refProforma && (
-                  <span className="text-gray-600 font-semibold text-[11px] print:text-[10px] ml-1">
-                    Ref: {refProforma}
-                  </span>
-                )}
-              </>
-            ) : (
-              <>
+              </p>
+              {refProforma && (
+                <p className="text-gray-600 font-semibold text-[11px] print:text-[10px]">
+                  Ref: {refProforma}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <p>
                 <strong>N-GST Invoice No: </strong> {clientData?.bill_number}
-                {refProforma && (
-                  <span className="text-gray-600 font-semibold text-[11px] print:text-[10px] ml-1">
-                    Ref: {refProforma}
-                  </span>
-                )}
-              </>
-            )}
-          </p>
+              </p>
+              {refProforma && (
+                <p className="text-gray-600 font-semibold text-[11px] print:text-[10px]">
+                  Ref: {refProforma}
+                </p>
+              )}
+            </>
+          )}
           <p>
             <strong>Date:</strong>{" "}
-            {moment(clientData?.created_at).format("DD/MM/YYYY")}
+            {clientData?.created_at && moment(clientData.created_at).isValid()
+              ? moment(clientData.created_at).format("DD/MM/YYYY")
+              : moment().format("DD/MM/YYYY")}
           </p>
         </div>
       </div>
@@ -110,17 +135,17 @@ export default function InvoiceCustomerInfoCard({
           </p>
           {clientData?.client_gst_no && (
             <p>
-              <strong>GST No:</strong> {clientData.client_gst_no}
+              <strong>GST No:</strong> {clientData?.client_gst_no}
             </p>
           )}
           {clientData?.client_pan_no && (
             <p>
-              <strong>PAN No:</strong> {clientData.client_pan_no}
+              <strong>PAN No:</strong> {clientData?.client_pan_no}
             </p>
           )}
           {clientData?.address && (
             <p>
-              <strong>Address:</strong> {clientData.address}
+              <strong>Address:</strong> {clientData?.address}
             </p>
           )}
         </div>
