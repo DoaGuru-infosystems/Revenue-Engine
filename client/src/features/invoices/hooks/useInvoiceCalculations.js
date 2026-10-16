@@ -135,6 +135,15 @@ export const useInvoiceCalculations = ({
 
     const totalAfterAdjustment = Math.max(0, totalAfterDiscount - adjustmentAmount);
 
+    // 3.2 Previous Balance Calculations
+    const previousBalanceAmount = Number(
+      clientData?.previous_balance_amount !== undefined && clientData?.previous_balance_amount !== null
+        ? clientData.previous_balance_amount
+        : 0
+    );
+
+    const totalWithPreviousBalance = totalAfterAdjustment + previousBalanceAmount;
+
     // 4. Ad Budget Calculations
     const realizedAdBudget = Number(clientData?.realized_ad_budget || 0);
     const realizedGoogleBudget = Number(clientData?.realized_google_budget || 0);
@@ -190,7 +199,7 @@ export const useInvoiceCalculations = ({
       : pastServicesIncGst;
 
     const projectValueDeferred = Math.max(
-      totalAfterAdjustment - activeTaxableSubtotal - pastActiveTaxableSubtotal,
+      totalWithPreviousBalance - activeTaxableSubtotal - pastActiveTaxableSubtotal,
       0
     );
 
@@ -198,12 +207,12 @@ export const useInvoiceCalculations = ({
     const gstAmount = isGST
       ? isPartialPayment && currentBillGrossReceived > 0
         ? activeTaxableSubtotal * 0.18
-        : totalAfterAdjustment * 0.18
+        : totalWithPreviousBalance * 0.18
       : 0;
 
-    const totalgstamount = gstAmount + totalAfterAdjustment;
+    const totalgstamount = gstAmount + totalWithPreviousBalance;
     const currentTotalAmount = totalgstamount + Number(clientData?.previous_amt || 0);
-    const invoiceSubtotal = Math.max(totalAfterAdjustment, 0);
+    const invoiceSubtotal = Math.max(totalWithPreviousBalance, 0);
     const invoiceTotal = invoiceSubtotal + gstAmount;
 
     const activeInvoiceTotal =
@@ -426,6 +435,8 @@ export const useInvoiceCalculations = ({
       dmTotalAfterDiscount,
       adjustmentAmount,
       totalAfterAdjustment,
+      previousBalanceAmount,
+      totalWithPreviousBalance,
       dmTotalAfterAdjustment,
       dmGstAmount,
       dmSubtotalWithGst,

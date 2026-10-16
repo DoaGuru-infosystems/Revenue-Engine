@@ -9,6 +9,7 @@ export default function InvoiceDiscountSection({
   discountAmount = 0,
   selectedAdjustment = null,
   adjustmentAmount = 0,
+  previousBalanceAmount = 0,
   invoiceSubtotal = 0,
   clientData = {},
   publicMode = false,
@@ -58,6 +59,22 @@ export default function InvoiceDiscountSection({
                   </td>
                   <td className="border px-2 py-1 text-right w-[15%]">
                     -₹{formatAmountNoDecimals(adjustmentAmount)}
+                  </td>
+                </tr>
+              )}
+              {previousBalanceAmount > 0 && (
+                <tr
+                  style={{
+                    color: "#1d4ed8",
+                    background: "#eff6ff",
+                    fontWeight: 700,
+                  }}
+                >
+                  <td className="border px-2 py-1 text-right" colSpan={4}>
+                    Previous Balance
+                  </td>
+                  <td className="border px-2 py-1 text-right w-[15%]">
+                    +₹{formatAmountNoDecimals(previousBalanceAmount)}
                   </td>
                 </tr>
               )}

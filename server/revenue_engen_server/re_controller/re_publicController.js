@@ -268,7 +268,7 @@ exports.getPublicInvoiceData = async (req, res) => {
     if (targetProformaId) {
       try {
         const proformaRows = await queryDb(
-          "SELECT id, proforma_number, pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot FROM re_proposal_proforma WHERE id = ?",
+          "SELECT id, proforma_number, pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot, adjustment_amount, adjustment_snapshot, previous_balance_amount FROM re_proposal_proforma WHERE id = ?",
           [targetProformaId]
         );
         if (proformaRows.length > 0) {
@@ -282,10 +282,26 @@ exports.getPublicInvoiceData = async (req, res) => {
           if (!clientData.notes_snapshot && proformaRows[0].notes_snapshot) {
             clientData.notes_snapshot = proformaRows[0].notes_snapshot;
           }
+          if (proformaRows[0].discount_snapshot) {
+            clientData.discount_snapshot = proformaRows[0].discount_snapshot;
+          }
+          if (proformaRows[0].adjustment_amount !== undefined && proformaRows[0].adjustment_amount !== null) {
+            clientData.adjustment_amount = proformaRows[0].adjustment_amount;
+          }
+          if (proformaRows[0].adjustment_snapshot) {
+            clientData.adjustment_snapshot = proformaRows[0].adjustment_snapshot;
+          }
+          if (clientData.previous_balance_amount === undefined || clientData.previous_balance_amount === null || Number(clientData.previous_balance_amount) === 0) {
+            clientData.previous_balance_amount = Number(proformaRows[0].previous_balance_amount || 0);
+          } else {
+            clientData.previous_balance_amount = Number(clientData.previous_balance_amount);
+          }
         }
       } catch (e) {
         console.error("Error backfilling in getPublicInvoiceData:", e);
       }
+    } else {
+      clientData.previous_balance_amount = Number(clientData.previous_balance_amount || 0);
     }
 
     res.status(200).json({

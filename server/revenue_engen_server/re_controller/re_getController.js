@@ -2383,7 +2383,7 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
       invoice.total_past_ad_budget = Number(pastPayments[0].total_past_ad || 0);
 
       const proformaRows = await query(
-        "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot, adjustment_amount, adjustment_snapshot FROM re_proposal_proforma WHERE id = ?",
+        "SELECT pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, discount_snapshot, adjustment_amount, adjustment_snapshot, previous_balance_amount FROM re_proposal_proforma WHERE id = ?",
         [invoice.proforma_id]
       );
       if (proformaRows.length > 0) {
@@ -2405,7 +2405,14 @@ exports.getInvoiceClientDetailsById = async (req, res) => {
         if (proformaRows[0].adjustment_snapshot) {
           invoice.adjustment_snapshot = proformaRows[0].adjustment_snapshot;
         }
+        if (invoice.previous_balance_amount === undefined || invoice.previous_balance_amount === null || Number(invoice.previous_balance_amount) === 0) {
+          invoice.previous_balance_amount = Number(proformaRows[0].previous_balance_amount || 0);
+        } else {
+          invoice.previous_balance_amount = Number(invoice.previous_balance_amount);
+        }
       }
+    } else {
+      invoice.previous_balance_amount = Number(invoice.previous_balance_amount || 0);
     }
 
     res.status(200).json({ status: "Success", data: invoice });

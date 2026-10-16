@@ -17,11 +17,15 @@ const authSlice = createSlice({
       const { user, token } = action.payload;
       state.currentUser = user;
       state.token = token;
+      state.loading = false;
+      state.error = null;
     },
     clearUser: (state) => {
       state.currentUser = null;
       state.token = null;
       state.walletBalance = null;
+      state.loading = false;
+      state.error = null;
     },
     toggleRefresh: (state) => {
       state.refreshTable = !state.refreshTable;
@@ -32,6 +36,12 @@ const authSlice = createSlice({
     setError: (state, action) => {
       state.error = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase("persist/REHYDRATE", (state) => {
+      state.loading = false;
+      state.error = null;
+    });
   },
 });
 

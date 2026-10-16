@@ -1,18 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, Shield, ArrowRight } from "lucide-react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { useAuth } from "../hooks";
+import { setLoading } from "../auth.slice";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading } = useAuth();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Reset any stale loading flag on mount to ensure button is never stuck
+  useEffect(() => {
+    dispatch(setLoading(false));
+  }, [dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent duplicate submission
+
     if (!email || !password) {
       Swal.fire({
         icon: "error",
@@ -23,7 +33,15 @@ export default function LoginPage() {
       });
       return;
     }
-    await login(email, password);
+
+    const result = await login(email, password);
+    if (result?.success && result?.user) {
+      if (result.user.role === "Owner") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (result.user.role === "BD") {
+        navigate("/BD/dashboard", { replace: true });
+      }
+    }
   };
 
   return (

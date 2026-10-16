@@ -1,53 +1,35 @@
 const mysql = require("mysql");
+const path = require("path");
 const dotenv = require("dotenv");
-dotenv.config();
+
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const dbConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "revenue_engine",
+  connectionLimit: 10,
+  waitForConnections: true,
+  queueLimit: 0,
+  connectTimeout: 10000,
 };
 
-let connection;
+const pool = mysql.createPool(dbConfig);
 
-function handleDisconnect() {
-  connection = mysql.createConnection(dbConfig);
+pool.on("error", function (err) {
+  console.error("[DB POOL ERROR]", err);
+});
 
-  connection.connect(function (err) {
-    if (err) {
-      console.log("Error Connecting to database:", err);
-      setTimeout(handleDisconnect, 2000);
-    } else {
-      console.log("connected to database!");
-    }
-  });
-
-  connection.on("error", function (err) {
-    console.log("db error", err);
-    if (
-      err.code === "PROTOCOL_CONNECTION_LOST" ||
-      err.code === "ECONNRESET" ||
-      err.code === "ECONNREFUSED" ||
-      err.code === "PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR" ||
-      err.fatal
-    ) {
-      handleDisconnect();
-    } else {
-      console.error("Database connection error:", err);
-    }
-  });
-}
-
-handleDisconnect();
-
-const db = new Proxy({}, {
-  get: function (target, prop) {
-    if (typeof connection[prop] === "function") {
-      return connection[prop].bind(connection);
-    }
-    return connection[prop];
+// Verify connection on startup
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error("Error Connecting to database pool:", err);
+  } else {
+    console.log("connected to database pool!");
+    connection.release();
   }
 });
 
-module.exports = { db };
+module.exports = { db: pool };
+

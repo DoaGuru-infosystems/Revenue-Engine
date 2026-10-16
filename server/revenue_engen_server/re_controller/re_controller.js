@@ -188,54 +188,52 @@ exports.login = async (req, res) => {
           .json({ status: "Failure", message: err.message });
       }
 
-      if (results.length === 0) {
+      try {
+        if (!results || results.length === 0) {
+          return res
+            .status(404)
+            .json({ status: "Failure", message: "Invalid user ID or password" });
+        }
+
+        const user = results[0];
+
+        const isPasswordMatch = await bcrypt.compare(
+          employee_password,
+          user.employee_password,
+        );
+
+        if (!isPasswordMatch) {
+          return res
+            .status(401)
+            .json({ status: "Failure", message: "Invalid user ID or password" });
+        }
+
+        const token = jwt.sign(
+          {
+            id: user.id,
+            name: user.employee_name,
+            role: user.employee_role,
+          },
+          JWT_SECRET || "revenueenginesecret",
+          { expiresIn: "24h" },
+        );
+
+        return res.json({
+          status: "Success",
+          message: "Login successful",
+          token,
+          user: {
+            name: user.employee_name,
+            role: user.employee_role,
+            email: user.employee_email,
+          },
+        });
+      } catch (innerErr) {
+        console.error("Error verifying login credentials:", innerErr);
         return res
-          .status(404)
-          .json({ status: "Failure", message: "Invalid user ID or password" });
+          .status(500)
+          .json({ status: "Failure", message: "Internal server error during authentication" });
       }
-
-      const user = results[0];
-
-      const isPasswordMatch = await bcrypt.compare(
-        employee_password,
-        user.employee_password,
-      );
-
-      if (!isPasswordMatch) {
-        return res
-          .status(401)
-          .json({ status: "Failure", message: "Invalid user ID or password" });
-      }
-
-      const payload = {
-        id: user.id,
-        name: user.employee_name,
-        role: user.employee_role,
-        email: user.employee_email,
-      };
-
-      // const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1d" });
-
-      const token = jwt.sign(
-        {
-          id: user.id,
-          name: user.employee_name,
-          role: user.employee_role,
-        },
-        JWT_SECRET,
-        { expiresIn: "24h" },
-      );
-
-      return res.json({
-        status: "Success",
-        message: "Login successful",
-        token,
-        user: {
-          name: user.employee_name,
-          role: user.employee_role,
-          email: user.employee_email,
-        },
-      });
     });
   } catch (error) {
     console.error("Error processing request:", error);

@@ -2127,6 +2127,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
         current_amt, received_amt,
         pricing_snapshot, notes_snapshot, terms_snapshot,
         adjustment_amount, adjustment_snapshot,
+        previous_balance_amount,
         created_at
       ) VALUES (
         ?, ?, ?,
@@ -2139,6 +2140,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
         ?, ?,
         ?, ?, ?,
         ?, ?,
+        ?,
         NOW()
       )
     `;
@@ -2197,6 +2199,7 @@ exports.generateInvoiceFromProforma = async (req, res) => {
       proforma.terms_snapshot || null,
       proforma.adjustment_amount || 0,
       proforma.adjustment_snapshot || null,
+      Number(proforma.previous_balance_amount || 0),
     ];
 
     const result = await runQuery(insertQ, insertValues);

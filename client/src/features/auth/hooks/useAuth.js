@@ -21,7 +21,6 @@ export function useAuth() {
       });
 
       if (response.status === "Success" && response.message === "Login successful") {
-        dispatch(setLoading(false));
         Swal.fire({
           icon: "success",
           title: "Login Successful",
@@ -32,7 +31,6 @@ export function useAuth() {
         dispatch(setUser({ user: response.user, token: response.token }));
         return { success: true, user: response.user };
       } else {
-        dispatch(setLoading(false));
         const errMsg = response.message || "Invalid credentials.";
         dispatch(setError(errMsg));
         Swal.fire({
@@ -40,13 +38,20 @@ export function useAuth() {
           title: "Login Failed",
           text: errMsg,
           showConfirmButton: false,
-          timer: 1000,
+          timer: 1500,
         });
         return { success: false, error: errMsg };
       }
     } catch (err) {
-      dispatch(setLoading(false));
-      const errMsg = err.response?.data?.message || "Login failed. Please check your credentials.";
+      let errMsg = "Login failed. Please check your credentials.";
+      if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        errMsg = "Server is taking too long to respond. Please try again.";
+      } else if (err.response?.data?.message) {
+        errMsg = err.response.data.message;
+      } else if (!err.response) {
+        errMsg = "Unable to reach server. Please check your network connection.";
+      }
+
       dispatch(setError(errMsg));
       Swal.fire({
         icon: "error",
@@ -56,6 +61,8 @@ export function useAuth() {
         timer: 1500,
       });
       return { success: false, error: errMsg };
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 

@@ -283,6 +283,7 @@ export const useInvoiceData = ({
               current_amt: Math.max(Number(proforma.total_amount || 0) - totalRecordedSettled, 0),
               total_amt: Number(proforma.total_amount || 0),
               previous_amt: 0,
+              previous_balance_amount: Number(proforma.previous_balance_amount || 0),
               discount_snapshot: proforma.discount_snapshot || null,
               realized_ad_budget: Number(proforma.realized_ad_budget || 0),
               invoice_source: "proposal",
@@ -457,6 +458,7 @@ export const useInvoiceData = ({
           current_amt: Number(bp.current_balance || 0),
           total_amt: Number(bp.total_amount || 0),
           previous_amt: 0,
+          previous_balance_amount: Number(bp.previous_balance_amount || 0),
           created_at: bp.created_at,
           discount_snapshot: bp.discount_snapshot || null,
         });

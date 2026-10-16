@@ -126,6 +126,7 @@ export default function InvoicePage({
     totalAfterDiscount,
     discountAmount,
     adjustmentAmount,
+    previousBalanceAmount,
     totalAfterAdjustment,
     invoiceSubtotal,
     gstAmount,
@@ -295,6 +296,7 @@ export default function InvoicePage({
                       discountAmount={discountAmount}
                       selectedAdjustment={null}
                       adjustmentAmount={adjustmentAmount}
+                      previousBalanceAmount={previousBalanceAmount}
                       invoiceSubtotal={invoiceSubtotal}
                       clientData={clientData}
                       publicMode={publicMode}
@@ -317,6 +319,7 @@ export default function InvoicePage({
                         totalAfterDiscount={totalAfterDiscount}
                         totalAfterAdjustment={totalAfterAdjustment}
                         adjustmentAmount={adjustmentAmount}
+                        previousBalanceAmount={previousBalanceAmount}
                         pastActiveTaxableSubtotal={pastActiveTaxableSubtotal}
                         projectValueDeferred={projectValueDeferred}
                         activeTaxableSubtotal={activeTaxableSubtotal}

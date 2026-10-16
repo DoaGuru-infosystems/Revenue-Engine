@@ -6,6 +6,7 @@ export default function InvoiceSummaryRightSide({
   totalAfterDiscount = 0,
   totalAfterAdjustment = 0,
   adjustmentAmount = 0,
+  previousBalanceAmount = 0,
   pastActiveTaxableSubtotal = 0,
   projectValueDeferred = 0,
   activeTaxableSubtotal = 0,
@@ -41,9 +42,26 @@ export default function InvoiceSummaryRightSide({
             >
               <span className="text-gray-600">Total Project Base Value</span>
               <span className="text-gray-900 font-medium">
-                ₹{formatAmount(totalAfterAdjustment !== undefined && totalAfterAdjustment !== null && totalAfterAdjustment > 0 ? totalAfterAdjustment : (totalAfterDiscount - (adjustmentAmount || 0)))}
+                ₹{formatAmount(
+                  (totalAfterAdjustment !== undefined && totalAfterAdjustment !== null && totalAfterAdjustment > 0
+                    ? totalAfterAdjustment
+                    : totalAfterDiscount - (adjustmentAmount || 0)) + (previousBalanceAmount || 0)
+                )}
               </span>
             </div>
+            {previousBalanceAmount > 0 && (
+              <div
+                style={{
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  fontWeight: 600,
+                }}
+                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+              >
+                <span>Includes Previous Balance</span>
+                <span className="font-semibold">+₹{formatAmount(previousBalanceAmount)}</span>
+              </div>
+            )}
             {pastActiveTaxableSubtotal > 0 && (
               <div
                 style={{
@@ -135,6 +153,19 @@ export default function InvoiceSummaryRightSide({
                 <span className="font-semibold">-₹{formatAmount(adjustmentAmount)}</span>
               </div>
             )}
+            {previousBalanceAmount > 0 && (
+              <div
+                style={{
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  fontWeight: 600,
+                }}
+                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+              >
+                <span>Previous Balance</span>
+                <span className="font-semibold">+₹{formatAmount(previousBalanceAmount)}</span>
+              </div>
+            )}
             {isGST && (
               <>
                 <div
@@ -145,7 +176,9 @@ export default function InvoiceSummaryRightSide({
                   }}
                   className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
                 >
-                  <span className="text-gray-600">Taxable Amount</span>
+                  <span className="text-gray-600">
+                    {previousBalanceAmount > 0 ? "Taxable Service Amount" : "Taxable Amount"}
+                  </span>
                   <span className="text-gray-900 font-medium">
                     ₹{formatAmount(invoiceSubtotal)}
                   </span>
