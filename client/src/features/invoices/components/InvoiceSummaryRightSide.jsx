@@ -32,73 +32,23 @@ export default function InvoiceSummaryRightSide({
       <div className="flex flex-col">
         {isPartialPayment && currentBillGrossReceived > 0 ? (
           <>
-            {previousBalanceAmount > 0 ? (
-              <>
-                <div
-                  style={{
-                    background: "#f5f8fc",
-                    fontWeight: 800,
-                    color: "#111827",
-                  }}
-                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-                >
-                  <span className="text-gray-600">Base Services Value</span>
-                  <span className="text-gray-900 font-medium">
-                    ₹{formatAmount(
-                      totalAfterAdjustment !== undefined && totalAfterAdjustment !== null && totalAfterAdjustment > 0
-                        ? totalAfterAdjustment
-                        : totalAfterDiscount - (adjustmentAmount || 0)
-                    )}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    background: "#eff6ff",
-                    color: "#1d4ed8",
-                    fontWeight: 600,
-                  }}
-                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-                >
-                  <span>Previous Balance</span>
-                  <span className="font-semibold">+₹{formatAmount(previousBalanceAmount)}</span>
-                </div>
-                <div
-                  style={{
-                    background: "#f0fdf4",
-                    color: "#166534",
-                    fontWeight: 800,
-                  }}
-                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-                >
-                  <span>Total Project Base Value</span>
-                  <span className="font-bold">
-                    ₹{formatAmount(
-                      (totalAfterAdjustment !== undefined && totalAfterAdjustment !== null && totalAfterAdjustment > 0
-                        ? totalAfterAdjustment
-                        : totalAfterDiscount - (adjustmentAmount || 0)) + previousBalanceAmount
-                    )}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div
-                style={{
-                  background: "#f5f8fc",
-                  fontWeight: 800,
-                  color: "#111827",
-                }}
-                className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-              >
-                <span className="text-gray-600">Total Project Base Value</span>
-                <span className="text-gray-900 font-medium">
-                  ₹{formatAmount(
-                    totalAfterAdjustment !== undefined && totalAfterAdjustment !== null && totalAfterAdjustment > 0
-                      ? totalAfterAdjustment
-                      : totalAfterDiscount - (adjustmentAmount || 0)
-                  )}
-                </span>
-              </div>
-            )}
+            <div
+              style={{
+                background: "#f5f8fc",
+                fontWeight: 800,
+                color: "#111827",
+              }}
+              className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+            >
+              <span className="text-gray-600">Total Project Base Value</span>
+              <span className="text-gray-900 font-medium">
+                ₹{formatAmount(
+                  totalAfterAdjustment !== undefined && totalAfterAdjustment !== null && totalAfterAdjustment > 0
+                    ? totalAfterAdjustment
+                    : totalAfterDiscount - (adjustmentAmount || 0)
+                )}
+              </span>
+            </div>
             {pastActiveTaxableSubtotal > 0 && (
               <div
                 style={{
@@ -125,7 +75,12 @@ export default function InvoiceSummaryRightSide({
                 }}
                 className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
               >
-                <span>Less: Amount to be Billed Separately</span>
+                <span className="flex items-center gap-1.5">
+                  <span>Less: Amount to be Billed Separately</span>
+                  <span className="text-[10px] font-normal text-gray-500">
+                    (Bal: ₹{formatAmount(isGST ? projectValueDeferred * 1.18 : projectValueDeferred)})
+                  </span>
+                </span>
                 <span className="font-medium">
                   -₹{formatAmount(projectValueDeferred)}
                 </span>
