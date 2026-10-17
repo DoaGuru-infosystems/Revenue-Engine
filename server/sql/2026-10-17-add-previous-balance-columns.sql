@@ -15,7 +15,10 @@ ALTER TABLE re_invoice
 ALTER TABLE re_balance_proforma 
   ADD COLUMN IF NOT EXISTS previous_balance_amount DECIMAL(10,2) DEFAULT 0;
 
--- 4. Complimentary & Graphic Invoice Tables (Additional Services support)
+-- 4. Complimentary & Graphic Tables (Additional Services support)
+ALTER TABLE re_complimentary 
+  ADD COLUMN IF NOT EXISTS additional_services TEXT DEFAULT NULL;
+
 ALTER TABLE re_complimentary_invoice 
   ADD COLUMN IF NOT EXISTS additional_services TEXT DEFAULT NULL;
 
