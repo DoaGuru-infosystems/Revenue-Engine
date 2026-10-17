@@ -5,10 +5,10 @@ const dotenv = require("dotenv");
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 const dbConfig = {
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "revenue_engine",
+  host: process.env.DB_HOST || process.env.HOST || "localhost",
+  user: process.env.DB_USER || process.env.USER || "root",
+  password: process.env.DB_PASSWORD || process.env.PASSWORD || "",
+  database: process.env.DB_NAME || process.env.DATABASE || "revenue_engine",
   connectTimeout: 10000,
 };
 
