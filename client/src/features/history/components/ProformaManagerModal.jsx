@@ -615,7 +615,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         {/* Header */ }
         <div className="flex items-center justify-between p-6 bg-gray-800 border-b border-gray-700">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 dark:from-yellow-400 dark:to-yellow-500 bg-clip-text text-transparent">
               Proposal & Instant Proformas
             </h1>
             <p className="text-gray-400 text-sm mt-1">
@@ -658,43 +658,43 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               const statusBadgeMap = {
                 'carried_forward': {
                   label: 'Carried Forward (Frozen)',
-                  badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-                  dot: 'bg-purple-400',
+                  badge: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30',
+                  dot: 'bg-purple-600 dark:bg-purple-400',
                 },
                 'fully-paid': {
                   label: 'Fully Paid',
-                  badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-                  dot: 'bg-emerald-400',
+                  badge: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/30',
+                  dot: 'bg-emerald-600 dark:bg-emerald-400',
                 },
                 'partial': {
                   label: 'Partial',
-                  badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                  dot: 'bg-amber-400',
+                  badge: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30',
+                  dot: 'bg-amber-600 dark:bg-amber-400',
                 },
                 'pending': {
                   label: 'Pending',
-                  badge: 'bg-slate-700/60 text-slate-300 border-slate-600/50',
-                  dot: 'bg-slate-400',
+                  badge: 'bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600/50',
+                  dot: 'bg-slate-500 dark:bg-slate-400',
                 }
               };
               const currentStatusConfig = statusBadgeMap[paymentStatus] || statusBadgeMap['pending'];
 
               return (
-                <div key={ proforma.id } className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden">
+                <div key={ proforma.id } className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden shadow-sm">
                   <div className="p-5 border-b border-gray-700/50 flex flex-wrap items-center justify-between bg-gray-800/60 gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-yellow-500/20 flex items-center justify-center text-amber-600 dark:text-yellow-400">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <h3 className="font-bold text-lg text-white">{ proforma.proforma_number || `Proforma #${ proforma.id }` }</h3>
                           { (proforma.source_type === 'manual' || !proforma.proposal_id) ? (
-                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30 flex items-center gap-1">
                               ⚡ Instant Proforma
                             </span>
                           ) : (
-                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gray-700/60 text-gray-300 border border-gray-600/50">
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600/50">
                               Proposal #{ proforma.proposal_id }
                             </span>
                           ) }
@@ -724,14 +724,14 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={ () => handleViewProforma(proforma) }
-                          className="px-4 py-2 bg-green-600/20 text-green-700 dark:text-green-300 border border-green-500 dark:border-green-500/30 rounded-xl hover:bg-green-600/30 transition text-sm font-semibold whitespace-nowrap"
+                          className="px-4 py-2 bg-emerald-50 dark:bg-green-600/20 text-emerald-700 dark:text-green-300 border border-emerald-500/40 dark:border-green-500/30 rounded-xl hover:bg-emerald-100 dark:hover:bg-green-600/30 transition text-sm font-semibold whitespace-nowrap shadow-sm"
                         >
                           View Proforma
                         </button>
                         { totalReceived > 0 && (
                           <button
                             onClick={ () => handleCreateBalanceProforma(proforma) }
-                            className="px-4 py-2 bg-amber-600/20 text-amber-400 border border-amber-500/30 rounded-xl hover:bg-amber-600/30 transition text-sm font-semibold whitespace-nowrap flex items-center gap-1.5"
+                            className="px-4 py-2 bg-amber-50 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border border-amber-500/40 dark:border-amber-500/30 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-600/30 transition text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 shadow-sm"
                           >
                             <FileText className="w-4 h-4" /> Balance Proforma
                           </button>
@@ -746,7 +746,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       <div className="flex flex-wrap items-center gap-3">
                         <button
                           onClick={ () => handleDeleteProforma(proforma.id) }
-                          className="px-4 py-2 bg-red-600/20 text-red-700 dark:text-red-400 border border-red-500 dark:border-red-500/30 rounded-xl hover:bg-red-600/30 transition text-sm font-semibold flex items-center gap-2"
+                          className="px-4 py-2 bg-red-50 dark:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-500/40 dark:border-red-500/30 rounded-xl hover:bg-red-100 dark:hover:bg-red-600/30 transition text-sm font-semibold flex items-center gap-2 shadow-sm"
                         >
                           <Trash className="w-4 h-4" /> Delete Proforma
                         </button>
@@ -757,7 +757,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                         ) : !isPaid && (
                           <button
                             onClick={ () => openPaymentModal(proforma) }
-                            className="px-4 py-2 bg-yellow-600/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500 dark:border-yellow-500/30 rounded-xl hover:bg-yellow-600/30 transition text-sm font-semibold flex items-center gap-2"
+                            className="px-4 py-2 bg-amber-50 dark:bg-yellow-600/20 text-amber-700 dark:text-yellow-400 border border-amber-500/40 dark:border-yellow-500/30 rounded-xl hover:bg-amber-100 dark:hover:bg-yellow-600/30 transition text-sm font-semibold flex items-center gap-2 shadow-sm"
                           >
                             <CreditCard className="w-4 h-4" /> Record Payment
                           </button>
@@ -766,9 +766,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                     </div>
 
                     { proformaPayments.length === 0 ? (
-                      <div className="p-4 rounded-xl bg-gray-900/40 border border-gray-700/40 flex items-center justify-between">
-                        <p className="text-sm text-gray-400 italic">No payments recorded yet.</p>
-                        <span className="px-2.5 py-1 bg-slate-700/60 text-slate-300 border border-slate-600/50 rounded-lg text-xs font-semibold">
+                      <div className="p-4 rounded-xl bg-orange-50/30 dark:bg-gray-900/40 border border-orange-500/15 dark:border-gray-700/40 flex items-center justify-between">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">No payments recorded yet.</p>
+                        <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600/50 rounded-lg text-xs font-semibold">
                           Payment: Pending
                         </span>
                       </div>

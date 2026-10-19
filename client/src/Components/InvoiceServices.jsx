@@ -26,6 +26,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { clearUser } from "../redux/user/userSlice";
 import API_BASE_URL from "../config/apiBaseUrl";
 import moment from "moment";
+import { useForceDark } from "../context/ThemeContext";
 
 const toNumber = (value) => Number(value || 0);
 const formatRs = (value) => `Rs. ${toNumber(value).toFixed(2)}`;
@@ -49,6 +50,7 @@ const getMatchingAdsRange = (ranges, amount) => {
 };
 
 function ProformaServices() {
+  useForceDark();
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
   const location = useLocation();
@@ -1319,69 +1321,6 @@ function ProformaServices() {
         .is-panel-icon.amber { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: #fcd34d; }
         .is-panel-icon.gold { background: rgba(184,150,46,0.12); border: 1px solid rgba(184,150,46,0.22); color: #d4a940; }
 
-        /* ── LIGHT THEME OVERRIDES ── */
-        [data-theme="light"] .is-root { background: #f8f4ef; color: #1a1a2e; }
-        [data-theme="light"] .is-bg { 
-          background: radial-gradient(ellipse 55% 40% at 10% 0%, rgba(234,88,12,0.04) 0%, transparent 65%),
-                      radial-gradient(ellipse 45% 50% at 90% 100%, rgba(234,88,12,0.03) 0%, transparent 60%);
-        }
-        [data-theme="light"] .is-grid { opacity: 0.4; filter: invert(1); }
-        [data-theme="light"] .is-card { 
-          background: rgba(255, 255, 255, 0.85); 
-          border: 1px solid rgba(234, 88, 12, 0.15);
-          box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-        }
-        [data-theme="light"] .is-input {
-          background: rgba(255,255,255,0.9);
-          border-color: rgba(234, 88, 12, 0.2);
-          color: #1a1a2e;
-        }
-        [data-theme="light"] .is-input:focus {
-          border-color: #ea580c;
-          background: #fff;
-          box-shadow: 0 0 0 3px rgba(234,88,12,0.1);
-        }
-        [data-theme="light"] .is-input::placeholder { color: #9ca3af; }
-        [data-theme="light"] .is-input option { background: #fff; color: #1a1a2e; }
-        
-        [data-theme="light"] .is-section-title { color: #ea580c; font-weight: 700; }
-        [data-theme="light"] .is-section-title::after { background: linear-gradient(90deg, rgba(234,88,12,0.2), transparent); }
-        
-        [data-theme="light"] .is-info-tile { background: rgba(255,255,255,0.7); border-color: rgba(234,88,12,0.1); }
-        [data-theme="light"] .is-tile-label { color: #ea580c; font-weight: 700; }
-        [data-theme="light"] .is-tile-val { color: #1a1a2e; font-weight: 600; }
-        
-        [data-theme="light"] .is-addon-row { border-bottom-color: rgba(0,0,0,0.05); }
-        [data-theme="light"] .is-preview { background: rgba(234,88,12,0.05); border-color: rgba(234,88,12,0.15); }
-        [data-theme="light"] .is-range-box { background: rgba(255,255,255,0.8); border-color: rgba(234,88,12,0.1); }
-        
-        [data-theme="light"] .is-btn-back { color: #6b7280; }
-        [data-theme="light"] .is-btn-back:hover { color: #1a1a2e; }
-        
-        [data-theme="light"] .is-table thead tr { background: rgba(234,88,12,0.05); border-bottom-color: rgba(234,88,12,0.1); }
-        [data-theme="light"] .is-table thead th { color: #ea580c; font-weight: 700; }
-        [data-theme="light"] .is-table tbody tr { border-bottom-color: rgba(0,0,0,0.05); }
-        [data-theme="light"] .is-table tbody tr:hover { background: rgba(234,88,12,0.03); }
-        [data-theme="light"] .is-table tbody td { color: #374151; font-weight: 500; }
-        [data-theme="light"] .is-table-input { background: #fff; border-color: rgba(234,88,12,0.2); color: #1a1a2e; }
-        [data-theme="light"] .is-table-input:focus { border-color: #ea580c; box-shadow: 0 0 0 2px rgba(234,88,12,0.1); }
-        
-        [data-theme="light"] .is-btn-remove { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2); color: #dc2626; }
-        [data-theme="light"] .is-btn-remove:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); }
-        
-        [data-theme="light"] .is-page-title { color: #1a1a2e; }
-        [data-theme="light"] .is-page-title span { background: linear-gradient(135deg, #ea580c, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        [data-theme="light"] .is-divider { background: linear-gradient(90deg, transparent, rgba(234,88,12,0.15), transparent); }
-        
-        [data-theme="light"] .is-empty { color: #6b7280; }
-        [data-theme="light"] .is-empty-icon { color: rgba(234,88,12,0.3); }
-        [data-theme="light"] .is-footer-bar { border-top-color: rgba(234,88,12,0.15); background: rgba(255,255,255,0.8); }
-        
-        [data-theme="light"] .is-panel-icon.cyan { background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.2); color: #0891b2; }
-        [data-theme="light"] .is-panel-icon.amber { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); color: #d97706; }
-        [data-theme="light"] .is-panel-icon.gold { background: rgba(234,88,12,0.1); border-color: rgba(234,88,12,0.2); color: #ea580c; }
-
         @media (max-width: 640px) {
           .is-root { padding: 1.25rem 1rem; }
           .is-grid-2 { grid-template-columns: 1fr; }
@@ -1390,7 +1329,7 @@ function ProformaServices() {
         }
       `}</style>
 
-      <div className="is-root">
+      <div className="is-root theme-force-dark" data-theme="dark">
         <div className="is-bg" />
         <div className="is-grid" />
 

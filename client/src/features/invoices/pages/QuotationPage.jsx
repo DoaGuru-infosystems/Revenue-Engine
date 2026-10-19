@@ -25,8 +25,10 @@ import {
   QuotationNotesSection,
   QuotationNoteModal,
 } from "../components";
+import { useForceDark } from "../../../context/ThemeContext";
 
 export default function QuotationPage() {
+  useForceDark();
   const { id, txn_id } = useParams();
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");

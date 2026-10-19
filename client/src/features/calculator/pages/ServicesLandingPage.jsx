@@ -827,7 +827,11 @@ export default function ServicesLandingPage() {
                 navigate(fallback);
               }
             }}
-            className="inline-flex items-center gap-1.5 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl px-3 py-2 transition-all duration-200 group shrink-0"
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 transition-all duration-200 shrink-0 font-medium text-sm ${
+              isLight
+                ? "text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 border border-gray-300 shadow-sm"
+                : "text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20"
+            }`}
           >
             <ArrowLeft className="w-4 h-4 transform transition-transform group-hover:-translate-x-1" />
             <span className="font-medium text-sm">Back</span>
@@ -943,11 +947,15 @@ export default function ServicesLandingPage() {
                   }}
                   onFocus={() => setDropdownOpen(true)}
                   placeholder="Type to search a plan..."
-                  className="w-full bg-white/[0.06] border border-white/10 rounded-xl pl-10 pr-8 py-2.5 text-white placeholder-white/25 text-sm outline-none focus:border-yellow-400/40 focus:bg-white/[0.09] focus:shadow-[0_0_15px_rgba(250,204,21,0.08)] transition-all duration-200"
+                  className={`w-full rounded-xl pl-10 pr-8 py-2.5 text-sm outline-none transition-all duration-200 ${
+                    isLight
+                      ? "bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-sm"
+                      : "bg-white/[0.06] border border-white/10 text-white placeholder-white/25 focus:border-yellow-400/40 focus:bg-white/[0.09]"
+                  }`}
                 />
                 {searchQuery && (
                   <button onClick={() => { setSearchQuery(""); setSelectedPlan(null); setShowPlanPopup(false); setDropdownOpen(false); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isLight ? "text-gray-400 hover:text-gray-700" : "text-white/30 hover:text-white"}`}>
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -955,7 +963,11 @@ export default function ServicesLandingPage() {
               {/* Dropdown toggle */}
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
-                className="bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] hover:border-white/20 rounded-xl px-3 py-2.5 text-white/50 hover:text-white transition-all duration-200 flex items-center gap-1.5 text-sm font-medium"
+                className={`rounded-xl px-3 py-2.5 transition-all duration-200 flex items-center gap-1.5 text-sm font-medium ${
+                  isLight
+                    ? "bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 hover:text-gray-900 shadow-sm"
+                    : "bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] hover:border-white/20 text-white/70 hover:text-white"
+                }`}
               >
                 Plans <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />
               </button>
@@ -998,17 +1010,21 @@ export default function ServicesLandingPage() {
               {services.map((service) => {
                 const IconComponent = service.icon;
                 return (
-                  <div key={service.id} className="w-full shrink-0 group relative overflow-hidden bg-gradient-to-r from-white/[0.06] to-white/[0.03] rounded-xl border border-white/10 hover:border-white/20 transition-all duration-200 flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3 py-2.5 cursor-pointer hover:bg-white/[0.09]"
+                  <div key={service.id} className={`w-full shrink-0 group relative overflow-hidden rounded-xl transition-all duration-200 flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3 py-2.5 cursor-pointer ${
+                    isLight
+                      ? "bg-white hover:bg-orange-50/50 border border-gray-200 hover:border-orange-300 shadow-sm"
+                      : "bg-gradient-to-r from-white/[0.06] to-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.09]"
+                  }`}
                     onClick={() => handleCustomServiceNavigate(service)}>
                     <div className={`absolute left-0 top-0 w-[3px] h-full bg-gradient-to-b ${service.gradient} rounded-r opacity-70`} />
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${service.gradient} shadow flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105`}>
                       <IconComponent className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold text-xs truncate leading-tight">{service.title}</p>
+                      <p className={`font-semibold text-xs truncate leading-tight ${isLight ? "text-gray-900" : "text-white"}`}>{service.title}</p>
                       <p className={`text-[9px] font-semibold uppercase tracking-wider bg-gradient-to-r ${service.gradient} bg-clip-text text-transparent truncate`}>{service.subtitle}</p>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/60 transform group-hover:translate-x-0.5 transition-all duration-200 shrink-0" />
+                    <ArrowRight className={`w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-all duration-200 shrink-0 ${isLight ? "text-gray-400 group-hover:text-gray-700" : "text-white/20 group-hover:text-white/60"}`} />
                   </div>
                 );
               })}
@@ -1016,18 +1032,26 @@ export default function ServicesLandingPage() {
 
             {/* Active Plan */}
             {planName && (
-              <div className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-yellow-500/10 to-white/[0.03] rounded-xl border border-yellow-400/20 px-3 py-2 flex items-center justify-between gap-2 mt-1">
+              <div className={`flex-shrink-0 relative overflow-hidden rounded-xl px-3 py-2 flex items-center justify-between gap-2 mt-1 ${
+                isLight
+                  ? "bg-amber-50/70 border border-amber-300 shadow-sm"
+                  : "bg-gradient-to-r from-yellow-500/10 to-white/[0.03] border border-yellow-400/20"
+              }`}>
                 <div className="absolute left-0 top-0 w-[3px] h-full bg-gradient-to-b from-yellow-400 to-yellow-500 rounded-r" />
                 <div className="flex items-center gap-2 min-w-0">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-yellow-300/60 text-[9px] font-semibold uppercase tracking-wider">Active Plan</p>
-                    <p className="text-white font-semibold text-[11px] truncate">{planName}</p>
+                    <p className={`text-[9px] font-semibold uppercase tracking-wider ${isLight ? "text-amber-800" : "text-yellow-300/60"}`}>Active Plan</p>
+                    <p className={`font-semibold text-[11px] truncate ${isLight ? "text-gray-900" : "text-white"}`}>{planName}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => handleDeleteClientPlanData(proposalId)}
-                  className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-red-500/15 text-red-300 hover:bg-red-500 hover:text-white border border-red-400/25 transition-all duration-200 shrink-0"
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all duration-200 shrink-0 ${
+                    isLight
+                      ? "bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 shadow-sm"
+                      : "bg-red-500/15 text-red-300 hover:bg-red-500 hover:text-white border border-red-400/25"
+                  }`}
                 >
                   Delete
                 </button>
@@ -1172,9 +1196,9 @@ export default function ServicesLandingPage() {
                             </td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
-                                <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
+                                <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
                                   onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "paid", editItem: order } })}>Edit</button>
-                                <button onClick={() => handleDelete(order.id)} className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">Delete</button>
+                                <button onClick={() => handleDelete(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
                               </div>
                             </td>
                           </tr>
@@ -1225,9 +1249,9 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">₹{order.total}</td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
-                                <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
+                                <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
                                   onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/Adscalculator/${id}/${proposalId}?doc=proforma` : `${basePath}/Adscalculator/${id}/${proposalId}`, { state: { editItem: order } })}>Edit</button>
-                                <button onClick={() => handleDeleteads(order.id)} className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">Delete</button>
+                                <button onClick={() => handleDeleteads(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
                               </div>
                             </td>
                           </tr>
@@ -1272,9 +1296,9 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">₹{order.total_amount}</td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
-                                <button className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"
+                                <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
                                   onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "complimentary", editItem: order } })}>Edit</button>
-                                <button onClick={() => handleDeleteComplimenatry(order.id)} className="px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">Delete</button>
+                                <button onClick={() => handleDeleteComplimenatry(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
                               </div>
                             </td>
                           </tr>
@@ -1478,11 +1502,16 @@ export default function ServicesLandingPage() {
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-3">
               <button onClick={() => { navigate(`${basePath}/quotation/${id}/${proposalId}?gst=1${docTypeFromURL === "proforma" ? "&doc=proforma" : ""}`); setShowModal(false); }}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                style={{ color: "#ffffff" }}
+                className="flex-1 bg-green-600 hover:bg-green-700 !text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 shadow-md">
                 With GST (18%)
               </button>
               <button onClick={() => { navigate(`${basePath}/quotation/${id}/${proposalId}?gst=0${docTypeFromURL === "proforma" ? "&doc=proforma" : ""}`); setShowModal(false); }}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
+                  isLight
+                    ? "bg-gray-200 hover:bg-gray-300 text-gray-800 border border-gray-300 shadow-sm"
+                    : "bg-gray-700 hover:bg-gray-600 text-white"
+                }`}>
                 Without GST
               </button>
             </div>

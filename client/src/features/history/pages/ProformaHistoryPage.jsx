@@ -737,8 +737,8 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                               );
                             }
                             return (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-300/80 border border-amber-500/20 w-fit">
-                                <Clock size={10} /> {item.duration_end_date ? `End: ${moment(item.duration_end_date).format("DD MMM")}` : "Pending"}
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-600/30 dark:border-amber-500/20 w-fit">
+                                <Clock size={10} className="text-amber-800 dark:text-amber-300" /> {item.duration_end_date ? `End: ${moment(item.duration_end_date).format("DD MMM")}` : "Pending"}
                               </span>
                             );
                           })()}

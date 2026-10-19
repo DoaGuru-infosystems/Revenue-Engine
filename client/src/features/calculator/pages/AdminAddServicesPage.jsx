@@ -657,14 +657,14 @@ export default function AdminAddServicesPage() {
               </div>
 
               {/* Segmented Mode Switch */}
-              <div className="inline-flex rounded-xl bg-slate-950/80 p-1 border border-white/10 text-xs">
+              <div className="inline-flex rounded-xl bg-slate-200 dark:bg-slate-950/80 p-1 border border-slate-300 dark:border-white/10 text-xs shadow-inner">
                 <button
                   type="button"
                   onClick={() => setServiceMode("existing")}
                   className={`px-3 py-1.5 rounded-lg font-medium transition ${
                     serviceMode === "existing"
                       ? "bg-amber-500 text-slate-950 font-bold shadow-md"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
                   }`}
                 >
                   Select Existing
@@ -675,7 +675,7 @@ export default function AdminAddServicesPage() {
                   className={`px-3 py-1.5 rounded-lg font-medium transition ${
                     serviceMode === "new"
                       ? "bg-amber-500 text-slate-950 font-bold shadow-md"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
                   }`}
                 >
                   + Create New

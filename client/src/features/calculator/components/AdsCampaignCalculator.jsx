@@ -4,10 +4,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Megaphone, Sparkles, Pencil, Trash2, Wallet, Layers } from "lucide-react";
 import API_BASE_URL from "../../../config/apiBaseUrl";
+import { useTheme } from "../../../context/ThemeContext";
 
 const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const baseURL = API_BASE_URL;
   const params = useParams();
   const id = params.id || params.clientId;
@@ -537,38 +540,41 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 space-y-8 text-white">
-          <div className="relative flex items-center justify-center">
+      <div className="glass-calculator-container">
+        {/* Ambient background glows for realistic glass refraction */}
+        <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-br from-rose-400/25 to-pink-300/20 dark:from-rose-600/10 dark:to-pink-600/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-bl from-amber-400/25 to-orange-300/20 dark:from-amber-600/10 dark:to-orange-600/10 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[32rem] h-[32rem] rounded-full bg-gradient-to-r from-sky-400/15 to-indigo-300/15 dark:from-sky-600/10 dark:to-indigo-600/10 blur-3xl" />
+
+        <div className="glass-calculator-card space-y-8">
+          <div className="relative flex items-center justify-center min-h-[44px]">
             {!onServiceAdded && (
               <button
                 type="button"
                 onClick={handleBack}
-                className="absolute left-0 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center gap-2 transition-all hover:scale-105 shadow-sm"
+                className="glass-calculator-back absolute left-0"
                 title="Go Back"
               >
-                <ArrowLeft className="w-4 h-4 text-gray-200" />
-                <span className="text-sm font-medium hidden sm:inline">Back</span>
+                <ArrowLeft className="w-4 h-4 text-slate-700 dark:text-gray-300" />
+                <span className="text-sm font-semibold hidden sm:inline">Back</span>
               </button>
             )}
-            <h3 className="text-2xl sm:text-3xl font-bold text-center text-white">
+            <h3 className="text-2xl sm:text-3xl font-bold text-center text-slate-900 dark:text-white">
               📢 Ads Campaign Budget Calculator
             </h3>
           </div>
 
-
-
           {loading && (
-            <div className="p-4 rounded-lg bg-red-600/20 text-red-300 border border-red-500">
-              <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-2 border-t-white rounded-full"></div>
+            <div className="p-4 rounded-xl bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/30 backdrop-blur-md">
+              <div className="flex items-center gap-2 font-medium">
+                <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
                 Loading ads data...
               </div>
             </div>
           )}
 
           {error && (
-            <div className="p-4 rounded-lg bg-red-600/20 text-red-300 border border-red-500">
+            <div className="p-4 rounded-xl bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/30 backdrop-blur-md">
               <strong>Error:</strong> {error}
             </div>
           )}
@@ -576,77 +582,84 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           {!loading && adsData.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-xl font-semibold">Enter Budget Amounts</h4>
+                <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Enter Budget Amounts
+                </h4>
                 {editingId && (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 border border-yellow-400/40 text-yellow-300">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 border border-amber-400/50 text-amber-800 dark:text-amber-300 flex items-center gap-1.5 shadow-sm">
                     ✏️ Editing existing entry
                   </span>
                 )}
               </div>
-              {categories.map((category) => {
-                const isThisEditing = editingId && (
-                  (enteredAmount[category] !== undefined && enteredAmount[category] !== "") ||
-                  (getData.find(d => String(d.id) === String(editingId))?.category === category)
-                );
-                return (
-                  <div
-                    key={category}
-                    className={`backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4 transition-all ${
-                      isThisEditing
-                        ? 'bg-yellow-500/15 border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/10'
-                        : 'bg-white/10 border border-transparent'
-                    }`}
-                  >
-                    <label className="sm:w-48 font-medium flex items-center justify-between">
-                      <span>{category}</span>
-                      {isThisEditing && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300">
-                          ✏️ Editing
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Enter Amount (₹)"
-                      value={enteredAmount[category] || ""}
-                      onChange={(e) =>
-                        handleAmountChange(category, e.target.value)
-                      }
-                      className={`w-full px-4 py-2 rounded-lg border bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all ${
-                        isThisEditing ? 'border-yellow-400/50 focus:ring-yellow-400' : 'border-white/20'
+              <div className="space-y-3">
+                {categories.map((category) => {
+                  const isThisEditing = editingId && (
+                    (enteredAmount[category] !== undefined && enteredAmount[category] !== "") ||
+                    (getData.find(d => String(d.id) === String(editingId))?.category === category)
+                  );
+                  return (
+                    <div
+                      key={category}
+                      className={`glass-calculator-row flex flex-col sm:flex-row items-center gap-4 ${
+                        isThisEditing ? 'is-editing' : ''
                       }`}
-                      autoFocus={Boolean(isThisEditing)}
-                    />
-                  </div>
-                );
-              })}
+                    >
+                      <label className="sm:w-56 font-semibold text-slate-900 dark:text-white text-base flex items-center justify-between w-full">
+                        <span>{category}</span>
+                        {isThisEditing && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/40">
+                            Editing
+                          </span>
+                        )}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Enter Amount (₹)"
+                        value={enteredAmount[category] || ""}
+                        onChange={(e) =>
+                          handleAmountChange(category, e.target.value)
+                        }
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-white/15 bg-white/95 dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500 focus:bg-white text-base font-medium shadow-inner transition-all"
+                        autoFocus={Boolean(isThisEditing)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
           {!loading && adsData.length > 0 && (
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
+                type="button"
                 onClick={handleCalculateAndSave}
                 disabled={loading || Object.keys(enteredAmount).length === 0}
-                className={`px-6 py-3 rounded-lg text-white font-semibold transition disabled:bg-gray-400 ${
-                  editingId ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700'
+                className={`px-7 py-3 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 ${
+                  (loading || Object.keys(enteredAmount).length === 0)
+                    ? "bg-slate-200/80 dark:bg-gray-800 text-slate-400 dark:text-gray-500 border border-slate-300/60 dark:border-transparent cursor-not-allowed"
+                    : editingId
+                      ? "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0"
+                      : "bg-red-600 hover:bg-red-700 text-white shadow-red-500/25 hover:shadow-red-500/40 hover:-translate-y-0.5 active:translate-y-0"
                 }`}
               >
                 {loading ? "Saving..." : editingId ? "Update Entry" : "Calculate & Save"}
               </button>
               {editingId ? (
                 <button
+                  type="button"
                   onClick={resetEditingState}
-                  className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                  className="glass-calculator-btn-secondary"
                 >
                   Cancel Edit
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={clearAll}
-                  className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                  className="glass-calculator-btn-secondary"
                 >
                   Clear All
                 </button>
@@ -654,126 +667,126 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
             </div>
           )}
 
-
           {adsItems.length > 0 && (
-            <div className="space-y-4">
-              <h4 className="text-xl font-semibold">📋 Budget Breakdown</h4>
-              {adsItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-gradient-to-r from-red-900/30 to-green-900/30 border border-white/10 p-4 rounded-lg"
-                >
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="w-full">
-                      <div className="flex justify-between items-center mb-2">
-                        <h5 className="text-lg font-semibold text-red-300">
-                          📢 {item.category}
-                        </h5>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => handleEdit(item)}
-                            className="text-blue-400 hover:text-blue-600 transition"
-                            title="Edit"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => removeItem(item.id)}
-                            className="text-red-400 hover:text-red-600 transition text-xl leading-none"
-                            title="Delete"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                        <p>
-                          💼 Budget:{" "}
-                          <span className="font-medium text-white">
-                            ₹{item.amount.toLocaleString()}
-                          </span>
-                        </p>
-                        <p>
-                          📊 Charge ({item.percent}%):{" "}
-                          <span className="font-medium text-white">
-                            ₹{item.charge.toLocaleString()}
-                          </span>
-                        </p>
-                        <p className="font-bold text-green-300">
-                          🧾 Total: ₹{item.total.toLocaleString()}
-                        </p>
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                📋 Budget Breakdown
+              </h4>
+              <div className="space-y-3">
+                {adsItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="glass-calculator-row p-4 rounded-2xl"
+                  >
+                    <div className="flex flex-wrap justify-between items-center gap-3">
+                      <h5 className="text-base font-bold text-red-600 dark:text-red-400">
+                        📢 {item.category}
+                      </h5>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        💼 Budget: <strong className="font-bold text-slate-950 dark:text-white">₹{item.amount.toLocaleString()}</strong>
+                      </p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        📊 Charge ({item.percent}%): <strong className="font-bold text-slate-950 dark:text-white">₹{item.charge.toLocaleString()}</strong>
+                      </p>
+                      <p className="text-sm font-bold text-emerald-600 dark:text-green-300">
+                        🧾 Total: ₹{item.total.toLocaleString()}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(item)}
+                          style={{ backgroundColor: "#2563eb", color: "#ffffff" }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white"
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white leading-none"
+                          title="Delete"
+                        >
+                          ×
+                        </button>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
           {adsItems.length > 0 && (
-            <div className="text-center bg-green-800/30 p-6 rounded-lg border border-green-600">
-              <h4 className="text-xl font-bold text-green-300 mb-2">
-                💰 Total Ads Budget
+            <div className="glass-calculator-total-card">
+              <h4 className="text-base font-bold text-emerald-800 dark:text-emerald-300 mb-1 flex items-center justify-center gap-2">
+                <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                Total Ads Budget
               </h4>
-              <p className="text-4xl font-extrabold text-green-400">
+              <p className="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                 ₹{totalAdsCost.toLocaleString()}
               </p>
             </div>
           )}
 
           {getData.length > 0 && (
-            <div className="mt-10 space-y-4">
-              <h3 className="text-xl font-bold text-white">
+            <div className="mt-8 space-y-4">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                 🧾 Previously Saved Campaigns
               </h3>
-              {getData.map((item, index) => (
-                <div
-                  key={index}
-                  className={`p-4 border rounded-xl text-white transition-all ${
-                    editingId && String(editingId) === String(item.id)
-                      ? 'bg-yellow-500/15 border-yellow-400/40'
-                      : 'bg-white/10 border-white/10'
-                  }`}
-                >
-                  <div className="flex flex-wrap justify-between items-center gap-2">
-                    <p>
-                      📢 <strong>{item.category}</strong>
-                    </p>
-                    <p>
-                      💰 Budget: ₹{parseFloat(item.amount).toLocaleString()}
-                    </p>
-                    <p>
-                      📊 Charge: ₹{parseFloat(item.charge).toLocaleString()} (
-                      {item.percent}%)
-                    </p>
-                    <p>🧾 Total: ₹{parseFloat(item.total).toLocaleString()}</p>
-                    <div className="flex items-center gap-2">
-                      {docTypeFromURL === "proforma" && (
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className={`text-white text-sm rounded-full w-8 h-8 flex items-center justify-center transition ${
-                            editingId && String(editingId) === String(item.id)
-                              ? 'bg-yellow-500 hover:bg-yellow-600'
-                              : 'bg-blue-600 hover:bg-blue-700'
-                          }`}
-                          title="Edit this entry"
-                        >
-                          ✏️
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white text-lg rounded-full w-8 h-8 flex items-center justify-center"
-                        title="Delete this entry"
-                      >
-                        ×
-                      </button>
+              <div className="space-y-3">
+                {getData.map((item, index) => {
+                  const isEditingThis = editingId && String(editingId) === String(item.id);
+                  return (
+                    <div
+                      key={item.id || index}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        isEditingThis
+                          ? 'bg-amber-500/15 border-amber-400/50 shadow-md shadow-amber-500/10'
+                          : 'glass-calculator-saved-card'
+                      }`}
+                    >
+                      <div className="flex flex-wrap justify-between items-center gap-3">
+                        <p className="font-bold text-slate-900 dark:text-white text-base">
+                          📢 {item.category}
+                        </p>
+                        <p className="text-slate-800 dark:text-slate-200 text-sm font-medium">
+                          💰 Budget: <strong className="font-bold text-slate-950 dark:text-white">₹{parseFloat(item.amount || 0).toLocaleString()}</strong>
+                        </p>
+                        <p className="text-slate-800 dark:text-slate-200 text-sm font-medium">
+                          📊 Charge: <strong className="font-bold text-slate-950 dark:text-white">₹{parseFloat(item.charge || 0).toLocaleString()}</strong> ({item.percent}%)
+                        </p>
+                        <p className="text-slate-900 dark:text-white text-sm font-bold">
+                          🧾 Total: ₹{parseFloat(item.total || 0).toLocaleString()}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {docTypeFromURL === "proforma" && (
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(item)}
+                              style={{ backgroundColor: isEditingThis ? "#f59e0b" : "#2563eb", color: "#ffffff" }}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white"
+                              title="Edit this entry"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(item.id)}
+                            style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white leading-none"
+                            title="Delete this entry"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>

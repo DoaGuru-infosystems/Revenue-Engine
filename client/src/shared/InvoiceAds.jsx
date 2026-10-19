@@ -5,6 +5,7 @@ import { clearUser } from "../redux/user/userSlice";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Megaphone, Sparkles, Trash2, Wallet, Layers } from "lucide-react";
 import API_BASE_URL from "../config/apiBaseUrl";
 
 const InvoiceAds = () => {
@@ -436,71 +437,105 @@ const { id, proposalId } = useParams();
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 flex items-center justify-center p-4">
-        <div className="w-full max-w-4xl bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 space-y-8 text-white">
-          <h3 className="text-3xl font-bold text-center text-white">
-            📢 Ads Campaign Budget Calculator
-          </h3>
+      <div className="glass-calculator-container">
+        {/* Ambient background glows for realistic glass refraction */}
+        <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-br from-rose-400/25 to-pink-300/20 dark:from-rose-600/10 dark:to-pink-600/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-bl from-amber-400/25 to-orange-300/20 dark:from-amber-600/10 dark:to-orange-600/10 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[32rem] h-[32rem] rounded-full bg-gradient-to-r from-sky-400/15 to-indigo-300/15 dark:from-sky-600/10 dark:to-indigo-600/10 blur-3xl" />
 
-          <button
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition"
-          >
-            ← Go Back
-          </button>
+        <div className="glass-calculator-card space-y-8">
+          <div className="relative flex items-center justify-center min-h-[44px]">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="glass-calculator-back absolute left-0"
+              title="Go Back"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-gray-300" />
+              <span className="text-sm font-semibold hidden sm:inline">Back</span>
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-white shadow-lg shadow-red-500/25">
+                <Megaphone className="w-5 h-5" />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Ads Campaign Budget Calculator
+              </h3>
+            </div>
+          </div>
 
           {loading && (
-            <div className="p-4 rounded-lg bg-red-600/20 text-red-300 border border-red-500">
-              <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-2 border-t-white rounded-full"></div>
+            <div className="p-4 rounded-xl bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/30 backdrop-blur-md">
+              <div className="flex items-center gap-2 font-medium">
+                <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
                 Loading ads data...
               </div>
             </div>
           )}
 
           {error && (
-            <div className="p-4 rounded-lg bg-red-600/20 text-red-300 border border-red-500">
+            <div className="p-4 rounded-xl bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/30 backdrop-blur-md">
               <strong>Error:</strong> {error}
             </div>
           )}
 
           {!loading && adsData.length > 0 && (
             <div className="space-y-4">
-              <h4 className="text-xl font-semibold">Enter Budget Amounts</h4>
-              {categories.map((category) => (
-                <div
-                  key={category}
-                  className="bg-white/10 backdrop-blur rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4"
-                >
-                  <label className="sm:w-48 font-medium">{category}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter Amount (₹)"
-                    value={enteredAmount[category] || ""}
-                    onChange={(e) =>
-                      handleAmountChange(category, e.target.value)
-                    }
-                    className="w-full px-4 py-2 rounded-lg border border-white/20 bg-white/5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  />
-                </div>
-              ))}
+              <h4 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                Enter Budget Amounts
+              </h4>
+              <div className="space-y-3">
+                {categories.map((category) => (
+                  <div
+                    key={category}
+                    className="glass-calculator-row flex flex-col sm:flex-row items-center gap-4"
+                  >
+                    <label className="sm:w-56 font-semibold text-slate-800 dark:text-white text-base flex items-center justify-between w-full">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500/80"></span>
+                        {category}
+                      </span>
+                    </label>
+                    <div className="relative w-full">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-semibold text-sm">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Enter Amount"
+                        value={enteredAmount[category] || ""}
+                        onChange={(e) =>
+                          handleAmountChange(category, e.target.value)
+                        }
+                        className="glass-calculator-input pl-8"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {!loading && adsData.length > 0 && (
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={handleCalculateAndSave}
                 disabled={loading || Object.keys(enteredAmount).length === 0}
-                className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition disabled:bg-gray-400"
+                className={`px-7 py-3 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 ${
+                  (loading || Object.keys(enteredAmount).length === 0)
+                    ? "bg-slate-200/80 dark:bg-gray-800 text-slate-400 dark:text-gray-500 border border-slate-300/60 dark:border-transparent cursor-not-allowed"
+                    : "bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:via-rose-500 hover:to-red-500 text-white shadow-red-500/25 hover:shadow-red-500/40 hover:-translate-y-0.5 active:translate-y-0"
+                }`}
               >
+                <Wallet className="w-4 h-4" />
                 {loading ? "Calculating..." : "Calculate & Save"}
               </button>
               <button
                 onClick={clearAll}
-                className="px-6 py-3 rounded-lg bg-gray-600 hover:bg-gray-700 text-white font-semibold transition"
+                className="glass-calculator-btn-secondary"
               >
                 Clear All
               </button>
@@ -508,100 +543,104 @@ const { id, proposalId } = useParams();
           )}
 
           {adsItems.length > 0 && (
-            <div className="space-y-4">
-              <h4 className="text-xl font-semibold">📋 Budget Breakdown</h4>
-              {adsItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-gradient-to-r from-red-900/30 to-green-900/30 border border-white/10 p-4 rounded-lg"
-                >
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <h5 className="text-lg font-semibold text-red-300 mb-2">
-                        📢 {item.category}
-                      </h5>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                        <p>
-                          💼 Budget:{" "}
-                          <span className="font-medium text-white">
-                            ₹{item.amount.toLocaleString()}
-                          </span>
-                        </p>
-                        <p>
-                          📊 Charge ({item.percent}%):{" "}
-                          <span className="font-medium text-white">
-                            ₹{item.charge.toLocaleString()}
-                          </span>
-                        </p>
-                        <p className="font-bold text-green-300">
-                          🧾 Total: ₹{item.total.toLocaleString()}
-                        </p>
+            <div className="space-y-4 pt-2">
+              <h4 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <Layers className="w-5 h-5 text-red-500" />
+                Budget Breakdown
+              </h4>
+              <div className="space-y-3">
+                {adsItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="glass-calculator-saved-card"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                        <h5 className="text-base font-bold text-slate-900 dark:text-white">
+                          {item.category}
+                        </h5>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <span className="px-3 py-1 rounded-lg bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300">
+                          Budget: <strong className="text-slate-900 dark:text-white font-bold">₹{item.amount.toLocaleString()}</strong>
+                        </span>
+                        <span className="px-3 py-1 rounded-lg bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300">
+                          Charge ({item.percent}%): <strong className="text-slate-900 dark:text-white font-bold">₹{item.charge.toLocaleString()}</strong>
+                        </span>
+                        <span className="px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300 font-bold">
+                          Total: ₹{item.total.toLocaleString()}
+                        </span>
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="w-8 h-8 rounded-lg bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-500/20 hover:scale-105 active:scale-95 transition-all text-lg leading-none ml-auto sm:ml-2"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-red-400 hover:text-red-600 text-xl"
-                    >
-                      ×
-                    </button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
           {adsItems.length > 0 && (
-            <div className="text-center bg-green-800/30 p-6 rounded-lg border border-green-600">
-              <h4 className="text-xl font-bold text-green-300 mb-2">
-                💰 Total Ads Budget
+            <div className="glass-calculator-total-card">
+              <h4 className="text-base font-bold text-emerald-800 dark:text-emerald-300 mb-1 flex items-center justify-center gap-2">
+                <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                Total Ads Budget
               </h4>
-              <p className="text-4xl font-extrabold text-green-400">
+              <p className="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
                 ₹{totalAdsCost.toLocaleString()}
               </p>
             </div>
           )}
 
-          {!loading &&
-            adsItems.length === 0 &&
-            Object.keys(enteredAmount).length > 0 && (
-              <div className="text-center text-gray-400">
-                Enter amounts and click "Calculate & Save" to see results.
-              </div>
-            )}
           {getData.length > 0 && (
-            <div className="mt-10 space-y-4">
-              <h3 className="text-xl font-bold text-white">
-                🧾 Previously Saved Campaigns
+            <div className="mt-8 space-y-4">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-red-500" />
+                Previously Saved Campaigns
               </h3>
-              {getData.map((item, index) => (
-                <div
-                  key={index}
-                  className="p-4 bg-white/10 border border-white/10 rounded-xl text-white"
-                >
-                  <div className="flex flex-wrap justify-between">
-                    <p>
-                      📢 <strong>{item.category}</strong>
-                    </p>
-                    <p>
-                      💰 Budget: ₹{parseFloat(item.amount).toLocaleString()}
-                    </p>
-                    <p>
-                      📊 Charge: ₹{parseFloat(item.charge).toLocaleString()} (
-                      {item.percent}%)
-                    </p>
-                    <p>🧾 Total: ₹{parseFloat(item.total).toLocaleString()}</p>
-                    {/* <p className="text-sm text-white/60">
-                      🕒 {new Date(item.created_at).toLocaleString("en-IN")}
-                    </p> */}
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white text-lg rounded-full w-8 h-8 flex items-center justify-center"
-                    >
-                      ×
-                    </button>
+              <div className="space-y-3">
+                {getData.map((item, index) => (
+                  <div
+                    key={index}
+                    className="glass-calculator-saved-card"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="p-2 rounded-xl bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400">
+                          <Megaphone className="w-4 h-4" />
+                        </span>
+                        <span className="font-bold text-slate-900 dark:text-white text-base">
+                          {item.category}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
+                        <span className="px-3 py-1.5 rounded-lg bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                          💼 Budget: <strong className="text-slate-900 dark:text-white font-bold">₹{parseFloat(item.amount).toLocaleString()}</strong>
+                        </span>
+                        <span className="px-3 py-1.5 rounded-lg bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 font-medium">
+                          📊 Charge: <strong className="text-slate-900 dark:text-white font-bold">₹{parseFloat(item.charge).toLocaleString()}</strong> ({item.percent}%)
+                        </span>
+                        <span className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-300 font-bold">
+                          🧾 Total: ₹{parseFloat(item.total).toLocaleString()}
+                        </span>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="w-8 h-8 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-md shadow-red-500/25 hover:scale-105 active:scale-95 transition-all text-lg font-bold ml-auto sm:ml-2"
+                          title="Delete this entry"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>

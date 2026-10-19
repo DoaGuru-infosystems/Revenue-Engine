@@ -31,6 +31,7 @@ import {
   InvoiceTermsConditions,
   InvoiceModalsContainer,
 } from "../components";
+import { useForceDark } from "../../../context/ThemeContext";
 
 // Layer 4 (Page Container) — Modular 4-Layer Architecture
 export default function InvoicePage({
@@ -38,6 +39,7 @@ export default function InvoicePage({
   publicData = null,
   publicToken = null,
 }) {
+  useForceDark();
   const { id, txn_id } = useParams();
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");

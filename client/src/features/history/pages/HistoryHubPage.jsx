@@ -40,56 +40,58 @@ const ComingSoonPlaceholder = ({ title, description, icon: Icon, color }) => (
   </div>
 );
 
+import { useTheme } from "../../../context/ThemeContext";
+
 // ─── Sub-tab config ─────────────────────────────────────────────────────────
 const SUB_TABS = [
   {
     id: "proposals",
     label: "Proposal ",
     icon: FileText,
-    color: "#a78bfa", // violet
+    colorDark: "#a78bfa", // violet
+    colorLight: "#6d28d9",
   },
-
   {
     id: "proforma",
     label: "Proforma ",
     icon: FileCode,
-    color: "#38bdf8", // sky
+    colorDark: "#38bdf8", // sky
+    colorLight: "#0284c7",
   },
-
   {
     id: "balance_proforma",
     label: "Balance Proforma",
     icon: Scale,
-    color: "#f472b6", // pink
+    colorDark: "#f472b6", // pink
+    colorLight: "#be185d",
   },
   {
     id: "payment_history",
     label: "Payment History",
     icon: Receipt,
-    color: "#f97316", // orange
+    colorDark: "#f97316", // orange
+    colorLight: "#c2410c",
   },
-
-
   {
     id: "invoices",
     label: "Invoice ",
     icon: Receipt,
-    color: "#34d399", // emerald
+    colorDark: "#34d399", // emerald
+    colorLight: "#047857",
   },
-
-
-
-
   {
     id: "revenue",
     label: "Revenue ",
     icon: TrendingUp,
-    color: "#fbbf24", // amber
+    colorDark: "#fbbf24", // amber
+    colorLight: "#b45309",
   },
 ];
 
 // ─── Main HistoryHub Component ───────────────────────────────────────────────
 const HistoryHubPage = ({ setActiveTab }) => {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const [activeSubTab, setActiveSubTab] = useState(() => {
     return localStorage.getItem("history-hub-active-tab") || "proposals";
   });
@@ -107,19 +109,20 @@ const HistoryHubPage = ({ setActiveTab }) => {
   };
 
   const activeTabConfig = SUB_TABS.find((t) => t.id === activeSubTab);
+  const activeColor = isLight ? (activeTabConfig?.colorLight || activeTabConfig?.colorDark) : activeTabConfig?.colorDark;
 
   return (
     <div className="w-full min-h-full flex flex-col lg:flex-row relative gap-4 lg:gap-6">
       
       {/* ── Mobile Top Bar ─────────────────────────────────────────────────── */}
-      <div className="lg:hidden flex items-center justify-between bg-gray-900/80 backdrop-blur-xl border border-gray-800/60 rounded-xl px-4 py-3 z-30">
-        <div className="flex items-center gap-2 font-semibold text-lg" style={{ color: activeTabConfig?.color || '#fff' }}>
+      <div className="lg:hidden flex items-center justify-between bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200 dark:border-gray-800/60 rounded-xl px-4 py-3 z-30">
+        <div className="flex items-center gap-2 font-semibold text-lg" style={{ color: activeColor || (isLight ? '#1a1a2e' : '#fff') }}>
           {activeTabConfig?.icon && React.createElement(activeTabConfig.icon, { className: "w-5 h-5" })}
           {activeTabConfig?.label}
         </div>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -135,16 +138,17 @@ const HistoryHubPage = ({ setActiveTab }) => {
           : '-translate-y-4 opacity-0 pointer-events-none lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto lg:shadow-none'
         }
         flex
-        bg-gray-900/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none
-        border border-gray-800/60 lg:border-none
+        bg-white/95 dark:bg-gray-900/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none
+        border border-gray-200 dark:border-gray-800/60 lg:border-none
         rounded-xl lg:rounded-none
         p-4 lg:p-0
-        lg:border-r lg:border-gray-800/60 lg:pr-4 xl:pr-6
+        lg:border-r lg:border-gray-200 dark:lg:border-gray-800/60 lg:pr-4 xl:pr-6
         lg:shrink-0
       `}>
         {SUB_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeSubTab === tab.id;
+          const tabColor = isLight ? tab.colorLight : tab.colorDark;
           return (
             <button
               key={tab.id}
@@ -155,21 +159,31 @@ const HistoryHubPage = ({ setActiveTab }) => {
               className={[
                 "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 w-full text-left",
                 isActive
-                  ? "text-white shadow-md"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/60",
+                  ? "shadow-md font-bold"
+                  : isLight
+                    ? "text-gray-700 hover:text-gray-950 hover:bg-orange-500/10"
+                    : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/60",
               ].join(" ")}
               style={
                 isActive
                   ? {
-                      background: tab.color + "22",
-                      border: `1px solid ${tab.color}55`,
-                      color: tab.color,
+                      background: tabColor + (isLight ? "18" : "22"),
+                      border: `1.5px solid ${tabColor}55`,
+                      color: tabColor,
                     }
-                  : { border: "1px solid transparent" }
+                  : {
+                      border: "1.5px solid transparent",
+                      color: isLight ? "#374151" : undefined,
+                    }
               }
             >
-              <Icon className="w-5 h-5 shrink-0" />
-              {tab.label}
+              <Icon
+                className="w-5 h-5 shrink-0"
+                style={{ color: isActive ? tabColor : (isLight ? "#4b5563" : undefined) }}
+              />
+              <span style={{ color: isActive ? tabColor : (isLight ? "#1f2937" : undefined) }}>
+                {tab.label}
+              </span>
             </button>
           );
         })}

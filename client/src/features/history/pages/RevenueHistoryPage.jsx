@@ -116,12 +116,100 @@ const RevenueHistoryPage = () => {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
+
+        /* ── Light Mode High-Contrast Overrides ── */
+        [data-theme="light"] .font-body {
+          color: #1a1a2e !important;
+        }
+        [data-theme="light"] .text-\[\#dee2f3\] {
+          color: #1a1a2e !important;
+        }
+        [data-theme="light"] .text-\[\#c2c6d6\] {
+          color: #4b5563 !important;
+        }
+        [data-theme="light"] .text-\[\#c2c6d6\]\/50 {
+          color: #6b7280 !important;
+        }
+        [data-theme="light"] .text-\[\#31e193\] {
+          color: #047857 !important;
+        }
+        [data-theme="light"] .text-\[\#ffb786\] {
+          color: #c2410c !important;
+        }
+        [data-theme="light"] .text-\[\#ffb4ab\] {
+          color: #b91c1c !important;
+        }
+        [data-theme="light"] .glass-card {
+          background: #ffffff !important;
+          border: 1px solid rgba(234, 88, 12, 0.15) !important;
+          box-shadow: 0 8px 24px rgba(234, 88, 12, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+        }
+        [data-theme="light"] .glass-card h3 {
+          color: #4b5563 !important;
+        }
+        [data-theme="light"] .rev-hero-card {
+          background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+          border: 1.5px solid rgba(16, 185, 129, 0.35) !important;
+          box-shadow: 0 12px 32px rgba(16, 185, 129, 0.12) !important;
+        }
+        [data-theme="light"] .rev-hero-card .neon-text-gradient {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
+        }
+        [data-theme="light"] .rev-hero-card h2 {
+          color: #374151 !important;
+        }
+        [data-theme="light"] .rev-card-blue {
+          border: 1.5px solid rgba(59, 130, 246, 0.35) !important;
+          box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08) !important;
+        }
+        [data-theme="light"] .rev-card-blue p {
+          color: #1e3a8a !important;
+        }
+        [data-theme="light"] .rev-card-orange {
+          border: 1.5px solid rgba(249, 115, 22, 0.35) !important;
+          box-shadow: 0 8px 24px rgba(249, 115, 22, 0.08) !important;
+        }
+        [data-theme="light"] .rev-card-orange p {
+          color: #c2410c !important;
+        }
+        [data-theme="light"] .rev-card-purple {
+          border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.08) !important;
+        }
+        [data-theme="light"] .rev-card-purple p {
+          color: #6b21a8 !important;
+        }
+        [data-theme="light"] .rev-row {
+          background: #ffffff !important;
+          border: 1px solid rgba(234, 88, 12, 0.14) !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+        }
+        [data-theme="light"] .rev-row:hover {
+          border-color: rgba(234, 88, 12, 0.35) !important;
+          background: #fffbf7 !important;
+        }
+        [data-theme="light"] .rev-avatar {
+          background: #fef3e8 !important;
+          color: #ea580c !important;
+          border-color: rgba(234, 88, 12, 0.25) !important;
+        }
+        [data-theme="light"] .rev-input {
+          background: #ffffff !important;
+          color: #1a1a2e !important;
+          border: 1px solid rgba(234, 88, 12, 0.25) !important;
+        }
+        [data-theme="light"] .rev-input:focus {
+          border-color: #ea580c !important;
+          box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15) !important;
+        }
       `}</style>
 
       <main className="pt-4 sm:pt-8 pb-8 sm:pb-16 px-3 sm:px-6 max-w-7xl mx-auto">
         <section className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12">
 
-          <div className="md:col-span-6 lg:col-span-4 relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#31e193]/20 to-[#090e19] p-8 shadow-2xl transition-all hover:translate-y-[-4px]">
+          <div className="md:col-span-6 lg:col-span-4 relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#31e193]/20 to-[#090e19] rev-hero-card p-8 shadow-2xl transition-all hover:translate-y-[-4px]">
             <div className="absolute -right-12 -top-12 w-48 h-48 bg-[#31e193]/20 blur-[80px] rounded-full group-hover:bg-[#31e193]/30 transition-all"></div>
             <div className="relative z-10 flex flex-col h-full justify-between">
               <div>
@@ -134,7 +222,7 @@ const RevenueHistoryPage = () => {
             </div>
           </div>
 
-          <div className="md:col-span-6 lg:col-span-3 glass-card rounded-[2rem] p-8 border border-white/5 shadow-xl flex flex-col justify-between hover:bg-[#303541]/60 transition-colors">
+          <div className="md:col-span-6 lg:col-span-3 glass-card rev-card-blue rounded-[2rem] p-8 border border-white/5 shadow-xl flex flex-col justify-between hover:bg-[#303541]/60 transition-colors">
             <div>
               <div className="w-12 h-12 rounded-2xl bg-[#0566d9]/20 flex items-center justify-center text-[#adc6ff] mb-6">
                 <Banknote size={ 24 } />
@@ -146,7 +234,7 @@ const RevenueHistoryPage = () => {
             </div>
           </div>
 
-          <div className="md:col-span-6 lg:col-span-3 glass-card rounded-[2rem] p-8 border border-white/5 shadow-xl flex flex-col justify-between hover:bg-[#303541]/60 transition-colors">
+          <div className="md:col-span-6 lg:col-span-3 glass-card rev-card-orange rounded-[2rem] p-8 border border-white/5 shadow-xl flex flex-col justify-between hover:bg-[#303541]/60 transition-colors">
             <div>
               <div className="w-12 h-12 rounded-2xl bg-[#df7412]/20 flex items-center justify-center text-[#ffb786] mb-6">
                 <Hourglass size={ 24 } />
@@ -162,7 +250,7 @@ const RevenueHistoryPage = () => {
             </div>
           </div>
 
-          <div className="md:col-span-6 lg:col-span-2 glass-card rounded-[2rem] p-8 border border-white/5 shadow-xl flex flex-col justify-between hover:bg-[#303541]/60 transition-colors">
+          <div className="md:col-span-6 lg:col-span-2 glass-card rev-card-purple rounded-[2rem] p-8 border border-white/5 shadow-xl flex flex-col justify-between hover:bg-[#303541]/60 transition-colors">
             <div>
               <div className="w-12 h-12 rounded-2xl bg-[#9333ea]/20 flex items-center justify-center text-[#d8b4fe] mb-6">
                 <Banknote size={ 24 } />
@@ -189,7 +277,7 @@ const RevenueHistoryPage = () => {
                 placeholder="Search by client name..."
                 value={ searchQuery }
                 onChange={ (e) => setSearchQuery(e.target.value) }
-                className="w-full bg-[#303541] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#dee2f3] placeholder:text-[#c2c6d6]/50 focus:outline-none focus:border-[#31e193]/50 focus:ring-1 focus:ring-[#31e193]/50 transition-all"
+                className="w-full bg-[#303541] rev-input border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#dee2f3] placeholder:text-[#c2c6d6]/50 focus:outline-none focus:border-[#31e193]/50 focus:ring-1 focus:ring-[#31e193]/50 transition-all"
               />
             </div>
           </div>
@@ -225,9 +313,9 @@ const RevenueHistoryPage = () => {
                 }
 
                 return (
-                  <div key={ client.client_id || idx } className="grid grid-cols-12 items-center px-8 py-5 glass-card rounded-2xl border border-white/5 hover:border-[#31e193]/20 transition-all group">
+                  <div key={ client.client_id || idx } className="grid grid-cols-12 items-center px-8 py-5 glass-card rev-row rounded-2xl border border-white/5 hover:border-[#31e193]/20 transition-all group">
                     <div className="col-span-3 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#303541] flex items-center justify-center text-[12px] font-bold text-[#dee2f3] border border-gray-600/50 flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-[#303541] rev-avatar flex items-center justify-center text-[12px] font-bold text-[#dee2f3] border border-gray-600/50 flex-shrink-0">
                         { client.client_name ? client.client_name.substring(0, 2).toUpperCase() : 'C' }
                       </div>
                       <span className="text-[#dee2f3] font-semibold text-sm truncate" title={ client.client_name }>
@@ -235,7 +323,7 @@ const RevenueHistoryPage = () => {
                       </span>
                     </div>
                     <div className="col-span-1 text-center text-[#c2c6d6] text-sm font-medium">
-                      <span className="bg-[#303541] px-2.5 py-1 rounded-full text-xs border border-gray-700/50">
+                      <span className="bg-[#303541] rev-avatar px-2.5 py-1 rounded-full text-xs border border-gray-700/50">
                         { proformasCount }
                       </span>
                     </div>
