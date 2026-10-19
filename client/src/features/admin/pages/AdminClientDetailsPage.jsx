@@ -861,10 +861,11 @@ const AdminClientDetailsPage = () => {
                 <Plus className="w-5 h-5" /> Create New Proposal
               </button>
               <button 
-                onClick={() => navigate(`/admin/client/service/history/${selectedClient.id}`)}
-                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition flex items-center justify-center gap-2"
+                onClick={() => {}}
+                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                title="Create Quotation (Coming Soon)"
               >
-                <FileText className="w-5 h-5" /> Manage Proposals
+                <FileText className="w-5 h-5" /> Create Quotation
               </button>
             </div>
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Calendar, FileText, Hash, Eye, ArrowUpRight, Trash2 } from "lucide-react";
+import { Calendar, FileText, Hash, Eye, ArrowUpRight, Trash2, Plus, Scale } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
 import Swal from "sweetalert2";
 import API_BASE_URL from "../../../config/apiBaseUrl";
+import CreateBalanceProformaModal from "../components/CreateBalanceProformaModal";
 
 const BalanceProformaHistoryPage = () => {
   const baseURL = API_BASE_URL;
@@ -16,6 +17,7 @@ const BalanceProformaHistoryPage = () => {
   const { token } = useSelector((state) => state.user);
 
   const [balanceProformas, setBalanceProformas] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [page, setPage] = useState(0);
   const itemsPerPage = 10;
 
@@ -97,9 +99,17 @@ const BalanceProformaHistoryPage = () => {
     <div className="space-y-8">
       {/* Balance Proformas Table Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-2">
-          <FileText className="w-6 h-6 text-yellow-400" /> Balance Proformas
-        </h2>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-2">
+            <Scale className="w-6 h-6 text-yellow-400" /> Balance Proformas
+          </h2>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all text-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Create Balance Proforma
+          </button>
+        </div>
         
         <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -236,6 +246,12 @@ const BalanceProformaHistoryPage = () => {
           </div>
         )}
       </div>
+
+      <CreateBalanceProformaModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={fetchBalanceProformas}
+      />
     </div>
   );
 };

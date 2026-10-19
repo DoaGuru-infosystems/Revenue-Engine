@@ -353,7 +353,10 @@ export default function InvoicePage({
                   </section>
 
                   {/* Amount in words */}
-                  <InvoiceAmountInWords amountInWords={amountInWords} />
+                  <InvoiceAmountInWords
+                    amountInWords={amountInWords}
+                    isBalanceProforma={isBalanceProforma}
+                  />
 
                   {/* Payment History Table (for Proforma with partial payments) */}
                   <InvoicePaymentHistoryTable

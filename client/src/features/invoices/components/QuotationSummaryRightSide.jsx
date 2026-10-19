@@ -165,10 +165,14 @@ export default function QuotationSummaryRightSide({
 
         <div className="mt-2 print:mt-1 pt-2 print:pt-0.5 border-t border-gray-200 text-right">
           <p className="text-[10px] print:text-[9px] text-gray-500 italic block leading-tight">
-            Total Amount (in words):
+            {isBalanceProforma ? "Current Balance (in words):" : "Total Amount (in words):"}
           </p>
           <p className="font-semibold text-gray-800 text-xs print:text-[11px] capitalize leading-tight">
-            {inrToWords(displayedGrandTotal)}
+            {isBalanceProforma
+              ? (Math.round(displayedCurrentBalance) <= 0
+                  ? "Nil (Fully Paid)"
+                  : inrToWords(Math.round(displayedCurrentBalance)))
+              : inrToWords(displayedGrandTotal)}
           </p>
         </div>
       </div>

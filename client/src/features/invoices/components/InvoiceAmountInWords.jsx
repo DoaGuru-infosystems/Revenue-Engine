@@ -1,13 +1,20 @@
 import React from "react";
 
-export default function InvoiceAmountInWords({ amountInWords = "" }) {
+export default function InvoiceAmountInWords({
+  amountInWords = "",
+  isBalanceProforma = false,
+  label = null,
+}) {
   if (!amountInWords) return null;
+
+  const displayLabel =
+    label || (isBalanceProforma ? "Current Balance (in words):" : "Total Amount (in words):");
 
   return (
     <div className="flex justify-end mt-1 print:mt-0.5 px-1 mb-2 print:mb-0.5 amount-in-words-section">
       <div className="text-right">
         <span className="text-[10px] print:text-[9px] text-gray-500 italic block leading-tight">
-          Total Amount (in words):
+          {displayLabel}
         </span>
         <span
           style={{

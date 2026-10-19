@@ -384,6 +384,12 @@ export const useInvoiceCalculations = ({
       displayedGrandTotal - displayedReceived
     );
 
+    const effectiveAmountInWords = isBalProf
+      ? Math.round(displayedCurrentBalance) <= 0
+        ? "Nil (Fully Paid)"
+        : inrToWords(Math.round(displayedCurrentBalance))
+      : amountInWords;
+
     return {
       graphicTotal,
       complimentaryTotal,
@@ -437,7 +443,7 @@ export const useInvoiceCalculations = ({
       hasPayment,
       totalForWords,
       safeTotal,
-      amountInWords,
+      amountInWords: effectiveAmountInWords,
       previousBalance,
       totalcurrentamount,
       hasSavedOutstandingFromPartial,
