@@ -219,8 +219,74 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
           </div>
         </div>
 
-        {/* Table Section */}
-        <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        {/* MOBILE/TABLET: Cards (hidden on lg+) */}
+        <div className="lg:hidden space-y-3">
+          {paginatedPayments.length > 0 ? (
+            paginatedPayments.map((p, index) => (
+              <div key={p.id} className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3 hover:border-gray-600/60 transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="w-7 h-7 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-bold flex items-center justify-center">
+                    {paymentPage * itemsPerPage + index + 1}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-gray-400 text-xs">
+                    <Calendar className="w-3.5 h-3.5 text-orange-400" />
+                    <span>{moment(p.payment_date).format("DD MMM YYYY")}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-full bg-gray-700/50 flex items-center justify-center shrink-0 border border-gray-600/50">
+                    <User className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Client</p>
+                    <p className="text-white font-semibold text-sm leading-tight">{p.client_name || "Unknown"}</p>
+                    {p.client_organization && <p className="text-gray-400 text-xs mt-0.5">{p.client_organization}</p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 border-t border-gray-700/50 pt-2">
+                  <div>
+                    <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Proforma No</p>
+                    {p.proforma_id ? (
+                      <span className="text-amber-400 font-bold text-xs font-mono">{p.proforma_number || `PROF-${p.proforma_id}`}</span>
+                    ) : (
+                      <span className="text-gray-500 italic text-xs">-</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Mode</p>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-gray-700 text-gray-300 border border-gray-600">{p.payment_mode || "N/A"}</span>
+                  </div>
+                  <div>
+                    <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Reference</p>
+                    <p className="text-gray-400 font-mono text-xs truncate max-w-[130px]">{p.transaction_reference || "No Ref"}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">TDS</p>
+                    {p.tds_applicable ? (
+                      <p className="text-orange-400 text-xs font-semibold">₹{p.tds_amount} <span className="text-gray-500">({p.tds_percentage}%)</span></p>
+                    ) : (
+                      <span className="text-gray-500 italic text-xs">N/A</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-gray-700/50 pt-2">
+                  <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Received Amount</p>
+                  <span className="font-bold text-lg bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
+                    ₹{Number(p.amount).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-16 text-gray-500">
+              <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p>No payment history found.</p>
+            </div>
+          )}
+        </div>
+
+        {/* DESKTOP: Table (lg+ only) */}
+        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <div className="overflow-auto max-h-[35rem]" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               <table className="w-full">
@@ -296,12 +362,8 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
                         <td className="py-4 px-6">
                           {p.tds_applicable ? (
                             <div className="flex flex-col">
-                              <span className="text-orange-400 text-sm font-semibold">
-                                ₹{p.tds_amount}
-                              </span>
-                              <span className="text-gray-500 text-xs">
-                                {p.tds_percentage}% TDS
-                              </span>
+                              <span className="text-orange-400 text-sm font-semibold">₹{p.tds_amount}</span>
+                              <span className="text-gray-500 text-xs">{p.tds_percentage}% TDS</span>
                             </div>
                           ) : (
                             <span className="text-gray-600 italic text-sm">N/A</span>
@@ -346,6 +408,7 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
           </PaginationContainer>
         )}
       </div>
+
 
       {/* ── Select Proforma Modal (List of Partially Paid Proformas) ─────────────── */}
       {showSelectModal && (

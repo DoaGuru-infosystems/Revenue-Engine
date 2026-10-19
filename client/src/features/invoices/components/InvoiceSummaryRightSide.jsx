@@ -39,8 +39,7 @@ export default function InvoiceSummaryRightSide({
           <>
             <div
               style={{
-                background: "#f5f8fc",
-                fontWeight: 800,
+                background: "white",
                 color: "#111827",
               }}
               className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
@@ -74,7 +73,7 @@ export default function InvoiceSummaryRightSide({
             {projectValueDeferred > 0 && (
               <div
                 style={{
-                  background: "#fef2f2",
+                  background: "white",
                   color: "#dc2626",
                   fontWeight: 700,
                 }}
@@ -88,14 +87,16 @@ export default function InvoiceSummaryRightSide({
             )}
             <div
               style={{
-                background: "#e8edff",
+                background: "#E8EDFF",
                 color: "#111827",
                 fontWeight: 800,
+                printColorAdjust: "exact",
+                WebkitPrintColorAdjust: "exact",
               }}
               className="flex justify-between items-center px-3 py-1 border-b border-gray-200"
             >
               <span className="text-gray-800">Net Taxable Value</span>
-              <span className="text-gray-900">
+              <span className="text-gray-900 font-bold">
                 ₹{formatAmount(activeTaxableSubtotal)}
               </span>
             </div>
@@ -150,7 +151,7 @@ export default function InvoiceSummaryRightSide({
                 </div>
                 <div
                   style={{
-                    background: "#eff6ff",
+                    background: "white",
                     color: "#1d4ed8",
                     fontWeight: 600,
                   }}
@@ -167,7 +168,7 @@ export default function InvoiceSummaryRightSide({
             {adjustmentAmount > 0 && (
               <div
                 style={{
-                  background: "#faf5ff",
+                  background: "white",
                   color: "#7e22ce",
                   fontWeight: 600,
                 }}
@@ -225,7 +226,7 @@ export default function InvoiceSummaryRightSide({
             {previousBalanceAmount > 0 && (
               <div
                 style={{
-                  background: "#eff6ff",
+                  background: "white",
                   color: "#1d4ed8",
                   fontWeight: 600,
                 }}
@@ -240,9 +241,11 @@ export default function InvoiceSummaryRightSide({
 
         <div
           style={{
-            background: "#dcf7e8",
+            background: "#E8EDFF",
             color: "#047968",
             fontWeight: 900,
+            printColorAdjust: "exact",
+            WebkitPrintColorAdjust: "exact",
           }}
           className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100"
         >
@@ -297,9 +300,11 @@ export default function InvoiceSummaryRightSide({
           {visibleAdBudget > 0 && !hasPayment && (
             <div
               style={{
-                background: "#dcf7e8",
+                background: "#E8EDFF",
                 color: "#047968",
                 fontWeight: 900,
+                printColorAdjust: "exact",
+                WebkitPrintColorAdjust: "exact",
               }}
               className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100"
             >
@@ -313,9 +318,8 @@ export default function InvoiceSummaryRightSide({
             <>
               <div
                 style={{
-                  background: "#dcf7e8",
-                  color: "#047968",
-                  fontWeight: 900,
+                  background: "white",
+                  color: "#111827",
                 }}
                 className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
               >
@@ -329,7 +333,7 @@ export default function InvoiceSummaryRightSide({
               {tdsAmountToShow > 0 && (
                 <div
                   style={{
-                    background: "#fef2f2",
+                    background: "white",
                     color: "#dc2626",
                     fontWeight: 700,
                   }}
@@ -343,9 +347,11 @@ export default function InvoiceSummaryRightSide({
               )}
               <div
                 style={{
-                  background: "#dcf7e8",
+                  background: "#E8EDFF",
                   color: "#047968",
                   fontWeight: 900,
+                  printColorAdjust: "exact",
+                  WebkitPrintColorAdjust: "exact",
                 }}
                 className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100"
               >
@@ -375,7 +381,12 @@ export default function InvoiceSummaryRightSide({
                 </span>
               </div>
               <div
-                style={{ background: "#ecfdf5", color: "#065f46" }}
+                style={{
+                  background: "#FFF7ED",
+                  color: "#065f46",
+                  printColorAdjust: "exact",
+                  WebkitPrintColorAdjust: "exact",
+                }}
                 className="flex justify-between items-center px-3 py-1.5 border-b border-gray-100"
               >
                 <span className="font-bold text-xs text-green-800">

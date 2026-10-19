@@ -26,9 +26,12 @@ export default function InvoiceTermsConditions({
   if (!shouldShow) return null;
 
   return (
-    <div className="terms-conditions-section w-full text-left pt-2 print:pt-1 border-t border-gray-300">
-      <h2 className="font-bold mb-1 print:mb-0.5 text-gray-800 print:text-xs">Terms &amp; Conditions</h2>
-      <ul className="list-decimal ml-5 space-y-0.5 print:space-y-0 text-gray-700 print:text-[10.5px] print:leading-tight">
+    <div
+      style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
+      className="terms-conditions-section w-full text-left pt-2 print:pt-1.5 border-t border-gray-300 break-inside-avoid print:break-inside-avoid"
+    >
+      <h2 className="font-bold mb-1 print:mb-1 text-gray-800 text-sm print:text-sm">Terms &amp; Conditions</h2>
+      <ul className="list-decimal ml-5 space-y-1 print:space-y-1 text-gray-700 text-xs sm:text-[13px] print:text-[12px] leading-relaxed print:leading-relaxed">
         {visibleAdBudget > 0 && (
           <li className="leading-relaxed print:leading-tight mt-1 print:mt-0.5 text-gray-700">
             The advertising budget shown in this invoice represents third-party

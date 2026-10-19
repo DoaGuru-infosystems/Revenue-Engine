@@ -22,9 +22,11 @@ export default function InvoiceServicesTable({
       <table className="w-full border text-xs">
         <thead
           style={{
-            background: "#e8edff",
+            background: "#E8EDFF",
             color: "#111827",
             fontSize: "11px",
+            printColorAdjust: "exact",
+            WebkitPrintColorAdjust: "exact",
           }}
         >
           <tr>
@@ -205,9 +207,11 @@ export default function InvoiceServicesTable({
         </tbody>
         <tfoot
           style={{
-            background: "#f5f8fc",
+            background: "#E8EDFF",
             fontWeight: 800,
             border: "1px solid #cfd8e3",
+            printColorAdjust: "exact",
+            WebkitPrintColorAdjust: "exact",
           }}
         >
           <tr>

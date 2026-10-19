@@ -109,10 +109,10 @@ const HistoryHubPage = ({ setActiveTab }) => {
   const activeTabConfig = SUB_TABS.find((t) => t.id === activeSubTab);
 
   return (
-    <div className="w-full min-h-full flex flex-col md:flex-row relative gap-4 md:gap-6">
+    <div className="w-full min-h-full flex flex-col lg:flex-row relative gap-4 lg:gap-6">
       
       {/* ── Mobile Top Bar ─────────────────────────────────────────────────── */}
-      <div className="md:hidden flex items-center justify-between bg-gray-900/80 backdrop-blur-xl border border-gray-800/60 rounded-xl px-4 py-3 z-30">
+      <div className="lg:hidden flex items-center justify-between bg-gray-900/80 backdrop-blur-xl border border-gray-800/60 rounded-xl px-4 py-3 z-30">
         <div className="flex items-center gap-2 font-semibold text-lg" style={{ color: activeTabConfig?.color || '#fff' }}>
           {activeTabConfig?.icon && React.createElement(activeTabConfig.icon, { className: "w-5 h-5" })}
           {activeTabConfig?.label}
@@ -127,20 +127,20 @@ const HistoryHubPage = ({ setActiveTab }) => {
 
       {/* ── Sub-tab Sidebar (Desktop & Mobile Drawer) ──────────────────────── */}
       <div className={`
-        absolute md:sticky md:top-0 top-[60px] left-0 right-0 z-20 
-        w-full md:w-64 flex-col gap-2 h-fit
+        absolute lg:sticky lg:top-0 top-[60px] left-0 right-0 z-20 
+        w-full lg:w-56 xl:w-64 flex-col gap-2 h-fit
         transition-all duration-300 ease-in-out
         ${isMobileMenuOpen 
           ? 'translate-y-0 opacity-100 pointer-events-auto shadow-2xl' 
-          : '-translate-y-4 opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto md:shadow-none'
+          : '-translate-y-4 opacity-0 pointer-events-none lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto lg:shadow-none'
         }
         flex
-        bg-gray-900/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none
-        border border-gray-800/60 md:border-none
-        rounded-xl md:rounded-none
-        p-4 md:p-0
-        md:border-r md:border-gray-800/60 md:pr-6
-        md:shrink-0
+        bg-gray-900/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none
+        border border-gray-800/60 lg:border-none
+        rounded-xl lg:rounded-none
+        p-4 lg:p-0
+        lg:border-r lg:border-gray-800/60 lg:pr-4 xl:pr-6
+        lg:shrink-0
       `}>
         {SUB_TABS.map((tab) => {
           const Icon = tab.icon;

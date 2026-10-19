@@ -42,7 +42,7 @@ export default function InvoiceDiscountSection({
                 <tr
                   style={{
                     color: "#dc2626",
-                    background: "#fef2f2",
+                    background: "white",
                     fontWeight: 700,
                   }}
                 >
@@ -58,7 +58,7 @@ export default function InvoiceDiscountSection({
                 <tr
                   style={{
                     color: "#7e22ce",
-                    background: "#faf5ff",
+                    background: "white",
                     fontWeight: 700,
                   }}
                 >
@@ -70,7 +70,14 @@ export default function InvoiceDiscountSection({
                   </td>
                 </tr>
               )}
-              <tr className="bg-orange-50 font-semibold">
+              <tr
+                style={{
+                  background: "#E8EDFF",
+                  printColorAdjust: "exact",
+                  WebkitPrintColorAdjust: "exact",
+                }}
+                className="font-semibold"
+              >
                 <td className="border px-2 print:px-1.5 py-1 print:py-0.5 text-right" colSpan={4}>
                   {prevBal > 0 ? "Current Services Subtotal" : "Subtotal"}
                 </td>

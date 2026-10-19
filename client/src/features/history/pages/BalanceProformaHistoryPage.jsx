@@ -111,7 +111,81 @@ const BalanceProformaHistoryPage = () => {
           </button>
         </div>
         
-        <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        {/* MOBILE/TABLET: Cards (hidden on lg+) */}
+        <div className="lg:hidden space-y-3">
+          {paginatedItems.length > 0 ? (
+            paginatedItems.map((item, index) => {
+              const totalAmt = Number(item.total_amount || 0);
+              const recAmt = Number(item.received_amount || 0);
+              const curBal = Number(item.current_balance || 0);
+              return (
+                <div key={item.id} className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3 hover:border-gray-600/60 transition-all duration-200">
+                  <div className="flex items-center justify-between">
+                    <span className="w-7 h-7 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-bold flex items-center justify-center">
+                      {page * itemsPerPage + index + 1}
+                    </span>
+                    <div className="flex items-center gap-1.5 text-gray-400 text-xs">
+                      <Calendar className="w-3.5 h-3.5 text-orange-400" />
+                      <span>{moment(item.created_at).format("DD MMM YYYY")}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Client</p>
+                    <p className="text-white font-semibold text-sm">{item.client_name || "Unknown"}</p>
+                    {item.client_organization && <p className="text-gray-400 text-xs">{item.client_organization}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 border-t border-gray-700/50 pt-2">
+                    <div>
+                      <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Balance No</p>
+                      <p className="text-amber-400 font-bold text-xs font-mono">{item.balance_proforma_number || `BAL-PROF-${item.balance_number}`}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Source Ref</p>
+                      <p className="text-gray-300 text-xs">{item.source_proforma_number || `PROF-${item.source_proforma_id}`}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Total</p>
+                      <p className="text-gray-200 font-semibold text-xs">₹{totalAmt.toLocaleString("en-IN")}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Received</p>
+                      <p className="text-emerald-400 font-semibold text-xs">₹{recAmt.toLocaleString("en-IN")}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Current Balance</p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-green-400 font-bold text-xs">₹{curBal.toLocaleString("en-IN")}</p>
+                        {curBal <= 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">Paid</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 border-t border-gray-700/50 pt-2">
+                    <button
+                      onClick={() => handlePreviewPdf(item)}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/30 transition-all"
+                    >
+                      <Eye size={13} /> View <ArrowUpRight size={11} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30 transition-all"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-16 text-gray-500">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>No balance proformas found.</p>
+            </div>
+          )}
+        </div>
+
+        {/* DESKTOP: Table (lg+ only) */}
+        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <div className="overflow-auto max-h-[28rem]" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               <table className="w-full">
@@ -134,7 +208,6 @@ const BalanceProformaHistoryPage = () => {
                       const totalAmt = Number(item.total_amount || 0);
                       const recAmt = Number(item.received_amount || 0);
                       const curBal = Number(item.current_balance || 0);
-
                       return (
                         <tr key={item.id} className="border-b border-gray-700/30 hover:bg-gray-700/20 transition-all duration-300 group">
                           <td className="py-4 px-6">
@@ -174,24 +247,16 @@ const BalanceProformaHistoryPage = () => {
                             </div>
                           </td>
                           <td className="py-4 px-6 text-right whitespace-nowrap">
-                            <span className="text-sm font-semibold text-gray-200">
-                              ₹{totalAmt.toLocaleString("en-IN")}
-                            </span>
+                            <span className="text-sm font-semibold text-gray-200">₹{totalAmt.toLocaleString("en-IN")}</span>
                           </td>
                           <td className="py-4 px-6 text-right whitespace-nowrap">
-                            <span className="text-sm font-semibold text-emerald-400">
-                              ₹{recAmt.toLocaleString("en-IN")}
-                            </span>
+                            <span className="text-sm font-semibold text-emerald-400">₹{recAmt.toLocaleString("en-IN")}</span>
                           </td>
                           <td className="py-4 px-6 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <span className="text-sm font-bold text-green-400">
-                                ₹{curBal.toLocaleString("en-IN")}
-                              </span>
+                              <span className="text-sm font-bold text-green-400">₹{curBal.toLocaleString("en-IN")}</span>
                               {curBal <= 0 && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-                                  Paid
-                                </span>
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">Paid</span>
                               )}
                             </div>
                           </td>
@@ -202,8 +267,7 @@ const BalanceProformaHistoryPage = () => {
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/30 transition-all"
                                 title="View Balance Proforma"
                               >
-                                <Eye size={14} /> View
-                                <ArrowUpRight size={12} />
+                                <Eye size={14} /> View <ArrowUpRight size={12} />
                               </button>
                               <button
                                 onClick={() => handleDelete(item)}
@@ -229,6 +293,7 @@ const BalanceProformaHistoryPage = () => {
             </div>
           </div>
         </div>
+
 
         {totalPages > 1 && (
           <div className="flex justify-end mt-4">

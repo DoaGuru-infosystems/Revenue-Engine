@@ -218,32 +218,47 @@ export const InvoicePrintWrapper = styled.div`
       margin-bottom: 2px !important;
     }
 
-    /* Terms & Conditions / Notes: natural flow to next page if needed */
+    /* Terms & Conditions / Notes: keep entire section together; if any note overflows, move whole section to next page */
     .terms-conditions-section,
-    .notes-section,
+    .notes-section {
+      page-break-before: auto !important;
+      break-before: auto !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      margin-top: 4px !important;
+      padding-top: 4px !important;
+    }
+
     .payment-history-section {
       page-break-before: auto !important;
       break-before: auto !important;
-      page-break-inside: auto !important;
-      break-inside: auto !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
       margin-top: 3px !important;
       padding-top: 3px !important;
     }
 
+    .terms-conditions-section h2,
+    .notes-section p {
+      font-size: 13.5px !important;
+      font-weight: 700 !important;
+      margin-bottom: 2px !important;
+    }
+
     .terms-conditions-section ul,
     .notes-section ul {
-      margin-top: 1px !important;
-      margin-bottom: 1px !important;
+      margin-top: 2px !important;
+      margin-bottom: 2px !important;
     }
 
     .terms-conditions-section ul li,
     .notes-section ul li {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
-      font-size: 10.5px !important;
-      line-height: 1.25 !important;
-      margin-top: 1px !important;
-      margin-bottom: 1px !important;
+      font-size: 12px !important;
+      line-height: 1.35 !important;
+      margin-top: 2px !important;
+      margin-bottom: 2px !important;
     }
   }
 `;

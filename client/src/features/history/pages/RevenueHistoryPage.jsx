@@ -118,7 +118,7 @@ const RevenueHistoryPage = () => {
         }
       `}</style>
 
-      <main className="pt-8 pb-32 px-6 max-w-7xl mx-auto">
+      <main className="pt-4 sm:pt-8 pb-8 sm:pb-16 px-3 sm:px-6 max-w-7xl mx-auto">
         <section className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12">
 
           <div className="md:col-span-6 lg:col-span-4 relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#31e193]/20 to-[#090e19] p-8 shadow-2xl transition-all hover:translate-y-[-4px]">
@@ -195,7 +195,7 @@ const RevenueHistoryPage = () => {
           </div>
 
           <div className="overflow-x-auto pb-4">
-            <div className="min-w-[900px] space-y-3">
+            <div className="min-w-[640px] space-y-3">
               <div className="grid grid-cols-12 px-8 py-4 font-label uppercase tracking-widest text-[0.6875rem] text-[#c2c6d6]/50">
                 <div className="col-span-3">Client</div>
                 <div className="col-span-1 text-center">Proformas</div>

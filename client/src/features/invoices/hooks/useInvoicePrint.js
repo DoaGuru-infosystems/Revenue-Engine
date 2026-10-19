@@ -113,6 +113,20 @@ export function useInvoicePrint({
               tr    { page-break-inside: avoid; page-break-after: auto; }
               thead { display: table-header-group !important; }
               tfoot { display: table-footer-group !important; }
+
+              .terms-conditions-section, .notes-section, .payment-history-section {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+              }
+              .terms-conditions-section h2, .notes-section p {
+                font-size: 13.5px !important;
+                font-weight: bold !important;
+                margin-bottom: 3px !important;
+              }
+              .terms-conditions-section ul li, .notes-section ul li {
+                font-size: 12px !important;
+                line-height: 1.35 !important;
+              }
             }
           </style>
         </head>

@@ -88,7 +88,7 @@ export default function ProposalHistoryPage() {
         </div>
 
         {/* MOBILE: Card List */}
-        <div className="block md:hidden space-y-3 overflow-y-auto max-h-[calc(100vh-20rem)] pr-1">
+        <div className="block lg:hidden space-y-3 overflow-y-auto max-h-[calc(100vh-20rem)] pr-1">
           {currentItems.length > 0 ? (
             currentItems.map((item, index) => (
               <div
@@ -181,7 +181,7 @@ export default function ProposalHistoryPage() {
         </div>
 
         {/* DESKTOP: Table */}
-        <div className="hidden md:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <div
               className="overflow-auto h-[calc(100vh-20rem)] max-h-[35rem]"

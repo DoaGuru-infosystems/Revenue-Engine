@@ -9,7 +9,13 @@ export default function InvoiceComplimentaryTable({
   return (
     <section className="text-sm mt-2">
       <table className="w-full border text-xs">
-        <thead className="bg-green-100">
+        <thead
+          style={{
+            background: "#E8EDFF",
+            printColorAdjust: "exact",
+            WebkitPrintColorAdjust: "exact",
+          }}
+        >
           <tr>
             <th className="border px-2 py-1 text-left w-[12rem] text-green-900 font-bold">
               Complimentary Service Name
@@ -111,7 +117,10 @@ export default function InvoiceComplimentaryTable({
                   const addonQty = Number(addon.quantity) || qty;
                   const addonName = addon.name || addon.additional_service_name || "Additional Service";
                   return (
-                    <tr key={`comp-${idx}-addon-${aIdx}`} className="bg-emerald-50/40 text-gray-700">
+                    <tr
+                      key={`comp-${idx}-addon-${aIdx}`}
+                      className="bg-white text-gray-700"
+                    >
                       <td className="border px-2 py-1 font-medium pl-4">
                         + {addonName}
                       </td>
@@ -133,7 +142,7 @@ export default function InvoiceComplimentaryTable({
           })}
         </tbody>
         <tfoot>
-          <tr className="bg-green-50">
+          <tr className="bg-white">
             <td colSpan={4} className="border px-2 py-1 text-right font-semibold">
               Total Complimentary Value
             </td>
@@ -172,14 +181,14 @@ export default function InvoiceComplimentaryTable({
               )}
             </td>
           </tr>
-          <tr className="bg-green-100 font-bold">
+          <tr className="bg-white font-bold">
             <td
               colSpan={4}
-              className="border px-2 py-1 text-right text-green-900"
+              className="border px-2 py-1 text-right text-green-900 font-bold"
             >
               Complimentary Total (Free)
             </td>
-            <td className="border px-2 py-1 text-right text-green-900">₹0</td>
+            <td className="border px-2 py-1 text-right text-green-900 font-bold">₹0</td>
           </tr>
         </tfoot>
       </table>

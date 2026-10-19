@@ -49,6 +49,7 @@ const GenerateProformaModal = ({
   const [quotationServicesPreview, setQuotationServicesPreview] = useState([]);
   const [quotationPreviewLoading, setQuotationPreviewLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mobileTableView, setMobileTableView] = useState("cards");
   const [previousBalance, setPreviousBalance] = useState({
     totalPending: 0,
     include: true,
@@ -98,6 +99,78 @@ const GenerateProformaModal = ({
   const getServiceDisplayName = (serviceName) => {
     if (!serviceName) return "";
     return serviceName.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const getCategoryDisplay = (svc) => {
+    const isServiceCharge = (svc.service_name || "").toLowerCase() === "service charge" || (svc.service_name || "").toLowerCase() === "ads service charge";
+    if (isServiceCharge) {
+      return getServiceDisplayName(
+        (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item")
+          ? (svc.service || svc.category_name || svc.editing_type_name)
+          : (svc.editing_type_name || svc.category_name || "N/A")
+      );
+    }
+    const cat = svc.category_name && svc.category_name !== "N/A" ? svc.category_name : "";
+    const type =
+      svc.editing_type_name &&
+      svc.editing_type_name !== "N/A" &&
+      svc.editing_type_name !== "null" &&
+      svc.editing_type_name !== "undefined" &&
+      svc.editing_type_name.trim() !== "" &&
+      svc.editing_type_name.toLowerCase() !== "proposal item"
+        ? svc.editing_type_name.trim()
+        : "";
+
+    if (
+      cat &&
+      type &&
+      cat.trim().toLowerCase() !== type.toLowerCase() &&
+      type.toLowerCase() !== (svc.service_name || "").trim().toLowerCase()
+    ) {
+      return `${cat} (${type})`;
+    }
+    return cat || type || "N/A";
+  };
+
+  const getAddons = (svc, defaultQty) => {
+    let addons = [];
+    if (svc.additional_services) {
+      try {
+        addons = typeof svc.additional_services === 'string'
+          ? JSON.parse(svc.additional_services)
+          : svc.additional_services;
+        if (!Array.isArray(addons)) addons = [];
+      } catch {
+        addons = [];
+      }
+    }
+    return addons.map((ad) => {
+      const amount = Number(ad.amount || ad.unit_price || 0);
+      const quantity = Number(ad.quantity) || defaultQty;
+      return {
+        name: ad.name || ad.additional_service_name || "Additional Service",
+        amount,
+        quantity,
+        total: amount * quantity
+      };
+    });
+  };
+
+  const getCompServiceName = (svc) => {
+    return getServiceDisplayName(
+      String((svc.service_name && svc.service_name.toLowerCase() === "proposal item")
+        ? (svc.category_name || svc.service_name)
+        : (svc.service_name || svc.category_name || "N/A")
+      ).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()
+    );
+  };
+
+  const getCompEditingName = (svc) => {
+    return String(
+      (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item")
+        ? (svc.service || svc.category_name || svc.editing_type_name)
+        : (svc.editing_type_name || svc.service_type || "N/A")
+    ).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
   };
 
   const isInitialized = useRef(false);
@@ -519,21 +592,30 @@ const GenerateProformaModal = ({
 
         .ci-table-container { border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.02); }
         [data-theme="light"] .ci-table-container { border-color: rgba(0,0,0,0.08); background: rgba(0,0,0,0.01); }
-        .ci-table { width: 100%; border-collapse: collapse; }
+        
+        .ci-table { width: 100%; border-collapse: collapse; min-width: 520px; }
+        .ci-table-ads { width: 100%; border-collapse: collapse; min-width: 280px; }
+        .ci-table-comp { width: 100%; border-collapse: collapse; min-width: 500px; }
 
-        .ci-th-dm { background: rgba(99,102,241,0.12); }
-        [data-theme="light"] .ci-th-dm { background: rgba(99,102,241,0.06); }
-        .ci-th-ads { background: rgba(168,85,247,0.12); }
-        [data-theme="light"] .ci-th-ads { background: rgba(168,85,247,0.06); }
-        .ci-th-comp { background: rgba(34,197,94,0.12); }
-        [data-theme="light"] .ci-th-comp { background: rgba(34,197,94,0.06); }
+        .ci-table thead th, .ci-table-ads thead th, .ci-table-comp thead th {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+        }
 
-        .ci-th-cell, .ci-th-cell-right { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); color: #c7d2fe; }
+        .ci-th-dm { background: #18192a; }
+        [data-theme="light"] .ci-th-dm { background: #eef2ff; }
+        .ci-th-ads { background: #1e192a; }
+        [data-theme="light"] .ci-th-ads { background: #faf5ff; }
+        .ci-th-comp { background: #15221d; }
+        [data-theme="light"] .ci-th-comp { background: #f0fdf4; }
+
+        .ci-th-cell, .ci-th-cell-right { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); color: #c7d2fe; white-space: nowrap; }
         .ci-th-cell-right { text-align: right; }
         [data-theme="light"] .ci-th-cell, [data-theme="light"] .ci-th-cell-right { border-bottom-color: rgba(0,0,0,0.08); color: #4f46e5; }
 
         .ci-td-cell, .ci-td-cell-right { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
-        .ci-td-cell-right { text-align: right; color: #e8e8f0; }
+        .ci-td-cell-right { text-align: right; color: #e8e8f0; white-space: nowrap; font-variant-numeric: tabular-nums; }
         [data-theme="light"] .ci-td-cell { border-bottom-color: rgba(0,0,0,0.04); color: #374151; }
         [data-theme="light"] .ci-td-cell-right { border-bottom-color: rgba(0,0,0,0.04); color: #111827; }
 
@@ -547,22 +629,22 @@ const GenerateProformaModal = ({
         .ci-tfoot-comp-row { background: rgba(34,197,94,0.08); }
         [data-theme="light"] .ci-tfoot-comp-row { background: rgba(34,197,94,0.04); }
 
-        .ci-footer-label { color: #c7d2fe; border-top: 1px solid rgba(99,102,241,0.2); }
+        .ci-footer-label { color: #c7d2fe; border-top: 1px solid rgba(99,102,241,0.2); white-space: nowrap; }
         [data-theme="light"] .ci-footer-label { color: #312e81; border-top-color: rgba(99,102,241,0.15); }
-        .ci-footer-value { color: #f0f5ff; border-top: 1px solid rgba(99,102,241,0.2); }
+        .ci-footer-value { color: #f0f5ff; border-top: 1px solid rgba(99,102,241,0.2); white-space: nowrap; font-variant-numeric: tabular-nums; }
         [data-theme="light"] .ci-footer-value { color: #111827; border-top-color: rgba(99,102,241,0.15); }
 
-        .ci-footer-ads-label { color: #d8b4fe; border-top: 1px solid rgba(168,85,247,0.2); }
+        .ci-footer-ads-label { color: #d8b4fe; border-top: 1px solid rgba(168,85,247,0.2); white-space: nowrap; }
         [data-theme="light"] .ci-footer-ads-label { color: #581c87; border-top-color: rgba(168,85,247,0.15); }
-        .ci-footer-ads-value { color: #f0f5ff; border-top: 1px solid rgba(168,85,247,0.2); }
+        .ci-footer-ads-value { color: #f0f5ff; border-top: 1px solid rgba(168,85,247,0.2); white-space: nowrap; font-variant-numeric: tabular-nums; }
         [data-theme="light"] .ci-footer-ads-value { color: #111827; border-top-color: rgba(168,85,247,0.15); }
 
-        .ci-footer-comp-label { color: #86efac; border-top: 1px solid rgba(34,197,94,0.2); }
+        .ci-footer-comp-label { color: #86efac; border-top: 1px solid rgba(34,197,94,0.2); white-space: nowrap; }
         [data-theme="light"] .ci-footer-comp-label { color: #15803d; border-top-color: rgba(34,197,94,0.15); }
-        .ci-footer-comp-value { color: #f0f5ff; border-top: 1px solid rgba(34,197,94,0.2); }
+        .ci-footer-comp-value { color: #f0f5ff; border-top: 1px solid rgba(34,197,94,0.2); white-space: nowrap; font-variant-numeric: tabular-nums; }
         [data-theme="light"] .ci-footer-comp-value { color: #111827; border-top-color: rgba(34,197,94,0.15); }
 
-        .ci-comp-border-top { border-top: 1px solid rgba(255,255,255,0.08); }
+        .ci-comp-border-top { border-top: 1px solid rgba(255,255,255,0.08); white-space: nowrap; }
         [data-theme="light"] .ci-comp-border-top { border-top-color: rgba(0,0,0,0.08); }
 
         .ci-text-orange { color: #f97316; }
@@ -572,6 +654,229 @@ const GenerateProformaModal = ({
 
         .ci-empty-text { text-align: center; color: rgba(255,255,255,0.5); padding: 1rem 0; }
         [data-theme="light"] .ci-empty-text { color: rgba(0,0,0,0.45); }
+
+        /* Mobile Toggle Switch */
+        .ci-mobile-toggle-wrap {
+          display: none;
+          align-items: center;
+          gap: 3px;
+          background: rgba(255, 255, 255, 0.04);
+          padding: 2px;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        [data-theme="light"] .ci-mobile-toggle-wrap {
+          background: rgba(0, 0, 0, 0.03);
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+        @media (max-width: 640px) {
+          .ci-mobile-toggle-wrap {
+            display: inline-flex;
+          }
+        }
+        .ci-toggle-btn {
+          border: none;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.45);
+          font-size: 11px;
+          font-weight: 600;
+          padding: 3px 10px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        [data-theme="light"] .ci-toggle-btn {
+          color: rgba(0, 0, 0, 0.5);
+        }
+        .ci-toggle-btn.active {
+          background: rgba(184, 150, 46, 0.25);
+          color: #d4a940;
+          font-weight: 700;
+        }
+        [data-theme="light"] .ci-toggle-btn.active {
+          background: #fef3c7;
+          color: #b45309;
+        }
+
+        /* Mobile Card Layout */
+        .ci-mobile-card {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
+          padding: 10px 12px;
+        }
+        [data-theme="light"] .ci-mobile-card {
+          background: #f8fafc;
+          border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .ci-mobile-card-title {
+          font-size: 12px;
+          font-weight: 700;
+          color: #f97316;
+          padding-bottom: 6px;
+          margin-bottom: 6px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        [data-theme="light"] .ci-mobile-card-title {
+          border-bottom-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .ci-mobile-card-item {
+          padding: 4px 0;
+        }
+        .ci-mobile-card-item + .ci-mobile-card-item {
+          border-top: 1px dashed rgba(255, 255, 255, 0.06);
+          margin-top: 6px;
+          padding-top: 6px;
+        }
+        [data-theme="light"] .ci-mobile-card-item + .ci-mobile-card-item {
+          border-top-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .ci-mobile-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .ci-mobile-cat {
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(255, 255, 255, 0.85);
+          word-break: break-word;
+        }
+        [data-theme="light"] .ci-mobile-cat {
+          color: #1f2937;
+        }
+
+        .ci-mobile-price {
+          font-size: 12px;
+          font-weight: 700;
+          color: #f3f4f6;
+          white-space: nowrap;
+        }
+        [data-theme="light"] .ci-mobile-price {
+          color: #111827;
+        }
+
+        .ci-mobile-subinfo {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.45);
+          margin-top: 3px;
+        }
+        [data-theme="light"] .ci-mobile-subinfo {
+          color: #6b7280;
+        }
+        .ci-mobile-subinfo strong {
+          color: rgba(255, 255, 255, 0.75);
+        }
+        [data-theme="light"] .ci-mobile-subinfo strong {
+          color: #374151;
+        }
+
+        .ci-mobile-subrow {
+          margin-top: 5px;
+          padding: 4px 8px;
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 8px;
+          border-left: 2px solid rgba(99, 102, 241, 0.4);
+        }
+        [data-theme="light"] .ci-mobile-subrow {
+          background: rgba(0, 0, 0, 0.02);
+          border-left-color: rgba(99, 102, 241, 0.6);
+        }
+
+        .ci-mobile-subname {
+          font-size: 11px;
+          color: #c7d2fe;
+          font-weight: 500;
+        }
+        [data-theme="light"] .ci-mobile-subname {
+          color: #4338ca;
+        }
+
+        .ci-free-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 7px;
+          border-radius: 6px;
+          font-size: 10px;
+          font-weight: 700;
+          background: rgba(34, 197, 94, 0.15);
+          color: #4ade80;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          letter-spacing: 0.04em;
+        }
+        [data-theme="light"] .ci-free-badge {
+          background: #dcfce7;
+          color: #15803d;
+          border-color: #86efac;
+        }
+
+        .ci-mobile-total-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 9px 12px;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .ci-mobile-total-dm {
+          background: rgba(99, 102, 241, 0.12);
+          border: 1px solid rgba(99, 102, 241, 0.25);
+          color: #c7d2fe;
+        }
+        [data-theme="light"] .ci-mobile-total-dm {
+          background: #eef2ff;
+          border-color: #c7d2fe;
+          color: #3730a3;
+        }
+
+        .ci-mobile-total-ads {
+          background: rgba(168, 85, 247, 0.12);
+          border: 1px solid rgba(168, 85, 247, 0.25);
+          color: #e9d5ff;
+        }
+        [data-theme="light"] .ci-mobile-total-ads {
+          background: #faf5ff;
+          border-color: #e9d5ff;
+          color: #6b21a8;
+        }
+
+        .ci-mobile-total-comp {
+          background: rgba(34, 197, 94, 0.12);
+          border: 1px solid rgba(34, 197, 94, 0.25);
+          color: #86efac;
+        }
+        [data-theme="light"] .ci-mobile-total-comp {
+          background: #f0fdf4;
+          border-color: #bbf7d0;
+          color: #166534;
+        }
+
+        .ci-table-scroll-hint {
+          display: none;
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.4);
+          text-align: right;
+          margin-bottom: 4px;
+        }
+        [data-theme="light"] .ci-table-scroll-hint {
+          color: rgba(0, 0, 0, 0.4);
+        }
+        @media (max-width: 640px) {
+          .ci-table-scroll-hint {
+            display: block;
+          }
+        }
 
         .ci-summary-sub { font-size: 12px; color: #93c5fd; margin-bottom: 2px; }
         [data-theme="light"] .ci-summary-sub { color: #1d4ed8; }
@@ -584,6 +889,43 @@ const GenerateProformaModal = ({
 
         .ci-modal-footer { display: flex; gap: 10px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4px; }
         [data-theme="light"] .ci-modal-footer { border-top-color: rgba(0,0,0,0.08); }
+
+        @media (max-width: 640px) {
+          .ci-modal-overlay {
+            padding: 0.5rem;
+          }
+          .ci-modal-card {
+            max-height: 95vh;
+            border-radius: 16px;
+          }
+          .ci-modal-header {
+            padding: 0.875rem 1rem;
+          }
+          .ci-modal-title {
+            font-size: 15px;
+          }
+          .ci-meta-bar {
+            padding: 8px 12px;
+            gap: 8px 12px;
+          }
+          .ci-form-body {
+            padding: 1rem 0.75rem;
+            max-height: 80vh;
+            gap: 12px;
+          }
+          .ci-grid-2 {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .ci-modal-footer {
+            flex-direction: column-reverse;
+            gap: 8px;
+          }
+          .ci-modal-footer button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
 
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -899,7 +1241,27 @@ const GenerateProformaModal = ({
             )}
 
             <div>
-              <label className="ci-label">Quotation Services Preview</label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <label className="ci-label" style={{ marginBottom: 0 }}>Quotation Services Preview</label>
+                {/* Mobile view toggle */}
+                <div className="ci-mobile-toggle-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setMobileTableView("cards")}
+                    className={`ci-toggle-btn ${mobileTableView === "cards" ? "active" : ""}`}
+                  >
+                    Cards
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileTableView("table")}
+                    className={`ci-toggle-btn ${mobileTableView === "table" ? "active" : ""}`}
+                  >
+                    Table
+                  </button>
+                </div>
+              </div>
+
               { quotationPreviewLoading && (
                 <div className="ci-empty-text">
                   Loading services...
@@ -976,206 +1338,275 @@ const GenerateProformaModal = ({
 
                 const grandTotal = dmSubtotalWithGst + adsTotal;
 
+                // Group DM services
+                const groupedDm = [];
+                dmServices.forEach((svc) => {
+                  let parentServiceTitle = (svc.service_name && svc.service_name.toLowerCase() === "proposal item")
+                    ? (svc.category_name || svc.service_name)
+                    : (svc.service_name || "N/A");
+                  if (parentServiceTitle && (parentServiceTitle.toLowerCase() === "service charge" || parentServiceTitle.toLowerCase() === "ads service charge")) {
+                    parentServiceTitle = "Ads Service Charge";
+                  }
+                  let lastGroup = groupedDm[groupedDm.length - 1];
+                  if (lastGroup && lastGroup.title === parentServiceTitle) {
+                    lastGroup.items.push(svc);
+                  } else {
+                    groupedDm.push({ title: parentServiceTitle, items: [svc] });
+                  }
+                });
+
                 return (
                   <div style={ { display: "flex", flexDirection: "column", gap: 14 } }>
                     { dmServices.length > 0 && (
-                      <div className="ci-table-container">
-                        <div style={ { maxHeight: 220, overflow: "auto" } } className="ci-scroll">
-                          <table className="ci-table">
-                            <thead>
-                              <tr className="ci-th-dm">
-                                <th className="ci-th-cell">Services</th>
-                                <th className="ci-th-cell">Categories</th>
-                                <th className="ci-th-cell-right">Qty</th>
-                                <th className="ci-th-cell-right">Price (₹)</th>
-                                <th className="ci-th-cell-right">Total (₹)</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {(() => {
-                                const groupedDm = [];
-                                dmServices.forEach((svc) => {
-                                  let parentServiceTitle = (svc.service_name && svc.service_name.toLowerCase() === "proposal item")
-                                    ? (svc.category_name || svc.service_name)
-                                    : (svc.service_name || "N/A");
-                                  if (parentServiceTitle && (parentServiceTitle.toLowerCase() === "service charge" || parentServiceTitle.toLowerCase() === "ads service charge")) {
-                                    parentServiceTitle = "Ads Service Charge";
-                                  }
-                                  let lastGroup = groupedDm[groupedDm.length - 1];
-                                  if (lastGroup && lastGroup.title === parentServiceTitle) {
-                                    lastGroup.items.push(svc);
-                                  } else {
-                                    groupedDm.push({ title: parentServiceTitle, items: [svc] });
-                                  }
-                                });
+                      <div>
+                        {/* MOBILE: Cards View */}
+                        <div className={ mobileTableView === "cards" ? "sm:hidden space-y-2.5" : "hidden" }>
+                          { groupedDm.map((group, gIdx) => (
+                            <div key={ `m-group-${gIdx}` } className="ci-mobile-card space-y-2">
+                              <div className="ci-mobile-card-title">
+                                { group.title }
+                              </div>
+                              { group.items.map((svc, sIdx) => {
+                                const qty = Number(svc.quantity || 1);
+                                const basePrice = Number(svc.editing_type_amount || svc.amount || 0);
+                                const catDisplay = getCategoryDisplay(svc);
+                                const addons = getAddons(svc, qty);
+                                const cp = Number(svc.include_content_posting || 0);
+                                const th2 = Number(svc.include_thumbnail_creation || 0);
+                                const yt2 = Number(svc.include_youtube_video_posting || 0);
 
-                                return groupedDm.map((group, gIdx) => {
-                                  return (
-                                    <React.Fragment key={ `dm-${gIdx}` }>
-                                      {/* Category rows for this service group */}
-                                      { group.items.map((svc, sIdx) => {
-                                        const qty = Number(svc.quantity || 1);
-                                        const basePrice = Number(svc.editing_type_amount || svc.amount || 0);
+                                return (
+                                  <div key={ `m-item-${gIdx}-${sIdx}` } className="ci-mobile-card-item">
+                                    <div className="ci-mobile-row">
+                                      <span className="ci-mobile-cat">{ catDisplay }</span>
+                                      <span className="ci-mobile-price">₹{ (basePrice * qty).toLocaleString("en-IN") }</span>
+                                    </div>
+                                    <div className="ci-mobile-subinfo">
+                                      <span>Qty: <strong>{ qty }</strong></span>
+                                      <span>Rate: <strong>₹{ basePrice.toLocaleString("en-IN") }</strong></span>
+                                    </div>
 
-                                        return (
-                                          <tr key={ `dm-${gIdx}-${sIdx}` }>
-                                            { sIdx === 0 && (
-                                              <td
-                                                className="ci-td-cell ci-text-orange font-medium align-middle"
-                                                rowSpan={ group.items.length }
-                                              >
-                                                { group.title }
-                                              </td>
-                                            ) }
-                                            <td className="ci-td-cell">
-                                              {(() => {
-                                                const isServiceCharge = (svc.service_name || "").toLowerCase() === "service charge" || (svc.service_name || "").toLowerCase() === "ads service charge";
-                                                if (isServiceCharge) {
-                                                  return getServiceDisplayName(
-                                                    (svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item")
-                                                      ? (svc.service || svc.category_name || svc.editing_type_name)
-                                                      : (svc.editing_type_name || svc.category_name || "N/A")
-                                                  );
-                                                }
-                                                const cat = svc.category_name && svc.category_name !== "N/A" ? svc.category_name : "";
-                                                const type =
-                                                  svc.editing_type_name &&
-                                                  svc.editing_type_name !== "N/A" &&
-                                                  svc.editing_type_name !== "null" &&
-                                                  svc.editing_type_name !== "undefined" &&
-                                                  svc.editing_type_name.trim() !== "" &&
-                                                  svc.editing_type_name.toLowerCase() !== "proposal item"
-                                                    ? svc.editing_type_name.trim()
-                                                    : "";
+                                    { addons.map((ad, aIdx) => (
+                                      <div key={ `m-ad-${aIdx}` } className="ci-mobile-subrow">
+                                        <div className="ci-mobile-row">
+                                          <span className="ci-mobile-subname">+ { ad.name }</span>
+                                          <span className="ci-mobile-price">₹{ ad.total.toLocaleString("en-IN") }</span>
+                                        </div>
+                                        <div className="ci-mobile-subinfo">
+                                          <span>Qty: <strong>{ ad.quantity }</strong></span>
+                                          <span>Rate: <strong>₹{ ad.amount.toLocaleString("en-IN") }</strong></span>
+                                        </div>
+                                      </div>
+                                    )) }
 
-                                                if (
-                                                  cat &&
-                                                  type &&
-                                                  cat.trim().toLowerCase() !== type.toLowerCase() &&
-                                                  type.toLowerCase() !== (svc.service_name || "").trim().toLowerCase()
-                                                ) {
-                                                  return `${cat} (${type})`;
-                                                }
-                                                return cat || type || "N/A";
-                                              })()}
-                                            </td>
-                                            <td className="ci-td-cell-right">{ qty }</td>
-                                            <td className="ci-td-cell-right">₹{ basePrice.toLocaleString("en-IN") }</td>
-                                            <td className="ci-td-cell-right">₹{ (basePrice * qty).toLocaleString("en-IN") }</td>
-                                          </tr>
-                                        );
-                                      }) }
+                                    { th2 > 0 && (
+                                      <div className="ci-mobile-subrow">
+                                        <div className="ci-mobile-row">
+                                          <span className="ci-mobile-subname">Thumbnail Creation</span>
+                                          <span className="ci-mobile-price">₹{ (th2 * qty).toLocaleString("en-IN") }</span>
+                                        </div>
+                                        <div className="ci-mobile-subinfo">
+                                          <span>Qty: <strong>{ qty }</strong></span>
+                                          <span>Rate: <strong>₹{ th2.toLocaleString("en-IN") }</strong></span>
+                                        </div>
+                                      </div>
+                                    ) }
+                                    { cp > 0 && (
+                                      <div className="ci-mobile-subrow">
+                                        <div className="ci-mobile-row">
+                                          <span className="ci-mobile-subname">Meta Growth & Content</span>
+                                          <span className="ci-mobile-price">₹{ (cp * qty).toLocaleString("en-IN") }</span>
+                                        </div>
+                                        <div className="ci-mobile-subinfo">
+                                          <span>Qty: <strong>{ qty }</strong></span>
+                                          <span>Rate: <strong>₹{ cp.toLocaleString("en-IN") }</strong></span>
+                                        </div>
+                                      </div>
+                                    ) }
+                                    { yt2 > 0 && (
+                                      <div className="ci-mobile-subrow">
+                                        <div className="ci-mobile-row">
+                                          <span className="ci-mobile-subname">YouTube Optimization</span>
+                                          <span className="ci-mobile-price">₹{ (yt2 * qty).toLocaleString("en-IN") }</span>
+                                        </div>
+                                        <div className="ci-mobile-subinfo">
+                                          <span>Qty: <strong>{ qty }</strong></span>
+                                          <span>Rate: <strong>₹{ yt2.toLocaleString("en-IN") }</strong></span>
+                                        </div>
+                                      </div>
+                                    ) }
+                                  </div>
+                                );
+                              }) }
+                            </div>
+                          )) }
+                          <div className="ci-mobile-total-bar ci-mobile-total-dm">
+                            <span>Services Total</span>
+                            <span>₹{ dmTotal.toLocaleString("en-IN") }</span>
+                          </div>
+                        </div>
 
-                                      {/* Separate rows for Additional Services */}
-                                      { group.items.flatMap((svc, sIdx) => {
-                                        const qty = Number(svc.quantity || 1);
-                                        let addons = [];
-                                        if (svc.additional_services) {
-                                          try {
-                                            addons = typeof svc.additional_services === 'string'
-                                              ? JSON.parse(svc.additional_services)
-                                              : svc.additional_services;
-                                            if (!Array.isArray(addons)) addons = [];
-                                          } catch {
-                                            addons = [];
-                                          }
-                                        }
-                                        return addons.map((ad, aIdx) => {
-                                          const addonAmt = Number(ad.amount || ad.unit_price || 0);
-                                          const addonQty = Number(ad.quantity) || qty;
-                                          const addonTotal = addonAmt * addonQty;
-                                          const addonName = ad.name || ad.additional_service_name || "Additional Service";
+                        {/* DESKTOP/TABLET (or mobile table mode): Table */}
+                        <div className={ mobileTableView === "table" ? "block" : "hidden sm:block" }>
+                          <div className="ci-table-scroll-hint">← Swipe to view all columns →</div>
+                          <div className="ci-table-container">
+                            <div style={ { maxHeight: 240, overflow: "auto" } } className="ci-scroll">
+                              <table className="ci-table">
+                                <thead>
+                                  <tr className="ci-th-dm">
+                                    <th className="ci-th-cell">Services</th>
+                                    <th className="ci-th-cell">Categories</th>
+                                    <th className="ci-th-cell-right">Qty</th>
+                                    <th className="ci-th-cell-right">Price (₹)</th>
+                                    <th className="ci-th-cell-right">Total (₹)</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  { groupedDm.map((group, gIdx) => {
+                                    return (
+                                      <React.Fragment key={ `dm-${gIdx}` }>
+                                        { group.items.map((svc, sIdx) => {
+                                          const qty = Number(svc.quantity || 1);
+                                          const basePrice = Number(svc.editing_type_amount || svc.amount || 0);
+                                          const catDisplay = getCategoryDisplay(svc);
+
                                           return (
-                                            <tr key={ `dm-${gIdx}-${sIdx}-addon-${aIdx}` } className="ci-tr-subrow">
-                                              <td className="ci-td-cell" colSpan={ 2 }>{ addonName } ({ group.title })</td>
-                                              <td className="ci-td-cell-right">{ addonQty }</td>
-                                              <td className="ci-td-cell-right">₹{ addonAmt.toLocaleString("en-IN") }</td>
-                                              <td className="ci-td-cell-right">₹{ addonTotal.toLocaleString("en-IN") }</td>
+                                            <tr key={ `dm-${gIdx}-${sIdx}` }>
+                                              { sIdx === 0 && (
+                                                <td
+                                                  className="ci-td-cell ci-text-orange font-medium align-middle"
+                                                  rowSpan={ group.items.length }
+                                                >
+                                                  { group.title }
+                                                </td>
+                                              ) }
+                                              <td className="ci-td-cell">{ catDisplay }</td>
+                                              <td className="ci-td-cell-right">{ qty }</td>
+                                              <td className="ci-td-cell-right">₹{ basePrice.toLocaleString("en-IN") }</td>
+                                              <td className="ci-td-cell-right">₹{ (basePrice * qty).toLocaleString("en-IN") }</td>
                                             </tr>
                                           );
-                                        });
-                                      }) }
+                                        }) }
 
-                                      {/* Optional service subrows for this group */}
-                                      { group.items.map((svc, sIdx) => {
-                                        const qty = Number(svc.quantity || 1);
-                                        const cp = Number(svc.include_content_posting || 0);
-                                        const th2 = Number(svc.include_thumbnail_creation || 0);
-                                        const yt2 = Number(svc.include_youtube_video_posting || 0);
-                                        return (
-                                          <React.Fragment key={ `dm-${gIdx}-${sIdx}-opt` }>
-                                            { th2 > 0 && (
-                                              <tr className="ci-tr-subrow">
-                                                <td className="ci-td-cell" colSpan={ 2 }>Thumbnail Creation Total</td>
-                                                <td className="ci-td-cell-right">{ qty }</td>
-                                                <td className="ci-td-cell-right">₹{ th2.toLocaleString("en-IN") }</td>
-                                                <td className="ci-td-cell-right">₹{ (th2 * qty).toLocaleString("en-IN") }</td>
-                                              </tr>
-                                            ) }
-                                            { cp > 0 && (
-                                              <tr className="ci-tr-subrow">
-                                                <td className="ci-td-cell" colSpan={ 2 }>Meta Growth & Content Management Total</td>
-                                                <td className="ci-td-cell-right">{ qty }</td>
-                                                <td className="ci-td-cell-right">₹{ cp.toLocaleString("en-IN") }</td>
-                                                <td className="ci-td-cell-right">₹{ (cp * qty).toLocaleString("en-IN") }</td>
-                                              </tr>
-                                            ) }
-                                            { yt2 > 0 && (
-                                              <tr className="ci-tr-subrow">
-                                                <td className="ci-td-cell" colSpan={ 2 }>YouTube Channel Growth & Optimization Total</td>
-                                                <td className="ci-td-cell-right">{ qty }</td>
-                                                <td className="ci-td-cell-right">₹{ yt2.toLocaleString("en-IN") }</td>
-                                                <td className="ci-td-cell-right">₹{ (yt2 * qty).toLocaleString("en-IN") }</td>
-                                              </tr>
-                                            ) }
-                                          </React.Fragment>
-                                        );
-                                      }) }
-                                    </React.Fragment>
-                                  );
-                                });
-                              })()}
-                            </tbody>
-                            <tfoot className="ci-tfoot-dm">
-                              <tr>
-                                <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-label">Services Total</td>
-                                <td className="ci-td-cell-right font-bold ci-footer-value">₹{ dmTotal.toLocaleString("en-IN") }</td>
-                              </tr>
-                            </tfoot>
-                          </table>
+                                        {/* Separate rows for Additional Services */}
+                                        { group.items.flatMap((svc, sIdx) => {
+                                          const qty = Number(svc.quantity || 1);
+                                          const addons = getAddons(svc, qty);
+                                          return addons.map((ad, aIdx) => (
+                                            <tr key={ `dm-${gIdx}-${sIdx}-addon-${aIdx}` } className="ci-tr-subrow">
+                                              <td className="ci-td-cell" colSpan={ 2 }>{ ad.name } ({ group.title })</td>
+                                              <td className="ci-td-cell-right">{ ad.quantity }</td>
+                                              <td className="ci-td-cell-right">₹{ ad.amount.toLocaleString("en-IN") }</td>
+                                              <td className="ci-td-cell-right">₹{ ad.total.toLocaleString("en-IN") }</td>
+                                            </tr>
+                                          ));
+                                        }) }
+
+                                        {/* Optional service subrows for this group */}
+                                        { group.items.map((svc, sIdx) => {
+                                          const qty = Number(svc.quantity || 1);
+                                          const cp = Number(svc.include_content_posting || 0);
+                                          const th2 = Number(svc.include_thumbnail_creation || 0);
+                                          const yt2 = Number(svc.include_youtube_video_posting || 0);
+                                          return (
+                                            <React.Fragment key={ `dm-${gIdx}-${sIdx}-opt` }>
+                                              { th2 > 0 && (
+                                                <tr className="ci-tr-subrow">
+                                                  <td className="ci-td-cell" colSpan={ 2 }>Thumbnail Creation Total</td>
+                                                  <td className="ci-td-cell-right">{ qty }</td>
+                                                  <td className="ci-td-cell-right">₹{ th2.toLocaleString("en-IN") }</td>
+                                                  <td className="ci-td-cell-right">₹{ (th2 * qty).toLocaleString("en-IN") }</td>
+                                                </tr>
+                                              ) }
+                                              { cp > 0 && (
+                                                <tr className="ci-tr-subrow">
+                                                  <td className="ci-td-cell" colSpan={ 2 }>Meta Growth & Content Management Total</td>
+                                                  <td className="ci-td-cell-right">{ qty }</td>
+                                                  <td className="ci-td-cell-right">₹{ cp.toLocaleString("en-IN") }</td>
+                                                  <td className="ci-td-cell-right">₹{ (cp * qty).toLocaleString("en-IN") }</td>
+                                                </tr>
+                                              ) }
+                                              { yt2 > 0 && (
+                                                <tr className="ci-tr-subrow">
+                                                  <td className="ci-td-cell" colSpan={ 2 }>YouTube Channel Growth & Optimization Total</td>
+                                                  <td className="ci-td-cell-right">{ qty }</td>
+                                                  <td className="ci-td-cell-right">₹{ yt2.toLocaleString("en-IN") }</td>
+                                                  <td className="ci-td-cell-right">₹{ (yt2 * qty).toLocaleString("en-IN") }</td>
+                                                </tr>
+                                              ) }
+                                            </React.Fragment>
+                                          );
+                                        }) }
+                                      </React.Fragment>
+                                    );
+                                  }) }
+                                </tbody>
+                                <tfoot className="ci-tfoot-dm">
+                                  <tr>
+                                    <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-label">Services Total</td>
+                                    <td className="ci-td-cell-right font-bold ci-footer-value">₹{ dmTotal.toLocaleString("en-IN") }</td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ) }
 
-                         { adsServices.length > 0 && (
-                      <div className="ci-table-container">
-                        <div style={ { maxHeight: 220, overflow: "auto" } } className="ci-scroll">
-                          <table className="ci-table">
-                            <thead>
-                              <tr className="ci-th-ads">
-                                <th className="ci-th-cell">Ads Services</th>
-                                <th className="ci-th-cell-right">Budget (₹)</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              { adsServices.map((svc, idx) => {
-                                 const adsCategoryName = getServiceDisplayName(svc.category || svc.category_name || svc.service_name || "N/A");
-                                 const amount = Number(svc.amount || svc.budget || 0);
-                                 return (
-                                   <tr key={ `ads-${idx}` }>
-                                     <td className="ci-td-cell font-medium" style={ { color: "#60a5fa" } }>{ adsCategoryName }</td>
-                                     <td className="ci-td-cell-right">₹{ amount.toLocaleString("en-IN") }</td>
-                                   </tr>
-                                 );
-                              }) }
-                            </tbody>
-                            <tfoot className="ci-tfoot-ads">
-                              <tr>
-                                <td colSpan={ 1 } className="ci-td-cell-right font-bold ci-footer-ads-label">Ads Total</td>
-                                <td className="ci-td-cell-right font-bold ci-footer-ads-value">₹{ adsTotal.toLocaleString("en-IN") }</td>
-                              </tr>
-                            </tfoot>
-                          </table>
+                    { adsServices.length > 0 && (
+                      <div>
+                        {/* MOBILE: Cards View */}
+                        <div className={ mobileTableView === "cards" ? "sm:hidden space-y-2" : "hidden" }>
+                          { adsServices.map((svc, idx) => {
+                            const adsCategoryName = getServiceDisplayName(svc.category || svc.category_name || svc.service_name || "N/A");
+                            const amount = Number(svc.amount || svc.budget || 0);
+                            return (
+                              <div key={ `m-ads-${idx}` } className="ci-mobile-card ci-mobile-row">
+                                <span className="font-semibold text-[#60a5fa]">{ adsCategoryName }</span>
+                                <span className="font-bold text-white">₹{ amount.toLocaleString("en-IN") }</span>
+                              </div>
+                            );
+                          }) }
+                          <div className="ci-mobile-total-bar ci-mobile-total-ads">
+                            <span>Ads Total</span>
+                            <span>₹{ adsTotal.toLocaleString("en-IN") }</span>
+                          </div>
+                        </div>
+
+                        {/* DESKTOP/TABLET (or mobile table mode): Table */}
+                        <div className={ mobileTableView === "table" ? "block" : "hidden sm:block" }>
+                          <div className="ci-table-scroll-hint">← Swipe to view all columns →</div>
+                          <div className="ci-table-container">
+                            <div style={ { maxHeight: 220, overflow: "auto" } } className="ci-scroll">
+                              <table className="ci-table-ads">
+                                <thead>
+                                  <tr className="ci-th-ads">
+                                    <th className="ci-th-cell">Ads Services</th>
+                                    <th className="ci-th-cell-right">Budget (₹)</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  { adsServices.map((svc, idx) => {
+                                    const adsCategoryName = getServiceDisplayName(svc.category || svc.category_name || svc.service_name || "N/A");
+                                    const amount = Number(svc.amount || svc.budget || 0);
+                                    return (
+                                      <tr key={ `ads-${idx}` }>
+                                        <td className="ci-td-cell font-medium" style={ { color: "#60a5fa" } }>{ adsCategoryName }</td>
+                                        <td className="ci-td-cell-right">₹{ amount.toLocaleString("en-IN") }</td>
+                                      </tr>
+                                    );
+                                  }) }
+                                </tbody>
+                                <tfoot className="ci-tfoot-ads">
+                                  <tr>
+                                    <td colSpan={ 1 } className="ci-td-cell-right font-bold ci-footer-ads-label">Ads Total</td>
+                                    <td className="ci-td-cell-right font-bold ci-footer-ads-value">₹{ adsTotal.toLocaleString("en-IN") }</td>
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ) }
@@ -1185,44 +1616,79 @@ const GenerateProformaModal = ({
                         return sum + (Number(svc.editing_type_amount || svc.amount || 0) * Number(svc.quantity || 1));
                       }, 0);
                       return (
-                        <div className="ci-table-container">
-                          <div style={ { maxHeight: 180, overflow: "auto" } } className="ci-scroll">
-                            <table className="ci-table">
-                              <thead>
-                                <tr className="ci-th-comp">
-                                  <th className="ci-th-cell">Complimentary Service</th>
-                                  <th className="ci-th-cell">Service Name</th>
-                                  <th className="ci-th-cell-right">Qty</th>
-                                  <th className="ci-th-cell-right">Price (₹)</th>
-                                  <th className="ci-th-cell-right">Total (₹)</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                { complimentaryServices.map((svc, idx) => {
-                                  const qty = Number(svc.quantity || 1);
-                                  const price = Number(svc.editing_type_amount || svc.price || svc.amount || 0);
-                                  return (
-                                    <tr key={ `comp-${idx}` }>
-                                      <td className="ci-td-cell" style={ { color: "#60a5fa" } }>{ getServiceDisplayName(String((svc.service_name && svc.service_name.toLowerCase() === "proposal item") ? (svc.category_name || svc.service_name) : (svc.service_name || svc.category_name || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim()) }</td>
-                                      <td className="ci-td-cell">{ String((svc.editing_type_name && svc.editing_type_name.toLowerCase() === "proposal item") ? (svc.service || svc.category_name || svc.editing_type_name) : (svc.editing_type_name || svc.service_type || "N/A")).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim() }</td>
-                                      <td className="ci-td-cell-right">{ qty }</td>
-                                      <td className="ci-td-cell-right">₹{ price.toLocaleString("en-IN") }</td>
-                                      <td className="ci-td-cell-right">₹{ (price * qty).toLocaleString("en-IN") }</td>
+                        <div>
+                          {/* MOBILE: Cards View */}
+                          <div className={ mobileTableView === "cards" ? "sm:hidden space-y-2" : "hidden" }>
+                            { complimentaryServices.map((svc, idx) => {
+                              const qty = Number(svc.quantity || 1);
+                              const price = Number(svc.editing_type_amount || svc.price || svc.amount || 0);
+                              const sName = getCompServiceName(svc);
+                              const eName = getCompEditingName(svc);
+                              return (
+                                <div key={ `m-comp-${idx}` } className="ci-mobile-card space-y-1.5 border-emerald-500/20">
+                                  <div className="ci-mobile-row">
+                                    <div>
+                                      <span className="font-bold text-[#60a5fa] block leading-tight">{ sName }</span>
+                                      <span className="text-[11px] text-gray-400">{ eName }</span>
+                                    </div>
+                                    <span className="ci-free-badge">FREE</span>
+                                  </div>
+                                  <div className="ci-mobile-subinfo border-t border-white/5 pt-1.5">
+                                    <span>Qty: <strong>{ qty }</strong> × ₹{ price.toLocaleString("en-IN") }</span>
+                                    <span className="line-through opacity-50">₹{ (price * qty).toLocaleString("en-IN") }</span>
+                                  </div>
+                                </div>
+                              );
+                            }) }
+                            <div className="ci-mobile-total-bar ci-mobile-total-comp">
+                              <span>Complimentary Total</span>
+                              <span>₹0</span>
+                            </div>
+                          </div>
+
+                          {/* DESKTOP/TABLET (or mobile table mode): Table */}
+                          <div className={ mobileTableView === "table" ? "block" : "hidden sm:block" }>
+                            <div className="ci-table-scroll-hint">← Swipe to view all columns →</div>
+                            <div className="ci-table-container">
+                              <div style={ { maxHeight: 180, overflow: "auto" } } className="ci-scroll">
+                                <table className="ci-table-comp">
+                                  <thead>
+                                    <tr className="ci-th-comp">
+                                      <th className="ci-th-cell">Complimentary Service</th>
+                                      <th className="ci-th-cell">Service Name</th>
+                                      <th className="ci-th-cell-right">Qty</th>
+                                      <th className="ci-th-cell-right">Price (₹)</th>
+                                      <th className="ci-th-cell-right">Total (₹)</th>
                                     </tr>
-                                  );
-                                }) }
-                              </tbody>
-                              <tfoot>
-                                <tr>
-                                  <td colSpan={ 4 } className="ci-td-cell-right font-medium ci-comp-border-top">Total</td>
-                                  <td className="ci-td-cell-right font-medium ci-comp-border-top">₹{ compRawTotal.toLocaleString("en-IN") }</td>
-                                </tr>
-                                <tr className="ci-tfoot-comp-row">
-                                  <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-comp-label">Complimentary Total</td>
-                                  <td className="ci-td-cell-right font-bold ci-footer-comp-value">₹0</td>
-                                </tr>
-                              </tfoot>
-                            </table>
+                                  </thead>
+                                  <tbody>
+                                    { complimentaryServices.map((svc, idx) => {
+                                      const qty = Number(svc.quantity || 1);
+                                      const price = Number(svc.editing_type_amount || svc.price || svc.amount || 0);
+                                      return (
+                                        <tr key={ `comp-${idx}` }>
+                                          <td className="ci-td-cell" style={ { color: "#60a5fa" } }>{ getCompServiceName(svc) }</td>
+                                          <td className="ci-td-cell">{ getCompEditingName(svc) }</td>
+                                          <td className="ci-td-cell-right">{ qty }</td>
+                                          <td className="ci-td-cell-right">₹{ price.toLocaleString("en-IN") }</td>
+                                          <td className="ci-td-cell-right">₹{ (price * qty).toLocaleString("en-IN") }</td>
+                                        </tr>
+                                      );
+                                    }) }
+                                  </tbody>
+                                  <tfoot>
+                                    <tr>
+                                      <td colSpan={ 4 } className="ci-td-cell-right font-medium ci-comp-border-top">Total</td>
+                                      <td className="ci-td-cell-right font-medium ci-comp-border-top">₹{ compRawTotal.toLocaleString("en-IN") }</td>
+                                    </tr>
+                                    <tr className="ci-tfoot-comp-row">
+                                      <td colSpan={ 4 } className="ci-td-cell-right font-bold ci-footer-comp-label">Complimentary Total</td>
+                                      <td className="ci-td-cell-right font-bold ci-footer-comp-value">₹0</td>
+                                    </tr>
+                                  </tfoot>
+                                </table>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       );

@@ -256,7 +256,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
         </div>
 
         {/* ── Desktop Table (hidden on mobile) ──────────────────────────────── */ }
-        <div className="hidden md:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="p-4 lg:p-8">
             <div className="overflow-auto h-[35rem]" style={ { scrollbarWidth: 'none', msOverflowStyle: 'none' } }>
               <table className="w-full">
@@ -336,7 +336,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
         </div>
 
         {/* ── Mobile Cards (visible only on mobile) ─────────────────────────── */ }
-        <div className="md:hidden space-y-3">
+        <div className="lg:hidden space-y-3">
           { showApiData.length > 0 ? (
             showApiData.map((item, index) => {
               const globalIndex = currentPage * clientPerPage + index;

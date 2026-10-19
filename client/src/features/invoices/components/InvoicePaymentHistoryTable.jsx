@@ -20,7 +20,13 @@ export default function InvoicePaymentHistoryTable({
         Payment History
       </h2>
       <table className="w-full border text-xs">
-        <thead className="bg-orange-100">
+        <thead
+          style={{
+            background: "#E8EDFF",
+            printColorAdjust: "exact",
+            WebkitPrintColorAdjust: "exact",
+          }}
+        >
           <tr>
             <th className="border px-2 py-1 text-left">Date</th>
             <th className="border px-2 py-1 text-left">TXN ID</th>

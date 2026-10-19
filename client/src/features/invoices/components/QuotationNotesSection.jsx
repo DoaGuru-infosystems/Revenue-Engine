@@ -13,13 +13,14 @@ export default function QuotationNotesSection({
 
   return (
     <div
-      className={`notes-section ${
+      style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
+      className={`notes-section break-inside-avoid print:break-inside-avoid ${
         isProforma
           ? "mt-4 print:mt-2 border-t pt-4 print:pt-2 border-gray-300"
           : "mt-2 print:mt-1"
       }`}
     >
-      <p className="text-sm font-bold text-gray-800">Notes</p>
+      <p className="text-sm print:text-sm font-bold text-gray-800">Notes</p>
 
       <ul className="list-disc pl-5 mt-1 space-y-1">
         {notesData.map((note) => (
@@ -27,7 +28,7 @@ export default function QuotationNotesSection({
             key={note.id}
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
-            <li className="text-xs text-gray-700 font-bold">
+            <li className="text-xs sm:text-[13px] print:text-[12px] text-gray-700 font-bold leading-relaxed print:leading-relaxed">
               {note.note_name}
             </li>
             {!isReceived && (

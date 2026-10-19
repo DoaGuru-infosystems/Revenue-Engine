@@ -578,7 +578,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
       </div>
 
       {/* MOBILE: Cards */}
-      <div className="md:hidden space-y-4">
+      <div className="lg:hidden space-y-4">
         {showApiData.length > 0 ? (
           showApiData.map((item, index) => (
             <div
@@ -656,7 +656,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
       </div>
 
       {/* DESKTOP: Table */}
-      <div className="hidden md:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+      <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <div className="overflow-auto h-[calc(100vh-20rem)] max-h-[35rem]" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
             <table className="w-full">

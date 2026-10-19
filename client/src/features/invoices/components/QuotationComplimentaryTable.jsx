@@ -8,7 +8,13 @@ export default function QuotationComplimentaryTable({
   return (
     <section className="mb-2 mt-4 text-sm">
       <table className="w-full border text-xs">
-        <thead className="bg-orange-100">
+        <thead
+          style={{
+            background: "#E8EDFF",
+            printColorAdjust: "exact",
+            WebkitPrintColorAdjust: "exact",
+          }}
+        >
           <tr>
             <th className="border w-[12rem] px-2 py-1 text-left">
               Complimentary Service Name
