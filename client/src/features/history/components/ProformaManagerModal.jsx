@@ -7,8 +7,8 @@ import moment from "moment";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import { classifyProformaServices } from "../../../utils/proformaPricing";
 
-const getClientDisplayName = (client) =>
-  client?.company_name || client?.client_organization || client?.client_name || "Client";
+const getClientDisplayName = (client, fallback) =>
+  client?.company_name || client?.client_organization || client?.client_name || fallback?.client_name || fallback?.company_name || fallback?.client_organization || "Client";
 
 export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   const { currentUser, token } = useSelector((state) => state.user);
@@ -50,7 +50,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
   const fetchClientData = async () => {
     try {
-      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${proposal.client_id}`, {
+      const clientId = proposal?.client_id || proposal?.clientId;
+      if (!clientId) return;
+      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/getClientDetailsById/${clientId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const client = data.status === "Success" ? (Array.isArray(data.data) ? data.data[0] : data.data) : null;
@@ -63,23 +65,56 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   const fetchProformas = async () => {
     try {
       setLoading(true);
+      const clientId = proposal?.client_id || proposal?.clientId;
 
-      // If it's a direct/manual proforma passed from history, skip fetching by proposal ID
-      if (proposal.isDirectProforma) {
-        setProformas([proposal]);
-        if (proposal.openRecordPaymentDirectly) {
-          openPaymentModal(proposal);
+      let clientProformas = [];
+
+      // 1. Fetch all proformas for this client (both proposal-linked and instant proformas)
+      if (clientId) {
+        const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/client/${clientId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (data.status === "Success" && Array.isArray(data.data)) {
+          clientProformas = data.data;
         }
-        return;
       }
 
-      // Fetch specifically for this proposal instead of all proformas for the client
-      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/proposal/${proposal.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (data.status === "Success") setProformas(data.data || []);
+      // 2. If opened for a specific proposal, ensure that proposal's proforma is included even if client lookup differed
+      if (proposal?.id && !proposal?.isDirectProforma) {
+        try {
+          const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/proforma/proposal/${proposal.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (data.status === "Success" && Array.isArray(data.data)) {
+            const existingIds = new Set(clientProformas.map((p) => p.id));
+            data.data.forEach((p) => {
+              if (!existingIds.has(p.id)) {
+                clientProformas.push(p);
+              }
+            });
+          }
+        } catch (propErr) {
+          console.warn("Could not fetch proposal-specific proformas:", propErr.message);
+        }
+      }
+
+      // 3. Fallback for direct proforma object if no records found from API
+      if (clientProformas.length === 0 && proposal?.isDirectProforma) {
+        clientProformas = [proposal];
+      }
+
+      // 4. Sort latest first
+      clientProformas.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0) || b.id - a.id);
+
+      setProformas(clientProformas);
+
+      // If user requested to directly record payment on a specific proforma
+      if (proposal?.openRecordPaymentDirectly) {
+        const target = clientProformas.find((p) => p.id === proposal.id) || proposal;
+        openPaymentModal(target);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("fetchProformas error:", err);
     } finally {
       setLoading(false);
     }
@@ -87,7 +122,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
   const fetchPayments = async () => {
     try {
-      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/proposal-payments/client/${proposal.client_id}`, {
+      const clientId = proposal?.client_id || proposal?.clientId;
+      if (!clientId) return;
+      const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/proposal-payments/client/${clientId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (data.status === "Success") setPayments(data.data || []);
@@ -407,8 +444,8 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     try {
       const payload = {
         proforma_id: selectedProforma.id,
-        proposal_id: selectedProforma.proposal_id,
-        client_id: proposal.client_id,
+        proposal_id: selectedProforma.proposal_id || null,
+        client_id: selectedProforma.client_id || proposal?.client_id || proposal?.clientId,
         ...paymentForm,
         realized_ad_budget: paymentForm.has_ad_budget ? totalAdBudgetThisPayment : 0,
         realized_google_budget: paymentForm.has_ad_budget && hasGoogleAd ? activeGoogleBudget : 0,
@@ -468,6 +505,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         });
         setShowPaymentModal(false);
         fetchPayments();
+        fetchProformas();
         try { window.dispatchEvent(new CustomEvent("paymentRecorded")); } catch(e) {}
       }
     } catch (err) {
@@ -507,7 +545,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
   const handleViewProforma = (proforma) => {
     const isGST = proforma.is_gst && typeof proforma.is_gst === 'object' && proforma.is_gst.data ? proforma.is_gst.data[0] === 1 : Number(proforma.is_gst) === 1;
-    const url = `#/admin/quotation/${proposal.client_id}/${proforma.id}?doc=proforma&source=proposal&gst=${isGST ? 1 : 0}`;
+    const clientId = proforma.client_id || proposal?.client_id || proposal?.clientId;
+    const source = proforma.source_type === 'manual' || !proforma.proposal_id ? 'manual' : 'proposal';
+    const url = `#/admin/quotation/${clientId}/${proforma.id}?doc=proforma&source=${source}&gst=${isGST ? 1 : 0}`;
     window.open(url, "_blank");
   };
 
@@ -549,8 +589,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               confirmButtonColor: "#f59e0b"
             }).then((viewResult) => {
               if (viewResult.isConfirmed) {
+                const clientId = proforma.client_id || proposal?.client_id || proposal?.clientId;
                 window.open(
-                  `#/admin/balance-proforma/${proposal.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGST ? 1 : 0}`,
+                  `#/admin/balance-proforma/${clientId}/${newBal.id}?doc=balance-proforma-view&gst=${isGST ? 1 : 0}`,
                   "_blank"
                 );
               }
@@ -575,9 +616,14 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         <div className="flex items-center justify-between p-6 bg-gray-800 border-b border-gray-700">
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 bg-clip-text text-transparent">
-              Proposal Proformas & Payments
+              Proposal & Instant Proformas
             </h1>
-            <p className="text-gray-400 text-sm mt-1">Client: { getClientDisplayName(clientData) } | Proposal Ref: #{ proposal?.id }</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Client: <span className="text-white font-medium">{ getClientDisplayName(clientData, proposal) }</span>
+              { proposal?.id && !proposal?.isDirectProforma && (
+                <span className="text-gray-400 ml-2">| Proposal Ref: #{ proposal.id }</span>
+              )}
+            </p>
           </div>
           <button onClick={ onClose } className="p-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition text-gray-300">
             <X className="w-6 h-6" />
@@ -590,7 +636,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
             <div className="flex justify-center p-10"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>
           ) : proformas.length === 0 ? (
             <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl p-10 text-center text-gray-400">
-              No Proforma Invoices found for this proposal. Generate one from the dropdown first.
+              No Proforma Invoices found for this client. Generate a proposal proforma or create an Instant Proforma.
             </div>
           ) : (
             proformas.map(proforma => {
@@ -641,8 +687,17 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                         <FileText className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2.5 flex-wrap">
                           <h3 className="font-bold text-lg text-white">{ proforma.proforma_number || `Proforma #${ proforma.id }` }</h3>
+                          { (proforma.source_type === 'manual' || !proforma.proposal_id) ? (
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                              ⚡ Instant Proforma
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gray-700/60 text-gray-300 border border-gray-600/50">
+                              Proposal #{ proforma.proposal_id }
+                            </span>
+                          ) }
                           <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase border flex items-center gap-1.5 ${currentStatusConfig.badge}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${currentStatusConfig.dot}`}></span>
                             { currentStatusConfig.label }
@@ -774,7 +829,8 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                                       <button 
                                         onClick={() => {
                                           const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
-                                          window.open(`#/admin/invoice/${proposal.client_id}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
+                                          const clientId = p.client_id || proforma.client_id || proposal?.client_id || proposal?.clientId;
+                                          window.open(`#/admin/invoice/${clientId}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
                                         }}
                                         className="px-3 py-1 bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500 dark:border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
                                       >

@@ -104,6 +104,18 @@ export default function ReminderSetting() {
     loadSettings();
   }, []);
 
+  // Validation Helpers
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(String(email || "").trim());
+  };
+
+  const validatePhone = (phone, isRequired = true) => {
+    const clean = String(phone || "").replace(/\D/g, "");
+    if (!clean) return !isRequired;
+    return clean.length === 10 && /^[6-9]\d{9}$/.test(clean);
+  };
+
   // Save Owner Details
   const handleSaveOwner = async (e) => {
     e.preventDefault();
@@ -118,11 +130,38 @@ export default function ReminderSetting() {
       return;
     }
 
+    if (!validateEmail(owner.email)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Email",
+        text: "Please enter a valid Owner Email address (e.g. owner@doaguru.com).",
+        background: "#1e293b",
+        color: "#fff",
+      });
+      return;
+    }
+
+    if (!validatePhone(owner.phone_number, true)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Phone Number",
+        text: "Owner WhatsApp/Phone must be a valid 10-digit number starting with 6, 7, 8, or 9 (without +91, 0 or spaces).",
+        background: "#1e293b",
+        color: "#fff",
+      });
+      return;
+    }
+
     try {
       setSavingOwner(true);
       const res = await axios.post(
         `${baseURL}/auth/api/re_calculator/reminder-settings/owner`,
-        owner,
+        {
+          ...owner,
+          name: owner.name.trim(),
+          email: owner.email.trim().toLowerCase(),
+          phone_number: String(owner.phone_number || "").replace(/\D/g, "").slice(0, 10),
+        },
         authHeaders
       );
       if (res.data?.status === "Success") {
@@ -164,11 +203,38 @@ export default function ReminderSetting() {
       return;
     }
 
+    if (!validateEmail(manager.email)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Email",
+        text: "Please enter a valid Manager Email address (e.g. manager@doaguru.com).",
+        background: "#1e293b",
+        color: "#fff",
+      });
+      return;
+    }
+
+    if (!validatePhone(manager.phone_number, true)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Phone Number",
+        text: "Manager WhatsApp/Phone must be a valid 10-digit number starting with 6, 7, 8, or 9 (without +91, 0 or spaces).",
+        background: "#1e293b",
+        color: "#fff",
+      });
+      return;
+    }
+
     try {
       setSavingManager(true);
       const res = await axios.post(
         `${baseURL}/auth/api/re_calculator/reminder-settings/manager`,
-        manager,
+        {
+          ...manager,
+          name: manager.name.trim(),
+          email: manager.email.trim().toLowerCase(),
+          phone_number: String(manager.phone_number || "").replace(/\D/g, "").slice(0, 10),
+        },
         authHeaders
       );
       if (res.data?.status === "Success") {
@@ -309,6 +375,28 @@ export default function ReminderSetting() {
         icon: "warning",
         title: "Required Fields",
         text: "Team Name, Name, and Email are mandatory.",
+        background: "#1e293b",
+        color: "#fff",
+      });
+      return;
+    }
+
+    if (!validateEmail(tlFormData.email)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Email",
+        text: "Please enter a valid Team Lead email address.",
+        background: "#1e293b",
+        color: "#fff",
+      });
+      return;
+    }
+
+    if (tlFormData.phone_number && !validatePhone(tlFormData.phone_number, false)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Phone Number",
+        text: "Team Lead Phone Number must be a valid 10-digit number starting with 6, 7, 8, or 9 (without +91, 0 or spaces).",
         background: "#1e293b",
         color: "#fff",
       });
@@ -495,18 +583,26 @@ export default function ReminderSetting() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">WhatsApp / Phone Number *</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-semibold text-gray-300">WhatsApp / Phone Number *</label>
+                <span className={`text-[10px] font-mono ${owner.phone_number?.length === 10 ? 'text-emerald-400 font-semibold' : 'text-gray-500'}`}>
+                  {owner.phone_number?.length || 0}/10 digits
+                </span>
+              </div>
               <div className="relative">
                 <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   value={owner.phone_number}
-                  onChange={(e) => setOwner({ ...owner, phone_number: e.target.value })}
-                  placeholder="e.g. 7000102121 (without + or 91)"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+                  onChange={(e) => setOwner({ ...owner, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                  placeholder="e.g. 7000102121 (10 digits only)"
+                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors font-mono tracking-wide"
+                  required
                 />
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">Used for Meta WhatsApp alerts and daily cron summaries</p>
+              <p className="text-[11px] text-gray-500 mt-1">10-digit mobile number for WhatsApp alerts & daily cron summaries</p>
             </div>
 
             <div className="pt-2 flex justify-end">
@@ -568,18 +664,26 @@ export default function ReminderSetting() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">Manager WhatsApp / Phone *</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-semibold text-gray-300">Manager WhatsApp / Phone *</label>
+                <span className={`text-[10px] font-mono ${manager.phone_number?.length === 10 ? 'text-emerald-400 font-semibold' : 'text-gray-500'}`}>
+                  {manager.phone_number?.length || 0}/10 digits
+                </span>
+              </div>
               <div className="relative">
                 <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   value={manager.phone_number}
-                  onChange={(e) => setManager({ ...manager, phone_number: e.target.value })}
-                  placeholder="e.g. 9826012345"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+                  onChange={(e) => setManager({ ...manager, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                  placeholder="e.g. 9826012345 (10 digits only)"
+                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors font-mono tracking-wide"
+                  required
                 />
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">Dispatches alerts directly to Manager's WhatsApp</p>
+              <p className="text-[11px] text-gray-500 mt-1">Dispatches alerts directly to Manager's WhatsApp (Must be 10 digits)</p>
             </div>
 
             <div className="pt-2 flex justify-end">
@@ -825,15 +929,22 @@ export default function ReminderSetting() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
-                  WhatsApp / Phone Number
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-semibold text-gray-300">
+                    WhatsApp / Phone Number
+                  </label>
+                  <span className={`text-[10px] font-mono ${tlFormData.phone_number?.length === 10 ? 'text-emerald-400 font-semibold' : 'text-gray-500'}`}>
+                    {tlFormData.phone_number?.length || 0}/10 digits
+                  </span>
+                </div>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   value={tlFormData.phone_number}
-                  onChange={(e) => setTlFormData({ ...tlFormData, phone_number: e.target.value })}
-                  placeholder="e.g. 9876543210"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                  onChange={(e) => setTlFormData({ ...tlFormData, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                  placeholder="e.g. 9876543210 (10 digits)"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500 font-mono tracking-wide"
                 />
               </div>
 

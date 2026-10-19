@@ -75,7 +75,18 @@ const ProposalTable = ({ proposals, keyword, setKeyword, fetchProposals, handleC
         <div className="flex flex-col space-y-3">
           {filteredProposals.length > 0 ? (
             filteredProposals.map((proposal) => {
-              const statusInfo = PROPOSAL_STATUS_MAP[proposal.status] || PROPOSAL_STATUS_MAP['draft'];
+              // Show pure proposal lifecycle status in proposals table (keep payment/proforma statuses scoped to proforma/payments)
+              const displayStatus = [
+                'proforma_generated',
+                'proforma_sent',
+                'payment_awaited',
+                'partially_paid',
+                'payment_received',
+                'invoiced'
+              ].includes(proposal.status)
+                ? 'client_approved'
+                : (proposal.status || 'draft');
+              const statusInfo = PROPOSAL_STATUS_MAP[displayStatus] || PROPOSAL_STATUS_MAP['draft'];
               return (
                 <div key={proposal.id} className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-center px-6 py-5 bg-gray-800/40 border border-gray-700/50 rounded-2xl hover:bg-gray-800/60 transition-all duration-300 shadow-sm group">
                   <div className="text-sm font-semibold text-orange-400">

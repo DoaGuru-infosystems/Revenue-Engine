@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Eye, Send, FilePlus, CreditCard, CheckCircle, Trash, FileText } from "lucide-react";
+import { ChevronDown, Eye, Send, FilePlus, CheckCircle, Trash, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -333,13 +333,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
                 </li>
               )}
 
-              {isAdmin && ['proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
-                <li>
-                  <button onClick={() => handleAction("record_payment")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
-                    <CreditCard size={14} /> Record Payment
-                  </button>
-                </li>
-              )}
+
 
 
 

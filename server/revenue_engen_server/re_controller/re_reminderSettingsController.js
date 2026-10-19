@@ -118,21 +118,34 @@ exports.getReminderSettings = async (req, res) => {
 // POST: Save Owner Settings
 exports.saveOwnerSettings = async (req, res) => {
   try {
-    const { name, email, phone_number } = req.body;
+    let { name, email, phone_number } = req.body;
+    name = (name || "").trim();
+    email = (email || "").trim().toLowerCase();
+    const cleanPhone = phone_number ? String(phone_number).replace(/\D/g, "").slice(0, 10) : "";
+
     if (!name || !email) {
-      return res.status(400).json({ status: "Failure", message: "Name and email are required" });
+      return res.status(400).json({ status: "Failure", message: "Owner name and email are required" });
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ status: "Failure", message: "Invalid email address format (e.g. owner@example.com)" });
+    }
+
+    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      return res.status(400).json({ status: "Failure", message: "Phone number must be a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9" });
     }
 
     const existing = await runQuery("SELECT id FROM message_notification WHERE role = 'owner' LIMIT 1");
     if (existing.length > 0) {
       await runQuery(
         "UPDATE message_notification SET name = ?, email = ?, phone_number = ? WHERE id = ?",
-        [name, email, phone_number || null, existing[0].id]
+        [name, email, cleanPhone, existing[0].id]
       );
     } else {
       await runQuery(
         "INSERT INTO message_notification (role, name, email, phone_number) VALUES ('owner', ?, ?, ?)",
-        [name, email, phone_number || null]
+        [name, email, cleanPhone]
       );
     }
 
@@ -146,21 +159,34 @@ exports.saveOwnerSettings = async (req, res) => {
 // POST: Save Manager Settings
 exports.saveManagerSettings = async (req, res) => {
   try {
-    const { name, email, phone_number } = req.body;
+    let { name, email, phone_number } = req.body;
+    name = (name || "").trim();
+    email = (email || "").trim().toLowerCase();
+    const cleanPhone = phone_number ? String(phone_number).replace(/\D/g, "").slice(0, 10) : "";
+
     if (!name || !email) {
-      return res.status(400).json({ status: "Failure", message: "Name and email are required" });
+      return res.status(400).json({ status: "Failure", message: "Manager name and email are required" });
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ status: "Failure", message: "Invalid email address format (e.g. manager@example.com)" });
+    }
+
+    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      return res.status(400).json({ status: "Failure", message: "Manager phone number must be a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9" });
     }
 
     const existing = await runQuery("SELECT id FROM message_notification WHERE role = 'manager' LIMIT 1");
     if (existing.length > 0) {
       await runQuery(
         "UPDATE message_notification SET name = ?, email = ?, phone_number = ? WHERE id = ?",
-        [name, email, phone_number || null, existing[0].id]
+        [name, email, cleanPhone, existing[0].id]
       );
     } else {
       await runQuery(
         "INSERT INTO message_notification (role, name, email, phone_number) VALUES ('manager', ?, ?, ?)",
-        [name, email, phone_number || null]
+        [name, email, cleanPhone]
       );
     }
 
@@ -199,21 +225,36 @@ exports.saveApiConfig = async (req, res) => {
 // POST: Add or Update Team Lead Manually
 exports.saveTeamLead = async (req, res) => {
   try {
-    const { id, team_name, name, email, phone_number, designation } = req.body;
+    let { id, team_name, name, email, phone_number, designation } = req.body;
+    name = (name || "").trim();
+    email = (email || "").trim().toLowerCase();
+    team_name = (team_name || "").trim();
+    designation = (designation || "").trim();
+    const cleanPhone = phone_number ? String(phone_number).replace(/\D/g, "").slice(0, 10) : null;
+
     if (!team_name || !name || !email) {
       return res.status(400).json({ status: "Failure", message: "Team Name, Name, and Email are required" });
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ status: "Failure", message: "Invalid email address format" });
+    }
+
+    if (cleanPhone && (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone))) {
+      return res.status(400).json({ status: "Failure", message: "Phone number must be a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9" });
     }
 
     if (id) {
       await runQuery(
         "UPDATE message_notification SET team_name = ?, name = ?, email = ?, phone_number = ?, designation = ? WHERE id = ? AND role = 'team_lead'",
-        [team_name, name, email, phone_number || null, designation || null, id]
+        [team_name, name, email, cleanPhone || null, designation || null, id]
       );
       return res.status(200).json({ status: "Success", message: "Team Lead updated successfully" });
     } else {
       const result = await runQuery(
         "INSERT INTO message_notification (role, team_name, name, email, phone_number, designation) VALUES ('team_lead', ?, ?, ?, ?, ?)",
-        [team_name, name, email, phone_number || null, designation || null]
+        [team_name, name, email, cleanPhone || null, designation || null]
       );
       return res.status(200).json({ status: "Success", message: "Team Lead added successfully", id: result.insertId });
     }
