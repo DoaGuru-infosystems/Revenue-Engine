@@ -100,9 +100,9 @@ const ClientServiceHistoryPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden">
+      <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-gray-900 dark:via-slate-800 dark:to-gray-900 text-gray-900 dark:text-white relative overflow-hidden">
         {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
@@ -110,61 +110,51 @@ const ClientServiceHistoryPage = () => {
 
         <Header />
 
-        <div className="relative z-10 p-6 space-y-8 mt-10">
+        <div className="relative z-10 p-3 sm:p-6 space-y-6 sm:space-y-8 mt-2 sm:mt-6 max-w-7xl mx-auto">
           {/* Header Section */}
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                 Proposal & Quotation History
               </h2>
-              <button
-                onClick={() => navigate(-1)}
-                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transform hover:scale-105 transition-all duration-200 bg-gradient-to-r from-yellow-500 to-green-500 text-white shadow-lg shadow-yellow-500/25"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Go Back
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.setItem(isAdmin ? "admin-active-tab" : "bd-active-tab", "assign");
-                  navigate(`${basePath}/dashboard`);
-                }}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition mx-2"
-              >
-                Assign List
-              </button>
-              <button
-                onClick={handleCreateProposal}
-                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition mx-2"
-              >
-                New Proposal
-              </button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <div className="relative group">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 group-hover:text-amber-400 transition-colors" />
-                <input
-                  type="text"
-                  value={proposalKeyword}
-                  placeholder="Search proposals..."
-                  className="w-full sm:w-auto pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 backdrop-blur-sm hover:bg-gray-700/50 transition-all text-sm"
-                  onChange={(e) => setProposalKeyword(e.target.value)}
-                />
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 transition shadow-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Go Back
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem(isAdmin ? "admin-active-tab" : "bd-active-tab", "assign");
+                    navigate(`${basePath}/dashboard`);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-orange-50 hover:bg-orange-100 dark:bg-orange-500/20 dark:hover:bg-orange-500/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 transition shadow-sm"
+                >
+                  Assign List
+                </button>
+                <button
+                  onClick={handleCreateProposal}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white shadow-md transition"
+                >
+                  + New Proposal
+                </button>
               </div>
             </div>
           </div>
 
           {/* Main Table */}
-          <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
-            <div className="p-8">
+          <div className="bg-white dark:bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700/50 shadow-sm overflow-hidden">
+            <div className="p-3 sm:p-6">
               {/* TABS HEADER */}
-              <div className="flex space-x-4 mb-6 border-b border-gray-700">
+              <div className="flex space-x-4 mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-700">
                 <button
                   onClick={() => setActiveTab("proposals")}
                   className={`pb-2 px-1 font-semibold text-sm transition-colors border-b-2 ${
                     activeTab === "proposals"
-                      ? "border-orange-500 text-orange-400"
-                      : "border-transparent text-gray-400 hover:text-gray-300"
+                      ? "border-orange-500 text-orange-600 dark:text-orange-400"
+                      : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   }`}
                 >
                   Proposals

@@ -272,7 +272,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
   };
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className={`relative inline-block text-left ${isOpen ? "z-30" : "z-10"}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-500 text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-105"
@@ -284,10 +284,10 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
         const status = proposal.status?.toLowerCase() || "";
         const isAdmin = !window.location.pathname.includes('/BD/');
         return (
-          <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/60 rounded-xl shadow-2xl z-50 py-1">
-            <ul className="py-1 text-sm text-gray-300">
+          <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto custom-scrollbar">
+            <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
               <li>
-                <button onClick={() => handleAction("view")} className="w-full text-left px-4 py-2 hover:bg-gray-800/80 hover:text-white transition-all flex items-center gap-2">
+                <button onClick={() => handleAction("view")} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2">
                   <Eye size={14} className="text-gray-400" /> View / Edit Proposal
                 </button>
               </li>
@@ -295,13 +295,13 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
               {['draft', 'sent', 'changes', 'rejected'].includes(status) && (
                 <>
                   <li>
-                    <button onClick={() => handleAction("send_to_client")} className="w-full text-left px-4 py-2 hover:bg-emerald-500/10 text-emerald-400 hover:text-emerald-300 transition-all flex items-center gap-2">
+                    <button onClick={() => handleAction("send_to_client")} className="w-full text-left px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all flex items-center gap-2">
                       <Send size={14} /> {['sent', 'changes', 'rejected'].includes(status) ? 'Send Again' : 'Send to Client'}
                     </button>
                   </li>
                   {isAdmin && (
                     <li>
-                      <button onClick={() => handleAction("mark_approved")} className="w-full text-left px-4 py-2 hover:bg-green-500/10 text-green-400 hover:text-green-300 transition-all flex items-center gap-2">
+                      <button onClick={() => handleAction("mark_approved")} className="w-full text-left px-4 py-2 hover:bg-green-50 dark:hover:bg-green-500/10 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-all flex items-center gap-2">
                         <CheckCircle size={14} /> Mark Approved
                       </button>
                     </li>
@@ -311,7 +311,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
               
               {status === 'sent' && (
                 <li>
-                  <button onClick={() => handleAction("mark_client_response")} className="w-full text-left px-4 py-2 hover:bg-blue-500/10 text-blue-400 hover:text-blue-300 transition-all flex items-center gap-2">
+                  <button onClick={() => handleAction("mark_client_response")} className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all flex items-center gap-2">
                     <CheckCircle size={14} /> Mark Client Response
                   </button>
                 </li>
@@ -319,7 +319,7 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
               
               {['approved', 'client_approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
                 <li>
-                  <button onClick={() => handleAction("generate_proforma")} className="w-full text-left px-4 py-2 hover:bg-orange-500/10 text-orange-400 hover:text-orange-300 transition-all flex items-center gap-2">
+                  <button onClick={() => handleAction("generate_proforma")} className="w-full text-left px-4 py-2 hover:bg-orange-50 dark:hover:bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-all flex items-center gap-2">
                     <FilePlus size={14} /> Generate Proforma
                   </button>
                 </li>
@@ -327,33 +327,29 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
 
               {proposal.proforma_id && (
                 <li>
-                  <button onClick={() => handleAction("view_proformas")} className="w-full text-left px-4 py-2 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-all flex items-center gap-2">
+                  <button onClick={() => handleAction("view_proformas")} className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-all flex items-center gap-2">
                     <FileText size={14} /> View Proformas
                   </button>
                 </li>
               )}
 
-
-
-
-
               {['draft', 'sent', 'changes', 'rejected', 'approved', 'client_approved', 'proforma_generated', 'proforma_sent', 'payment_awaited', 'payment_received', 'partially_paid', 'invoiced'].includes(status) && (
-              <li>
-                <button onClick={() => handleAction("download_pdf")} className="w-full text-left px-4 py-2 hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all flex items-center gap-2">
-                  <FilePlus size={14} /> Download PDF
-                </button>
-              </li>
-            )}
+                <li>
+                  <button onClick={() => handleAction("download_pdf")} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2">
+                    <FilePlus size={14} className="text-gray-400" /> Download PDF
+                  </button>
+                </li>
+              )}
 
-            {isAdmin && (
-              <li>
-                <button onClick={() => handleAction("delete_proposal")} className="w-full text-left px-4 py-2 hover:bg-red-500/15 text-red-400 hover:text-red-300 transition-all flex items-center gap-2">
-                  <Trash size={14} /> Delete Proposal
-                </button>
-              </li>
-            )}
-          </ul>
-        </div>
+              {isAdmin && (
+                <li>
+                  <button onClick={() => handleAction("delete_proposal")} className="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-500/15 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-all flex items-center gap-2">
+                    <Trash size={14} /> Delete Proposal
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
         );
       })()}
     </div>

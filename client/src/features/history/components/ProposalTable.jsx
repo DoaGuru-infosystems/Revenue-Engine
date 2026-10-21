@@ -47,23 +47,23 @@ const ProposalTable = ({ proposals, keyword, setKeyword, fetchProposals, handleC
   });
 
   return (
-    <div className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden shadow-2xl flex flex-col min-h-[600px]">
-      <div className="p-5 border-b border-gray-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-gray-900/40 gap-4">
-        <h3 className="font-semibold text-white text-lg">Active Proposals</h3>
+    <div className="bg-slate-50/60 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200 dark:border-gray-700/50 rounded-2xl shadow-sm flex flex-col min-h-[500px]">
+      <div className="p-3.5 sm:p-5 border-b border-gray-200 dark:border-gray-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white dark:bg-gray-900/40 gap-3 sm:gap-4">
+        <h3 className="font-semibold text-gray-900 dark:text-white text-base sm:text-lg">Active Proposals</h3>
         <div className="relative w-full sm:w-auto">
           <input
             type="text"
             placeholder="Search proposals..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            className="pl-10 pr-4 py-2 bg-gray-900/60 border border-gray-750 rounded-xl text-sm w-full sm:w-64 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all hover:bg-gray-900/80"
+            className="pl-10 pr-4 py-2 bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-750 rounded-xl text-sm w-full sm:w-64 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all shadow-sm"
           />
-          <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
         </div>
       </div>
       
-      <div className="p-5 flex-1 overflow-y-auto">
-        <div className="hidden lg:grid grid-cols-6 gap-4 px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+      <div className="p-3 sm:p-5 flex-1">
+        <div className="hidden lg:grid grid-cols-6 gap-4 px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
           <div>Proposal ID</div>
           <div>Date</div>
           <div>Type</div>
@@ -88,21 +88,21 @@ const ProposalTable = ({ proposals, keyword, setKeyword, fetchProposals, handleC
                 : (proposal.status || 'draft');
               const statusInfo = PROPOSAL_STATUS_MAP[displayStatus] || PROPOSAL_STATUS_MAP['draft'];
               return (
-                <div key={proposal.id} className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-center px-6 py-5 bg-gray-800/40 border border-gray-700/50 rounded-2xl hover:bg-gray-800/60 transition-all duration-300 shadow-sm group">
-                  <div className="text-sm font-semibold text-orange-400">
-                    <span className="lg:hidden text-gray-400 font-normal mr-2">ID:</span>
+                <div key={proposal.id} className="relative grid grid-cols-1 lg:grid-cols-6 gap-3 sm:gap-4 items-start lg:items-center px-4 sm:px-6 py-4 sm:py-5 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-2xl hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 shadow-sm group">
+                  <div className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                    <span className="lg:hidden text-gray-500 dark:text-gray-400 font-normal mr-2">ID:</span>
                     PRP-{proposal.id}
                   </div>
-                  <div className="text-sm text-gray-300">
-                    <span className="lg:hidden text-gray-400 font-normal mr-2">Date:</span>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    <span className="lg:hidden text-gray-500 dark:text-gray-400 font-normal mr-2">Date:</span>
                     {moment(proposal.created_at).format("DD MMM YYYY")}
                   </div>
-                  <div className="text-sm text-gray-300 capitalize">
-                    <span className="lg:hidden text-gray-400 font-normal mr-2">Type:</span>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                    <span className="lg:hidden text-gray-500 dark:text-gray-400 font-normal mr-2">Type:</span>
                     {proposal.proposal_type}
                   </div>
-                  <div className="text-sm font-medium text-white lg:text-right">
-                    <span className="lg:hidden text-gray-400 font-normal mr-2">Amount:</span>
+                  <div className="text-sm font-bold text-gray-900 dark:text-white lg:text-right">
+                    <span className="lg:hidden text-gray-500 dark:text-gray-400 font-normal mr-2">Amount:</span>
                     ₹{Number(proposal.grand_total_excl_gst).toLocaleString()}
                   </div>
                   <div className="lg:text-center">
@@ -113,16 +113,16 @@ const ProposalTable = ({ proposals, keyword, setKeyword, fetchProposals, handleC
                       {statusInfo.label}
                     </span>
                   </div>
-                  <div className="lg:text-right flex justify-start lg:justify-end">
+                  <div className="lg:text-right flex justify-start lg:justify-end mt-2 lg:mt-0">
                     <ProposalActions proposal={proposal} fetchProposals={fetchProposals} handleCreateProformaFromProposal={handleCreateProformaFromProposal} openProformaManager={openProformaManager} />
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="py-16 flex flex-col items-center justify-center bg-gray-800/20 border border-gray-700/30 rounded-2xl border-dashed">
-              <p className="text-lg font-semibold text-gray-400 mb-1">No proposals found</p>
-              <p className="text-sm text-gray-500">Try adjusting your search query.</p>
+            <div className="py-16 flex flex-col items-center justify-center bg-white dark:bg-gray-800/20 border border-gray-200 dark:border-gray-700/30 rounded-2xl border-dashed">
+              <p className="text-base sm:text-lg font-semibold text-gray-500 dark:text-gray-400 mb-1">No proposals found</p>
+              <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">Try adjusting your search query.</p>
             </div>
           )}
         </div>

@@ -252,67 +252,67 @@ export default function PublicProposalPage() {
   };
 
   const SectionTitle = ({ children }) => (
-    <h2 className="text-xl font-bold text-blue-900 uppercase tracking-wide border-b-2 border-blue-100 pb-3 mt-14 mb-8 flex items-center gap-3">
-      <span className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm shadow-sm border border-blue-100/50">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <h2 className="text-lg sm:text-xl font-bold text-blue-900 uppercase tracking-wide border-b-2 border-blue-100 pb-2.5 sm:pb-3 mt-8 sm:mt-14 mb-4 sm:mb-8 flex items-center gap-2.5 sm:gap-3">
+      <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm shadow-sm border border-blue-100/50 shrink-0">
+        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
         </svg>
       </span>
-      {children}
+      <span>{children}</span>
     </h2>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 font-sans selection:bg-blue-100 selection:text-blue-900">
-      <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center">
+    <div className="min-h-screen bg-slate-50 py-6 sm:py-12 px-2.5 sm:px-4 font-sans selection:bg-blue-100 selection:text-blue-900">
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
         <div></div>
         <button
           onClick={handleDownloadPDF}
           disabled={downloading}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 rounded-xl sm:rounded-full font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed text-xs sm:text-sm"
         >
           {downloading ? "Generating PDF..." : "Download Full PDF"}
         </button>
       </div>
 
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden border border-slate-100">
-        <div className="p-8 md:p-16">
+        <div className="p-4 sm:p-8 md:p-16">
           {/* Header Info Table */}
-          <div className="mb-16">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-cyan-600 text-center mb-10 tracking-tight leading-tight">
+          <div className="mb-10 sm:mb-16">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-cyan-600 text-center mb-6 sm:mb-10 tracking-tight leading-tight">
               {propType} {(organization ? organization : clientName).toUpperCase()}
             </h1>
 
-            <div className="max-w-2xl mx-auto bg-slate-50/50 rounded-2xl p-6 md:p-8 border border-slate-100 shadow-sm">
-              <table className="w-full text-slate-700">
+            <div className="max-w-2xl mx-auto bg-slate-50/50 rounded-2xl p-4 sm:p-6 md:p-8 border border-slate-100 shadow-sm">
+              <table className="w-full text-slate-700 text-xs sm:text-sm">
                 <tbody className="divide-y divide-slate-100/50">
                   <tr>
-                    <td className="py-3 font-semibold text-slate-800 w-2/5">Client Name:</td>
-                    <td className="py-3">{clientName}</td>
+                    <td className="py-2.5 sm:py-3 font-semibold text-slate-800 w-2/5">Client Name:</td>
+                    <td className="py-2.5 sm:py-3 break-words">{clientName}</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-semibold text-slate-800">Organization:</td>
-                    <td className="py-3">{organization}</td>
+                    <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Organization:</td>
+                    <td className="py-2.5 sm:py-3 break-words">{organization}</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-semibold text-slate-800">Duration:</td>
-                    <td className="py-3">{duration}</td>
+                    <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Duration:</td>
+                    <td className="py-2.5 sm:py-3">{duration}</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-semibold text-slate-800">Proposal Date:</td>
-                    <td className="py-3">{propDate}</td>
+                    <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Proposal Date:</td>
+                    <td className="py-2.5 sm:py-3">{propDate}</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-semibold text-slate-800">Proposal Validity:</td>
-                    <td className="py-3">{validity}</td>
+                    <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Proposal Validity:</td>
+                    <td className="py-2.5 sm:py-3">{validity}</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-semibold text-slate-800">Prepared By:</td>
-                    <td className="py-3 text-blue-700 font-medium">{prepBy}</td>
+                    <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Prepared By:</td>
+                    <td className="py-2.5 sm:py-3 text-blue-700 font-medium break-words">{prepBy}</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-semibold text-slate-800">Website:</td>
-                    <td className="py-3">
+                    <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Website:</td>
+                    <td className="py-2.5 sm:py-3 break-all">
                       <a href={`https://${web}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
                         {web}
                       </a>
@@ -325,11 +325,14 @@ export default function PublicProposalPage() {
 
           <style>
             {`
-              .prose-custom p { margin-bottom: 1rem; color: #475569; line-height: 1.7; }
-              .prose-custom ul { padding-left: 1.5rem; margin-bottom: 1rem; color: #475569; list-style-type: disc; }
-              .prose-custom li { margin-bottom: 0.5rem; }
+              .prose-custom p { margin-bottom: 1rem; color: #475569; line-height: 1.7; font-size: 0.9375rem; }
+              .prose-custom ul { padding-left: 1.25rem; margin-bottom: 1rem; color: #475569; list-style-type: disc; }
+              .prose-custom li { margin-bottom: 0.5rem; font-size: 0.9375rem; }
               .prose-custom strong { color: #1e293b; font-weight: 600; }
-              .prose-custom h3, .prose-custom h4 { color: #0f172a; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+              .prose-custom h3, .prose-custom h4 { color: #0f172a; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; font-size: 1.05rem; }
+              @media (max-width: 640px) {
+                .prose-custom p, .prose-custom li { font-size: 0.85rem; }
+              }
             `}
           </style>
 
@@ -373,13 +376,13 @@ export default function PublicProposalPage() {
               <div>
                 <SectionTitle>Scope of Work</SectionTitle>
                 {rawPricing && rawPricing.length > 0 ? (
-                  <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-xs tracking-wider border-b border-slate-200">
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                    <table className="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[480px]">
+                      <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-[11px] sm:text-xs tracking-wider border-b border-slate-200">
                         <tr>
-                          <th className="px-6 py-4">Service Category</th>
-                          <th className="px-6 py-4">Service Name</th>
-                          <th className="px-6 py-4 text-center w-32">Quantity</th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4">Service Category</th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4">Service Name</th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 text-center w-28 sm:w-32">Quantity</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -412,12 +415,12 @@ export default function PublicProposalPage() {
 
                           return (
                             <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 font-medium text-slate-800">
+                              <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-slate-800">
                                 {categoryName}
                                 {editingSuffix}
                               </td>
-                              <td className="px-6 py-4 text-slate-700">{serviceName}</td>
-                              <td className="px-6 py-4 text-center">
+                              <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-700">{serviceName}</td>
+                              <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
                                 <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 font-medium text-xs">
                                   {quantityVal}
                                 </span>
@@ -429,7 +432,7 @@ export default function PublicProposalPage() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-slate-500 italic px-4 py-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <p className="text-slate-500 italic px-4 py-3 bg-slate-50 rounded-lg border border-slate-100 text-xs sm:text-sm">
                     No deliverables added yet.
                   </p>
                 )}
@@ -450,21 +453,21 @@ export default function PublicProposalPage() {
               sections.timeline.length > 0 && (
                 <div>
                   <SectionTitle>Timeline & Milestones</SectionTitle>
-                  <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-                    <table className="w-full text-left text-sm text-slate-600">
-                      <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-xs tracking-wider border-b border-slate-200">
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                    <table className="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[500px]">
+                      <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-[11px] sm:text-xs tracking-wider border-b border-slate-200">
                         <tr>
-                          <th className="px-6 py-4 w-1/3">Milestone Title</th>
-                          <th className="px-6 py-4 w-1/4">Duration</th>
-                          <th className="px-6 py-4">Deliverables / Details</th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 w-1/3">Milestone Title</th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4 w-1/4">Duration</th>
+                          <th className="px-4 sm:px-6 py-3 sm:py-4">Deliverables / Details</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {sections.timeline.map((m, idx) => (
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4 font-semibold text-slate-800">{m.title || ""}</td>
-                            <td className="px-6 py-4 text-blue-600 font-medium">{m.duration || ""}</td>
-                            <td className="px-6 py-4 text-slate-700">{m.deliverables || ""}</td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 font-semibold text-slate-800">{m.title || ""}</td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-blue-600 font-medium">{m.duration || ""}</td>
+                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-700">{m.deliverables || ""}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -485,13 +488,13 @@ export default function PublicProposalPage() {
             {isSectionIncluded("pricing_investment") && pricing && pricing.length > 0 && (
               <div>
                 <SectionTitle>Pricing & Investment</SectionTitle>
-                <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-xs tracking-wider border-b border-slate-200">
+                <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                  <table className="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[520px]">
+                    <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-[11px] sm:text-xs tracking-wider border-b border-slate-200">
                       <tr>
-                        <th className="px-6 py-4">Service / Item</th>
-                        <th className="px-6 py-4 text-center w-32">Quantity</th>
-                        <th className="px-6 py-4 text-right w-48">Total Price (₹)</th>
+                        <th className="px-4 sm:px-6 py-3 sm:py-4">Service / Item</th>
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-center w-24 sm:w-32">Quantity</th>
+                        <th className="px-4 sm:px-6 py-3 sm:py-4 text-right w-40 sm:w-48">Total Price (₹)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -519,11 +522,11 @@ export default function PublicProposalPage() {
                         return (
                           <React.Fragment key={idx}>
                             <tr className="hover:bg-slate-50/50 transition-colors">
-                              <td className="px-6 py-4 font-medium text-slate-800">{item.service}</td>
-                              <td className="px-6 py-4 text-center text-slate-700">
+                              <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-slate-800">{item.service}</td>
+                              <td className="px-4 sm:px-6 py-3 sm:py-4 text-center text-slate-700">
                                 {itemQty}
                               </td>
-                              <td className="px-6 py-4 text-right font-medium">
+                              <td className="px-4 sm:px-6 py-3 sm:py-4 text-right font-medium">
                                 {isComp ? (
                                   <span className="text-slate-800">
                                     ₹ {compAmt.toLocaleString("en-IN")}{" "}
@@ -544,11 +547,11 @@ export default function PublicProposalPage() {
                               const parentName = item.service_name || item.service || "Service";
                               return (
                                 <tr key={`addon-${idx}-${aIdx}`} className="bg-slate-50/40 hover:bg-slate-50/80 transition-colors">
-                                  <td className="px-6 py-3 font-medium text-slate-700">
+                                  <td className="px-4 sm:px-6 py-2.5 sm:py-3 font-medium text-slate-700">
                                     {addonName} ({parentName})
                                   </td>
-                                  <td className="px-6 py-3 text-center text-slate-600">{addonQty}</td>
-                                  <td className="px-6 py-3 text-right font-medium text-slate-700">
+                                  <td className="px-4 sm:px-6 py-2.5 sm:py-3 text-center text-slate-600">{addonQty}</td>
+                                  <td className="px-4 sm:px-6 py-2.5 sm:py-3 text-right font-medium text-slate-700">
                                     {isComp ? (
                                       <span>
                                         ₹ {addonTotal.toLocaleString("en-IN")}{" "}
@@ -567,29 +570,29 @@ export default function PublicProposalPage() {
                     </tbody>
                     <tfoot className="border-t border-slate-200">
                       <tr className="bg-slate-50/50">
-                        <td colSpan="2" className="px-6 py-4 text-right font-semibold text-slate-600">
+                        <td colSpan="2" className="px-4 sm:px-6 py-3 sm:py-4 text-right font-semibold text-slate-600">
                           Subtotal (Excl. GST)
                         </td>
-                        <td className="px-6 py-4 text-right font-bold text-slate-800">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 text-right font-bold text-slate-800">
                           ₹ {dmSubtotal.toLocaleString("en-IN")}
                         </td>
                       </tr>
                       {discountVal > 0 && (
                         <tr className="bg-slate-50/50">
-                          <td colSpan="2" className="px-6 py-3 text-right font-medium text-rose-500">
+                          <td colSpan="2" className="px-4 sm:px-6 py-2.5 sm:py-3 text-right font-medium text-rose-500">
                             Discount ({discountType === "Percentage" ? `${discountVal}%` : "₹"})
                           </td>
-                          <td className="px-6 py-3 text-right font-bold text-rose-500">
+                          <td className="px-4 sm:px-6 py-2.5 sm:py-3 text-right font-bold text-rose-500">
                             - ₹ {discountAmt.toLocaleString("en-IN")}
                           </td>
                         </tr>
                       )}
                       {adsSubtotal > 0 && (
                         <tr className="bg-slate-50/50">
-                          <td colSpan="2" className="px-6 py-4 text-right font-semibold text-slate-600">
+                          <td colSpan="2" className="px-4 sm:px-6 py-3 sm:py-4 text-right font-semibold text-slate-600">
                             Ads Budget Total
                           </td>
-                          <td className="px-6 py-4 text-right font-bold text-slate-800">
+                          <td className="px-4 sm:px-6 py-3 sm:py-4 text-right font-bold text-slate-800">
                             ₹ {adsSubtotal.toLocaleString("en-IN")}
                           </td>
                         </tr>
@@ -597,11 +600,11 @@ export default function PublicProposalPage() {
                       <tr className="bg-blue-50/80">
                         <td
                           colSpan="2"
-                          className="px-6 py-5 text-right font-bold text-blue-900 text-base uppercase tracking-wide"
+                          className="px-4 sm:px-6 py-3.5 sm:py-5 text-right font-bold text-blue-900 text-sm sm:text-base uppercase tracking-wide"
                         >
                           Grand Total (Excl. GST)
                         </td>
-                        <td className="px-6 py-5 text-right font-black text-blue-900 text-lg">
+                        <td className="px-4 sm:px-6 py-3.5 sm:py-5 text-right font-black text-blue-900 text-base sm:text-lg">
                           ₹ {Number(data.grand_total_excl_gst || finalGrandTotal).toLocaleString("en-IN")}
                         </td>
                       </tr>
@@ -617,8 +620,8 @@ export default function PublicProposalPage() {
                 {(sections.notes_selection || (terms && terms.length > 0)) && (
                   <>
                     <SectionTitle>Notes & Terms</SectionTitle>
-                    <div className="bg-amber-50/50 rounded-xl p-6 md:p-8 border border-amber-100/50">
-                      <ul className="space-y-4">
+                    <div className="bg-amber-50/50 rounded-xl p-4 sm:p-6 md:p-8 border border-amber-100/50 text-xs sm:text-sm">
+                      <ul className="space-y-3 sm:space-y-4">
                         {(() => {
                           const rawNotes = sections.notes_selection || terms;
                           const notesList = (Array.isArray(rawNotes) ? rawNotes : [])
@@ -632,7 +635,7 @@ export default function PublicProposalPage() {
                             }
                             if (!cleanText) return null;
                             return (
-                              <li key={idx} className="flex gap-4 text-slate-700 leading-relaxed">
+                              <li key={idx} className="flex gap-3 sm:gap-4 text-slate-700 leading-relaxed">
                                 <div className="flex-shrink-0 mt-1.5 w-2 h-2 rounded-full bg-amber-400"></div>
                                 <div>{cleanText}</div>
                               </li>
@@ -650,7 +653,7 @@ export default function PublicProposalPage() {
             {isSectionIncluded("additional_remarks") && hasContent(sections.additional_remarks) && (
               <div>
                 <SectionTitle>Additional Remarks</SectionTitle>
-                <div className="prose-custom bg-slate-50/50 p-6 rounded-xl border border-slate-100">
+                <div className="prose-custom bg-slate-50/50 p-4 sm:p-6 rounded-xl border border-slate-100">
                   {renderContent(sections.additional_remarks)}
                 </div>
               </div>
@@ -660,7 +663,7 @@ export default function PublicProposalPage() {
             {isSectionIncluded("client_instructions") && hasContent(sections.client_instructions) && (
               <div>
                 <SectionTitle>Client Instructions</SectionTitle>
-                <div className="prose-custom bg-slate-50/50 p-6 rounded-xl border border-slate-100">
+                <div className="prose-custom bg-slate-50/50 p-4 sm:p-6 rounded-xl border border-slate-100">
                   {renderContent(sections.client_instructions)}
                 </div>
               </div>
@@ -675,18 +678,18 @@ export default function PublicProposalPage() {
             )}
 
             {/* Approval Block */}
-            <div className="mt-20 pt-12 border-t border-slate-200">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4 text-center">Approval & Acceptance</h2>
-              <p className="text-slate-500 text-center mb-16">
+            <div className="mt-12 sm:mt-20 pt-8 sm:pt-12 border-t border-slate-200">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 sm:mb-4 text-center">Approval & Acceptance</h2>
+              <p className="text-slate-500 text-center mb-8 sm:mb-16 text-xs sm:text-sm">
                 By signing below, you agree to the terms and scope of work outlined in this proposal.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-8">
-                <div className="bg-slate-50/80 p-8 rounded-2xl border border-slate-100">
-                  <div className="border-t-2 border-slate-400 w-full mb-6 pt-4 text-lg font-bold text-slate-800 tracking-wide text-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                <div className="bg-slate-50/80 p-5 sm:p-8 rounded-2xl border border-slate-100">
+                  <div className="border-t-2 border-slate-400 w-full mb-4 sm:mb-6 pt-3 sm:pt-4 text-base sm:text-lg font-bold text-slate-800 tracking-wide text-center">
                     Authorized Client Signature
                   </div>
-                  <div className="space-y-4 text-slate-600">
+                  <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-600">
                     <p className="flex items-center gap-3">
                       <span className="font-semibold text-slate-800 w-24">Name:</span>{" "}
                       {approval.client_signatory_name || "______________________"}
@@ -701,11 +704,11 @@ export default function PublicProposalPage() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50/50 p-8 rounded-2xl border border-blue-100/50">
-                  <div className="border-t-2 border-blue-400 w-full mb-6 pt-4 text-lg font-bold text-blue-900 tracking-wide text-center">
+                <div className="bg-blue-50/50 p-5 sm:p-8 rounded-2xl border border-blue-100/50">
+                  <div className="border-t-2 border-blue-400 w-full mb-4 sm:mb-6 pt-3 sm:pt-4 text-base sm:text-lg font-bold text-blue-900 tracking-wide text-center">
                     DOAGuru InfoSystems
                   </div>
-                  <div className="space-y-4 text-blue-900/80">
+                  <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-blue-900/80">
                     <p className="flex items-center gap-3">
                       <span className="font-semibold text-blue-900 w-24">Name:</span>{" "}
                       {approval.our_signatory_name || "______________________"}
