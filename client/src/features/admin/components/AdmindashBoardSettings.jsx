@@ -42,39 +42,39 @@ function AdmindashBoardSettings() {
   const activeTabData = settingsTabs.find((t) => t.id === activeTab);
 
   return (
-    <div className="h-full w-full py-4 px-2">
+    <div className="h-full w-full py-4 px-1 sm:px-4 text-gray-900 dark:text-white">
       { !activeTab ? (
         <div className="space-y-8 animate-in fade-in duration-300">
-          <div className="text-center sm:text-left mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Dashboard Settings</h2>
-            <p className="text-gray-400">Select a module below to manage configurations, services, and features.</p>
+          <div className="text-center sm:text-left mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard Settings</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Select a module below to manage configurations, services, and features.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             { settingsTabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={ tab.id }
                   onClick={ () => setActiveTab(tab.id) }
-                  className="group relative bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 p-6 rounded-3xl text-left transition-all duration-300 hover:bg-gray-800/80 hover:shadow-2xl hover:shadow-black/50 hover:-translate-y-1 overflow-hidden"
+                  className="group relative bg-white/80 dark:bg-gray-800/40 backdrop-blur-sm border border-gray-200 dark:border-gray-700/50 p-5 sm:p-6 rounded-3xl text-left transition-all duration-300 hover:bg-white dark:hover:bg-gray-800/80 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-1 overflow-hidden"
                 >
                   <div className={ `absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tab.color} opacity-5 rounded-bl-full -mr-8 -mt-8 transition-transform duration-500 group-hover:scale-125 group-hover:opacity-10` }></div>
 
-                  <div className={ `w-14 h-14 rounded-2xl flex items-center justify-center mb-5 bg-gradient-to-br ${tab.color} shadow-lg shadow-black/20 ring-1 ring-white/10 group-hover:scale-110 transition-transform duration-300` }>
-                    <Icon className="w-6 h-6 text-white" />
+                  <div className={ `w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-4 sm:mb-5 bg-gradient-to-br ${tab.color} shadow-lg shadow-black/20 ring-1 ring-white/10 group-hover:scale-110 transition-transform duration-300` }>
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
 
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:text-yellow-500 transition-colors">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-amber-600 dark:group-hover:text-yellow-400 transition-colors">
                       { tab.label }
                     </h3>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-4">
+                    <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm leading-relaxed mb-4">
                       { tab.description }
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-700/50 flex flex-row items-center justify-between text-xs font-semibold uppercase tracking-wider text-gray-500 group-hover:text-white transition-colors">
+                  <div className="pt-4 border-t border-gray-100 dark:border-gray-700/50 flex flex-row items-center justify-between text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 group-hover:text-amber-600 dark:group-hover:text-white transition-colors">
                     <span>Manage Module</span>
                     <span className="opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
                       →
@@ -86,25 +86,25 @@ function AdmindashBoardSettings() {
           </div>
         </div>
       ) : (
-        <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-          <div className="flex items-center gap-4 border-b border-gray-700/50 pb-4">
+        <div className="space-y-4 sm:space-y-6 animate-in slide-in-from-right-8 duration-300">
+          <div className="flex items-center gap-3 sm:gap-4 border-b border-gray-200 dark:border-gray-700/50 pb-4">
             <button
               onClick={ () => setActiveTab("") }
-              className="p-3 bg-gray-800/50 hover:bg-gray-700 text-white rounded-xl transition-all border border-gray-700 hover:shadow-lg"
+              className="p-2.5 sm:p-3 bg-white dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-xl transition-all border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md shrink-0"
               title="Back to Settings Grid"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-2xl font-bold text-white">{ activeTabData?.label }</h2>
-              <p className="text-xs text-gray-400">Settings & Configuration</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{ activeTabData?.label }</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Settings & Configuration</p>
             </div>
           </div>
 
-          <div className="bg-gray-800/80 rounded-2xl p-6 border border-gray-700 shadow-2xl relative min-h-[500px]">
+          <div className="bg-white/90 dark:bg-gray-800/80 rounded-2xl p-2.5 sm:p-5 md:p-6 border border-gray-200 dark:border-gray-700 shadow-xl relative min-h-[500px]">
             <React.Suspense fallback={
-              <div className="flex flex-col items-center justify-center h-64 text-white/60 gap-4">
-                <div className="w-10 h-10 border-4 border-gray-600 border-t-orange-500 rounded-full animate-spin"></div>
+              <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-white/60 gap-4">
+                <div className="w-10 h-10 border-4 border-gray-300 dark:border-gray-600 border-t-orange-500 rounded-full animate-spin"></div>
                 Loading Module...
               </div>
             }>

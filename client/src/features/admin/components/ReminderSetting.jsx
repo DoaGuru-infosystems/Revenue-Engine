@@ -509,24 +509,24 @@ export default function ReminderSetting() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 text-gray-900 dark:text-white transition-colors">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent border border-orange-500/20 rounded-2xl p-6">
+      <div className="bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-transparent border border-orange-500/20 rounded-2xl p-4 sm:p-6 shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <BellRing className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-3.5 sm:gap-4">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
+              <BellRing className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Meeting Reminder Settings</h2>
-              <p className="text-xs text-gray-400 mt-1">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Meeting Reminder Settings</h2>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                 Configure notifications sent 1 week before service deadlines daily at 10 AM, 12 PM, and 3 PM.
               </p>
             </div>
           </div>
           <button
             onClick={loadSettings}
-            className="flex items-center gap-2 px-3.5 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-200 text-xs font-semibold rounded-xl border border-gray-600/50 transition-all"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-600/50 shadow-sm transition-all"
             title="Refresh settings"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -538,45 +538,45 @@ export default function ReminderSetting() {
       {/* Grid: Owner & Manager Details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 1. Owner Configuration Card */}
-        <div className="bg-gray-900/40 border border-gray-700/60 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+        <div className="bg-white/90 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/60 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-125"></div>
           
-          <div className="flex items-center gap-3 mb-5 border-b border-gray-700/50 pb-4">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
+          <div className="flex items-center gap-3 mb-5 border-b border-gray-100 dark:border-gray-700/50 pb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 border border-orange-500/20 dark:border-orange-500/30 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Company Owner Details</h3>
-              <p className="text-xs text-gray-400">Dynamic recipient for all owner alerts across Revenue Engine</p>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">Company Owner Details</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Dynamic recipient for all owner alerts across Revenue Engine</p>
             </div>
           </div>
 
           <form onSubmit={handleSaveOwner} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">Owner Name *</label>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">Owner Name *</label>
               <div className="relative">
-                <User className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+                <User className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                 <input
                   type="text"
                   value={owner.name}
                   onChange={(e) => setOwner({ ...owner, name: e.target.value })}
                   placeholder="e.g. Ad Dubay"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+                  className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">Owner Email Address *</label>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">Owner Email Address *</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+                <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                 <input
                   type="email"
                   value={owner.email}
                   onChange={(e) => setOwner({ ...owner, email: e.target.value })}
                   placeholder="e.g. owner@doaguru.com"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+                  className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
                   required
                 />
               </div>
@@ -584,13 +584,13 @@ export default function ReminderSetting() {
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-semibold text-gray-300">WhatsApp / Phone Number *</label>
-                <span className={`text-[10px] font-mono ${owner.phone_number?.length === 10 ? 'text-emerald-400 font-semibold' : 'text-gray-500'}`}>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">WhatsApp / Phone Number *</label>
+                <span className={`text-[10px] font-mono ${owner.phone_number?.length === 10 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-400 dark:text-gray-500'}`}>
                   {owner.phone_number?.length || 0}/10 digits
                 </span>
               </div>
               <div className="relative">
-                <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+                <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                 <input
                   type="tel"
                   inputMode="numeric"
@@ -598,11 +598,11 @@ export default function ReminderSetting() {
                   value={owner.phone_number}
                   onChange={(e) => setOwner({ ...owner, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                   placeholder="e.g. 7000102121 (10 digits only)"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors font-mono tracking-wide"
+                  className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors font-mono tracking-wide"
                   required
                 />
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">10-digit mobile number for WhatsApp alerts & daily cron summaries</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">10-digit mobile number for WhatsApp alerts & daily cron summaries</p>
             </div>
 
             <div className="pt-2 flex justify-end">
@@ -619,45 +619,45 @@ export default function ReminderSetting() {
         </div>
 
         {/* 2. Manager Configuration Card */}
-        <div className="bg-gray-900/40 border border-gray-700/60 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+        <div className="bg-white/90 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/60 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-125"></div>
 
-          <div className="flex items-center gap-3 mb-5 border-b border-gray-700/50 pb-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+          <div className="flex items-center gap-3 mb-5 border-b border-gray-100 dark:border-gray-700/50 pb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 dark:border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
               <Briefcase className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Project Manager Details</h3>
-              <p className="text-xs text-gray-400">Receives all upcoming meeting reminders across teams</p>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">Project Manager Details</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Receives all upcoming meeting reminders across teams</p>
             </div>
           </div>
 
           <form onSubmit={handleSaveManager} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">Manager Name *</label>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">Manager Name *</label>
               <div className="relative">
-                <User className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+                <User className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                 <input
                   type="text"
                   value={manager.name}
                   onChange={(e) => setManager({ ...manager, name: e.target.value })}
                   placeholder="e.g. Operations Manager"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">Manager Email Address *</label>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">Manager Email Address *</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+                <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                 <input
                   type="email"
                   value={manager.email}
                   onChange={(e) => setManager({ ...manager, email: e.target.value })}
                   placeholder="e.g. manager@doaguru.com"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
                   required
                 />
               </div>
@@ -665,13 +665,13 @@ export default function ReminderSetting() {
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs font-semibold text-gray-300">Manager WhatsApp / Phone *</label>
-                <span className={`text-[10px] font-mono ${manager.phone_number?.length === 10 ? 'text-emerald-400 font-semibold' : 'text-gray-500'}`}>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Manager WhatsApp / Phone *</label>
+                <span className={`text-[10px] font-mono ${manager.phone_number?.length === 10 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-400 dark:text-gray-500'}`}>
                   {manager.phone_number?.length || 0}/10 digits
                 </span>
               </div>
               <div className="relative">
-                <Phone className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+                <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
                 <input
                   type="tel"
                   inputMode="numeric"
@@ -679,11 +679,11 @@ export default function ReminderSetting() {
                   value={manager.phone_number}
                   onChange={(e) => setManager({ ...manager, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                   placeholder="e.g. 9826012345 (10 digits only)"
-                  className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors font-mono tracking-wide"
+                  className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors font-mono tracking-wide"
                   required
                 />
               </div>
-              <p className="text-[11px] text-gray-500 mt-1">Dispatches alerts directly to Manager's WhatsApp (Must be 10 digits)</p>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">Dispatches alerts directly to Manager's WhatsApp (Must be 10 digits)</p>
             </div>
 
             <div className="pt-2 flex justify-end">
@@ -701,15 +701,15 @@ export default function ReminderSetting() {
       </div>
 
       {/* 3. External API Integration Card */}
-      <div className="bg-gray-900/40 border border-gray-700/60 rounded-2xl p-6 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 border-b border-gray-700/50 pb-4">
+      <div className="bg-white/90 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/60 rounded-2xl p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 border-b border-gray-100 dark:border-gray-700/50 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 dark:border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
               <Globe className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">External Employee API Configuration</h3>
-              <p className="text-xs text-gray-400">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">External Employee API Configuration</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Connect external company HR/CRM application to fetch all Team Leads automatically
               </p>
             </div>
@@ -720,9 +720,9 @@ export default function ReminderSetting() {
               type="button"
               onClick={handleSaveApiConfig}
               disabled={savingApi}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-semibold rounded-xl border border-gray-600 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-600 transition-all disabled:opacity-50"
             >
-              <Save className="w-3.5 h-3.5 text-gray-400" />
+              <Save className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
               Save Config
             </button>
             <button
@@ -743,29 +743,29 @@ export default function ReminderSetting() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-300 mb-1.5">External API Endpoint URL</label>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">External API Endpoint URL</label>
             <div className="relative">
-              <Globe className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
               <input
                 type="url"
                 value={apiConfig.api_endpoint}
                 onChange={(e) => setApiConfig({ ...apiConfig, api_endpoint: e.target.value })}
                 placeholder="https://api.yourcompany.com/v1/employees"
-                className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-300 mb-1.5">Authorization Header / Bearer Token (Optional)</label>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">Authorization Header / Bearer Token (Optional)</label>
             <div className="relative">
-              <Key className="w-4 h-4 text-gray-500 absolute left-3 top-3" />
+              <Key className="w-4 h-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
               <input
                 type="text"
                 value={apiConfig.api_token}
                 onChange={(e) => setApiConfig({ ...apiConfig, api_token: e.target.value })}
                 placeholder="Bearer eyJhbGciOi... or API Key"
-                className="w-full bg-gray-800/60 border border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
@@ -773,34 +773,34 @@ export default function ReminderSetting() {
       </div>
 
       {/* 4. Team Leads Directory Section */}
-      <div className="bg-gray-900/40 border border-gray-700/60 rounded-2xl p-6 shadow-xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-700/50 pb-4">
+      <div className="bg-white/90 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/60 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700/50 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 dark:border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Configured Team Leads ({teamLeads.length})</h3>
-              <p className="text-xs text-gray-400">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">Configured Team Leads ({teamLeads.length})</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Mapped teams will appear in Proforma creation. The respective TL will receive meeting reminders.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="relative flex-1 sm:flex-initial">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder="Search team lead..."
                 value={tlSearch}
                 onChange={(e) => setTlSearch(e.target.value)}
-                className="bg-gray-800/60 border border-gray-700/60 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 w-48 sm:w-56"
+                className="bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl pl-9 pr-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 w-full sm:w-56 transition-colors"
               />
             </div>
             <button
               onClick={handleOpenAddModal}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-105"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-500/20 transition-all hover:scale-105 shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Manually
@@ -810,34 +810,34 @@ export default function ReminderSetting() {
 
         {/* Team Leads Table / Cards */}
         {filteredTeamLeads.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {filteredTeamLeads.map((tl) => (
               <div
                 key={tl.id}
-                className="bg-gray-800/50 border border-gray-700/60 hover:border-gray-600 rounded-xl p-4 transition-all hover:shadow-lg space-y-3 relative group"
+                className="bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl p-4 transition-all hover:shadow-md space-y-3 relative group"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
                       {tl.team_name || "Unassigned"}
                     </span>
-                    <h4 className="text-sm font-bold text-white mt-1.5">{tl.name}</h4>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mt-1.5 truncate">{tl.name}</h4>
                     {tl.designation && (
-                      <p className="text-[11px] text-gray-400">{tl.designation}</p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{tl.designation}</p>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
                       onClick={() => handleOpenEditModal(tl)}
-                      className="p-1.5 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-lg transition-colors"
                       title="Edit details"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDeleteTeamLead(tl)}
-                      className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-lg transition-colors"
+                      className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/20 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-lg transition-colors"
                       title="Delete team lead"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -845,13 +845,13 @@ export default function ReminderSetting() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5 text-xs text-gray-300 border-t border-gray-700/40 pt-2.5">
+                <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 border-t border-gray-200/80 dark:border-gray-700/40 pt-2.5">
                   <div className="flex items-center gap-2 truncate">
-                    <Mail className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                    <Mail className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" />
                     <span className="truncate">{tl.email || "No email"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                    <Phone className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" />
                     <span>{tl.phone_number || "No phone"}</span>
                   </div>
                 </div>
@@ -859,10 +859,10 @@ export default function ReminderSetting() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 border border-dashed border-gray-700/80 rounded-xl text-gray-400 space-y-3">
-            <Users className="w-10 h-10 mx-auto text-gray-600" />
-            <p className="text-sm">No Team Leads found.</p>
-            <p className="text-xs text-gray-500">
+          <div className="text-center py-12 border border-dashed border-gray-200 dark:border-gray-700/80 rounded-xl text-gray-400 space-y-3">
+            <Users className="w-10 h-10 mx-auto text-gray-400 dark:text-gray-600" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">No Team Leads found.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
               Click "Fetch Team Leads" to sync from external API, or click "Add Manually" to create one.
             </p>
           </div>
@@ -871,15 +871,15 @@ export default function ReminderSetting() {
 
       {/* Modal: Add / Edit Team Lead */}
       {showTlModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
                 {editingTl ? "Edit Team Lead" : "Add Team Lead Manually"}
               </h3>
               <button
                 onClick={() => setShowTlModal(false)}
-                className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white rounded-lg transition-colors"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -887,7 +887,7 @@ export default function ReminderSetting() {
 
             <form onSubmit={handleSaveTeamLead} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wider">
                   Team Name * (e.g. Web Development, SEO, Graphic Designing)
                 </label>
                 <input
@@ -895,13 +895,13 @@ export default function ReminderSetting() {
                   value={tlFormData.team_name}
                   onChange={(e) => setTlFormData({ ...tlFormData, team_name: e.target.value })}
                   placeholder="e.g. Web Development"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wider">
                   Team Lead Name *
                 </label>
                 <input
@@ -909,13 +909,13 @@ export default function ReminderSetting() {
                   value={tlFormData.name}
                   onChange={(e) => setTlFormData({ ...tlFormData, name: e.target.value })}
                   placeholder="e.g. Rahul Sharma"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wider">
                   Email Address *
                 </label>
                 <input
@@ -923,17 +923,17 @@ export default function ReminderSetting() {
                   value={tlFormData.email}
                   onChange={(e) => setTlFormData({ ...tlFormData, email: e.target.value })}
                   placeholder="e.g. rahul@doaguru.com"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                   required
                 />
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-semibold text-gray-300">
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                     WhatsApp / Phone Number
                   </label>
-                  <span className={`text-[10px] font-mono ${tlFormData.phone_number?.length === 10 ? 'text-emerald-400 font-semibold' : 'text-gray-500'}`}>
+                  <span className={`text-[10px] font-mono ${tlFormData.phone_number?.length === 10 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-400 dark:text-gray-500'}`}>
                     {tlFormData.phone_number?.length || 0}/10 digits
                   </span>
                 </div>
@@ -944,12 +944,12 @@ export default function ReminderSetting() {
                   value={tlFormData.phone_number}
                   onChange={(e) => setTlFormData({ ...tlFormData, phone_number: e.target.value.replace(/\D/g, "").slice(0, 10) })}
                   placeholder="e.g. 9876543210 (10 digits)"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500 font-mono tracking-wide"
+                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-purple-500 font-mono tracking-wide"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wider">
                   Designation (Optional)
                 </label>
                 <input
@@ -957,15 +957,15 @@ export default function ReminderSetting() {
                   value={tlFormData.designation}
                   onChange={(e) => setTlFormData({ ...tlFormData, designation: e.target.value })}
                   placeholder="e.g. Sr. Tech Lead"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
 
-              <div className="pt-3 flex justify-end gap-3 border-t border-gray-800">
+              <div className="pt-3 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={() => setShowTlModal(false)}
-                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded-xl transition-colors"
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl transition-colors"
                 >
                   Cancel
                 </button>

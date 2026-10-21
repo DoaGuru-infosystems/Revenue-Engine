@@ -233,13 +233,13 @@ export default function BdExplorePlansPage() {
   return (
     <div className="flex flex-col h-full max-h-screen overflow-hidden">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Plan Explorer</h1>
-        <div className="bg-white/10 px-4 py-1.5 rounded-full border border-white/10">
-          <span className="text-yellow-400 font-mono text-sm">{plans.length} Plans Available</span>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Plan Explorer</h1>
+        <div className="bg-amber-500/10 dark:bg-white/10 px-4 py-1.5 rounded-full border border-amber-500/20 dark:border-white/10">
+          <span className="text-amber-700 dark:text-yellow-400 font-mono text-sm font-semibold">{plans.length} Plans Available</span>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)] overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)] overflow-hidden text-gray-900 dark:text-white">
         <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
           {plans.map((plan) => (
             <button
@@ -247,49 +247,49 @@ export default function BdExplorePlansPage() {
               onClick={() => setSelectedPlanId(plan.id)}
               className={`text-left p-4 rounded-2xl border transition-all duration-200 ${
                 selectedPlanId === plan.id
-                  ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-yellow-500/50 shadow-lg shadow-yellow-500/10"
-                  : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                  ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/50 shadow-lg text-amber-900 dark:text-yellow-300"
+                  : "bg-white/90 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm"
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${selectedPlanId === plan.id ? "bg-yellow-500 text-white" : "bg-white/10 text-white/50"}`}>
+                <div className={`p-2 rounded-lg ${selectedPlanId === plan.id ? "bg-amber-500 text-slate-950 font-bold" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"}`}>
                   <List size={20} />
                 </div>
                 <div>
-                  <h3 className={`font-semibold ${selectedPlanId === plan.id ? "text-yellow-400" : "text-white/80"}`}>
+                  <h3 className={`font-semibold ${selectedPlanId === plan.id ? "text-amber-800 dark:text-yellow-400" : "text-gray-900 dark:text-white/80"}`}>
                     {plan.title}
                   </h3>
-                  <p className="text-xs text-white/40 mt-1">₹{plan.totalAmount.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500 dark:text-white/40 mt-1 font-medium">₹{plan.totalAmount.toLocaleString()}</p>
                 </div>
               </div>
             </button>
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-3xl border border-gray-200 dark:border-white/10 p-8 custom-scrollbar shadow-sm">
           {activePlan ? (
             <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-4xl font-bold text-white mb-2">{activePlan.title}</h2>
-                  <p className="text-white/50 text-lg leading-relaxed">{activePlan.description}</p>
+                  <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{activePlan.title}</h2>
+                  <p className="text-gray-600 dark:text-white/50 text-lg leading-relaxed">{activePlan.description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-white/40 text-sm uppercase tracking-wider mb-1 font-semibold">Total Investment</p>
-                  <p className="text-4xl font-black text-yellow-400">₹{activePlan.totalAmount.toLocaleString()}</p>
+                  <p className="text-gray-500 dark:text-white/40 text-sm uppercase tracking-wider mb-1 font-semibold">Total Investment</p>
+                  <p className="text-4xl font-black text-amber-600 dark:text-yellow-400">₹{activePlan.totalAmount.toLocaleString()}</p>
                 </div>
               </div>
 
-              <hr className="border-white/10" />
+              <hr className="border-gray-200 dark:border-white/10" />
 
               <div className="space-y-4">
-                <h3 className="text-white font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="text-yellow-500" size={18} /> Included Services
+                <h3 className="text-gray-900 dark:text-white font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="text-amber-500" size={18} /> Included Services
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {activePlan.features.map((feature, idx) => (
-                    <div key={idx} className="bg-white/5 border border-white/5 p-4 rounded-xl text-white/70 text-sm flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-1.5 shrink-0" />
+                    <div key={idx} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 p-4 rounded-xl text-gray-700 dark:text-white/70 text-sm flex items-start gap-3 font-medium">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
                       {feature}
                     </div>
                   ))}
@@ -299,14 +299,14 @@ export default function BdExplorePlansPage() {
               <button
                 onClick={() => handleCreateQuotation(activePlan)}
                 disabled={loading}
-                className="w-full py-5 rounded-2xl bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold text-xl shadow-xl shadow-yellow-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4"
+                className="w-full py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-xl shadow-xl shadow-amber-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4"
               >
                 {loading ? "Processing..." : "Generate Full Quotation"}
                 <ArrowRight size={22} />
               </button>
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center text-white/20 italic">
+            <div className="h-full flex items-center justify-center text-gray-400 dark:text-white/40 font-medium italic text-base">
               Select a plan from the left sidebar to view details
             </div>
           )}

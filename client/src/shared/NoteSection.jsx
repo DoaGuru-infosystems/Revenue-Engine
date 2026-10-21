@@ -318,156 +318,176 @@ const dispatch = useDispatch();
 
   return (
     <>
-      <div className="min-h-screen flex flex-wrap gap-3 items-center flex-cloumn justify-center bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white p-6">
-        <div className="w-full max-w-xl bg-white/10 backdrop-blur rounded-xl px-10 py-8 space-y-6 shadow-2xl">
-          <h2 className="text-3xl font-bold text-white text-center mb-6">
-            🧮 Note Section
-          </h2>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition"
-          >
-            ← Go Back
-          </button>
+      <div className="w-full flex flex-col lg:flex-row gap-6 items-start justify-center text-gray-900 dark:text-white transition-colors">
+        {/* Note Section 1 */}
+        <div className="w-full lg:flex-1 max-w-xl bg-white/90 dark:bg-slate-900/60 border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>📋</span> Standard Notes
+            </h2>
+            {id && (
+              <button
+                onClick={() => navigate(-1)}
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition"
+              >
+                ← Go Back
+              </button>
+            )}
+          </div>
+
           <div>
-            <label className="block font-semibold mb-1">Note Name</label>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Note Name / Content</label>
             <input
-              className="w-full p-2 border rounded bg-white text-black"
+              className="w-full p-2.5 border border-gray-200 dark:border-white/15 rounded-xl bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors text-sm"
               value={selectedNote}
               onChange={(e) => {
                 setSelectedNote(e.target.value);
               }}
-              placeholder="Enter the Note Text"
+              placeholder="Enter standard quotation note text..."
             />
           </div>
 
-          <button
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold p-3 rounded mt-4"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? "Save..." : editId ? "Update Note" : "Create Note"}
-          </button>
-          <button
-            className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold p-3 rounded mt-2"
-            onClick={resetForm}
-          >
-            Reset Form
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <button
+              className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-orange-500/20 transition-all hover:opacity-95 text-sm"
+              onClick={handleSave}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : editId ? "Update Note" : "Create Note"}
+            </button>
+            <button
+              className="sm:w-auto px-4 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-gray-700 dark:text-slate-200 font-semibold py-2.5 rounded-xl border border-gray-200 dark:border-white/10 transition-colors text-sm"
+              onClick={resetForm}
+            >
+              Reset
+            </button>
+          </div>
 
-          {/* Client Orders */}
+          <div className="border-t border-gray-100 dark:border-white/10 pt-4">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <Package className="w-4 h-4 text-amber-500" />
+              Existing Notes ({getData.length})
+            </h3>
+            <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+              {getData.map((order) => (
+                <div
+                  key={order.id}
+                  className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200/80 dark:border-white/10 hover:bg-gray-100/70 dark:hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-3 text-gray-900 dark:text-white">
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <div className="font-medium text-sm text-gray-800 dark:text-slate-200 break-words">
+                        {order.note_text}
+                      </div>
+                    </div>
 
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Note Added
-          </h3>
-          <div className="space-y-4">
-            {getData.map((order) => (
-              <div
-                key={order.id}
-                className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-white">
-                  {/* Left Section: Info */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 font-semibold text-lg">
-                      <span>→ {order.note_text}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleEdit(order)}
+                        className="bg-amber-50 dark:bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-bold transition-colors"
+                        title="Edit"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => handleDelete(order.id)}
+                        className="bg-red-50 dark:bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-bold transition-colors"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
                     </div>
                   </div>
-
-                  {/* Right Section: Amount + Delete */}
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <button
-                      onClick={() => handleEdit(order)}
-                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                      title="Edit"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => handleDelete(order.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+              {getData.length === 0 && (
+                <p className="text-center py-6 text-xs text-gray-400 dark:text-slate-400">
+                  No standard notes configured.
+                </p>
+              )}
+            </div>
           </div>
         </div>
-        <div className="w-full max-w-xl bg-white/10 backdrop-blur rounded-xl px-10 py-8 space-y-6 shadow-2xl">
-          <h2 className="text-3xl font-bold text-white text-center mb-6">
-            🧮 Balance Proforma Notes
-          </h2>
+
+        {/* Note Section 2: Balance Proforma Notes */}
+        <div className="w-full lg:flex-1 max-w-xl bg-white/90 dark:bg-slate-900/60 border border-gray-200 dark:border-white/10 rounded-2xl p-4 sm:p-6 space-y-5 shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <span>⚖️</span> Balance Proforma Notes
+            </h2>
+          </div>
 
           <div>
-            <label className="block font-semibold mb-1">Note Name</label>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Note Name / Content</label>
             <input
-              className="w-full p-2 border rounded bg-white text-black"
+              className="w-full p-2.5 border border-gray-200 dark:border-white/15 rounded-xl bg-white dark:bg-slate-900/70 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors text-sm"
               value={selectedBalanceNote}
               onChange={(e) => {
                 setSelectedBalanceNote(e.target.value);
               }}
-              placeholder="Enter the Balance Proforma Note Text"
+              placeholder="Enter balance proforma note text..."
             />
           </div>
 
-          <button
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold p-3 rounded mt-4"
-            onClick={handleSaveBalance}
-            disabled={loadingBalance}
-          >
-            {loadingBalance ? "Save..." : editBalanceId ? "Update Note" : "Create Note"}
-          </button>
-          <button
-            className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold p-3 rounded mt-2"
-            onClick={resetBalanceForm}
-          >
-            Reset Form
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <button
+              className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-orange-500/20 transition-all hover:opacity-95 text-sm"
+              onClick={handleSaveBalance}
+              disabled={loadingBalance}
+            >
+              {loadingBalance ? "Saving..." : editBalanceId ? "Update Note" : "Create Note"}
+            </button>
+            <button
+              className="sm:w-auto px-4 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 text-gray-700 dark:text-slate-200 font-semibold py-2.5 rounded-xl border border-gray-200 dark:border-white/10 transition-colors text-sm"
+              onClick={resetBalanceForm}
+            >
+              Reset
+            </button>
+          </div>
 
-          {/* Client Orders */}
+          <div className="border-t border-gray-100 dark:border-white/10 pt-4">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <Package className="w-4 h-4 text-amber-500" />
+              Existing Balance Notes ({balanceData.length})
+            </h3>
+            <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+              {balanceData.map((order) => (
+                <div
+                  key={order.id}
+                  className="p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200/80 dark:border-white/10 hover:bg-gray-100/70 dark:hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-3 text-gray-900 dark:text-white">
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <div className="font-medium text-sm text-gray-800 dark:text-slate-200 break-words">
+                        {order.note_text}
+                      </div>
+                    </div>
 
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Balance Proforma Notes Added
-          </h3>
-          <div className="space-y-4">
-            {balanceData.map((order) => (
-              <div
-                key={order.id}
-                className="p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/20 transition"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-white">
-                  {/* Left Section: Info */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 font-semibold text-lg">
-                      <span>→ {order.note_text}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleEditBalance(order)}
+                        className="bg-amber-50 dark:bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-bold transition-colors"
+                        title="Edit"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBalance(order.id)}
+                        className="bg-red-50 dark:bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg w-8 h-8 flex items-center justify-center text-xs font-bold transition-colors"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
                     </div>
                   </div>
-
-                  {/* Right Section: Amount + Delete */}
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <button
-                      onClick={() => handleEditBalance(order)}
-                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                      title="Edit"
-                    >
-                      ✎
-                    </button>
-                    <button
-                      onClick={() => handleDeleteBalance(order.id)}
-                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+              {balanceData.length === 0 && (
+                <p className="text-center py-6 text-xs text-gray-400 dark:text-slate-400">
+                  No balance notes configured.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>

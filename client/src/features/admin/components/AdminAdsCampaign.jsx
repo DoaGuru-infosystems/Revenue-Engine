@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
 const inputClassName =
-  "w-full rounded-xl border border-white/15 bg-slate-900/60 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30";
+  "w-full rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-slate-900/60 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-colors";
 
 const AdminAdsCampaign = () => {
   const baseURL = API_BASE_URL;
@@ -270,47 +270,47 @@ const AdminAdsCampaign = () => {
   }, [adsList]);
 
   return (
-    <div className="space-y-6 text-white">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/85 via-slate-800/70 to-amber-900/60 p-4 sm:p-6">
+    <div className="space-y-6 text-gray-900 dark:text-white transition-colors">
+      <section className="rounded-3xl border border-amber-500/20 dark:border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-600/15 dark:from-slate-900/85 dark:via-slate-800/70 dark:to-amber-900/60 p-4 sm:p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/80">
+            <p className="text-xs uppercase tracking-[0.2em] font-bold text-amber-700 dark:text-amber-300/80">
               Dashboard Module
             </p>
-            <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Ads Campaign Services</h2>
-            <p className="mt-2 text-sm text-slate-300">
+            <h2 className="mt-2 text-2xl font-bold sm:text-3xl text-gray-900 dark:text-white">Ads Campaign Services</h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">
               Manage campaign slabs, percentage rules, and keep pricing structured for sales
               teams.
             </p>
           </div>
-          <div className="grid w-full gap-3 sm:grid-cols-3 md:w-auto">
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <div className="text-xs uppercase text-slate-400">Services</div>
-              <div className="mt-1 text-xl font-semibold">{stats.totalRows}</div>
+          <div className="grid w-full grid-cols-3 gap-2 sm:gap-3 md:w-auto">
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/80 dark:bg-white/5 p-2.5 sm:px-4 sm:py-3 shadow-sm text-center sm:text-left">
+              <div className="text-[10px] sm:text-xs uppercase font-medium text-gray-500 dark:text-slate-400">Services</div>
+              <div className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.totalRows}</div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <div className="text-xs uppercase text-slate-400">Categories</div>
-              <div className="mt-1 text-xl font-semibold">{stats.uniqueCategories}</div>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/80 dark:bg-white/5 p-2.5 sm:px-4 sm:py-3 shadow-sm text-center sm:text-left">
+              <div className="text-[10px] sm:text-xs uppercase font-medium text-gray-500 dark:text-slate-400">Categories</div>
+              <div className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.uniqueCategories}</div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <div className="text-xs uppercase text-slate-400">Avg. %</div>
-              <div className="mt-1 text-xl font-semibold">{stats.avgPercentage}%</div>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/80 dark:bg-white/5 p-2.5 sm:px-4 sm:py-3 shadow-sm text-center sm:text-left">
+              <div className="text-[10px] sm:text-xs uppercase font-medium text-gray-500 dark:text-slate-400">Avg. %</div>
+              <div className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.avgPercentage}%</div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 sm:p-6">
+      <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/55 p-4 sm:p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
-          <Megaphone className="h-5 w-5 text-amber-300" />
-          <h3 className="text-lg font-semibold">
+          <Megaphone className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             {editingId ? "Update Campaign Service" : "Add Campaign Service"}
           </h3>
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-sm text-slate-300">Ads Category</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Ads Category</label>
             <input
               type="text"
               name="ads_category"
@@ -322,7 +322,7 @@ const AdminAdsCampaign = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-slate-300">Amount Range Start</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Amount Range Start</label>
             <input
               type="number"
               name="amt_range_start"
@@ -334,7 +334,7 @@ const AdminAdsCampaign = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-slate-300">Amount Range End</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Amount Range End</label>
             <input
               type="text"
               name="amt_range_end"
@@ -346,7 +346,7 @@ const AdminAdsCampaign = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-slate-300">Percentage (%)</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300">Percentage (%)</label>
             <input
               type="number"
               name="percentage"
@@ -360,7 +360,7 @@ const AdminAdsCampaign = () => {
           <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row">
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-500/20 transition hover:opacity-90 active:scale-95"
             >
               <Percent className="h-4 w-4" />
               {editingId ? "Update Service" : "Save Service"}
@@ -370,7 +370,7 @@ const AdminAdsCampaign = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-xl border border-white/20 px-5 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                className="rounded-xl border border-gray-300 dark:border-white/20 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-200 transition hover:bg-gray-100 dark:hover:bg-white/10"
               >
                 Cancel Edit
               </button>
@@ -379,34 +379,34 @@ const AdminAdsCampaign = () => {
         </form>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 sm:p-6">
+      <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/55 p-4 sm:p-6 shadow-sm">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="h-5 w-5 text-amber-300" />
-            <h3 className="text-lg font-semibold">Existing Ads Services</h3>
+            <Layers className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Existing Ads Services</h3>
           </div>
 
           <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
             <input
               type="search"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               placeholder="Search category or range"
-              className="w-full rounded-xl border border-white/15 bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+              className="w-full rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-colors"
             />
           </div>
         </div>
 
         {filteredAdsList.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-slate-900/35 px-4 py-10 text-center text-slate-300">
+          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/15 bg-gray-50/50 dark:bg-slate-900/35 px-4 py-10 text-center text-gray-500 dark:text-slate-300">
             No ads services found for the current filter.
           </div>
         ) : (
           <>
             <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full text-sm">
-                <thead className="bg-white/5 text-slate-300">
+                <thead className="bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-slate-300">
                   <tr>
                     <th className="px-4 py-3 text-left">#</th>
                     <th className="px-4 py-3 text-left">Category</th>
@@ -417,27 +417,27 @@ const AdminAdsCampaign = () => {
                     <th className="px-4 py-3 text-left">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                   {filteredAdsList.map((item, index) => (
-                    <tr key={item.id} className="hover:bg-white/5">
-                      <td className="px-4 py-3 text-slate-300">{index + 1}</td>
-                      <td className="px-4 py-3 font-medium text-white">{item.ads_category}</td>
-                      <td className="px-4 py-3 text-slate-300">{item.amt_range_start}</td>
-                      <td className="px-4 py-3 text-slate-300">{item.amt_range_end}</td>
-                      <td className="px-4 py-3 text-amber-300">{item.percentage}%</td>
-                      <td className="px-4 py-3 text-slate-400">{item.created_at}</td>
+                    <tr key={item.id} className="hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3 text-gray-500 dark:text-slate-300">{index + 1}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{item.ads_category}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{item.amt_range_start}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{item.amt_range_end}</td>
+                      <td className="px-4 py-3 font-bold text-amber-600 dark:text-amber-400">{item.percentage}%</td>
+                      <td className="px-4 py-3 text-gray-400 dark:text-slate-400 text-xs">{item.created_at}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleEdit(item)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
+                            className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
                           >
                             <Edit className="h-3.5 w-3.5" />
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Delete
@@ -454,43 +454,43 @@ const AdminAdsCampaign = () => {
               {filteredAdsList.map((item, index) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border border-white/10 bg-slate-900/60 p-4"
+                  className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/60 p-4 shadow-sm"
                 >
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.15em] text-slate-400">
-                        Service {index + 1}
+                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 dark:text-slate-400">
+                        Service #{index + 1}
                       </p>
-                      <p className="text-base font-semibold text-white">{item.ads_category}</p>
+                      <p className="text-base font-bold text-gray-900 dark:text-white">{item.ads_category}</p>
                     </div>
-                    <p className="rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-200">
+                    <p className="rounded-full bg-amber-100 dark:bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-transparent">
                       {item.percentage}%
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-xs text-slate-300">
-                    <div className="rounded-lg bg-white/5 p-2.5">
-                      <p className="text-slate-400">Range Start</p>
-                      <p className="mt-1 text-sm font-medium text-white">{item.amt_range_start}</p>
+                  <div className="grid grid-cols-2 gap-3 text-xs text-gray-600 dark:text-slate-300">
+                    <div className="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-transparent p-2.5">
+                      <p className="text-gray-400 dark:text-slate-400 text-[11px]">Range Start</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{item.amt_range_start}</p>
                     </div>
-                    <div className="rounded-lg bg-white/5 p-2.5">
-                      <p className="text-slate-400">Range End</p>
-                      <p className="mt-1 text-sm font-medium text-white">{item.amt_range_end}</p>
+                    <div className="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-transparent p-2.5">
+                      <p className="text-gray-400 dark:text-slate-400 text-[11px]">Range End</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{item.amt_range_end}</p>
                     </div>
                   </div>
 
-                  <p className="mt-3 text-xs text-slate-500">Created: {item.created_at}</p>
+                  <p className="mt-3 text-[11px] text-gray-400 dark:text-slate-500">Created: {item.created_at}</p>
 
                   <div className="mt-4 flex items-center gap-2">
                     <button
                       onClick={() => handleEdit(item)}
-                      className="flex-1 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300"
+                      className="flex-1 rounded-lg border border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="flex-1 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300"
+                      className="flex-1 rounded-lg border border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                     >
                       Delete
                     </button>

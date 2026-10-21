@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
 const inputClassName =
-  "w-full rounded-xl border border-white/15 bg-slate-900/60 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30";
+  "w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/60 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all";
 
 export default function AdminAddPlanPage() {
   const baseURL = API_BASE_URL;
@@ -217,41 +217,41 @@ export default function AdminAddPlanPage() {
   }, [getData]);
 
   return (
-    <div className="space-y-6 text-white">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/85 via-slate-800/70 to-orange-900/60 p-4 sm:p-6">
+    <div className="space-y-6 text-slate-900 dark:text-white">
+      <section className="rounded-3xl border border-amber-500/20 dark:border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-600/15 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-amber-950/70 p-4 sm:p-6 shadow-xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-orange-300/90">Plan Manager</p>
-            <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Create & Maintain Plans</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300 font-bold">Plan Manager</p>
+            <h2 className="mt-2 text-2xl font-bold sm:text-3xl text-gray-900 dark:text-white">Create & Maintain Plans</h2>
+            <p className="mt-2 max-w-2xl text-sm text-gray-600 dark:text-slate-200">
               Add new plans, rename existing ones, and quickly open plan details for service mapping.
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 md:w-auto">
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase text-slate-400">Rows</p>
-              <p className="mt-1 text-xl font-semibold">{getData.length}</p>
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-right backdrop-blur-sm shadow-sm">
+              <p className="text-[10px] sm:text-xs uppercase text-gray-500 dark:text-slate-300 font-semibold tracking-wider">Rows</p>
+              <p className="mt-1 text-base sm:text-xl font-bold text-gray-900 dark:text-white">{getData.length}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase text-slate-400">Unique Plans</p>
-              <p className="mt-1 text-xl font-semibold">{uniquePlansCount}</p>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-right backdrop-blur-sm shadow-sm">
+              <p className="text-[10px] sm:text-xs uppercase text-gray-500 dark:text-slate-300 font-semibold tracking-wider">Unique Plans</p>
+              <p className="mt-1 text-base sm:text-xl font-bold text-gray-900 dark:text-white">{uniquePlansCount}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase text-slate-400">Editing</p>
-              <p className="mt-1 text-xl font-semibold">{editId ? "Yes" : "No"}</p>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-right backdrop-blur-sm shadow-sm">
+              <p className="text-[10px] sm:text-xs uppercase text-gray-500 dark:text-slate-300 font-semibold tracking-wider">Editing</p>
+              <p className="mt-1 text-base sm:text-xl font-bold text-amber-600 dark:text-amber-300">{editId ? "Yes" : "No"}</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 sm:p-6">
+      <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/55 p-4 sm:p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
-          <List className="h-5 w-5 text-orange-300" />
-          <h3 className="text-lg font-semibold">{editId ? "Edit Plan" : "Add New Plan"}</h3>
+          <List className="h-5 w-5 text-amber-500 dark:text-orange-300" />
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">{editId ? "Edit Plan" : "Add New Plan"}</h3>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[1fr_auto_auto]">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-[1fr_auto_auto]">
           <input
             className={inputClassName}
             value={selectedPlan}
@@ -262,7 +262,7 @@ export default function AdminAddPlanPage() {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 shadow-md"
           >
             <Save className="h-4 w-4" />
             {loading ? "Saving..." : editId ? "Update Plan" : "Create Plan"}
@@ -270,7 +270,7 @@ export default function AdminAddPlanPage() {
 
           <button
             onClick={resetForm}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 dark:border-white/20 px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-slate-200 transition hover:bg-gray-100 dark:hover:bg-white/10"
           >
             <RotateCcw className="h-4 w-4" />
             Reset
@@ -278,69 +278,69 @@ export default function AdminAddPlanPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 sm:p-6">
+      <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/55 p-4 sm:p-6 shadow-sm">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-orange-300" />
-            <h3 className="text-lg font-semibold">Available Plans</h3>
+            <FileText className="h-5 w-5 text-amber-500 dark:text-orange-300" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Available Plans</h3>
           </div>
           <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
             <input
               type="search"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               placeholder="Search plan name or category"
-              className="w-full rounded-xl border border-white/15 bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+              className="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
             />
           </div>
         </div>
 
         {filteredPlans.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-slate-900/35 px-4 py-10 text-center text-slate-300">
+          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-slate-900/35 px-4 py-10 text-center text-gray-500 dark:text-slate-300">
             No plans found.
           </div>
         ) : (
           <>
             <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full text-sm">
-                <thead className="bg-white/5 text-slate-300">
+                <thead className="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-slate-300 border-b border-gray-200 dark:border-white/10">
                   <tr>
-                    <th className="px-4 py-3 text-left">#</th>
-                    <th className="px-4 py-3 text-left">Plan Name</th>
-                    <th className="px-4 py-3 text-left">Category</th>
-                    <th className="px-4 py-3 text-left">Created At</th>
-                    <th className="px-4 py-3 text-left">Actions</th>
+                    <th className="px-4 py-3 text-left font-semibold">#</th>
+                    <th className="px-4 py-3 text-left font-semibold">Plan Name</th>
+                    <th className="px-4 py-3 text-left font-semibold">Category</th>
+                    <th className="px-4 py-3 text-left font-semibold">Created At</th>
+                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                   {filteredPlans.map((order, index) => (
-                    <tr key={order.id} className="hover:bg-white/5">
-                      <td className="px-4 py-3 text-slate-300">{index + 1}</td>
-                      <td className="px-4 py-3 font-semibold text-white">{order.plan_name}</td>
-                      <td className="px-4 py-3 text-slate-300">
+                    <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{index + 1}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{order.plan_name}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-slate-300">
                         {order.category_name || "Not assigned"}
                       </td>
-                      <td className="px-4 py-3 text-slate-400">{order.created_at || "-"}</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-slate-400">{order.created_at || "-"}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleEdit(order)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
+                            className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-500/20"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(order.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-500/20"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Delete
                           </button>
                           <button
                             onClick={() => navigate(`/admin/plan-details/${order.id}`)}
-                            className="rounded-lg border border-orange-300/40 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-200 hover:bg-orange-500/20"
+                            className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-semibold text-orange-700 dark:text-orange-200 hover:bg-orange-500/20"
                           >
                             Details
                           </button>
@@ -356,38 +356,38 @@ export default function AdminAddPlanPage() {
               {filteredPlans.map((order) => (
                 <div
                   key={order.id}
-                  className="rounded-xl border border-white/10 bg-slate-900/60 p-4"
+                  className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/60 p-4 shadow-sm"
                 >
-                  <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Plan Name</p>
-                  <p className="mt-1 text-base font-semibold text-white">{order.plan_name}</p>
+                  <p className="text-xs uppercase tracking-[0.15em] text-gray-500 dark:text-slate-400 font-semibold">Plan Name</p>
+                  <p className="mt-1 text-base font-bold text-gray-900 dark:text-white">{order.plan_name}</p>
 
                   <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                    <div className="rounded-lg bg-white/5 p-2.5">
-                      <p className="text-slate-400">Category</p>
-                      <p className="mt-1 text-sm text-white">{order.category_name || "-"}</p>
+                    <div className="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-transparent p-2.5">
+                      <p className="text-gray-500 dark:text-slate-400">Category</p>
+                      <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{order.category_name || "-"}</p>
                     </div>
-                    <div className="rounded-lg bg-white/5 p-2.5">
-                      <p className="text-slate-400">Created</p>
-                      <p className="mt-1 text-sm text-white">{order.created_at || "-"}</p>
+                    <div className="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-transparent p-2.5">
+                      <p className="text-gray-500 dark:text-slate-400">Created</p>
+                      <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{order.created_at || "-"}</p>
                     </div>
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-2">
                     <button
                       onClick={() => handleEdit(order)}
-                      className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300"
+                      className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-800 dark:text-amber-300"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(order.id)}
-                      className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300"
+                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-300"
                     >
                       Delete
                     </button>
                     <button
                       onClick={() => navigate(`/admin/plan-details/${order.id}`)}
-                      className="rounded-lg border border-orange-300/40 bg-orange-500/10 px-3 py-2 text-xs font-semibold text-orange-200"
+                      className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-xs font-semibold text-orange-700 dark:text-orange-200"
                     >
                       Details
                     </button>

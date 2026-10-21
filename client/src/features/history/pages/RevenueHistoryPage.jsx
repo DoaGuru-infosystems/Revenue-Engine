@@ -121,23 +121,30 @@ const RevenueHistoryPage = () => {
         [data-theme="light"] .font-body {
           color: #1a1a2e !important;
         }
-        [data-theme="light"] .text-\[\#dee2f3\] {
-          color: #1a1a2e !important;
+        [data-theme="light"] .rev-title {
+          color: #0f172a !important;
         }
-        [data-theme="light"] .text-\[\#c2c6d6\] {
-          color: #4b5563 !important;
+        [data-theme="light"] .rev-subtitle {
+          color: #475569 !important;
         }
-        [data-theme="light"] .text-\[\#c2c6d6\]\/50 {
-          color: #6b7280 !important;
+        [data-theme="light"] .rev-table-header {
+          color: #1e293b !important;
         }
-        [data-theme="light"] .text-\[\#31e193\] {
+        [data-theme="light"] .rev-table-header > div {
+          color: #1e293b !important;
+          font-weight: 700 !important;
+        }
+        [data-theme="light"] .rev-client-name {
+          color: #0f172a !important;
+        }
+        [data-theme="light"] .rev-total-amt {
+          color: #0f172a !important;
+        }
+        [data-theme="light"] .rev-received-amt {
           color: #047857 !important;
         }
-        [data-theme="light"] .text-\[\#ffb786\] {
+        [data-theme="light"] .rev-pending-amt {
           color: #c2410c !important;
-        }
-        [data-theme="light"] .text-\[\#ffb4ab\] {
-          color: #b91c1c !important;
         }
         [data-theme="light"] .glass-card {
           background: #ffffff !important;
@@ -267,11 +274,11 @@ const RevenueHistoryPage = () => {
         <section className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="font-headline text-2xl font-bold text-[#dee2f3] tracking-tight">Client Ledgers</h2>
-              <p className="text-[#c2c6d6] text-sm mt-1">Real-time ledger of digital transactions</p>
+              <h2 className="font-headline text-2xl font-bold text-gray-900 dark:text-[#dee2f3] rev-title tracking-tight">Client Ledgers</h2>
+              <p className="text-gray-600 dark:text-[#c2c6d6] rev-subtitle text-sm mt-1">Real-time ledger of digital transactions</p>
             </div>
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c2c6d6]" size={ 18 } />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#c2c6d6]" size={ 18 } />
               <input
                 type="text"
                 placeholder="Search by client name..."
@@ -284,7 +291,7 @@ const RevenueHistoryPage = () => {
 
           <div className="overflow-x-auto pb-4">
             <div className="min-w-[640px] space-y-3">
-              <div className="grid grid-cols-12 px-8 py-4 font-label uppercase tracking-widest text-[0.6875rem] text-[#c2c6d6]/50">
+              <div className="grid grid-cols-12 px-8 py-3.5 font-label uppercase tracking-wider text-xs font-bold text-gray-800 dark:text-[#c2c6d6]/70 rev-table-header">
                 <div className="col-span-3">Client</div>
                 <div className="col-span-1 text-center">Proformas</div>
                 <div className="col-span-2 text-right">Total Amount</div>
@@ -318,22 +325,22 @@ const RevenueHistoryPage = () => {
                       <div className="w-10 h-10 rounded-full bg-[#303541] rev-avatar flex items-center justify-center text-[12px] font-bold text-[#dee2f3] border border-gray-600/50 flex-shrink-0">
                         { client.client_name ? client.client_name.substring(0, 2).toUpperCase() : 'C' }
                       </div>
-                      <span className="text-[#dee2f3] font-semibold text-sm truncate" title={ client.client_name }>
+                      <span className="text-gray-900 dark:text-[#dee2f3] rev-client-name font-semibold text-sm truncate" title={ client.client_name }>
                         { client.client_name }
                       </span>
                     </div>
-                    <div className="col-span-1 text-center text-[#c2c6d6] text-sm font-medium">
-                      <span className="bg-[#303541] rev-avatar px-2.5 py-1 rounded-full text-xs border border-gray-700/50">
+                    <div className="col-span-1 text-center text-gray-700 dark:text-[#c2c6d6] text-sm font-medium">
+                      <span className="bg-[#303541] rev-avatar px-2.5 py-1 rounded-full text-xs border border-gray-700/50 font-semibold">
                         { proformasCount }
                       </span>
                     </div>
-                    <div className="col-span-2 text-[#dee2f3] font-bold text-right">
+                    <div className="col-span-2 text-gray-900 dark:text-[#dee2f3] rev-total-amt font-bold text-right">
                       { formatCurrency(totalAmt) }
                     </div>
-                    <div className="col-span-2 text-[#31e193] font-bold text-right">
+                    <div className="col-span-2 text-emerald-700 dark:text-[#31e193] rev-received-amt font-bold text-right">
                       { formatCurrency(received) }
                     </div>
-                    <div className="col-span-2 text-[#ffb786] font-bold text-right">
+                    <div className="col-span-2 text-amber-700 dark:text-[#ffb786] rev-pending-amt font-bold text-right">
                       { formatCurrency(pending) }
                     </div>
                     <div className="col-span-2 flex justify-end">
@@ -344,7 +351,7 @@ const RevenueHistoryPage = () => {
               }) }
 
               { filteredClients.length === 0 && (
-                <div className="text-center text-[#c2c6d6]/60 py-12 glass-card rounded-2xl">
+                <div className="text-center text-gray-600 dark:text-[#c2c6d6]/60 py-12 glass-card rounded-2xl">
                   No clients found matching &quot;{ searchQuery }&quot;
                 </div>
               )}

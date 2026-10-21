@@ -234,11 +234,11 @@ export default function AdminExplorePlansPage() {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[100vh] overflow-hidden">
+    <div className="flex flex-col h-full max-h-[100vh] overflow-hidden text-gray-900 dark:text-white">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Plan Explorer</h1>
-        <div className="bg-white/10 px-4 py-1.5 rounded-full border border-white/10 self-start sm:self-auto">
-          <span className="text-yellow-400 font-mono text-xs md:text-sm">{plans.length} Plans Available</span>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Plan Explorer</h1>
+        <div className="bg-amber-500/10 dark:bg-white/10 px-4 py-1.5 rounded-full border border-amber-500/20 dark:border-white/10 self-start sm:self-auto">
+          <span className="text-amber-700 dark:text-yellow-400 font-mono text-xs md:text-sm font-semibold">{plans.length} Plans Available</span>
         </div>
       </div>
 
@@ -246,25 +246,29 @@ export default function AdminExplorePlansPage() {
         <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col shrink-0 overflow-visible">
           <div className="lg:hidden relative w-full mb-2">
             <div 
-              className={`flex items-center justify-between w-full p-4 border rounded-2xl cursor-pointer transition-all ${isDropdownOpen ? "bg-white/10 border-white/20 shadow-lg" : "bg-white/5 border-white/10"}`}
+              className={`flex items-center justify-between w-full p-4 border rounded-2xl cursor-pointer transition-all ${
+                isDropdownOpen 
+                  ? "bg-amber-50/70 dark:bg-white/10 border-amber-500/40 dark:border-white/20 shadow-lg" 
+                  : "bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 shadow-sm"
+              }`}
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <div className="flex items-center gap-3 overflow-hidden">
-                <Search className="text-white/50 w-5 h-5 shrink-0" />
-                <span className="text-white font-semibold truncate">{activePlan ? activePlan.title : "Search & Select Plan..."}</span>
+                <Search className="text-gray-400 dark:text-white/50 w-5 h-5 shrink-0" />
+                <span className="text-gray-900 dark:text-white font-semibold truncate">{activePlan ? activePlan.title : "Search & Select Plan..."}</span>
               </div>
-              <ChevronDown className={`text-white/50 w-5 h-5 shrink-0 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown className={`text-gray-500 dark:text-white/50 w-5 h-5 shrink-0 transition-transform ${isDropdownOpen ? "rotate-180 text-amber-500" : ""}`} />
             </div>
 
             {isDropdownOpen && (
-              <div className="absolute z-50 w-full mt-2 bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2 duration-200">
-                <div className="p-3 bg-white/5 border-b border-white/10">
+              <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-from-top-2 duration-200">
+                <div className="p-3 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
                   <input 
                     type="text" 
                     placeholder="Search plans by name..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-black/20 border border-white/5 rounded-xl py-2.5 px-4 text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 text-sm"
+                    className="w-full bg-white dark:bg-black/20 border border-gray-200 dark:border-white/5 rounded-xl py-2.5 px-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-amber-500 text-sm"
                     onClick={(e) => e.stopPropagation()}
                     autoFocus
                   />
@@ -278,14 +282,20 @@ export default function AdminExplorePlansPage() {
                         setIsDropdownOpen(false);
                         setSearchQuery("");
                       }}
-                      className={`w-full text-left px-4 py-3 rounded-xl transition-all ${selectedPlanId === plan.id ? "bg-gradient-to-r from-yellow-500/30 to-yellow-500/10 text-yellow-300 font-semibold border border-yellow-500/30" : "hover:bg-white/5 text-white/70 border border-transparent"}`}
+                      className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
+                        selectedPlanId === plan.id 
+                          ? "bg-amber-500/15 text-amber-900 dark:text-yellow-300 font-bold border border-amber-500/30" 
+                          : "hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-white/70 border border-transparent font-medium"
+                      }`}
                     >
                       <div className="flex justify-between items-center gap-2">
                         <span className="truncate">{plan.title}</span>
-                        <span className="text-xs shrink-0 bg-black/20 px-2 py-1 rounded-md">₹{plan.totalAmount.toLocaleString()}</span>
+                        <span className="text-xs shrink-0 bg-amber-500/10 dark:bg-black/20 text-amber-800 dark:text-yellow-300 font-bold px-2 py-1 rounded-md">
+                          ₹{plan.totalAmount.toLocaleString()}
+                        </span>
                       </div>
                     </button>
-                  )) : <div className="p-6 text-center text-white/40 text-sm">No plans match your search</div>}
+                  )) : <div className="p-6 text-center text-gray-400 dark:text-white/40 text-sm">No plans match your search</div>}
                 </div>
               </div>
             )}
@@ -293,13 +303,13 @@ export default function AdminExplorePlansPage() {
 
           <div className="hidden lg:flex flex-col gap-3 h-full pb-2">
             <div className="relative shrink-0">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/40 w-4 h-4" />
               <input 
                 type="text" 
                 placeholder="Search plans..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors"
+                className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-amber-500 transition-colors shadow-sm"
               />
             </div>
             
@@ -310,52 +320,52 @@ export default function AdminExplorePlansPage() {
                   onClick={() => setSelectedPlanId(plan.id)}
                   className={`text-left p-3 md:p-4 rounded-xl md:rounded-2xl border transition-all duration-200 shrink-0 ${
                     selectedPlanId === plan.id
-                      ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-yellow-500/50 shadow-lg shadow-yellow-500/10"
-                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                      ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/50 shadow-lg text-amber-900 dark:text-yellow-300"
+                      : "bg-white/90 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg shrink-0 ${selectedPlanId === plan.id ? "bg-yellow-500 text-white" : "bg-white/10 text-white/50"}`}>
+                    <div className={`p-2 rounded-lg shrink-0 ${selectedPlanId === plan.id ? "bg-amber-500 text-slate-950 font-bold" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"}`}>
                       <List size={18} />
                     </div>
                     <div className="overflow-hidden">
-                      <h3 className={`font-semibold truncate text-sm md:text-base ${selectedPlanId === plan.id ? "text-yellow-400" : "text-white/80"}`}>
+                      <h3 className={`font-semibold truncate text-sm md:text-base ${selectedPlanId === plan.id ? "text-amber-800 dark:text-yellow-400" : "text-gray-900 dark:text-white/80"}`}>
                         {plan.title}
                       </h3>
-                      <p className="text-xs text-white/40 mt-0.5 md:mt-1">₹{plan.totalAmount.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500 dark:text-white/40 mt-0.5 md:mt-1 font-medium">₹{plan.totalAmount.toLocaleString()}</p>
                     </div>
                   </div>
                 </button>
               ))}
-              {filteredPlans.length === 0 && <div className="p-4 text-center text-white/40 text-sm border border-dashed border-white/10 rounded-xl mt-2">No plans found</div>}
+              {filteredPlans.length === 0 && <div className="p-4 text-center text-gray-400 dark:text-white/40 text-sm border border-dashed border-gray-200 dark:border-white/10 rounded-xl mt-2">No plans found</div>}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white/5 backdrop-blur-md rounded-2xl md:rounded-3xl border border-white/10 p-5 md:p-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-2xl md:rounded-3xl border border-gray-200 dark:border-white/10 p-5 md:p-8 custom-scrollbar shadow-sm">
           {activePlan ? (
             <div className="max-w-2xl mx-auto space-y-6 md:space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0">
                 <div>
-                  <h2 className="text-2xl md:text-4xl font-bold text-white mb-1.5 md:mb-2">{activePlan.title}</h2>
-                  <p className="text-white/50 text-sm md:text-lg leading-relaxed">{activePlan.description}</p>
+                  <h2 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1.5 md:mb-2">{activePlan.title}</h2>
+                  <p className="text-gray-600 dark:text-white/50 text-sm md:text-lg leading-relaxed">{activePlan.description}</p>
                 </div>
-                <div className="text-left md:text-right w-full md:w-auto bg-black/20 md:bg-transparent p-4 md:p-0 rounded-xl md:rounded-none">
-                  <p className="text-white/40 text-xs md:text-sm uppercase tracking-wider mb-1 font-semibold">Total Investment</p>
-                  <p className="text-3xl md:text-4xl font-black text-yellow-400">₹{activePlan.totalAmount.toLocaleString()}</p>
+                <div className="text-left md:text-right w-full md:w-auto bg-amber-50/70 dark:bg-black/20 md:bg-transparent p-4 md:p-0 rounded-xl md:rounded-none border border-amber-200/50 dark:border-transparent md:border-none">
+                  <p className="text-gray-500 dark:text-white/40 text-xs md:text-sm uppercase tracking-wider mb-1 font-semibold">Total Investment</p>
+                  <p className="text-3xl md:text-4xl font-black text-amber-600 dark:text-yellow-400">₹{activePlan.totalAmount.toLocaleString()}</p>
                 </div>
               </div>
 
-              <hr className="border-white/10 hidden md:block" />
+              <hr className="border-gray-200 dark:border-white/10 hidden md:block" />
 
               <div className="space-y-4">
-                <h3 className="text-white font-semibold flex items-center gap-2 text-sm md:text-base">
-                  <CheckCircle2 className="text-yellow-500" size={18} /> Included Services
+                <h3 className="text-gray-900 dark:text-white font-semibold flex items-center gap-2 text-sm md:text-base">
+                  <CheckCircle2 className="text-amber-500" size={18} /> Included Services
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 md:gap-3">
                   {activePlan.features.map((feature, idx) => (
-                    <div key={idx} className="bg-white/5 border border-white/5 p-3 md:p-4 rounded-xl text-white/70 text-xs md:text-sm flex items-start gap-2.5 md:gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-1 md:mt-1.5 shrink-0" />
+                    <div key={idx} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 p-3 md:p-4 rounded-xl text-gray-700 dark:text-white/70 text-xs md:text-sm flex items-start gap-2.5 md:gap-3 font-medium">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1 md:mt-1.5 shrink-0" />
                       {feature}
                     </div>
                   ))}
@@ -365,14 +375,14 @@ export default function AdminExplorePlansPage() {
               <button
                 onClick={() => handleCreateQuotation(activePlan)}
                 disabled={loading}
-                className="w-full py-4 md:py-5 rounded-xl md:rounded-2xl bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-bold text-lg md:text-xl shadow-xl shadow-yellow-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 md:gap-3 mt-2"
+                className="w-full py-4 md:py-5 rounded-xl md:rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-lg md:text-xl shadow-xl shadow-amber-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 md:gap-3 mt-2"
               >
                 {loading ? "Processing..." : "Generate Full Quotation"}
                 <ArrowRight size={20} className="md:w-6 md:h-6" />
               </button>
             </div>
           ) : (
-            <div className="h-full flex items-center justify-center text-white/20 italic">
+            <div className="h-full flex items-center justify-center text-gray-400 dark:text-white/40 font-medium italic text-base">
               Select a plan from the list to view details
             </div>
           )}

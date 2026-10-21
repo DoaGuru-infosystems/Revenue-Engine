@@ -18,7 +18,7 @@ import {
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
 const inputClassName =
-  "w-full rounded-xl border border-white/15 bg-slate-900/60 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30 transition-all";
+  "w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/60 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all";
 
 export default function AdminAddServicesPage() {
   const baseURL = API_BASE_URL;
@@ -610,29 +610,29 @@ export default function AdminAddServicesPage() {
   }, [addonServiceId, services]);
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-6 text-slate-900 dark:text-white">
       {/* Header Banner */}
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/85 via-slate-800/70 to-amber-900/60 p-4 sm:p-6 shadow-xl">
+      <section className="rounded-3xl border border-amber-500/20 dark:border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-600/15 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-amber-950/70 p-4 sm:p-6 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/80">Service Builder</p>
-            <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Graphic & SEO Service Management</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300 font-bold">Service Builder</p>
+            <h2 className="mt-2 text-2xl font-bold sm:text-3xl text-gray-900 dark:text-white">Graphic & SEO Service Management</h2>
+            <p className="mt-2 max-w-2xl text-sm text-gray-600 dark:text-slate-200">
               Create and manage services, categories with amounts, and dedicated additional services seamlessly.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-right">
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Services</p>
-              <p className="text-lg font-bold text-amber-300">{services.length}</p>
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3 w-full sm:w-auto">
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-right shadow-sm backdrop-blur-sm">
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-300 uppercase tracking-wider font-semibold">Services</p>
+              <p className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-300">{services.length}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-right">
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Categories</p>
-              <p className="text-lg font-bold text-amber-300">{categories.length}</p>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-right shadow-sm backdrop-blur-sm">
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-300 uppercase tracking-wider font-semibold">Categories</p>
+              <p className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-300">{categories.length}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 text-right">
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Add-ons</p>
-              <p className="text-lg font-bold text-amber-300">{additionalServices.length}</p>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-right shadow-sm backdrop-blur-sm">
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-300 uppercase tracking-wider font-semibold">Add-ons</p>
+              <p className="text-base sm:text-lg font-bold text-amber-600 dark:text-amber-300">{additionalServices.length}</p>
             </div>
           </div>
         </div>
@@ -643,28 +643,28 @@ export default function AdminAddServicesPage() {
         {/* ============================================================== */}
         {/* CARD 1: ADD SERVICE & CATEGORY (UNIFIED ALL-IN-ONE) */}
         {/* ============================================================== */}
-        <article className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+        <article className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/60 p-4 sm:p-6 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-3">
+            <div className="mb-5 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 p-2 text-amber-300">
+                <div className="rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 p-2 text-amber-500 dark:text-amber-300">
                   <Layers className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.15em] text-amber-400/90 font-semibold">Step 1</p>
-                  <h3 className="text-base font-bold text-white">Add Service & Category</h3>
+                  <p className="text-[11px] uppercase tracking-[0.15em] text-amber-600 dark:text-amber-400 font-bold">Step 1</p>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">Add Service & Category</h3>
                 </div>
               </div>
 
               {/* Segmented Mode Switch */}
-              <div className="inline-flex rounded-xl bg-slate-200 dark:bg-slate-950/80 p-1 border border-slate-300 dark:border-white/10 text-xs shadow-inner">
+              <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-950/80 p-1 border border-slate-200 dark:border-white/10 text-xs shadow-inner">
                 <button
                   type="button"
                   onClick={() => setServiceMode("existing")}
                   className={`px-3 py-1.5 rounded-lg font-medium transition ${
                     serviceMode === "existing"
                       ? "bg-amber-500 text-slate-950 font-bold shadow-md"
-                      : "text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
+                      : "text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
                   }`}
                 >
                   Select Existing
@@ -675,7 +675,7 @@ export default function AdminAddServicesPage() {
                   className={`px-3 py-1.5 rounded-lg font-medium transition ${
                     serviceMode === "new"
                       ? "bg-amber-500 text-slate-950 font-bold shadow-md"
-                      : "text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
+                      : "text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
                   }`}
                 >
                   + Create New
@@ -687,8 +687,8 @@ export default function AdminAddServicesPage() {
               {/* Service Selection or Entry */}
               {serviceMode === "existing" ? (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                    Select Service <span className="text-red-400">*</span>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Select Service <span className="text-red-500">*</span>
                   </label>
                   <select
                     className={inputClassName}
@@ -705,9 +705,9 @@ export default function AdminAddServicesPage() {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-xs font-semibold text-amber-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <FolderPlus className="w-3.5 h-3.5 text-amber-400" />
-                    New Service Name <span className="text-red-400">*</span>
+                  <label className="block text-xs font-semibold text-amber-600 dark:text-amber-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <FolderPlus className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                    New Service Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -721,8 +721,8 @@ export default function AdminAddServicesPage() {
 
               {/* Category Name */}
               <div className="relative" ref={catDropdownRef}>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Category Name {serviceMode === "existing" && <span className="text-red-400">*</span>}
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Category Name {serviceMode === "existing" && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
@@ -748,12 +748,12 @@ export default function AdminAddServicesPage() {
                   }
                   disabled={serviceMode === "existing" && !selectedServiceId}
                   className={`${inputClassName} ${
-                    isExistingCategory ? "border-amber-400/80 ring-1 ring-amber-400/30" : ""
-                  } pr-24`}
+                    serviceMode === "existing" && !selectedServiceId ? "opacity-60 cursor-not-allowed" : ""
+                  } ${isExistingCategory ? "border-amber-500/80 ring-1 ring-amber-500/30" : ""} pr-24`}
                 />
                 <div className="absolute right-2 top-8 flex items-center gap-1.5">
                   {isExistingCategory && (
-                    <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-[11px] font-medium text-amber-300">
+                    <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
                       Existing Category
                     </span>
                   )}
@@ -764,12 +764,12 @@ export default function AdminAddServicesPage() {
                         e.stopPropagation();
                         setIsCatDropdownOpen((prev) => !prev);
                       }}
-                      className="rounded p-1 text-slate-400 hover:text-white transition"
+                      className="rounded p-1 text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white transition"
                       title="Toggle categories list"
                     >
                       <ChevronDown
                         className={`h-4 w-4 transition-transform duration-200 ${
-                          isCatDropdownOpen ? "rotate-180 text-amber-400" : ""
+                          isCatDropdownOpen ? "rotate-180 text-amber-500" : ""
                         }`}
                       />
                     </button>
@@ -777,10 +777,10 @@ export default function AdminAddServicesPage() {
                 </div>
 
                 {isCatDropdownOpen && serviceMode === "existing" && selectedServiceId && categories.length > 0 && (
-                  <div className="absolute left-0 top-full z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-white/15 bg-slate-900/95 shadow-2xl backdrop-blur-md">
-                    <div className="border-b border-white/10 px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                  <div className="absolute left-0 top-full z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-slate-900 shadow-2xl backdrop-blur-md">
+                    <div className="border-b border-gray-100 dark:border-white/10 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400 flex items-center justify-between bg-gray-50 dark:bg-slate-950/60">
                       <span>Existing Categories ({categories.length})</span>
-                      <span className="text-[10px] text-slate-500">Click to select</span>
+                      <span className="text-[10px] text-gray-400 dark:text-slate-500">Click to select</span>
                     </div>
                     {filteredCategories.length > 0 ? (
                       filteredCategories.map((cat) => {
@@ -793,21 +793,21 @@ export default function AdminAddServicesPage() {
                               setCategoryName(cat.category_name);
                               setIsCatDropdownOpen(false);
                             }}
-                            className={`flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm transition hover:bg-amber-500/20 hover:text-amber-200 ${
+                            className={`flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm transition hover:bg-amber-50 dark:hover:bg-amber-500/20 hover:text-amber-900 dark:hover:text-amber-200 ${
                               isSelected
-                                ? "bg-amber-500/15 font-semibold text-amber-300"
-                                : "text-slate-200"
+                                ? "bg-amber-500/15 font-bold text-amber-800 dark:text-amber-300"
+                                : "text-gray-800 dark:text-slate-200"
                             }`}
                           >
                             <span>{cat.category_name}</span>
-                            {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-amber-400" />}
+                            {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />}
                           </div>
                         );
                       })
                     ) : (
-                      <div className="px-3 py-2.5 text-xs text-slate-400">
+                      <div className="px-3 py-2.5 text-xs text-gray-500 dark:text-slate-400">
                         No matching category. Typing will create:{" "}
-                        <span className="font-semibold text-amber-300">"{categoryName}"</span>
+                        <span className="font-semibold text-amber-700 dark:text-amber-300">"{categoryName}"</span>
                       </div>
                     )}
                   </div>
@@ -816,8 +816,8 @@ export default function AdminAddServicesPage() {
 
               {/* Service Amount */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Service Amount (₹) {serviceMode === "existing" && <span className="text-red-400">*</span>}
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Service Amount (₹) {serviceMode === "existing" && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="number"
@@ -830,9 +830,9 @@ export default function AdminAddServicesPage() {
 
               {/* Editing Type */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                   <span>Editing Type</span>
-                  <span className="text-[10px] font-normal text-slate-400">
+                  <span className="text-[10px] font-normal text-gray-500 dark:text-slate-400">
                     {isExistingCategory ? "(Required for existing category)" : "(Optional)"}
                   </span>
                 </label>
@@ -852,7 +852,7 @@ export default function AdminAddServicesPage() {
                   }`}
                 />
                 {isExistingCategory && (
-                  <p className="mt-1 text-xs text-amber-400">
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium">
                     * Note: Editing type is required when adding a new entry to an existing category.
                   </p>
                 )}
@@ -860,7 +860,7 @@ export default function AdminAddServicesPage() {
             </div>
           </div>
 
-          <div className="pt-5 mt-4 border-t border-white/10">
+          <div className="pt-5 mt-4 border-t border-gray-200 dark:border-white/10">
             <button
               type="button"
               onClick={handleSaveServiceAndCategory}
@@ -886,19 +886,19 @@ export default function AdminAddServicesPage() {
         {/* ============================================================== */}
         {/* CARD 2: ADDITIONAL SERVICES (DEDICATED SIDE CARD) */}
         {/* ============================================================== */}
-        <article className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+        <article className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/60 p-4 sm:p-6 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-3">
+            <div className="mb-5 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="rounded-xl bg-gradient-to-br from-amber-400/20 to-yellow-500/20 border border-amber-400/30 p-2 text-amber-400">
+                <div className="rounded-xl bg-gradient-to-br from-amber-400/20 to-yellow-500/20 border border-amber-400/30 p-2 text-amber-500 dark:text-amber-400">
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.15em] text-amber-400/90 font-semibold">Step 2</p>
-                  <h3 className="text-base font-bold text-white">Add Additional Service</h3>
+                  <p className="text-[11px] uppercase tracking-[0.15em] text-amber-600 dark:text-amber-400 font-bold">Step 2</p>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">Add Additional Service</h3>
                 </div>
               </div>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 font-semibold">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 font-semibold">
                 {additionalServices.length} {additionalServices.length === 1 ? "Addon" : "Addons"}
               </span>
             </div>
@@ -906,8 +906,8 @@ export default function AdminAddServicesPage() {
             <div className="space-y-4">
               {/* Select Service Dropdown */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Select Service for Additional Service <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Select Service for Additional Service <span className="text-red-500">*</span>
                 </label>
                 <select
                   className={inputClassName}
@@ -925,8 +925,8 @@ export default function AdminAddServicesPage() {
 
               {/* Select Category Dropdown */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Select Category for Additional Service <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Select Category for Additional Service <span className="text-red-500">*</span>
                 </label>
                 <select
                   className={`${inputClassName} disabled:opacity-50`}
@@ -951,7 +951,7 @@ export default function AdminAddServicesPage() {
                   ))}
                 </select>
                 {addonServiceId && addonCategories.length === 0 && (
-                  <p className="mt-1 text-xs text-amber-400/90">
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium">
                     * This service has no categories yet. Please create a category first in Card 1.
                   </p>
                 )}
@@ -959,8 +959,8 @@ export default function AdminAddServicesPage() {
 
               {/* Additional Service Name Input */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Additional Service Name <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Additional Service Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -974,8 +974,8 @@ export default function AdminAddServicesPage() {
 
               {/* Additional Service Amount Input */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Additional Service Amount (₹) <span className="text-red-400">*</span>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Additional Service Amount (₹) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -1007,7 +1007,7 @@ export default function AdminAddServicesPage() {
               {/* Saved Additional Services for this service */}
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-wider">
                     Configured Add-ons for "{addonServiceName}"
                   </span>
                 </div>
@@ -1017,27 +1017,27 @@ export default function AdminAddServicesPage() {
                     {additionalServices.map((ad) => (
                       <div
                         key={ad.id}
-                        className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-200 transition hover:bg-amber-500/10"
+                        className="flex items-center justify-between rounded-xl border border-amber-500/25 bg-amber-50/70 dark:bg-amber-500/5 px-3 py-2 text-xs text-amber-900 dark:text-amber-200 transition hover:bg-amber-100/70 dark:hover:bg-amber-500/10"
                       >
                         <div className="flex items-center gap-2">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
                           <div>
-                            <span className="font-semibold text-white">{ad.additional_service_name}</span>
+                            <span className="font-semibold text-gray-900 dark:text-white">{ad.additional_service_name}</span>
                             {ad.category_name && (
-                              <span className="ml-2 text-[10px] text-amber-300/90 bg-amber-500/15 border border-amber-500/25 px-1.5 py-0.5 rounded font-medium">
+                              <span className="ml-2 text-[10px] text-amber-800 dark:text-amber-300/90 bg-amber-500/15 border border-amber-500/25 px-1.5 py-0.5 rounded font-medium">
                                 {ad.category_name}
                               </span>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2.5">
-                          <span className="font-bold text-amber-400 bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 rounded-lg">
+                          <span className="font-bold text-amber-700 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg">
                             ₹{parseFloat(ad.amount).toLocaleString("en-IN")}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleDeleteAdditionalService(ad.id)}
-                            className="p-1 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition"
+                            className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-500/10 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-500/20 transition"
                             title="Delete this additional service"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1047,7 +1047,7 @@ export default function AdminAddServicesPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/40 p-4 text-center text-xs text-slate-400">
+                  <div className="rounded-xl border border-dashed border-gray-300 dark:border-white/10 bg-gray-50 dark:bg-slate-950/40 p-4 text-center text-xs text-gray-500 dark:text-slate-400">
                     {addonServiceId
                       ? "No additional services added yet for this service. Fill the form above to add one."
                       : "Please select a service above to view or add its additional services."}
@@ -1062,24 +1062,24 @@ export default function AdminAddServicesPage() {
       {/* ============================================================== */}
       {/* BOTTOM SECTION: CURRENT SELECTION & HIERARCHY OVERVIEW */}
       {/* ============================================================== */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-5 sm:p-6 shadow-xl">
+      <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/55 p-4 sm:p-6 shadow-xl">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Active Service Hierarchy</p>
-            <h4 className="mt-1 text-lg font-bold text-white flex items-center gap-2">
-              <Package className="w-5 h-5 text-amber-400" />
+            <p className="text-xs uppercase tracking-[0.15em] text-gray-500 dark:text-slate-400 font-semibold">Active Service Hierarchy</p>
+            <h4 className="mt-1 text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Package className="w-5 h-5 text-amber-500 dark:text-amber-400" />
               {selectedServiceName}
             </h4>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-200">
+          <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-800 dark:text-amber-200">
             <ArrowRight className="h-4 w-4" />
             Top-down service and addon structure is live and active
           </div>
         </div>
 
         {/* Categories list */}
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10">
+          <p className="text-xs text-gray-600 dark:text-slate-400 font-semibold uppercase tracking-wider mb-2">
             Categories ({categories.length})
           </p>
           {categories.length > 0 ? (
@@ -1087,14 +1087,14 @@ export default function AdminAddServicesPage() {
               {categories.map((category) => (
                 <span
                   key={category.category_id}
-                  className="rounded-full border border-white/15 bg-slate-800/80 px-3.5 py-1.5 text-xs font-medium text-slate-200 hover:border-amber-400/50 transition"
+                  className="rounded-full border border-amber-300 dark:border-white/15 bg-amber-50 dark:bg-slate-800/80 px-3.5 py-1.5 text-xs font-semibold text-amber-950 dark:text-slate-200 shadow-sm transition hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-slate-700"
                 >
                   📁 {category.category_name}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-500 italic">No categories created yet for this service.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-500 italic">No categories created yet for this service.</p>
           )}
         </div>
       </section>

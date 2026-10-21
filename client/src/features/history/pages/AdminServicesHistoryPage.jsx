@@ -8,7 +8,7 @@ import { clearUser } from "../../../redux/user/userSlice";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
 const inputClassName =
-  "w-full rounded-xl border border-white/15 bg-slate-900/60 px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30";
+  "w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/60 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all";
 
 const AdminServicesHistoryPage = () => {
   const baseURL = API_BASE_URL;
@@ -405,56 +405,56 @@ const AdminServicesHistoryPage = () => {
   }, [serviceData]);
 
   return (
-    <div className="space-y-6 text-white">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900/85 via-slate-800/70 to-yellow-900/55 p-4 sm:p-6">
+    <div className="space-y-6 text-slate-900 dark:text-white">
+      <section className="rounded-3xl border border-amber-500/20 dark:border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-600/15 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-amber-950/70 p-4 sm:p-6 shadow-xl">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-yellow-300/80">History Log</p>
-            <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Services History</h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300 font-bold">History Log</p>
+            <h2 className="mt-2 text-2xl font-bold sm:text-3xl text-gray-900 dark:text-white">Services History</h2>
+            <p className="mt-2 max-w-2xl text-sm text-gray-600 dark:text-slate-200">
               Review all service-category-editing combinations and manage updates from one place.
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-4 md:w-auto">
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase text-slate-400">Total Tiers</p>
-              <p className="mt-1 text-xl font-semibold">{stats.totalRows}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:w-auto w-full">
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-left backdrop-blur-sm shadow-sm">
+              <p className="text-[10px] sm:text-xs uppercase text-gray-500 dark:text-slate-300 font-semibold tracking-wider">Total Tiers</p>
+              <p className="mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.totalRows}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase text-slate-400">Services</p>
-              <p className="mt-1 text-xl font-semibold">{stats.serviceCount}</p>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-left backdrop-blur-sm shadow-sm">
+              <p className="text-[10px] sm:text-xs uppercase text-gray-500 dark:text-slate-300 font-semibold tracking-wider">Services</p>
+              <p className="mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.serviceCount}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase text-slate-400">Categories</p>
-              <p className="mt-1 text-xl font-semibold">{stats.categoryCount}</p>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-left backdrop-blur-sm shadow-sm">
+              <p className="text-[10px] sm:text-xs uppercase text-gray-500 dark:text-slate-300 font-semibold tracking-wider">Categories</p>
+              <p className="mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.categoryCount}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xs uppercase text-slate-400">Add-on Services</p>
-              <p className="mt-1 text-xl font-semibold text-amber-400">{additionalServicesList.length}</p>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/15 bg-white/80 dark:bg-slate-900/80 p-2.5 sm:px-4 sm:py-3 text-center sm:text-left backdrop-blur-sm shadow-sm">
+              <p className="text-[10px] sm:text-xs uppercase text-gray-500 dark:text-slate-300 font-semibold tracking-wider">Add-on Services</p>
+              <p className="mt-1 text-lg sm:text-xl font-bold text-amber-600 dark:text-amber-300">{additionalServicesList.length}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Tab Switcher */}
-      <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-white/10 max-w-md">
+      <div className="flex bg-slate-100 dark:bg-slate-900/60 p-1.5 rounded-2xl border border-slate-200 dark:border-white/10 max-w-md shadow-inner">
         <button
           onClick={() => setActiveTab("services")}
-          className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition ${
+          className={`flex-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold transition ${
             activeTab === "services"
               ? "bg-amber-500 text-slate-950 shadow-md font-bold"
-              : "text-slate-300 hover:text-white"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white"
           }`}
         >
           Services & Categories ({serviceData.length})
         </button>
         <button
           onClick={() => setActiveTab("additional_services")}
-          className={`flex-1 py-2 px-4 rounded-xl text-sm font-semibold transition ${
+          className={`flex-1 py-2 px-4 rounded-xl text-xs sm:text-sm font-semibold transition ${
             activeTab === "additional_services"
               ? "bg-amber-500 text-slate-950 shadow-md font-bold"
-              : "text-slate-300 hover:text-white"
+              : "text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white"
           }`}
         >
           Additional Services ({additionalServicesList.length})
@@ -462,16 +462,16 @@ const AdminServicesHistoryPage = () => {
       </div>
 
       {activeTab === "services" ? (
-        <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 sm:p-6">
+        <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/55 p-4 sm:p-6 shadow-sm">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-lg font-semibold">Search & Manage Entries</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Search & Manage Entries</h3>
           <div className="relative w-full sm:max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
             <input
               type="search"
               value={keyword}
               placeholder="Search service, category, editing type"
-              className="w-full rounded-xl border border-white/15 bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+              className="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
               onChange={(e) => {
                 setKeyword(e.target.value);
                 setCurrentPage(0);
@@ -481,29 +481,29 @@ const AdminServicesHistoryPage = () => {
         </div>
 
         {showApiData.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-slate-900/35 px-4 py-10 text-center text-slate-300">
+          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-slate-900/35 px-4 py-10 text-center text-gray-500 dark:text-slate-300">
             No services found.
           </div>
         ) : (
           <>
             <div className="hidden md:block overflow-auto h-[35rem]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <table className="min-w-full text-sm">
-                <thead className="bg-white/5 text-slate-300">
+                <thead className="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-slate-300 border-b border-gray-200 dark:border-white/10">
                   <tr>
-                    <th className="px-4 py-3 text-left">Service</th>
-                    <th className="px-4 py-3 text-left">Category</th>
-                    <th className="px-4 py-3 text-left">Editing Type</th>
-                    <th className="px-4 py-3 text-left">Amount</th>
-                    <th className="px-4 py-3 text-left">Action</th>
+                    <th className="px-4 py-3 text-left font-semibold">Service</th>
+                    <th className="px-4 py-3 text-left font-semibold">Category</th>
+                    <th className="px-4 py-3 text-left font-semibold">Editing Type</th>
+                    <th className="px-4 py-3 text-left font-semibold">Amount</th>
+                    <th className="px-4 py-3 text-left font-semibold">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                   {showApiData.map((item) => (
-                    <tr key={`${item.service_id}-${item.category_id}-${item.editing_type_id}`} className="hover:bg-white/5">
-                      <td className="px-4 py-3 font-medium text-white">{item.service_name}</td>
-                      <td className="px-4 py-3 text-slate-300">{item.category_name}</td>
-                      <td className="px-4 py-3 text-slate-300">{item.editing_type_name}</td>
-                      <td className="px-4 py-3 text-slate-200">Rs {item.amount}</td>
+                    <tr key={`${item.service_id}-${item.category_id}-${item.editing_type_id}`} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{item.service_name}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{item.category_name}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{item.editing_type_name}</td>
+                      <td className="px-4 py-3 font-bold text-gray-900 dark:text-slate-200">Rs {item.amount}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <button
@@ -518,14 +518,14 @@ const AdminServicesHistoryPage = () => {
                               });
                               setShowModal(true);
                             }}
-                            className="inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
+                            className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-500/20"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(item)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                            className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-500/20"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Delete
@@ -542,25 +542,25 @@ const AdminServicesHistoryPage = () => {
               {showApiData.map((item) => (
                 <div
                   key={`${item.service_id}-${item.category_id}-${item.editing_type_id}`}
-                  className="rounded-xl border border-white/10 bg-slate-900/60 p-4"
+                  className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/60 p-4 shadow-sm"
                 >
-                  <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Service</p>
-                  <p className="mt-1 text-base font-semibold text-white">{item.service_name}</p>
+                  <p className="text-xs uppercase tracking-[0.15em] text-gray-500 dark:text-slate-400 font-semibold">Service</p>
+                  <p className="mt-1 text-base font-bold text-gray-900 dark:text-white">{item.service_name}</p>
 
                   <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                    <div className="rounded-lg bg-white/5 p-2.5">
-                      <p className="text-slate-400">Category</p>
-                      <p className="mt-1 text-sm text-white">{item.category_name}</p>
+                    <div className="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-transparent p-2.5">
+                      <p className="text-gray-500 dark:text-slate-400">Category</p>
+                      <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{item.category_name}</p>
                     </div>
-                    <div className="rounded-lg bg-white/5 p-2.5">
-                      <p className="text-slate-400">Amount</p>
-                      <p className="mt-1 text-sm text-white">Rs {item.amount}</p>
+                    <div className="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-transparent p-2.5">
+                      <p className="text-gray-500 dark:text-slate-400">Amount</p>
+                      <p className="mt-1 text-sm font-bold text-gray-900 dark:text-white">Rs {item.amount}</p>
                     </div>
                   </div>
 
-                  <div className="mt-3 rounded-lg bg-white/5 p-2.5 text-xs">
-                    <p className="text-slate-400">Editing Type</p>
-                    <p className="mt-1 text-sm text-white">{item.editing_type_name}</p>
+                  <div className="mt-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-transparent p-2.5 text-xs">
+                    <p className="text-gray-500 dark:text-slate-400">Editing Type</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{item.editing_type_name}</p>
                   </div>
 
                   <div className="mt-4 flex items-center gap-2">
@@ -576,13 +576,13 @@ const AdminServicesHistoryPage = () => {
                         });
                         setShowModal(true);
                       }}
-                      className="flex-1 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300"
+                      className="flex-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-800 dark:text-amber-300"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(item)}
-                      className="flex-1 rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300"
+                      className="flex-1 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-300"
                     >
                       Delete
                     </button>
@@ -628,19 +628,19 @@ const AdminServicesHistoryPage = () => {
       </section>
       ) : (
         /* Additional Services Section */
-        <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4 sm:p-6">
+        <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/55 p-4 sm:p-6 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">Additional Services Management</h3>
-              <p className="text-xs text-slate-400">Manage names and default pricing for add-on services.</p>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Additional Services Management</h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Manage names and default pricing for add-on services.</p>
             </div>
             <div className="relative w-full sm:max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
               <input
                 type="search"
                 value={addonKeyword}
                 placeholder="Search parent service, add-on name..."
-                className="w-full rounded-xl border border-white/15 bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+                className="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
                 onChange={(e) => {
                   setAddonKeyword(e.target.value);
                   setAddonCurrentPage(0);
@@ -650,43 +650,43 @@ const AdminServicesHistoryPage = () => {
           </div>
 
           {showAddonData.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-slate-900/35 px-4 py-10 text-center text-slate-300">
+            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-slate-900/35 px-4 py-10 text-center text-gray-500 dark:text-slate-300">
               No additional services found.
             </div>
           ) : (
             <>
               <div className="hidden md:block overflow-auto h-[35rem]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <table className="min-w-full text-sm">
-                  <thead className="bg-white/5 text-slate-300">
+                  <thead className="bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-slate-300 border-b border-gray-200 dark:border-white/10">
                     <tr>
-                      <th className="px-4 py-3 text-left">Parent Service</th>
-                      <th className="px-4 py-3 text-left">Additional Service Name</th>
-                      <th className="px-4 py-3 text-left">Amount</th>
-                      <th className="px-4 py-3 text-left">Created At</th>
-                      <th className="px-4 py-3 text-left">Action</th>
+                      <th className="px-4 py-3 text-left font-semibold">Parent Service</th>
+                      <th className="px-4 py-3 text-left font-semibold">Additional Service Name</th>
+                      <th className="px-4 py-3 text-left font-semibold">Amount</th>
+                      <th className="px-4 py-3 text-left font-semibold">Created At</th>
+                      <th className="px-4 py-3 text-left font-semibold">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/10">
+                  <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                     {showAddonData.map((item) => (
-                      <tr key={item.id} className="hover:bg-white/5">
-                        <td className="px-4 py-3 font-medium text-white">{item.service_name || "-"}</td>
-                        <td className="px-4 py-3 text-slate-300 font-semibold">{item.additional_service_name}</td>
-                        <td className="px-4 py-3 text-emerald-400 font-bold">₹{Number(item.amount).toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-3 text-slate-400 text-xs">
+                      <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{item.service_name || "-"}</td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-slate-300 font-semibold">{item.additional_service_name}</td>
+                        <td className="px-4 py-3 text-emerald-700 dark:text-emerald-400 font-bold">₹{Number(item.amount).toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">
                           {item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleEditAddon(item)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
+                              className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-500/20"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                               Edit 
                             </button>
                             <button
                               onClick={() => handleDeleteAddon(item)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                              className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-500/20"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                               Delete
@@ -702,26 +702,26 @@ const AdminServicesHistoryPage = () => {
               {/* Mobile View */}
               <div className="grid gap-3 md:hidden">
                 {showAddonData.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-white/10 bg-slate-900/60 p-4">
+                  <div key={item.id} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900/60 p-4 shadow-sm">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs uppercase text-slate-400">{item.service_name || "Service"}</p>
-                        <h4 className="font-semibold text-white">{item.additional_service_name}</h4>
+                        <p className="text-xs uppercase text-gray-500 dark:text-slate-400 font-semibold">{item.service_name || "Service"}</p>
+                        <h4 className="font-bold text-gray-900 dark:text-white mt-0.5">{item.additional_service_name}</h4>
                       </div>
-                      <span className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 text-xs font-bold text-emerald-400">
+                      <span className="rounded-lg bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                         ₹{Number(item.amount).toLocaleString("en-IN")}
                       </span>
                     </div>
-                    <div className="mt-3 flex gap-2 border-t border-white/10 pt-3">
+                    <div className="mt-3 flex gap-2 border-t border-gray-100 dark:border-white/10 pt-3">
                       <button
                         onClick={() => handleEditAddon(item)}
-                        className="flex-1 rounded-lg border border-amber-400/40 bg-amber-500/10 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
+                        className="flex-1 rounded-lg border border-amber-500/30 bg-amber-500/10 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-500/20"
                       >
                         Edit Amount
                       </button>
                       <button
                         onClick={() => handleDeleteAddon(item)}
-                        className="flex-1 rounded-lg border border-red-500/40 bg-red-500/10 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                        className="flex-1 rounded-lg border border-red-500/30 bg-red-500/10 py-1.5 text-xs font-semibold text-red-600 dark:text-red-300 hover:bg-red-500/20"
                       >
                         Delete
                       </button>
@@ -759,15 +759,15 @@ const AdminServicesHistoryPage = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={handleClose} />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-5 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="relative z-10 w-full max-w-md rounded-2xl border border-gray-200 dark:border-white/15 bg-white dark:bg-slate-900 p-5 shadow-2xl text-gray-900 dark:text-white">
+            <div className="mb-4 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Update Entry</p>
-                <h2 className="mt-1 text-lg font-semibold text-white">Edit Service Details</h2>
+                <p className="text-xs uppercase tracking-[0.15em] text-gray-500 dark:text-slate-400 font-semibold">Update Entry</p>
+                <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Edit Service Details</h2>
               </div>
               <button
                 onClick={handleClose}
-                className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-2 text-gray-500 hover:text-gray-900 dark:text-slate-300 dark:hover:text-white transition hover:bg-gray-100 dark:hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -775,7 +775,7 @@ const AdminServicesHistoryPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm text-slate-300">Service</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-300">Service</label>
                 <select
                   name="service_id"
                   value={formData.service_id}
@@ -793,7 +793,7 @@ const AdminServicesHistoryPage = () => {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm text-slate-300">Category</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-300">Category</label>
                 <input
                   type="text"
                   name="category_name"
@@ -806,7 +806,7 @@ const AdminServicesHistoryPage = () => {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm text-slate-300">Editing Type</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-300">Editing Type</label>
                 <input
                   type="text"
                   name="editing_type_name"
@@ -818,15 +818,15 @@ const AdminServicesHistoryPage = () => {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm text-slate-300">Amount</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-300">Amount</label>
                 <div className="relative">
-                  <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
                   <input
                     type="number"
                     name="amount"
                     value={formData.amount}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-white/15 bg-slate-900/60 py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+                    className="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/60 py-2.5 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
                     placeholder="Enter amount"
                     required
                   />
@@ -837,14 +837,14 @@ const AdminServicesHistoryPage = () => {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="rounded-xl border border-white/20 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                  className="rounded-xl border border-gray-300 dark:border-white/20 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-200 transition hover:bg-gray-100 dark:hover:bg-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 shadow-md"
                 >
                   {loading ? "Saving..." : "Save Changes"}
                 </button>
@@ -858,15 +858,15 @@ const AdminServicesHistoryPage = () => {
       {showAddonModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={() => setShowAddonModal(false)} />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/15 bg-slate-900 p-5 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="relative z-10 w-full max-w-md rounded-2xl border border-gray-200 dark:border-white/15 bg-white dark:bg-slate-900 p-5 shadow-2xl text-gray-900 dark:text-white">
+            <div className="mb-4 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Settings</p>
-                <h2 className="mt-1 text-lg font-semibold text-white">Edit Additional Service</h2>
+                <p className="text-xs uppercase tracking-[0.15em] text-gray-500 dark:text-slate-400 font-semibold">Settings</p>
+                <h2 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">Edit Additional Service</h2>
               </div>
               <button
                 onClick={() => setShowAddonModal(false)}
-                className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-2 text-gray-500 hover:text-gray-900 dark:text-slate-300 dark:hover:text-white transition hover:bg-gray-100 dark:hover:bg-white/10"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -875,13 +875,13 @@ const AdminServicesHistoryPage = () => {
             <form onSubmit={handleUpdateAddon} className="space-y-4">
               {addonFormData.service_name && (
                 <div>
-                  <label className="mb-1 block text-sm text-slate-400">Parent Service</label>
-                  <p className="font-semibold text-amber-300 text-sm">{addonFormData.service_name}</p>
+                  <label className="mb-1 block text-sm font-semibold text-gray-500 dark:text-slate-400">Parent Service</label>
+                  <p className="font-bold text-amber-700 dark:text-amber-300 text-sm">{addonFormData.service_name}</p>
                 </div>
               )}
 
               <div>
-                <label className="mb-1 block text-sm text-slate-300">Additional Service Name</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-300">Additional Service Name</label>
                 <input
                   type="text"
                   value={addonFormData.additional_service_name}
@@ -893,14 +893,14 @@ const AdminServicesHistoryPage = () => {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm text-slate-300">Amount (₹)</label>
+                <label className="mb-1 block text-sm font-semibold text-gray-700 dark:text-slate-300">Amount (₹)</label>
                 <div className="relative">
-                  <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
                   <input
                     type="number"
                     value={addonFormData.amount}
                     onChange={(e) => setAddonFormData({ ...addonFormData, amount: e.target.value })}
-                    className="w-full rounded-xl border border-white/15 bg-slate-900/60 py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+                    className="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/60 py-2.5 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
                     placeholder="Enter amount"
                     required
                   />
@@ -911,14 +911,14 @@ const AdminServicesHistoryPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddonModal(false)}
-                  className="rounded-xl border border-white/20 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+                  className="rounded-xl border border-gray-300 dark:border-white/20 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-slate-200 transition hover:bg-gray-100 dark:hover:bg-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={addonLoading}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 shadow-md"
                 >
                   {addonLoading ? "Saving..." : "Save Changes"}
                 </button>
