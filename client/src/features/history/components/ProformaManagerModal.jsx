@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -607,31 +608,31 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+  return createPortal(
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm">
       {/* Main Manager Modal */ }
-      <div className={ `relative w-full max-w-5xl h-[90vh] flex flex-col bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${showPaymentModal ? 'scale-95 opacity-50 pointer-events-none' : 'scale-100 opacity-100'}` }>
+      <div className={ `relative w-full max-w-5xl h-[92vh] sm:h-[90vh] max-h-[92vh] sm:max-h-[90vh] flex flex-col bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 ${showPaymentModal ? 'scale-95 opacity-50 pointer-events-none' : 'scale-100 opacity-100'}` }>
 
         {/* Header */ }
-        <div className="flex items-center justify-between p-6 bg-gray-800 border-b border-gray-700">
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 dark:from-yellow-400 dark:to-yellow-500 bg-clip-text text-transparent">
+        <div className="shrink-0 flex items-center justify-between p-4 sm:p-6 bg-gray-800 border-b border-gray-700">
+          <div className="min-w-0 pr-2">
+            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 dark:from-yellow-400 dark:to-yellow-500 bg-clip-text text-transparent truncate">
               Proposal & Instant Proformas
             </h1>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">
               Client: <span className="text-white font-medium">{ getClientDisplayName(clientData, proposal) }</span>
               { proposal?.id && !proposal?.isDirectProforma && (
-                <span className="text-gray-400 ml-2">| Proposal Ref: #{ proposal.id }</span>
+                <span className="text-gray-400 ml-1.5 sm:ml-2">| Proposal Ref: #{ proposal.id }</span>
               )}
             </p>
           </div>
-          <button onClick={ onClose } className="p-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition text-gray-300">
-            <X className="w-6 h-6" />
+          <button onClick={ onClose } className="p-2 bg-gray-700 hover:bg-gray-600 rounded-xl transition text-gray-300 shrink-0" aria-label="Close">
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
         {/* Content */ }
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
           { loading ? (
             <div className="flex justify-center p-10"><div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div></div>
           ) : proformas.length === 0 ? (
@@ -681,35 +682,37 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
               return (
                 <div key={ proforma.id } className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden shadow-sm">
-                  <div className="p-5 border-b border-gray-700/50 flex flex-wrap items-center justify-between bg-gray-800/60 gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-yellow-500/20 flex items-center justify-center text-amber-600 dark:text-yellow-400">
-                        <FileText className="w-5 h-5" />
+                  {/* Card Header */}
+                  <div className="p-3.5 sm:p-5 border-b border-gray-700/50 flex flex-col md:flex-row md:items-center justify-between bg-gray-800/60 gap-3 sm:gap-4">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-100 dark:bg-yellow-500/20 flex items-center justify-center text-amber-600 dark:text-yellow-400 shrink-0 mt-0.5 sm:mt-0">
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <h3 className="font-bold text-lg text-white">{ proforma.proforma_number || `Proforma #${ proforma.id }` }</h3>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+                          <h3 className="font-bold text-base sm:text-lg text-white">{ proforma.proforma_number || `Proforma #${ proforma.id }` }</h3>
                           { (proforma.source_type === 'manual' || !proforma.proposal_id) ? (
-                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30 flex items-center gap-1">
+                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30 flex items-center gap-1">
                               ⚡ Instant Proforma
                             </span>
                           ) : (
-                            <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600/50">
+                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600/50">
                               Proposal #{ proforma.proposal_id }
                             </span>
                           ) }
-                          <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase border flex items-center gap-1.5 ${currentStatusConfig.badge}`}>
+                          <span className={`px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-bold uppercase border flex items-center gap-1.5 ${currentStatusConfig.badge}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${currentStatusConfig.dot}`}></span>
                             { currentStatusConfig.label }
                           </span>
                         </div>
-                        <p className="text-sm text-gray-400 mt-0.5">Created: { moment(proforma.created_at).format('DD MMM YYYY') }</p>
+                        <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Created: { moment(proforma.created_at).format('DD MMM YYYY') }</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <p className="text-sm text-gray-400 uppercase tracking-wider mb-1">Invoice Total</p>
-                        <p className="text-2xl font-bold text-white">₹{ totalAmount.toLocaleString() }</p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-3 sm:gap-4 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-gray-700/40">
+                      <div className="text-left sm:text-right">
+                        <p className="text-[11px] sm:text-xs text-gray-400 uppercase tracking-wider mb-0.5">Invoice Total</p>
+                        <p className="text-xl sm:text-2xl font-bold text-white">₹{ totalAmount.toLocaleString() }</p>
                         { totalReceived > 0 && (
                           <p className="text-xs text-emerald-400 font-medium mt-0.5">
                             Received: ₹{ totalReceived.toLocaleString() }
@@ -721,34 +724,35 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                           </p>
                         ) }
                       </div>
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={ () => handleViewProforma(proforma) }
-                          className="px-4 py-2 bg-emerald-50 dark:bg-green-600/20 text-emerald-700 dark:text-green-300 border border-emerald-500/40 dark:border-green-500/30 rounded-xl hover:bg-emerald-100 dark:hover:bg-green-600/30 transition text-sm font-semibold whitespace-nowrap shadow-sm"
+                          className="flex-1 sm:flex-initial justify-center px-3 sm:px-4 py-2 bg-emerald-50 dark:bg-green-600/20 text-emerald-700 dark:text-green-300 border border-emerald-500/40 dark:border-green-500/30 rounded-xl hover:bg-emerald-100 dark:hover:bg-green-600/30 transition text-xs sm:text-sm font-semibold whitespace-nowrap shadow-sm text-center"
                         >
                           View Proforma
                         </button>
                         { totalReceived > 0 && (
                           <button
                             onClick={ () => handleCreateBalanceProforma(proforma) }
-                            className="px-4 py-2 bg-amber-50 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border border-amber-500/40 dark:border-amber-500/30 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-600/30 transition text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 shadow-sm"
+                            className="flex-1 sm:flex-initial justify-center px-3 sm:px-4 py-2 bg-amber-50 dark:bg-amber-600/20 text-amber-700 dark:text-amber-400 border border-amber-500/40 dark:border-amber-500/30 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-600/30 transition text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center justify-center gap-1.5 shadow-sm text-center"
                           >
-                            <FileText className="w-4 h-4" /> Balance Proforma
+                            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Balance Proforma
                           </button>
                         ) }
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-5">
-                    <div className="flex flex-wrap items-center justify-between mb-4 gap-4">
-                      <h4 className="font-semibold text-gray-300">Payment History</h4>
-                      <div className="flex flex-wrap items-center gap-3">
+                  {/* Payment History Section */}
+                  <div className="p-3.5 sm:p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3.5 sm:mb-4 gap-2.5 sm:gap-4">
+                      <h4 className="font-semibold text-gray-300 text-sm sm:text-base">Payment History</h4>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <button
                           onClick={ () => handleDeleteProforma(proforma.id) }
-                          className="px-4 py-2 bg-red-50 dark:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-500/40 dark:border-red-500/30 rounded-xl hover:bg-red-100 dark:hover:bg-red-600/30 transition text-sm font-semibold flex items-center gap-2 shadow-sm"
+                          className="flex-1 sm:flex-initial justify-center px-3 sm:px-4 py-1.5 sm:py-2 bg-red-50 dark:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-500/40 dark:border-red-500/30 rounded-xl hover:bg-red-100 dark:hover:bg-red-600/30 transition text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm"
                         >
-                          <Trash className="w-4 h-4" /> Delete Proforma
+                          <Trash className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Delete Proforma
                         </button>
                         { isCarriedForward ? (
                           <span className="px-3 py-1.5 bg-purple-950/60 text-purple-300 border border-purple-800/60 rounded-xl text-xs font-semibold flex items-center gap-1.5">
@@ -757,96 +761,171 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                         ) : !isPaid && (
                           <button
                             onClick={ () => openPaymentModal(proforma) }
-                            className="px-4 py-2 bg-amber-50 dark:bg-yellow-600/20 text-amber-700 dark:text-yellow-400 border border-amber-500/40 dark:border-yellow-500/30 rounded-xl hover:bg-amber-100 dark:hover:bg-yellow-600/30 transition text-sm font-semibold flex items-center gap-2 shadow-sm"
+                            className="flex-1 sm:flex-initial justify-center px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-50 dark:bg-yellow-600/20 text-amber-700 dark:text-yellow-400 border border-amber-500/40 dark:border-yellow-500/30 rounded-xl hover:bg-amber-100 dark:hover:bg-yellow-600/30 transition text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm"
                           >
-                            <CreditCard className="w-4 h-4" /> Record Payment
+                            <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Record Payment
                           </button>
                         ) }
                       </div>
                     </div>
 
                     { proformaPayments.length === 0 ? (
-                      <div className="p-4 rounded-xl bg-orange-50/30 dark:bg-gray-900/40 border border-orange-500/15 dark:border-gray-700/40 flex items-center justify-between">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">No payments recorded yet.</p>
-                        <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600/50 rounded-lg text-xs font-semibold">
+                      <div className="p-3.5 sm:p-4 rounded-xl bg-orange-50/30 dark:bg-gray-900/40 border border-orange-500/15 dark:border-gray-700/40 flex items-center justify-between gap-2">
+                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 italic">No payments recorded yet.</p>
+                        <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600/50 rounded-lg text-[11px] sm:text-xs font-semibold shrink-0">
                           Payment: Pending
                         </span>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                          <thead>
-                            <tr className="border-b border-gray-700 text-gray-400 uppercase tracking-wider text-xs">
-                              <th className="pb-3 font-semibold">Date</th>
-                              <th className="pb-3 font-semibold">Mode</th>
-                              <th className="pb-3 font-semibold">Ref</th>
-                              <th className="pb-3 font-semibold">TDS</th>
-                              <th className="pb-3 font-semibold text-right">Received Amount</th>
-                              <th className="pb-3 font-semibold text-center">Status / Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            { proformaPayments.map(p => (
-                              <tr key={ p.id } className="border-b border-gray-800 text-gray-300">
-                                <td className="py-3">{ moment(p.payment_date).format('DD MMM YYYY') }</td>
-                                <td className="py-3">{ p.payment_mode }</td>
-                                <td className="py-3">{ p.transaction_reference || '-' }</td>
-                                <td className="py-3">
-                                  { p.tds_applicable ? (
-                                    <span className="text-orange-400 text-xs">₹{ p.tds_amount } ({ p.tds_percentage }%)</span>
-                                  ) : '-' }
-                                </td>
+                      <>
+                        {/* Mobile Cards View (< md) */}
+                        <div className="md:hidden space-y-2.5">
+                          { proformaPayments.map(p => (
+                            <div key={ p.id } className="p-3 rounded-xl bg-gray-900/60 dark:bg-gray-900/60 border border-gray-700/60 flex flex-col gap-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-300 font-semibold">{ moment(p.payment_date).format('DD MMM YYYY') }</span>
+                                <span className="px-2 py-0.5 rounded-md bg-gray-800 text-gray-300 border border-gray-700 font-medium text-[11px]">{ p.payment_mode }</span>
+                              </div>
 
-                                <td className="py-3 text-right font-bold text-yellow-400">₹{ Number(p.amount).toLocaleString() }</td>
-                                <td className="py-3 text-center">
-                                  { p.status === 'pending_approval' ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                      <span className="px-2 py-1 bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500 dark:border-amber-500/30 rounded text-xs font-bold uppercase">Pending</span>
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          onClick={ () => handleApprovePayment(p.id) }
-                                          disabled={ approvingPaymentId === p.id || deletingPaymentId === p.id }
-                                          className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold shadow transition disabled:opacity-50 cursor-pointer"
-                                        >
-                                          { approvingPaymentId === p.id ? 'Approving...' : 'Approve' }
-                                        </button>
-                                        <button
-                                          onClick={ () => handleDeletePayment(p.id) }
-                                          disabled={ deletingPaymentId === p.id || approvingPaymentId === p.id }
-                                          className="px-2.5 py-1 bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/40 rounded text-xs font-semibold transition flex items-center gap-1 disabled:opacity-50 cursor-pointer"
-                                          title="Mark as Failed / Reject"
-                                        >
-                                          <Trash className="w-3.5 h-3.5" />
-                                          { deletingPaymentId === p.id ? 'Deleting...' : 'Mark as Failed / Reject' }
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ) : p.status === 'approved' ? (
-                                    <div className="flex flex-col items-center gap-1.5">
-                                      <span className="px-2.5 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center">
-                                        <CheckCircle2 className="w-3.5 h-3.5" /> Approved
-                                      </span>
-                                      <button 
-                                        onClick={() => {
-                                          const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
-                                          const clientId = p.client_id || proforma.client_id || proposal?.client_id || proposal?.clientId;
-                                          window.open(`#/admin/invoice/${clientId}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
-                                        }}
-                                        className="px-3 py-1 bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500 dark:border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
+                              <div className="flex items-baseline justify-between">
+                                <div>
+                                  <span className="text-[11px] text-gray-400 uppercase tracking-wider">Amount: </span>
+                                  <span className="font-bold text-yellow-400 text-base">₹{ Number(p.amount).toLocaleString() }</span>
+                                </div>
+                                { p.tds_applicable ? (
+                                  <span className="text-orange-400 text-xs font-medium">TDS: ₹{ p.tds_amount } ({ p.tds_percentage }%)</span>
+                                ) : null }
+                              </div>
+
+                              { p.transaction_reference && (
+                                <div className="text-xs text-gray-400 truncate">
+                                  Ref: <span className="text-gray-200 font-mono">{ p.transaction_reference }</span>
+                                </div>
+                              ) }
+
+                              <div className="pt-2 border-t border-gray-800/80 flex items-center justify-between gap-2">
+                                { p.status === 'pending_approval' ? (
+                                  <>
+                                    <span className="px-2 py-0.5 bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 rounded text-[11px] font-bold uppercase">
+                                      Pending
+                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        onClick={ () => handleApprovePayment(p.id) }
+                                        disabled={ approvingPaymentId === p.id || deletingPaymentId === p.id }
+                                        className="px-2.5 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold shadow transition disabled:opacity-50"
                                       >
-                                        View Invoice
+                                        { approvingPaymentId === p.id ? 'Approving...' : 'Approve' }
+                                      </button>
+                                      <button
+                                        onClick={ () => handleDeletePayment(p.id) }
+                                        disabled={ deletingPaymentId === p.id || approvingPaymentId === p.id }
+                                        className="px-2 py-1 bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/40 rounded text-xs font-semibold transition flex items-center gap-1 disabled:opacity-50"
+                                      >
+                                        <Trash className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
-                                  ) : (
-                                    <span className="text-gray-500 text-xs">-</span>
-                                  ) }
-                                </td>
+                                  </>
+                                ) : p.status === 'approved' ? (
+                                  <>
+                                    <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-[11px] font-bold uppercase flex items-center gap-1">
+                                      <CheckCircle2 className="w-3.5 h-3.5" /> Approved
+                                    </span>
+                                    <button
+                                      onClick={() => {
+                                        const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
+                                        const clientId = p.client_id || proforma.client_id || proposal?.client_id || proposal?.clientId;
+                                        window.open(`#/admin/invoice/${clientId}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
+                                      }}
+                                      className="px-2.5 py-1 bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500 dark:border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
+                                    >
+                                      View Invoice
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-gray-500 text-xs">-</span>
+                                ) }
+                              </div>
+                            </div>
+                          )) }
+                        </div>
 
+                        {/* Desktop Table View (>= md) */}
+                        <div className="hidden md:block overflow-x-auto">
+                          <table className="w-full text-left text-sm min-w-[560px]">
+                            <thead>
+                              <tr className="border-b border-gray-700 text-gray-400 uppercase tracking-wider text-xs">
+                                <th className="pb-3 font-semibold">Date</th>
+                                <th className="pb-3 font-semibold">Mode</th>
+                                <th className="pb-3 font-semibold">Ref</th>
+                                <th className="pb-3 font-semibold">TDS</th>
+                                <th className="pb-3 font-semibold text-right">Received Amount</th>
+                                <th className="pb-3 font-semibold text-center">Status / Action</th>
                               </tr>
-                            )) }
-                          </tbody>
-                        </table>
-                      </div>
+                            </thead>
+                            <tbody>
+                              { proformaPayments.map(p => (
+                                <tr key={ p.id } className="border-b border-gray-800 text-gray-300">
+                                  <td className="py-3">{ moment(p.payment_date).format('DD MMM YYYY') }</td>
+                                  <td className="py-3">{ p.payment_mode }</td>
+                                  <td className="py-3">{ p.transaction_reference || '-' }</td>
+                                  <td className="py-3">
+                                    { p.tds_applicable ? (
+                                      <span className="text-orange-400 text-xs">₹{ p.tds_amount } ({ p.tds_percentage }%)</span>
+                                    ) : '-' }
+                                  </td>
+
+                                  <td className="py-3 text-right font-bold text-yellow-400">₹{ Number(p.amount).toLocaleString() }</td>
+                                  <td className="py-3 text-center">
+                                    { p.status === 'pending_approval' ? (
+                                      <div className="flex flex-col items-center gap-2">
+                                        <span className="px-2 py-1 bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500 dark:border-amber-500/30 rounded text-xs font-bold uppercase">Pending</span>
+                                        <div className="flex items-center gap-2">
+                                          <button
+                                            onClick={ () => handleApprovePayment(p.id) }
+                                            disabled={ approvingPaymentId === p.id || deletingPaymentId === p.id }
+                                            className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-semibold shadow transition disabled:opacity-50 cursor-pointer"
+                                          >
+                                            { approvingPaymentId === p.id ? 'Approving...' : 'Approve' }
+                                          </button>
+                                          <button
+                                            onClick={ () => handleDeletePayment(p.id) }
+                                            disabled={ deletingPaymentId === p.id || approvingPaymentId === p.id }
+                                            className="px-2.5 py-1 bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/40 rounded text-xs font-semibold transition flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                                            title="Mark as Failed / Reject"
+                                          >
+                                            <Trash className="w-3.5 h-3.5" />
+                                            { deletingPaymentId === p.id ? 'Deleting...' : 'Mark as Failed / Reject' }
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : p.status === 'approved' ? (
+                                      <div className="flex flex-col items-center gap-1.5">
+                                        <span className="px-2.5 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-xs font-bold uppercase flex items-center gap-1 justify-center">
+                                          <CheckCircle2 className="w-3.5 h-3.5" /> Approved
+                                        </span>
+                                        <button 
+                                          onClick={() => {
+                                            const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
+                                            const clientId = p.client_id || proforma.client_id || proposal?.client_id || proposal?.clientId;
+                                            window.open(`#/admin/invoice/${clientId}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
+                                          }}
+                                          className="px-3 py-1 bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500 dark:border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
+                                        >
+                                          View Invoice
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-500 text-xs">-</span>
+                                    ) }
+                                  </td>
+
+                                </tr>
+                              )) }
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
                     ) }
                   </div>
                 </div>
@@ -856,8 +935,8 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         </div>
         
         {/* Footer with Close Button */}
-        <div className="p-4 border-t border-gray-700 bg-gray-800 flex justify-end">
-          <button onClick={onClose} className="px-6 py-2 rounded-xl bg-gray-700 text-gray-300 hover:bg-gray-600 font-semibold transition">
+        <div className="p-3 sm:p-4 border-t border-gray-700 bg-gray-800 flex justify-end shrink-0">
+          <button onClick={onClose} className="w-full sm:w-auto px-6 py-2 rounded-xl bg-gray-700 text-gray-300 hover:bg-gray-600 font-semibold transition text-sm sm:text-base text-center">
             Close
           </button>
         </div>
@@ -865,34 +944,34 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
       {/* Dark Themed Record Payment Modal (renders on top of the manager) */ }
       { showPaymentModal && selectedProforma && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/30">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
           <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden shadow-2xl max-h-[95vh] flex flex-col">
-            <div className="p-5 border-b border-gray-800 flex items-center justify-between bg-yellow-500/10 shrink-0">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <IndianRupee className="w-5 h-5 text-yellow-400" /> Record Payment
+            <div className="p-4 sm:p-5 border-b border-gray-800 flex items-center justify-between bg-yellow-500/10 shrink-0">
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <IndianRupee className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" /> Record Payment
               </h3>
-              <button onClick={ () => setShowPaymentModal(false) } className="text-gray-400 hover:text-white transition">
+              <button onClick={ () => setShowPaymentModal(false) } className="text-gray-400 hover:text-white transition p-1">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={ handleRecordPayment } className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 sm:p-5 space-y-3 sm:space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Amount Received</label>
-                    <input type="number" step="0.01" required value={ paymentForm.amount } max={ selectedProforma ? Number(selectedProforma.total_amount) - payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved').reduce((sum, p) => sum + Number(p.amount), 0) : undefined } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Total Amount Received</label>
+                    <input type="number" step="0.01" required value={ paymentForm.amount } max={ selectedProforma ? Number(selectedProforma.total_amount) - payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved').reduce((sum, p) => sum + Number(p.amount), 0) : undefined } onChange={ e => setPaymentForm({ ...paymentForm, amount: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 sm:p-3 text-white focus:border-yellow-500 outline-none text-sm" placeholder="0.00" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Date</label>
-                    <input type="date" required value={ paymentForm.payment_date } onChange={ e => setPaymentForm({ ...paymentForm, payment_date: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" />
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Payment Date</label>
+                    <input type="date" required value={ paymentForm.payment_date } onChange={ e => setPaymentForm({ ...paymentForm, payment_date: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 sm:p-3 text-white focus:border-yellow-500 outline-none text-sm" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Mode</label>
-                    <select value={ paymentForm.payment_mode } onChange={ e => setPaymentForm({ ...paymentForm, payment_mode: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Payment Mode</label>
+                    <select value={ paymentForm.payment_mode } onChange={ e => setPaymentForm({ ...paymentForm, payment_mode: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 sm:p-3 text-white focus:border-yellow-500 outline-none text-sm">
                       <option value="UPI">UPI</option>
                       <option value="Bank Transfer">Bank Transfer</option>
                       <option value="Cash">Cash</option>
@@ -900,12 +979,12 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Transaction Ref</label>
-                    <input type="text" value={ paymentForm.transaction_reference } onChange={ e => setPaymentForm({ ...paymentForm, transaction_reference: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="Txn ID / UTR" />
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Transaction Ref</label>
+                    <input type="text" value={ paymentForm.transaction_reference } onChange={ e => setPaymentForm({ ...paymentForm, transaction_reference: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 sm:p-3 text-white focus:border-yellow-500 outline-none text-sm" placeholder="Txn ID / UTR" />
                   </div>
                 </div>
 
-                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 space-y-3">
+                <div className="bg-gray-800/50 p-3.5 sm:p-4 rounded-xl border border-gray-700 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-gray-300">TDS Applicable?</span>
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -915,10 +994,10 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                   </div>
 
                   { paymentForm.tds_applicable && (
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-700">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2 border-t border-gray-700">
                       <div>
                         <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">TDS Percentage</label>
-                        <select value={ paymentForm.tds_percentage } onChange={ e => setPaymentForm({ ...paymentForm, tds_percentage: e.target.value }) } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white">
+                        <select value={ paymentForm.tds_percentage } onChange={ e => setPaymentForm({ ...paymentForm, tds_percentage: e.target.value }) } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white text-sm">
                           <option value={ 1 }>1%</option>
                           <option value={ 2 }>2%</option>
                           <option value={ 5 }>5%</option>
@@ -927,14 +1006,14 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Calculated TDS Amount</label>
-                        <input type="text" readOnly value={ `₹${paymentForm.tds_amount}` } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-orange-400 font-bold" />
+                        <input type="text" readOnly value={ `₹${paymentForm.tds_amount}` } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-orange-400 font-bold text-sm" />
                       </div>
                     </div>
                   ) }
                 </div>
 
                 { (hasGoogleAd || hasMetaAd) && (
-                  <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                  <div className="bg-gray-800 p-3.5 sm:p-4 rounded-xl border border-gray-700">
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-sm font-semibold text-gray-300">Ad Budget (This Payment)?</span>
@@ -964,7 +1043,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       const maxAllowed = Math.max(0, Number(paymentForm.amount || 0) - 1);
 
                       return (
-                        <div className={ `grid grid-cols-1 ${hasGoogleAd && hasMetaAd ? 'md:grid-cols-2' : ''} gap-4 pt-2 border-t border-gray-700 mt-2` }>
+                        <div className={ `grid grid-cols-1 ${hasGoogleAd && hasMetaAd ? 'md:grid-cols-2' : ''} gap-3 sm:gap-4 pt-2 border-t border-gray-700 mt-2` }>
                           { hasGoogleAd && (
                             <div>
                               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
@@ -972,7 +1051,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                               </label>
                               <input type="number" step="0.01" value={ paymentForm.realized_google_budget } onChange={ e => {
                                 setPaymentForm({ ...paymentForm, realized_google_budget: e.target.value });
-                              } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                              } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none text-sm" placeholder="0.00" />
                               { Number(paymentForm.realized_google_budget) > remainingGoogleAdBudget && (
                                 <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Google budget ₹{ remainingGoogleAdBudget }</p>
                               ) }
@@ -985,7 +1064,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                               </label>
                               <input type="number" step="0.01" value={ paymentForm.realized_meta_budget } onChange={ e => {
                                 setPaymentForm({ ...paymentForm, realized_meta_budget: e.target.value });
-                              } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none" placeholder="0.00" />
+                              } } className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-white focus:border-yellow-500 outline-none text-sm" placeholder="0.00" />
                               { Number(paymentForm.realized_meta_budget) > remainingMetaAdBudget && (
                                 <p className="text-red-500 text-xs mt-1">Cannot exceed remaining Meta budget ₹{ remainingMetaAdBudget }</p>
                               ) }
@@ -1003,12 +1082,12 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                 ) }
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Remark</label>
-                  <textarea rows="2" value={ paymentForm.remark } onChange={ e => setPaymentForm({ ...paymentForm, remark: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white focus:border-yellow-500 outline-none" placeholder="Any notes..."></textarea>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2">Remark</label>
+                  <textarea rows="2" value={ paymentForm.remark } onChange={ e => setPaymentForm({ ...paymentForm, remark: e.target.value }) } className="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 sm:p-3 text-white focus:border-yellow-500 outline-none text-sm" placeholder="Any notes..."></textarea>
                 </div>
               </div>
 
-              <div className="p-5 border-t border-gray-800 bg-gray-900 shrink-0">
+              <div className="p-4 sm:p-5 border-t border-gray-800 bg-gray-900 shrink-0">
                 { (() => {
                   const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved');
                   const totalReceivedTillDate = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
@@ -1029,25 +1108,25 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                   );
 
                   return (
-                    <div className="flex flex-col gap-6">
-                      <div className="flex justify-between items-center px-2">
+                    <div className="flex flex-col gap-4 sm:gap-6">
+                      <div className="flex justify-between items-center px-1 sm:px-2">
                         <div className="text-center">
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Outstanding</p>
-                          <p className="text-lg font-bold text-gray-300">₹{ currentOutstanding.toLocaleString("en-IN") }</p>
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1">Outstanding</p>
+                          <p className="text-sm sm:text-lg font-bold text-gray-300">₹{ currentOutstanding.toLocaleString("en-IN") }</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] text-yellow-500/70 uppercase tracking-wider mb-1">Settle Amount</p>
-                          <p className="text-xl font-bold text-yellow-400">₹{ finalSettleAmount.toLocaleString("en-IN") }</p>
+                          <p className="text-[10px] text-yellow-500/70 uppercase tracking-wider mb-0.5 sm:mb-1">Settle Amount</p>
+                          <p className="text-base sm:text-xl font-bold text-yellow-400">₹{ finalSettleAmount.toLocaleString("en-IN") }</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] text-orange-500/70 uppercase tracking-wider mb-1">Pending Balance</p>
-                          <p className="text-lg font-bold text-orange-400">₹{ pendingAfterPayment > 0 ? pendingAfterPayment.toLocaleString("en-IN") : 0 }</p>
+                          <p className="text-[10px] text-orange-500/70 uppercase tracking-wider mb-0.5 sm:mb-1">Pending Balance</p>
+                          <p className="text-sm sm:text-lg font-bold text-orange-400">₹{ pendingAfterPayment > 0 ? pendingAfterPayment.toLocaleString("en-IN") : 0 }</p>
                         </div>
                       </div>
 
-                      <div className="flex justify-center gap-4">
-                        <button type="button" onClick={ () => setShowPaymentModal(false) } className="px-8 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 font-semibold transition">Cancel</button>
-                        <button type="submit" disabled={ savingPayment || isAdBudgetInvalid } className="px-8 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed">
+                      <div className="flex flex-col-reverse sm:flex-row justify-center gap-2.5 sm:gap-4">
+                        <button type="button" onClick={ () => setShowPaymentModal(false) } className="w-full sm:w-auto px-6 sm:px-8 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 font-semibold transition text-sm">Cancel</button>
+                        <button type="submit" disabled={ savingPayment || isAdBudgetInvalid } className="w-full sm:w-auto px-6 sm:px-8 py-2 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed text-sm">
                           { savingPayment ? 'Saving...' : 'Save Payment' }
                         </button>
                       </div>
@@ -1059,6 +1138,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
           </div>
         </div>
       ) }
-    </div>
+    </div>,
+    document.body
   );
 }

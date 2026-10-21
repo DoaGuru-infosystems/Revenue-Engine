@@ -118,6 +118,10 @@ export default function AdminDashboardPage() {
       <header
         className="fixed top-0 left-0 right-0 z-30 h-16"
         style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
           backgroundColor: isLight ? "#ffffff" : "var(--bg-header)",
           borderBottom: isLight
             ? "1px solid rgba(234, 88, 12, 0.25)"
@@ -210,11 +214,19 @@ export default function AdminDashboardPage() {
         persistKey="admin-active-tab"
       />
 
+      {/* Mobile Menu Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       <div
-        className={`lg:hidden relative z-20 ${mobileMenuOpen ? "block" : "hidden"}`}
+        className={`lg:hidden fixed top-16 left-0 right-0 z-40 ${mobileMenuOpen ? "block" : "hidden"}`}
       >
         <div
-          className="backdrop-blur-xl"
+          className="backdrop-blur-xl shadow-2xl"
           style={{
             backgroundColor: "var(--bg-nav-mobile)",
             borderBottom: "1px solid var(--border-color)",
@@ -307,19 +319,23 @@ export default function AdminDashboardPage() {
       <div
         className="lg:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl h-14"
         style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
           backgroundColor: "var(--bg-bottom-nav)",
           borderTop: "1px solid var(--border-color)",
         }}
       >
-        <div className="h-full flex justify-around items-center">
-          {tabs.slice(0, 4).map((tab) => {
+        <div className="h-full flex items-center overflow-x-auto no-scrollbar px-2 gap-1 justify-start sm:justify-around">
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className="flex flex-col items-center gap-1 py-2 px-3 rounded-lg transition-all duration-300"
+                className="flex flex-col items-center gap-1 py-1.5 px-3 rounded-lg transition-all duration-300 shrink-0 min-w-[64px]"
                 style={{
                   color: isActive
                     ? "var(--bottom-tab-active-text)"
@@ -330,7 +346,7 @@ export default function AdminDashboardPage() {
                 }}
               >
                 <Icon className="w-5 h-5" />
-                <span className="text-xs font-medium">
+                <span className="text-[11px] font-medium whitespace-nowrap">
                   {tab.label.split(" ")[0]}
                 </span>
               </button>

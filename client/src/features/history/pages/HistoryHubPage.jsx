@@ -128,16 +128,19 @@ const HistoryHubPage = ({ setActiveTab }) => {
         </button>
       </div>
 
+      {/* ── Mobile Drawer Overlay Backdrop ─────────────────────────────────── */}
+      {isMobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-20 bg-black/40 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* ── Sub-tab Sidebar (Desktop & Mobile Drawer) ──────────────────────── */}
       <div className={`
-        absolute lg:sticky lg:top-0 top-[60px] left-0 right-0 z-20 
+        ${isMobileMenuOpen ? 'flex !absolute top-[60px] left-0 right-0 z-30 shadow-2xl' : 'hidden lg:flex'}
+        lg:!sticky lg:!top-0
         w-full lg:w-56 xl:w-64 flex-col gap-2 h-fit
-        transition-all duration-300 ease-in-out
-        ${isMobileMenuOpen 
-          ? 'translate-y-0 opacity-100 pointer-events-auto shadow-2xl' 
-          : '-translate-y-4 opacity-0 pointer-events-none lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto lg:shadow-none'
-        }
-        flex
         bg-white/95 dark:bg-gray-900/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none
         border border-gray-200 dark:border-gray-800/60 lg:border-none
         rounded-xl lg:rounded-none

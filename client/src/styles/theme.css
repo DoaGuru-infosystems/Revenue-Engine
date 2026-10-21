@@ -1142,11 +1142,6 @@
   }
 }
 
-[data-theme="light"] .backdrop-blur-xl,
-[data-theme="light"] .backdrop-blur-2xl {
-  position: relative;
-}
-
 /* ================================================================
    KEEP — Gradient accent buttons unchanged
    They look great on both themes (orange, green, red gradients)
