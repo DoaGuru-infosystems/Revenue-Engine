@@ -234,7 +234,7 @@ export default function AdminExplorePlansPage() {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[100vh] overflow-hidden text-gray-900 dark:text-white">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden text-gray-900 dark:text-white">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Plan Explorer</h1>
         <div className="bg-amber-500/10 dark:bg-white/10 px-4 py-1.5 rounded-full border border-amber-500/20 dark:border-white/10 self-start sm:self-auto">
@@ -242,7 +242,7 @@ export default function AdminExplorePlansPage() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 md:gap-6 h-[calc(100vh-130px)] md:h-[calc(100vh-180px)] overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-6 flex-1 min-h-0 overflow-hidden">
         <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col shrink-0 overflow-visible">
           <div className="lg:hidden relative w-full mb-2">
             <div 

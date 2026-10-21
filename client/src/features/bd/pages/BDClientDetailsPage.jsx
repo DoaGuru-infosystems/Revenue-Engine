@@ -14,6 +14,7 @@ import {
   Copy,
   FileText,
   CreditCard,
+  Trash2,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -56,6 +57,7 @@ const BDClientDetailsPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const clientPerPage = 10;
   const [isEditing, setIsEditing] = useState(false);
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
 
   const handleClose = () => {
     setShowModal(false);
@@ -202,6 +204,10 @@ const BDClientDetailsPage = () => {
           showConfirmButton: false,
           timer: 1000,
         });
+        if (selectedClient?.id === clientId) {
+          setSelectedClient(null);
+          setMobileDetailOpen(false);
+        }
         getAllClients();
       }
       const data = response?.data || {};
@@ -239,19 +245,59 @@ const BDClientDetailsPage = () => {
     }
   };
 
+  const handleDeleteProposal = async (proposalId) => {
+    const confirm = await Swal.fire({
+      title: "Delete Proposal?",
+      text: "Are you sure you want to delete this proposal?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#4B5563",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await axios.delete(`${baseURL}/auth/api/re_calculator/proposal/${proposalId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Proposal deleted successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        setClientProposals((prev) => prev.filter((p) => p.id !== proposalId));
+      } catch (error) {
+        console.error("Delete proposal error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to delete proposal.",
+        });
+      }
+    }
+  };
+
   const getAllClients = async () => {
     try {
+      const employeeName = encodeURIComponent(currentUser?.name || "");
       const response = await axios.get(
-        `${baseURL}/auth/api/re_calculator/getClientDetails`,
+        `${baseURL}/auth/api/re_calculator/getClientsByEmployee/${employeeName}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setGetClients(response.data.data);
+      setGetClients(response.data?.data || []);
     } catch (error) {
       console.error("Error fetching clients:", error);
+      if (error.response && error.response.status === 404) {
+        setGetClients([]);
+        return;
+      }
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -404,11 +450,7 @@ const BDClientDetailsPage = () => {
   const handleClientClick = (client) => {
     setSelectedClient(client);
     if (window.innerWidth < 1024) {
-      setTimeout(() => {
-        if (detailRef.current) {
-          detailRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 100);
+      setMobileDetailOpen(true);
     }
   };
 
@@ -418,8 +460,8 @@ const BDClientDetailsPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Client Management</h2>
-          <p className="text-gray-400 text-sm mt-1">Manage clients, proposals and public links</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Client Management</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage clients, proposals and public links</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
@@ -428,7 +470,7 @@ const BDClientDetailsPage = () => {
               type="search"
               value={keyword}
               placeholder="Search clients..."
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-800/60 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500/50 focus:border-transparent outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/50 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-orange-500/50 focus:border-transparent outline-none transition-all"
               onChange={(e) => {
                 setKeyword(e.target.value);
                 setCurrentPage(0);
@@ -445,73 +487,65 @@ const BDClientDetailsPage = () => {
         </div>
       </div>
 
-      {/* Main Layout - mobile: profile top + cards below. Desktop: cards left + profile right */}
+      {/* Main Layout - desktop: cards left + profile right; mobile uses bottom sheet */}
       <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden">
-        {/* Client Profile - shows FIRST on mobile (top), SECOND on desktop (right) */}
-        <div ref={detailRef} className="w-full lg:w-80 xl:w-96 shrink-0 lg:order-2">
-          <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-5 md:p-6 lg:min-h-[400px] flex flex-col">
+        <div ref={detailRef} className="hidden lg:block w-80 xl:w-96 shrink-0 lg:order-2">
+          <div className="bg-white/90 dark:bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700/50 p-6 min-h-[400px] flex flex-col">
             {selectedClient ? (
-              <div className="flex flex-col h-full gap-4 lg:gap-6">
-                {/* Profile Header - compact on mobile */}
-                <div className="flex items-center gap-4 lg:flex-col lg:text-center">
-                  <div className="w-14 h-14 lg:w-20 lg:h-20 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full flex items-center justify-center lg:mx-auto border border-gray-700/50 shrink-0">
-                    <User className="w-7 h-7 lg:w-10 lg:h-10 text-gray-400" />
+              <div className="flex flex-col h-full gap-6">
+                <div className="flex flex-col text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full flex items-center justify-center mx-auto border border-gray-200 dark:border-gray-700/50">
+                    <User className="w-10 h-10 text-gray-400" />
                   </div>
-                  <div>
+                  <div className="mt-3">
                     {selectedClient.client_organization && (
-                      <h4 className="font-bold text-lg lg:text-xl text-white">{selectedClient.client_organization}</h4>
+                      <h4 className="font-bold text-xl text-gray-900 dark:text-white">{selectedClient.client_organization}</h4>
                     )}
-                    <p className={`text-sm lg:text-base ${selectedClient.client_organization ? "text-gray-400" : "text-white font-bold text-lg"}`}>
+                    <p className={`text-base ${selectedClient.client_organization ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white font-bold text-lg"}`}>
                       {selectedClient.client_name}
                     </p>
                   </div>
                 </div>
-
-                {/* Contact - horizontal on mobile, vertical on desktop */}
-                <div className="flex flex-wrap lg:flex-col gap-2 lg:gap-2.5">
+                <div className="flex flex-col gap-2.5">
                   {selectedClient.email && (
-                    <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 bg-gray-800/50 rounded-lg lg:rounded-xl border border-gray-700/50">
-                      <div className="p-1 lg:p-1.5 bg-red-500/10 rounded-lg"><Mail className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-red-400" /></div>
-                      <span className="text-xs lg:text-sm text-gray-300 break-all">{selectedClient.email}</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                      <div className="p-1.5 bg-red-500/10 rounded-lg"><Mail className="w-4 h-4 text-red-400" /></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-300 break-all">{selectedClient.email}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 bg-gray-800/50 rounded-lg lg:rounded-xl border border-gray-700/50">
-                    <div className="p-1 lg:p-1.5 bg-amber-500/10 rounded-lg"><Phone className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-amber-400" /></div>
-                    <span className="text-xs lg:text-sm text-gray-300">{selectedClient.phone}</span>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                    <div className="p-1.5 bg-amber-500/10 rounded-lg"><Phone className="w-4 h-4 text-amber-400" /></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{selectedClient.phone}</span>
                   </div>
                   {selectedClient.address && (
-                    <div className="hidden lg:flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50">
                       <div className="p-1.5 bg-red-500/10 rounded-lg"><MapPin className="w-4 h-4 text-red-400" /></div>
-                      <span className="text-sm text-gray-300 line-clamp-2">{selectedClient.address}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{selectedClient.address}</span>
                     </div>
                   )}
                 </div>
-
-                {/* Action Buttons - horizontal on mobile, vertical on desktop */}
-                <div className="flex lg:flex-col gap-2 lg:gap-2.5 lg:mt-auto lg:pt-4 lg:border-t lg:border-gray-700/50">
+                <div className="flex flex-col gap-2.5 mt-auto pt-4 border-t border-gray-200 dark:border-gray-700/50">
                   <button onClick={handleCreateProposal}
-                    className="flex-1 lg:w-full px-3 lg:px-4 py-2 lg:py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-xs lg:text-sm">
-                    <Plus className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> Create Proposal
+                    className="w-full px-4 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm">
+                    <Plus className="w-4 h-4" /> Create Proposal
                   </button>
                   <button onClick={(e) => { e.preventDefault(); handleGeneratePublicLink(); }} disabled={generating}
-                    className="flex-1 lg:w-full px-3 lg:px-4 py-2 lg:py-2.5 bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20 rounded-xl hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2 text-xs lg:text-sm disabled:opacity-50">
-                    <LinkIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> {generating ? "Generating..." : "Generate Link"}
+                    className="w-full px-4 py-2.5 bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20 rounded-xl hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50">
+                    <LinkIcon className="w-4 h-4" /> {generating ? "Generating..." : "Generate Link"}
                   </button>
                   <button onClick={() => navigate(`/BD/client/service/history/${selectedClient.id}`)}
-                    className="flex-1 lg:w-full px-3 lg:px-4 py-2 lg:py-2.5 bg-gray-800 text-gray-300 font-medium rounded-xl hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-xs lg:text-sm">
-                    <Calendar className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> History
+                    className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4" /> History
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-4 lg:flex-col lg:justify-center text-gray-500 py-6 lg:py-12 lg:text-center">
-                <div className="w-14 h-14 lg:w-20 lg:h-20 bg-gray-800/50 rounded-full flex items-center justify-center shrink-0">
-                  <User className="w-7 h-7 lg:w-10 lg:h-10 opacity-30" />
+              <div className="flex flex-col items-center justify-center text-gray-500 py-12 text-center">
+                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800/50 rounded-full flex items-center justify-center shrink-0">
+                  <User className="w-10 h-10 opacity-30" />
                 </div>
-                <div>
-                  <h3 className="text-base lg:text-lg font-semibold text-gray-400 mb-1">No Client Selected</h3>
-                  <p className="text-xs lg:text-sm">Tap a client card to view profile</p>
-                </div>
+                <h3 className="text-lg font-semibold text-gray-500 dark:text-gray-400 mb-1 mt-3">No Client Selected</h3>
+                <p className="text-sm">Tap a client card to view profile</p>
               </div>
             )}
           </div>
@@ -519,12 +553,12 @@ const BDClientDetailsPage = () => {
 
         {/* Client List - shows SECOND on mobile (below), FIRST on desktop (left) */}
         <div className="flex-1 min-h-0 flex flex-col lg:order-1">
-          <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden">
-            <div className="p-4 border-b border-gray-700/30 bg-gray-800/40 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">All Clients</h3>
+          <div className="bg-white/90 dark:bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700/30 bg-gray-50 dark:bg-gray-800/40 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">All Clients</h3>
               <span className="text-xs text-gray-500">{filteredItems.length} total</span>
             </div>
-            <div className="p-2 md:p-4 grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3 overflow-y-auto flex-1 min-h-0" style={{ maxHeight: 'calc(100vh - 340px)' }}>
+            <div className="p-2 md:p-4 grid grid-cols-1 gap-2 md:gap-3 overflow-y-auto no-scrollbar flex-1 min-h-0" style={{ maxHeight: 'calc(100vh - 240px)' }}>
               {loading ? (
                 <div className="flex items-center justify-center h-48">
                   <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
@@ -537,7 +571,7 @@ const BDClientDetailsPage = () => {
                     className={`p-2.5 md:p-4 rounded-xl md:rounded-2xl cursor-pointer transition-all duration-200 border group ${
                       selectedClient?.id === client.id
                         ? "bg-orange-500/10 border-orange-500/30 ring-1 ring-orange-500/20"
-                        : "bg-gray-800/40 border-gray-700/50 hover:bg-gray-700/40 hover:border-gray-600/50"
+                        : "bg-gray-50 dark:bg-gray-800/40 border-gray-200 dark:border-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700/40 hover:border-gray-300 dark:hover:border-gray-600/50"
                     }`}
                   >
                     {/* Mobile: Compact vertical card */}
@@ -545,22 +579,22 @@ const BDClientDetailsPage = () => {
                       {/* Avatar + Name */}
                       <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
                         <div className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 ${
-                          selectedClient?.id === client.id ? "bg-gradient-to-br from-orange-500 to-red-600 text-white" : "bg-gray-700/50 text-gray-400"
+                          selectedClient?.id === client.id ? "bg-gradient-to-br from-orange-500 to-red-600 text-white" : "bg-gray-200 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400"
                         }`}>
                           <User className="w-4 h-4 md:w-6 md:h-6" />
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-bold text-white truncate text-xs md:text-base leading-tight">
+                          <h4 className="font-bold text-gray-900 dark:text-white truncate text-xs md:text-base leading-tight">
                             {client.client_organization || client.client_name}
                           </h4>
-                          <p className="text-[10px] md:text-sm text-gray-400 truncate">
+                          <p className="text-[10px] md:text-sm text-gray-500 dark:text-gray-400 truncate">
                             {client.client_organization ? client.client_name : "—"}
                           </p>
                         </div>
                       </div>
 
                       {/* Contact Info - phone always, rest hidden on mobile */}
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] md:text-sm text-gray-400 mt-1 md:mt-0">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] md:text-sm text-gray-500 dark:text-gray-400 mt-1 md:mt-0">
                         <span className="flex items-center gap-1 md:gap-1.5 truncate">
                           <Phone className="w-3 h-3 md:w-3.5 md:h-3.5 text-amber-400 shrink-0" />
                           {client.phone}
@@ -594,7 +628,7 @@ const BDClientDetailsPage = () => {
                             setIsEditing(true);
                             setShowModal(true);
                           }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-700/50 hover:bg-gray-600/80 text-white transition-colors"
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-gray-700/50 hover:bg-gray-300 dark:hover:bg-gray-600/80 text-gray-800 dark:text-white transition-colors"
                         >
                           Edit
                         </button>
@@ -616,21 +650,21 @@ const BDClientDetailsPage = () => {
               )}
             </div>
             {/* Pagination */}
-            <div className="p-3 border-t border-gray-700/30 bg-gray-800/40 flex items-center justify-center gap-3">
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700/30 bg-gray-50 dark:bg-gray-800/40 flex items-center justify-center gap-3">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                 disabled={currentPage === 0}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-700/50 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 ← Prev
               </button>
 
               <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Page</span>
+                <span className="text-gray-500 dark:text-gray-400 text-sm">Page</span>
                 <select
                   value={currentPage}
                   onChange={(e) => setCurrentPage(Number(e.target.value))}
-                  className="bg-gray-900/80 border border-gray-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 cursor-pointer appearance-none min-w-[70px] text-center"
+                  className="bg-white dark:bg-gray-900/80 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 cursor-pointer appearance-none min-w-[70px] text-center"
                   style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 fill=%27%239ca3af%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z%27/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', paddingRight: '28px' }}
                 >
                   {Array.from({ length: totalPages }, (_, i) => (
@@ -643,7 +677,7 @@ const BDClientDetailsPage = () => {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
                 disabled={currentPage >= totalPages - 1}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-700/50 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-200 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 Next →
               </button>
@@ -652,63 +686,63 @@ const BDClientDetailsPage = () => {
             </div>
           </div>
         </div>
-
+      </div>
 
       {/* Add/Edit Client Modal */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={handleClose} />
-          <div className="relative bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl border border-gray-700/50 overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b border-gray-700/50">
+          <div className="relative bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center text-orange-400">
                   <User className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   {isEditing ? "Edit Client" : "Add New Client"}
                 </h2>
               </div>
-              <button onClick={handleClose} className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
+              <button onClick={handleClose} className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Client Name</label>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Client Name</label>
                 <input type="text" name="client_name" value={formData.client_name} onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
                   placeholder="Enter client name" required />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Organization</label>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Organization</label>
                 <input type="text" name="client_organization" value={formData.client_organization} onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
                   placeholder="Enter organization" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
                   <input type="email" name="email" value={formData.email} onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
                     placeholder="email@example.com" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Phone</label>
+                  <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Phone</label>
                   <input type="number" name="phone" value={formData.phone} onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors"
+                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
                     placeholder="10-digit number" required minLength={10} maxLength={10} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Address</label>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Address</label>
                 <textarea name="address" value={formData.address} onChange={handleChange} rows={2}
-                  className="w-full px-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-orange-500 transition-colors resize-none"
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors resize-none"
                   placeholder="Enter full address" />
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-700/50">
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700/50">
                 <button type="button" onClick={handleClose}
-                  className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-xl transition-colors">
+                  className="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium rounded-xl transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={loading}
@@ -724,25 +758,25 @@ const BDClientDetailsPage = () => {
       {/* Link Modal */}
       {showLinkModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-gray-900 border border-gray-700/50 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/50 rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-white">Share Client Portal</h3>
-              <button onClick={() => setShowLinkModal(false)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded-xl transition text-gray-400 hover:text-white">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Share Client Portal</h3>
+              <button onClick={() => setShowLinkModal(false)} className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
-              <p className="text-sm text-gray-400">Share this link with {selectedClient?.client_name}. The link will automatically expire in 30 days.</p>
-              <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 break-all text-sm text-red-400 font-medium">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Share this link with {selectedClient?.client_name}. The link will automatically expire in 30 days.</p>
+              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 break-all text-sm text-red-400 font-medium">
                 {generatedLink}
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleCopyLink}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-gray-900 font-bold hover:bg-gray-100 transition-colors">
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-colors">
                   <Copy className="w-4 h-4" /> Copy Link
                 </button>
                 <a href={generatedLink} target="_blank" rel="noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-600 text-white font-medium hover:bg-gray-700 transition-colors">
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                   <ExternalLink className="w-4 h-4" /> Open Link
                 </a>
               </div>
@@ -751,46 +785,91 @@ const BDClientDetailsPage = () => {
         </div>
       )}
 
-      {/* Proposal Selection Modal */}
-      {showProposalModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-gray-900 border border-gray-700/50 rounded-2xl p-6 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
-            <div className="flex justify-between items-center mb-6 shrink-0">
-              <h3 className="text-xl font-bold text-white">Client Proposals</h3>
-              <button onClick={() => setShowProposalModal(false)} className="p-2 bg-gray-800 hover:bg-gray-700 rounded-xl transition text-gray-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <button 
-              onClick={() => navigate(`/BD/proposal-builder/${selectedClient.id}`)}
-              className="w-full py-3 mb-4 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition flex justify-center items-center gap-2 shrink-0"
+      {/* Mobile Client Detail Bottom Sheet */}
+      {mobileDetailOpen && selectedClient && (
+        <div className="fixed inset-0 z-[90] lg:hidden">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileDetailOpen(false)} />
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700/60 rounded-t-3xl p-5 pb-20 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-2" />
+            <button
+              onClick={() => setMobileDetailOpen(false)}
+              className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
             >
-              <Plus className="w-5 h-5" /> Create New Proposal
+              <X className="w-5 h-5" />
             </button>
-
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3 min-h-0">
-              <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-gray-900 py-2">Existing Proposals</h4>
-              {loadingProposals ? (
-                <div className="text-center py-8 text-gray-500">Loading proposals...</div>
-              ) : clientProposals.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 bg-gray-800/30 rounded-xl border border-gray-700/30">No proposals found for this client.</div>
-              ) : (
-                clientProposals.map(p => (
-                  <button 
-                    key={p.id}
-                    onClick={() => navigate(`/BD/proposal-builder/${selectedClient.id}/${p.id}`)}
-                    className="w-full text-left p-4 bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 rounded-xl transition group"
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-semibold text-red-400 capitalize">{p.proposal_type.replace('_', ' ')}</span>
-                      <span className="text-xs bg-gray-700 px-2 py-1 rounded-md text-gray-300 capitalize">{p.status.replace('_', ' ')}</span>
-                    </div>
-                    <div className="text-sm text-gray-400 mb-2">Total: ₹{p.grand_total_excl_gst}</div>
-                    <div className="text-xs text-gray-500">Created: {new Date(p.created_at).toLocaleDateString()}</div>
-                  </button>
-                ))
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700/50 shrink-0">
+                <User className="w-8 h-8 text-gray-400" />
+              </div>
+              <div className="min-w-0">
+                {selectedClient.client_organization && (
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white truncate">{selectedClient.client_organization}</h4>
+                )}
+                <p className={`text-sm truncate ${selectedClient.client_organization ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white font-bold text-lg"}`}>
+                  {selectedClient.client_name}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {selectedClient.email && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                  <div className="p-1.5 bg-red-500/10 rounded-lg shrink-0"><Mail className="w-4 h-4 text-red-400" /></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300 break-all">{selectedClient.email}</span>
+                </div>
               )}
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                <div className="p-1.5 bg-amber-500/10 rounded-lg shrink-0"><Phone className="w-4 h-4 text-amber-400" /></div>
+                <span className="text-sm text-gray-600 dark:text-gray-300">{selectedClient.phone}</span>
+              </div>
+              {selectedClient.address && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                  <div className="p-1.5 bg-red-500/10 rounded-lg shrink-0"><MapPin className="w-4 h-4 text-red-400" /></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{selectedClient.address}</span>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2.5 pt-2">
+              <button
+                onClick={() => { setMobileDetailOpen(false); handleCreateProposal(); }}
+                className="w-full py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm"
+              >
+                <Plus className="w-4 h-4" /> Create Proposal
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); setMobileDetailOpen(false); handleGeneratePublicLink(); }}
+                disabled={generating}
+                className="w-full py-3 bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20 rounded-xl hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+              >
+                <LinkIcon className="w-4 h-4" /> {generating ? "Generating..." : "Generate Link"}
+              </button>
+              <button
+                onClick={() => { setMobileDetailOpen(false); navigate(`/BD/client/service/history/${selectedClient.id}`); }}
+                className="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm"
+              >
+                <Calendar className="w-4 h-4" /> History
+              </button>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => {
+                    setMobileDetailOpen(false);
+                    setFormData({
+                      client_name: selectedClient.client_name,
+                      client_organization: selectedClient.client_organization,
+                      email: selectedClient.email,
+                      phone: selectedClient.phone,
+                      address: selectedClient.address,
+                      dg_employee: selectedClient.dg_employee,
+                    });
+                    setIsEditing(true);
+                    setShowModal(true);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-gray-700/60 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white transition-colors"
+                >Edit</button>
+                <button
+                  onClick={() => { setMobileDetailOpen(false); handleDeleteClient(selectedClient.id); }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors"
+                >Delete</button>
+              </div>
             </div>
           </div>
         </div>
@@ -801,17 +880,17 @@ const BDClientDetailsPage = () => {
       {showProposalModal && selectedClient && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowProposalModal(false)} />
-          <div className="relative bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-gray-700/50 flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between p-5 border-b border-gray-800 bg-gray-800/40">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <div className="relative bg-white dark:bg-gray-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 flex flex-col max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-5 h-5 text-orange-400" /> Client Proposals
               </h2>
-              <button onClick={() => setShowProposalModal(false)} className="text-gray-400 hover:text-white transition">
+              <button onClick={() => setShowProposalModal(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="p-5 flex gap-3 border-b border-gray-800">
+            <div className="p-5 flex flex-col sm:flex-row gap-3 border-b border-gray-200 dark:border-gray-800">
               <button 
                 onClick={() => navigate(`/BD/proposal-builder/${selectedClient.id}`)}
                 className="flex-1 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-bold transition flex items-center justify-center gap-2"
@@ -820,7 +899,7 @@ const BDClientDetailsPage = () => {
               </button>
               <button 
                 onClick={() => {}}
-                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-xl font-bold transition flex items-center justify-center gap-2 cursor-pointer"
                 title="Create Quotation (Coming Soon)"
               >
                 <FileText className="w-5 h-5" /> Create Quotation
@@ -828,28 +907,37 @@ const BDClientDetailsPage = () => {
             </div>
 
             <div className="p-5 overflow-y-auto flex-1 no-scrollbar space-y-3">
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Existing Proposals</h3>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Existing Proposals</h3>
               {loadingProposals ? (
                 <div className="flex justify-center py-10">
                   <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : clientProposals.length === 0 ? (
-                <div className="text-center py-10 text-gray-500 bg-gray-800/30 rounded-xl border border-gray-700/50">
+                <div className="text-center py-10 text-gray-500 bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700/50">
                   No proposals found for {selectedClient.client_name}.
                 </div>
               ) : (
                 clientProposals.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800 transition">
-                    <div>
-                      <h4 className="font-semibold text-white">Proposal #{p.id} - {p.proposal_type}</h4>
-                      <p className="text-xs text-gray-400 mt-1">Status: {p.status} • Total: ₹{p.grand_total_excl_gst}</p>
+                  <div key={p.id} className="flex items-center justify-between p-4 bg-gray-800/40 rounded-xl border border-gray-200 dark:border-gray-700/50 hover:bg-gray-800 transition gap-2">
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-gray-900 dark:text-white truncate">Proposal #{p.id} - {p.proposal_type}</h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Status: {p.status} • Total: ₹{p.grand_total_excl_gst}</p>
                     </div>
-                    <button 
-                      onClick={() => navigate(`/BD/proposal-builder/${selectedClient.id}/${p.id}`)}
-                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition"
-                    >
-                      Edit
-                    </button>
+                    <div className="flex gap-2 shrink-0">
+                      <button 
+                        onClick={() => navigate(`/BD/proposal-builder/${selectedClient.id}/${p.id}`)}
+                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white text-sm font-semibold rounded-lg transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProposal(p.id)}
+                        className="px-3 py-2 bg-red-900/40 hover:bg-red-800 text-red-400 text-sm font-semibold rounded-lg transition"
+                        title="Delete Proposal"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -857,7 +945,6 @@ const BDClientDetailsPage = () => {
           </div>
         </div>
       )}
-      </div>
     </>
 
   );

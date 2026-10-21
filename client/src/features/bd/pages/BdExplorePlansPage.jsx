@@ -231,15 +231,15 @@ export default function BdExplorePlansPage() {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-screen overflow-hidden">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Plan Explorer</h1>
-        <div className="bg-amber-500/10 dark:bg-white/10 px-4 py-1.5 rounded-full border border-amber-500/20 dark:border-white/10">
-          <span className="text-amber-700 dark:text-yellow-400 font-mono text-sm font-semibold">{plans.length} Plans Available</span>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Plan Explorer</h1>
+        <div className="bg-amber-500/10 dark:bg-white/10 px-4 py-1.5 rounded-full border border-amber-500/20 dark:border-white/10 self-start sm:self-auto">
+          <span className="text-amber-700 dark:text-yellow-400 font-mono text-xs sm:text-sm font-semibold">{plans.length} Plans Available</span>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)] overflow-hidden text-gray-900 dark:text-white">
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 overflow-hidden text-gray-900 dark:text-white">
         <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
           {plans.map((plan) => (
             <button
@@ -266,17 +266,17 @@ export default function BdExplorePlansPage() {
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-3xl border border-gray-200 dark:border-white/10 p-8 custom-scrollbar shadow-sm">
+        <div className="flex-1 overflow-y-auto bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-white/10 p-4 sm:p-6 lg:p-8 custom-scrollbar shadow-sm">
           {activePlan ? (
-            <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="flex justify-between items-start">
+            <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
-                  <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">{activePlan.title}</h2>
-                  <p className="text-gray-600 dark:text-white/50 text-lg leading-relaxed">{activePlan.description}</p>
+                  <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">{activePlan.title}</h2>
+                  <p className="text-gray-600 dark:text-white/50 text-base sm:text-lg leading-relaxed">{activePlan.description}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-gray-500 dark:text-white/40 text-sm uppercase tracking-wider mb-1 font-semibold">Total Investment</p>
-                  <p className="text-4xl font-black text-amber-600 dark:text-yellow-400">₹{activePlan.totalAmount.toLocaleString()}</p>
+                <div className="sm:text-right shrink-0">
+                  <p className="text-gray-500 dark:text-white/40 text-xs sm:text-sm uppercase tracking-wider mb-1 font-semibold">Total Investment</p>
+                  <p className="text-2xl sm:text-4xl font-black text-amber-600 dark:text-yellow-400">₹{activePlan.totalAmount.toLocaleString()}</p>
                 </div>
               </div>
 
@@ -299,7 +299,7 @@ export default function BdExplorePlansPage() {
               <button
                 onClick={() => handleCreateQuotation(activePlan)}
                 disabled={loading}
-                className="w-full py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-xl shadow-xl shadow-amber-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4"
+                className="w-full py-3.5 sm:py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-base sm:text-xl shadow-xl shadow-amber-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4"
               >
                 {loading ? "Processing..." : "Generate Full Quotation"}
                 <ArrowRight size={22} />

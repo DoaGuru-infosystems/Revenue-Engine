@@ -9,12 +9,14 @@ import { clearUser } from "../../../redux/user/userSlice";
 import Swal from "sweetalert2";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import CreateBalanceProformaModal from "../components/CreateBalanceProformaModal";
+import { getBasePath, rolePath } from "../../../utils/rolePaths";
 
 const BalanceProformaHistoryPage = () => {
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { token } = useSelector((state) => state.user);
+  const { token, currentUser } = useSelector((state) => state.user);
+  const basePath = getBasePath(currentUser?.role);
 
   const [balanceProformas, setBalanceProformas] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -63,7 +65,7 @@ const BalanceProformaHistoryPage = () => {
 
   const handlePreviewPdf = (item) => {
     window.open(
-      `#/admin/balance-proforma/${item.client_id}/${item.id}?doc=balance-proforma-view&gst=${item.is_gst ? 1 : 0}`,
+      `#${rolePath(basePath, "balance-proforma", item.client_id, item.id, `doc=balance-proforma-view&gst=${item.is_gst ? 1 : 0}`)}`,
       "_blank"
     );
   };

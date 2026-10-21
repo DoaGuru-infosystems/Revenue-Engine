@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import { ArrowLeft, Megaphone, Sparkles, Pencil, Trash2, Wallet, Layers } from "lucide-react";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import { useTheme } from "../../../context/ThemeContext";
+import { getBasePathFromLocation, servicesLandingPath } from "../../../utils/rolePaths";
 
 const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
   const { theme } = useTheme();
@@ -531,9 +532,11 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
     if (window.history.length > 1) {
       navigate(-1);
     } else {
-      const fallbackUrl = docTypeFromURL === "proforma"
-        ? `/admin/ServicesLanding/${id}/${proposalId}?doc=proforma`
-        : `/admin/ServicesLanding/${id}/${proposalId}`;
+      const base = getBasePathFromLocation(location);
+      const fallbackUrl =
+        docTypeFromURL === "proforma"
+          ? servicesLandingPath(base, id, proposalId, "doc=proforma")
+          : servicesLandingPath(base, id, proposalId);
       navigate(fallbackUrl);
     }
   };

@@ -19,10 +19,12 @@ import {
 import moment from "moment";
 import { useSelector } from "react-redux";
 import API_BASE_URL from "../../../config/apiBaseUrl";
+import { getBasePath, rolePath } from "../../../utils/rolePaths";
 
 export default function CreateBalanceProformaModal({ isOpen, onClose, onSuccess }) {
   const baseURL = API_BASE_URL;
   const { currentUser, token } = useSelector((state) => state.user);
+  const basePath = getBasePath(currentUser?.role);
 
   const [step, setStep] = useState("client"); // "client" | "proformas"
   const [clients, setClients] = useState([]);
@@ -163,7 +165,7 @@ export default function CreateBalanceProformaModal({ isOpen, onClose, onSuccess 
         }).then((viewResult) => {
           if (viewResult.isConfirmed) {
             window.open(
-              `#/admin/balance-proforma/${selectedClient.id}/${newBal.id}?doc=balance-proforma-view&gst=${isGST ? 1 : 0}`,
+              `#${rolePath(basePath, "balance-proforma", selectedClient.id, newBal.id, `doc=balance-proforma-view&gst=${isGST ? 1 : 0}`)}`,
               "_blank"
             );
           }

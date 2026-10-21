@@ -41,6 +41,7 @@ import {
   useGraphicCalculatorNotes,
   isComplimentaryItem,
 } from "../hooks";
+import { getBasePathFromLocation, servicesLandingPath } from "../../../utils/rolePaths";
 
 const GraphicCalculator = ({
   hideNotes,
@@ -179,9 +180,11 @@ const GraphicCalculator = ({
     if (window.history.length > 1) {
       navigate(-1);
     } else {
-      const fallbackUrl = docTypeFromURL === "proforma"
-        ? `/admin/ServicesLanding/${id}/${proposalId}?doc=proforma`
-        : `/admin/ServicesLanding/${id}/${proposalId}`;
+      const base = getBasePathFromLocation(location);
+      const fallbackUrl =
+        docTypeFromURL === "proforma"
+          ? servicesLandingPath(base, id, proposalId, "doc=proforma")
+          : servicesLandingPath(base, id, proposalId);
       navigate(fallbackUrl);
     }
   };

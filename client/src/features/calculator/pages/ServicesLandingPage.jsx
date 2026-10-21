@@ -506,7 +506,7 @@ export default function ServicesLandingPage() {
           subtitle: "Custom Plan",
           description: `Includes ${item.plan_name} services tailored to your needs.`,
           gradient: "from-green-500 to-yellow-600",
-          navigation: "/admin/dynamicPlan",
+          navigation: `${basePath}/dynamicPlan`,
           features: [],
           totalAmount: 0,
         };

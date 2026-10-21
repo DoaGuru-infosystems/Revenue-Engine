@@ -8,10 +8,9 @@ import {
   Menu,
   X,
   List,
-  UserPlus,
   Link,
   TrendingUp,
-  Plus,
+  FileText,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +18,25 @@ import Swal from "sweetalert2";
 import { clearUser } from "../../../redux/user/userSlice";
 import NavTabs from "../../../Components/NavTabs";
 
-const AssignQuotationBD = lazy(() => import("./AssignQuotationBDPage"));
+const BD_ALLOWED_TABS = new Set([
+  "clients",
+  "history",
+  "invoicehistory",
+  "exploreplan",
+  "generatelink",
+  "seo",
+  "convert-letterhead",
+]);
+
+function getInitialBdTab() {
+  const saved = localStorage.getItem("bd-active-tab");
+  if (saved && BD_ALLOWED_TABS.has(saved)) return saved;
+  if (saved === "assign" || saved === "Convert Letterhead ") {
+    localStorage.setItem("bd-active-tab", "clients");
+  }
+  return "clients";
+}
+
 const AllHistory = lazy(() => import("../../history/pages/AllTransactionHistoryBDPage"));
 const InvoiceHistory = lazy(() => import("../../history/pages/InvoiceHistoryPage"));
 const ClientDetails = lazy(() => import("./BDClientDetailsPage"));
@@ -34,11 +51,12 @@ export default function BusinessDeveloperDashboardPage() {
   const { currentUser } = useSelector((state) => state.user);
   const { theme } = useTheme();
   const isLight = theme === "light";
-  const [activeTab, setActiveTab] = useState("clients");
+  const [activeTab, setActiveTab] = useState(getInitialBdTab);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
+    const next = BD_ALLOWED_TABS.has(tabId) ? tabId : "clients";
+    setActiveTab(next);
     setMobileMenuOpen(false);
   };
 
@@ -46,11 +64,10 @@ export default function BusinessDeveloperDashboardPage() {
     { id: "clients", label: "Client Details", icon: User },
     { id: "history", label: "Quotation History", icon: Clock },
     { id: "invoicehistory", label: "Invoice History", icon: Clock },
-    { id: "assign", label: "Assign", icon: UserPlus },
     { id: "exploreplan", label: "Explore Plans", icon: List },
     { id: "generatelink", label: "Generate Link", icon: Link },
     { id: "seo", label: "Website SEO", icon: TrendingUp },
-    { id: "Convert Letterhead ", label: "Convert Letterhead ", icon: Plus },
+    { id: "convert-letterhead", label: "Convert Letterhead", icon: FileText },
   ];
 
   const handleLogout = () => {
@@ -79,16 +96,27 @@ export default function BusinessDeveloperDashboardPage() {
   return (
     <div
       className="min-h-screen relative overflow-hidden"
-      style={{
-        background: isLight
-          ? "linear-gradient(135deg, #fdf6ec 0%, #fef3e8 50%, #fdf6ec 100%)"
-          : "linear-gradient(to bottom right, #111827, #1e293b, #111827)",
-      }}
+      style={{ background: `linear-gradient(to bottom right, var(--gradient-from), var(--gradient-via), var(--gradient-to))` }}
     >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -inset-[100%] bg-cover bg-center animate-[spin_60s_linear_infinite]"
+          style={{
+            backgroundImage: isLight ? "none" : undefined,
+            opacity: isLight ? 0 : 0.4,
+            mixBlendMode: isLight ? "normal" : "screen",
+          }}
+        />
+        <div
+          className="absolute inset-0 backdrop-blur-3xl"
+          style={{
+            backgroundColor: isLight
+              ? "rgba(253,246,236,0.82)"
+              : "rgba(2, 6, 23, 0.70)",
+          }}
+        />
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-orange-600/30 rounded-full blur-[100px] animate-[pulse_8s_ease-in-out_infinite]"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 md:w-96 md:h-96 bg-red-600/20 rounded-full blur-[100px] animate-[pulse_10s_ease-in-out_infinite_reverse]"></div>
       </div>
 
       <header
@@ -98,12 +126,12 @@ export default function BusinessDeveloperDashboardPage() {
           top: 0,
           left: 0,
           right: 0,
-          backgroundColor: isLight ? "#ffffff" : "rgba(31, 41, 55, 0.3)",
+          backgroundColor: isLight ? "#ffffff" : "var(--bg-header)",
           borderBottom: isLight
-            ? "1px solid rgba(234,88,12,0.25)"
-            : "1px solid rgba(55, 65, 81, 0.5)",
+            ? "1px solid rgba(234, 88, 12, 0.25)"
+            : "1px solid var(--border-color)",
           boxShadow: isLight
-            ? "0 2px 20px rgba(234,88,12,0.12), 0 1px 4px rgba(0,0,0,0.06)"
+            ? "0 2px 20px rgba(234, 88, 12, 0.12), 0 1px 4px rgba(0,0,0,0.06)"
             : "none",
           backdropFilter: "blur(24px)",
         }}
@@ -118,30 +146,28 @@ export default function BusinessDeveloperDashboardPage() {
                 <h1 className="font-bold text-lg leading-tight bg-gradient-to-r from-orange-400 via-amber-300 to-yellow-400 bg-clip-text text-transparent">
                   Revenue Engine
                 </h1>
-                <p className="text-xs text-gray-400">Business Developer</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  Business Developer
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* User Info - Hidden on small screens */}
               <div className="hidden sm:block text-right">
-                <div className="text-xs sm:text-sm text-gray-400">
+                <div className="text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
                   Welcome back,
                 </div>
-                <div className="font-semibold text-sm sm:text-base text-white">
+                <div className="font-semibold text-sm sm:text-base" style={{ color: "var(--text-primary)" }}>
                   {currentUser?.name || "BD User"}
                 </div>
               </div>
 
-              {/* Avatar */}
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
 
-              {/* Theme Toggle */}
               <ThemeToggle />
 
-              {/* CSMS Button */}
               <a
                 href="https://csms.dentalguru.software/login"
                 target="_blank"
@@ -151,19 +177,21 @@ export default function BusinessDeveloperDashboardPage() {
                 CSMS
               </a>
 
-              {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-gray-800/80 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-colors border border-gray-700/50"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 backdrop-blur-sm"
+                style={{ color: "var(--text-primary)", backgroundColor: "var(--btn-secondary-bg)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--btn-secondary-hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--btn-secondary-bg)")}
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden lg:inline">Logout</span>
               </button>
 
-              {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"
+                className="lg:hidden p-2 rounded-xl transition-colors"
+                style={{ color: "var(--text-secondary)" }}
               >
                 {mobileMenuOpen ? (
                   <X className="w-5 h-5" />
@@ -184,7 +212,6 @@ export default function BusinessDeveloperDashboardPage() {
         persistKey="bd-active-tab"
       />
 
-      {/* Mobile Menu Backdrop */}
       {mobileMenuOpen && (
         <div
           className="lg:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
@@ -204,8 +231,13 @@ export default function BusinessDeveloperDashboardPage() {
         >
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2 max-h-[75vh] overflow-auto">
             <div className="sm:block mb-2">
-              <div className="text-xs sm:text-sm text-gray-400">Welcome back,</div>
-              <div className="font-semibold text-sm sm:text-base text-white">
+              <div className="text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
+                Welcome back,
+              </div>
+              <div
+                className="font-semibold text-sm sm:text-base"
+                style={{ color: "var(--text-primary)" }}
+              >
                 {currentUser?.name || "BD User"}
               </div>
             </div>
@@ -260,11 +292,10 @@ export default function BusinessDeveloperDashboardPage() {
               {activeTab === "clients" && <ClientDetails />}
               {activeTab === "history" && <AllHistory />}
               {activeTab === "invoicehistory" && <InvoiceHistory />}
-              {activeTab === "assign" && <AssignQuotationBD />}
               {activeTab === "exploreplan" && <BdExplorePlans />}
               {activeTab === "generatelink" && <GenerateLinkHistoryBD />}
               {activeTab === "seo" && <SeoServices />}
-              {activeTab === "Convert Letterhead " && <ConvertLetterhead />}
+              {activeTab === "convert-letterhead" && <ConvertLetterhead />}
             </React.Suspense>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import { useTheme } from "../../../context/ThemeContext";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import { classifyProformaServices, calcAdsRowTotal } from "../../../utils/proformaPricing";
+import { getBasePath, rolePath } from "../../../utils/rolePaths";
 
 const EMPTY_ARRAY = [];
 
@@ -26,6 +27,7 @@ const GenerateProformaModal = ({
   const { theme } = useTheme();
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
+  const basePath = getBasePath(currentUser?.role);
 
   const [formData, setFormData] = useState({
     client_name: clientData?.client_name || "",
@@ -370,7 +372,15 @@ const GenerateProformaModal = ({
         if (res.data.status === "Success") {
           Swal.fire({ icon: "success", title: "Saved!", text: "Proforma Generated Successfully", timer: 1500, showConfirmButton: false });
           onClose();
-          navigate(`/admin/quotation/${selectedProposalForProforma.client_id}/${res.data.proformaId}?doc=proforma&source=proposal&gst=${formData.bill_type === "GST" ? 1 : 0}`);
+          navigate(
+            rolePath(
+              basePath,
+              "quotation",
+              selectedProposalForProforma.client_id,
+              res.data.proformaId,
+              `doc=proforma&source=proposal&gst=${formData.bill_type === "GST" ? 1 : 0}`
+            )
+          );
         }
       } catch (err) {
         Swal.fire({ icon: "error", title: "Error", text: "Failed to create proforma." });

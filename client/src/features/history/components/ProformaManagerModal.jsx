@@ -7,6 +7,7 @@ import { ArrowLeft, CreditCard, CheckCircle2, IndianRupee, FileText, X, Trash } 
 import moment from "moment";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import { classifyProformaServices } from "../../../utils/proformaPricing";
+import { getBasePath, rolePath } from "../../../utils/rolePaths";
 
 const getClientDisplayName = (client, fallback) =>
   client?.company_name || client?.client_organization || client?.client_name || fallback?.client_name || fallback?.company_name || fallback?.client_organization || "Client";
@@ -14,6 +15,7 @@ const getClientDisplayName = (client, fallback) =>
 export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   const { currentUser, token } = useSelector((state) => state.user);
   const baseURL = API_BASE_URL;
+  const basePath = getBasePath(currentUser?.role);
 
   const [proformas, setProformas] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -548,7 +550,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     const isGST = proforma.is_gst && typeof proforma.is_gst === 'object' && proforma.is_gst.data ? proforma.is_gst.data[0] === 1 : Number(proforma.is_gst) === 1;
     const clientId = proforma.client_id || proposal?.client_id || proposal?.clientId;
     const source = proforma.source_type === 'manual' || !proforma.proposal_id ? 'manual' : 'proposal';
-    const url = `#/admin/quotation/${clientId}/${proforma.id}?doc=proforma&source=${source}&gst=${isGST ? 1 : 0}`;
+    const url = `#${rolePath(basePath, "quotation", clientId, proforma.id, `doc=proforma&source=${source}&gst=${isGST ? 1 : 0}`)}`;
     window.open(url, "_blank");
   };
 
@@ -592,7 +594,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
               if (viewResult.isConfirmed) {
                 const clientId = proforma.client_id || proposal?.client_id || proposal?.clientId;
                 window.open(
-                  `#/admin/balance-proforma/${clientId}/${newBal.id}?doc=balance-proforma-view&gst=${isGST ? 1 : 0}`,
+                  `#${rolePath(basePath, "balance-proforma", clientId, newBal.id, `doc=balance-proforma-view&gst=${isGST ? 1 : 0}`)}`,
                   "_blank"
                 );
               }
@@ -835,7 +837,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                                       onClick={() => {
                                         const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
                                         const clientId = p.client_id || proforma.client_id || proposal?.client_id || proposal?.clientId;
-                                        window.open(`#/admin/invoice/${clientId}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
+                                        window.open(`#${rolePath(basePath, "invoice", clientId, p.txn_id, `gst=${isGST ? 1 : 0}`)}`, "_blank");
                                       }}
                                       className="px-2.5 py-1 bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500 dark:border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
                                     >
@@ -908,7 +910,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                                           onClick={() => {
                                             const isGST = p.is_gst && typeof p.is_gst === 'object' && p.is_gst.data ? p.is_gst.data[0] === 1 : Number(p.is_gst) === 1;
                                             const clientId = p.client_id || proforma.client_id || proposal?.client_id || proposal?.clientId;
-                                            window.open(`#/admin/invoice/${clientId}/${p.txn_id}?gst=${isGST ? 1 : 0}`, "_blank");
+                                            window.open(`#${rolePath(basePath, "invoice", clientId, p.txn_id, `gst=${isGST ? 1 : 0}`)}`, "_blank");
                                           }}
                                           className="px-3 py-1 bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500 dark:border-blue-500/30 rounded hover:bg-blue-600/30 text-xs font-semibold"
                                         >

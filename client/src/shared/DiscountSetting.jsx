@@ -36,7 +36,6 @@ const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  console.log(id, proposalId);
   const [editId, setEditId] = useState(null);
 
   const fetchData = async () => {
@@ -50,7 +49,6 @@ const dispatch = useDispatch();
           },
         }
       );
-      console.log(data.data);
       setGetData(data.data[0]);
     } catch (error) {
       console.log(error);

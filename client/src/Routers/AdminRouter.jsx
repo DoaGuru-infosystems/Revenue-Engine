@@ -88,7 +88,7 @@ const AdminRouter = () => {
             />
             <Route path="Invoice-history" element={<InvoiceHistory />} />
             <Route
-              path="discount-setting/:id/:txn_id"
+              path="discount-setting/:id/:proposalId"
               element={<DiscountSetting />}
             />
             <Route path="/review/:linkId" element={<ReviewRequirements />} />

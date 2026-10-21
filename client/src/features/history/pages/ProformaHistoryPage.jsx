@@ -25,6 +25,7 @@ import { clearUser } from "../../../redux/user/userSlice";
 import Swal from "sweetalert2";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import GenerateProformaModal from "../components/GenerateProformaModal";
+import { getBasePath, rolePath } from "../../../utils/rolePaths";
 
 const parseIsGst = (val) => Boolean(val && (typeof val === 'object' && val.data ? val.data[0] === 1 : Number(val) === 1));
 
@@ -34,6 +35,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   const [fetchServices, setFetchServices] = useState([]);
   const { currentUser, token } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const basePath = getBasePath(currentUser?.role);
 
   // Meeting Reschedule Modal State
   const [rescheduleModalItem, setRescheduleModalItem] = useState(null);
@@ -186,7 +188,15 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   const handlePreview = (item) => {
     // Determine GST status based on is_gst field safely
     const isGST = parseIsGst(item?.is_gst);
-    navigate(`/admin/quotation/${item.client_id}/${item.id}?doc=proforma&source=proposal&gst=${isGST ? 1 : 0}`);
+    navigate(
+      rolePath(
+        basePath,
+        "quotation",
+        item.client_id,
+        item.id,
+        `doc=proforma&source=proposal&gst=${isGST ? 1 : 0}`
+      )
+    );
   };
 
   const handleDelete = async (item) => {
@@ -253,7 +263,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
             }).then((viewResult) => {
               if (viewResult.isConfirmed) {
                 window.open(
-                  `#/admin/balance-proforma/${item.client_id}/${newBal.id}?doc=balance-proforma-view&gst=${isGst ? 1 : 0}`,
+                  `#${rolePath(basePath, "balance-proforma", item.client_id, newBal.id, `doc=balance-proforma-view&gst=${isGst ? 1 : 0}`)}`,
                   "_blank"
                 );
               }
@@ -559,7 +569,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                       localStorage.setItem("createInvoiceDefaultMode", "client");
                       setActiveTab("createinvoice");
                     } else {
-                      navigate("/admin/dashboard");
+                      navigate(rolePath(basePath, "dashboard"));
                     }
                   }}
                   className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-200 hover:bg-gray-700/50 hover:text-white transition-colors"

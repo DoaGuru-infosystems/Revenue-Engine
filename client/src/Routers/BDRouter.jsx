@@ -42,6 +42,7 @@ const BDRouter = () => {
           <Routes>
             <Route path="dashboard" element={<BusinessDeveloperDashboard />} />
             <Route path="AddService/:id/:proposalId" element={<AddService />} />
+            <Route path="ServicesLanding/:id/:proposalId" element={<AddService />} />
             <Route path="client/service/history/:id" element={<History />} />
             <Route path="proposal-builder/:clientId" element={<ProposalBuilder />} />
             <Route path="proposal-builder/:clientId/:proposalId" element={<ProposalBuilder />} />

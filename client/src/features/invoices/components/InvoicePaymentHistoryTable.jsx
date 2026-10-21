@@ -1,5 +1,6 @@
 import React from "react";
 import moment from "moment";
+import { getBasePathFromWindow, rolePath } from "../../../utils/rolePaths";
 
 export default function InvoicePaymentHistoryTable({
   isProforma = false,
@@ -13,6 +14,10 @@ export default function InvoicePaymentHistoryTable({
   if (!isProforma || isBalanceProforma || !proformaPayments || proformaPayments.length === 0) {
     return null;
   }
+
+  const basePath = getBasePathFromWindow();
+  const invoiceHref = (paymentTxnId) =>
+    `#${rolePath(basePath, "invoice", id, txn_id, `doc=proforma&source=proposal&txnId=${paymentTxnId}`)}`;
 
   return (
     <div className="payment-history-section w-full text-left pt-2 border-t border-gray-300">
@@ -44,7 +49,7 @@ export default function InvoicePaymentHistoryTable({
                 <td className="border px-2 py-1 whitespace-nowrap">
                   {payment.txn_id ? (
                     <a
-                      href={`/#/admin/invoice/${id}/${txn_id}?doc=proforma&source=proposal&txnId=${payment.txn_id}`}
+                      href={invoiceHref(payment.txn_id)}
                       className="text-orange-600 hover:underline font-semibold"
                       target="_blank"
                       rel="noopener noreferrer"

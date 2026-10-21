@@ -44,7 +44,12 @@ export default function AdminDashboardPage() {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("admin-active-tab") || "clients";
+    const saved = localStorage.getItem("admin-active-tab");
+    if (saved === "Convert Letterhead ") {
+      localStorage.setItem("admin-active-tab", "convert-letterhead");
+      return "convert-letterhead";
+    }
+    return saved || "clients";
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -60,7 +65,7 @@ export default function AdminDashboardPage() {
     { id: "assign", label: "Assign", icon: UserPlus },
     { id: "generatelink", label: "Generate Link", icon: Link },
     { id: "seo", label: "Website SEO", icon: TrendingUp },
-    { id: "Convert Letterhead ", label: "Convert Letterhead ", icon: FileText },
+    { id: "convert-letterhead", label: "Convert Letterhead", icon: FileText },
     { id: "dashboardsettings", label: "Dashboard Settings", icon: List },
   ];
 
@@ -309,7 +314,7 @@ export default function AdminDashboardPage() {
               {activeTab === "createinvoice" && (
                 <InstantProforma onBack={() => handleTabChange("history")} />
               )}
-              {activeTab === "Convert Letterhead " && <ConvertLetterhead />}
+              {activeTab === "convert-letterhead" && <ConvertLetterhead />}
               {activeTab === "dashboardsettings" && <AdmindashBoardSettings />}
             </React.Suspense>
           </div>

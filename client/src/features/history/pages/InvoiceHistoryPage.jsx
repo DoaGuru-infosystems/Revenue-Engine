@@ -11,23 +11,28 @@ import {
   Plus,
   Hash,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
 import Swal from "sweetalert2";
 import API_BASE_URL from "../../../config/apiBaseUrl";
+import { getBasePath, getBasePathFromLocation, rolePath } from "../../../utils/rolePaths";
 
 const InvoiceHistoryPage = ({ setActiveTab }) => {
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
+  const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState(null);
   const [fetchServices, setFetchServices] = useState([]); // Legacy
 
   const { id } = useParams();
   const { currentUser, token } = useSelector((state) => state.user);
+  const basePath =
+    currentUser?.role === "BD"
+      ? getBasePath("BD")
+      : getBasePathFromLocation(location);
   const dispatch = useDispatch();
   const [keyword, setKeyword] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -150,7 +155,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
 
   const handleNavigateInvoice = (selectedTxn, selectedClient, billType) => {
     const isGST = billType === "GST";
-    navigate(`/admin/invoice/${selectedClient}/${selectedTxn}?gst=${isGST ? 1 : 0}`);
+    navigate(rolePath(basePath, "invoice", selectedClient, selectedTxn, `gst=${isGST ? 1 : 0}`));
   };
 
   const handleCopyInvoice = (txnId) => {
