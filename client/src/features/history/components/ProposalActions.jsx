@@ -6,7 +6,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 
-const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromProposal, openProformaManager }) => {
+const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromProposal, openProformaManager, fullWidth = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -272,23 +272,27 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
   };
 
   return (
-    <div className={`relative inline-block text-left ${isOpen ? "z-30" : "z-10"}`} ref={dropdownRef}>
+    <div className={`relative text-left ${fullWidth ? "block w-full" : "inline-block"} ${isOpen ? "z-40" : "z-10"}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-orange-500 to-orange-500 text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-105"
+        className={`inline-flex items-center justify-center px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-sm font-semibold bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+          fullWidth ? "w-full" : ""
+        }`}
       >
-        Actions <ChevronDown size={16} className="ml-2" />
+        Actions <ChevronDown size={16} className={`ml-2 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (() => {
         const status = proposal.status?.toLowerCase() || "";
         const isAdmin = !window.location.pathname.includes('/BD/');
         return (
-          <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto custom-scrollbar">
+          <div className={`absolute mt-2 w-full min-w-[13rem] max-w-[18rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-xl z-50 py-1 max-h-64 overflow-y-auto custom-scrollbar ${
+            fullWidth ? "left-0 right-0" : "left-0 sm:left-auto sm:right-0"
+          }`}>
             <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
               <li>
-                <button onClick={() => handleAction("view")} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2">
-                  <Eye size={14} className="text-gray-400" /> View / Edit Proposal
+                <button onClick={() => handleAction("view")} className="w-full text-left px-4 py-2.5 sm:py-2 hover:bg-gray-100 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2">
+                  <Eye size={14} className="text-gray-400 shrink-0" /> View / Edit Proposal
                 </button>
               </li>
               

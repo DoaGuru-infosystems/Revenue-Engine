@@ -34,10 +34,10 @@ const Header = () => {
   };
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-30 h-16 bg-gray-800/30 backdrop-blur-xl border-b border-gray-700/50">
+      <header className="fixed top-0 left-0 right-0 z-30 h-16 bg-white/90 dark:bg-gray-800/30 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700/50">
         <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-full flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-orange-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-600 dark:text-white">
               Control Panel
             </h1>
 

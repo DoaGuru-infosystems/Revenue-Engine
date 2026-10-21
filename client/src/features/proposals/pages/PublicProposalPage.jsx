@@ -1,6 +1,50 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import img3 from "../../../assets/DOAGuru IT Solution.png";
 import { usePublicProposal } from "../hooks/usePublicProposal";
+
+/** Horizontal table scroller with always-visible scrollbar + slide hint */
+function ScrollableTable({ children, className = "" }) {
+  const scrollerRef = useRef(null);
+  const [canScroll, setCanScroll] = useState(false);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const check = () => {
+      setCanScroll(el.scrollWidth > el.clientWidth + 2);
+    };
+
+    check();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(check) : null;
+    ro?.observe(el);
+    window.addEventListener("resize", check);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", check);
+    };
+  }, []);
+
+  return (
+    <div className={`relative ${className}`}>
+      {canScroll && (
+        <div className="flex items-center justify-end gap-1.5 mb-1.5 px-0.5 sm:hidden">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full px-2.5 py-0.5">
+            <span aria-hidden>←</span>
+            Slide to see more
+            <span aria-hidden>→</span>
+          </span>
+        </div>
+      )}
+      <div
+        ref={scrollerRef}
+        className="proposal-h-scroll overflow-x-scroll rounded-xl border border-slate-200 shadow-sm"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function PublicProposalPage() {
   const {
@@ -333,6 +377,35 @@ export default function PublicProposalPage() {
               @media (max-width: 640px) {
                 .prose-custom p, .prose-custom li { font-size: 0.85rem; }
               }
+
+              /* Always-visible horizontal scrollbar on proposal tables */
+              .proposal-h-scroll {
+                overflow-x: scroll;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-gutter: stable;
+                scrollbar-width: auto;
+                scrollbar-color: #f97316 #fed7aa;
+                padding-bottom: 2px;
+              }
+              .proposal-h-scroll::-webkit-scrollbar {
+                height: 10px;
+                display: block;
+                -webkit-appearance: none;
+              }
+              .proposal-h-scroll::-webkit-scrollbar-track {
+                background: #ffedd5;
+                border-radius: 999px;
+                margin: 0 6px;
+              }
+              .proposal-h-scroll::-webkit-scrollbar-thumb {
+                background: linear-gradient(90deg, #f97316, #ea580c);
+                border-radius: 999px;
+                border: 2px solid #ffedd5;
+                min-width: 40px;
+              }
+              .proposal-h-scroll::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(90deg, #ea580c, #c2410c);
+              }
             `}
           </style>
 
@@ -376,7 +449,7 @@ export default function PublicProposalPage() {
               <div>
                 <SectionTitle>Scope of Work</SectionTitle>
                 {rawPricing && rawPricing.length > 0 ? (
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                  <ScrollableTable>
                     <table className="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[480px]">
                       <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-[11px] sm:text-xs tracking-wider border-b border-slate-200">
                         <tr>
@@ -430,7 +503,7 @@ export default function PublicProposalPage() {
                         })}
                       </tbody>
                     </table>
-                  </div>
+                  </ScrollableTable>
                 ) : (
                   <p className="text-slate-500 italic px-4 py-3 bg-slate-50 rounded-lg border border-slate-100 text-xs sm:text-sm">
                     No deliverables added yet.
@@ -453,7 +526,7 @@ export default function PublicProposalPage() {
               sections.timeline.length > 0 && (
                 <div>
                   <SectionTitle>Timeline & Milestones</SectionTitle>
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                  <ScrollableTable>
                     <table className="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[500px]">
                       <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-[11px] sm:text-xs tracking-wider border-b border-slate-200">
                         <tr>
@@ -472,7 +545,7 @@ export default function PublicProposalPage() {
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  </ScrollableTable>
                 </div>
               )}
 
@@ -488,7 +561,7 @@ export default function PublicProposalPage() {
             {isSectionIncluded("pricing_investment") && pricing && pricing.length > 0 && (
               <div>
                 <SectionTitle>Pricing & Investment</SectionTitle>
-                <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                <ScrollableTable>
                   <table className="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[520px]">
                     <thead className="bg-slate-50 text-slate-700 font-semibold uppercase text-[11px] sm:text-xs tracking-wider border-b border-slate-200">
                       <tr>
@@ -610,7 +683,7 @@ export default function PublicProposalPage() {
                       </tr>
                     </tfoot>
                   </table>
-                </div>
+                </ScrollableTable>
               </div>
             )}
 
