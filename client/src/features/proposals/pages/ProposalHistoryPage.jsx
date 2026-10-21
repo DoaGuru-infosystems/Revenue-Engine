@@ -93,7 +93,9 @@ export default function ProposalHistoryPage() {
             currentItems.map((item, index) => (
               <div
                 key={item.id || item.txn_id}
-                className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3 hover:border-gray-600/60 transition-all duration-200"
+                className={`bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3 hover:border-gray-600/60 transition-all duration-200 ${
+                  openDropdownId === item.id ? "relative z-30 ring-1 ring-amber-500/30" : "relative z-10"
+                }`}
               >
                 {/* Top row: index + date */}
                 <div className="flex items-center justify-between">
@@ -148,24 +150,24 @@ export default function ProposalHistoryPage() {
                   </button>
 
                   {openDropdownId === item.id && (
-                    <div className="absolute left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                    <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto custom-scrollbar divide-y divide-gray-100 dark:divide-gray-700/50">
                       <button
                         onClick={() => {
                           setOpenDropdownId(null);
                           handlePreview(item);
                         }}
-                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-200 hover:bg-gray-700 flex items-center justify-center gap-2"
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/60 flex items-center justify-center gap-2 transition-colors"
                       >
-                        <Eye className="w-4 h-4 text-blue-400" /> View Proposal
+                        <Eye className="w-4 h-4 text-blue-500 dark:text-blue-400" /> View Proposal
                       </button>
                       <button
                         onClick={() => {
                           setOpenDropdownId(null);
                           handleDeleteProposal(item);
                         }}
-                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-200 hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center gap-2 border-t border-gray-700/50"
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center gap-2 transition-colors"
                       >
-                        <Trash2 className="w-4 h-4 text-red-400" /> Delete Proposal
+                        <Trash2 className="w-4 h-4" /> Delete Proposal
                       </button>
                     </div>
                   )}
@@ -265,24 +267,24 @@ export default function ProposalHistoryPage() {
                             </button>
 
                             {openDropdownId === item.id && (
-                              <div className="absolute right-0 mt-2 w-36 bg-gray-800 border border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                              <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto custom-scrollbar divide-y divide-gray-100 dark:divide-gray-700/50">
                                 <button
                                   onClick={() => {
                                     setOpenDropdownId(null);
                                     handlePreview(item);
                                   }}
-                                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-200 hover:bg-gray-700 flex items-center gap-2"
+                                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/60 flex items-center gap-2 transition-colors"
                                 >
-                                  <Eye className="w-4 h-4 text-blue-400" /> View
+                                  <Eye className="w-4 h-4 text-blue-500 dark:text-blue-400" /> View
                                 </button>
                                 <button
                                   onClick={() => {
                                     setOpenDropdownId(null);
                                     handleDeleteProposal(item);
                                   }}
-                                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-200 hover:bg-red-500/20 hover:text-red-400 flex items-center gap-2 border-t border-gray-700/50"
+                                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2 transition-colors"
                                 >
-                                  <Trash2 className="w-4 h-4 text-red-400" /> Delete
+                                  <Trash2 className="w-4 h-4" /> Delete
                                 </button>
                               </div>
                             )}

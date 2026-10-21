@@ -347,15 +347,15 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
       </button>
 
       {openDropdownId === item.id && (
-        <div className="absolute right-0 mt-2 w-52 bg-gray-800 rounded-xl shadow-xl shadow-black/50 border border-gray-700/50 overflow-hidden z-[50]">
+        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700/60 max-h-60 sm:max-h-72 overflow-y-auto custom-scrollbar z-[60] divide-y divide-gray-100 dark:divide-gray-700/60">
           <button
             onClick={() => {
               setOpenDropdownId(null);
               handlePreview(item);
             }}
-            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-700/50 hover:text-white transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
           >
-            <Eye size={15} className="text-red-400" /> Preview
+            <Eye size={15} className="text-red-500 dark:text-red-400" /> Preview
           </button>
           
           <button
@@ -369,9 +369,9 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                 client_name: item.client_name 
               });
             }}
-            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-700/50 hover:text-white transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
           >
-            <IndianRupee size={15} className="text-yellow-400" /> Record Payment
+            <IndianRupee size={15} className="text-amber-600 dark:text-yellow-400" /> Record Payment
           </button>
 
           { (item.payment_status === 'partial' || Number(item.total_paid_amount || 0) > 0) && (
@@ -380,57 +380,56 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                 setOpenDropdownId(null);
                 handleCreateBalanceProforma(item);
               }}
-              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-amber-300 hover:bg-gray-700/50 transition-colors"
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
             >
-              <FileText size={15} className="text-amber-400" /> Balance Proforma
+              <FileText size={15} className="text-amber-500 dark:text-amber-400" /> Balance Proforma
             </button>
           ) }
 
           {/* Meeting Reminder Actions */}
-          <div className="border-t border-gray-700/60 my-1"></div>
-          <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-            <Clock size={11} className="text-orange-400" /> Meeting Status
+          <div className="py-1">
+            <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-400 flex items-center gap-1.5">
+              <Clock size={11} className="text-orange-500 dark:text-orange-400" /> Meeting Status
+            </div>
+
+            <button
+              onClick={() => {
+                setOpenDropdownId(null);
+                handleUpdateMeetingStatus(item, "done");
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700/50 transition-colors"
+            >
+              <CheckCircle2 size={14} /> Mark as Done
+            </button>
+
+            <button
+              onClick={() => {
+                setOpenDropdownId(null);
+                setRescheduleModalItem(item);
+                setRescheduleDate(item.meeting_rescheduled_date || item.duration_end_date || "");
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2 text-xs text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-gray-700/50 transition-colors"
+            >
+              <CalendarPlus size={14} /> Reschedule Meeting
+            </button>
+
+            <button
+              onClick={() => {
+                setOpenDropdownId(null);
+                handleUpdateMeetingStatus(item, "cancelled");
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2 text-xs text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+            >
+              <XCircle size={14} /> Cancel Meeting
+            </button>
           </div>
-
-          <button
-            onClick={() => {
-              setOpenDropdownId(null);
-              handleUpdateMeetingStatus(item, "done");
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-xs text-emerald-400 hover:bg-gray-700/50 hover:text-emerald-300 transition-colors"
-          >
-            <CheckCircle2 size={14} /> Mark as Done
-          </button>
-
-          <button
-            onClick={() => {
-              setOpenDropdownId(null);
-              setRescheduleModalItem(item);
-              setRescheduleDate(item.meeting_rescheduled_date || item.duration_end_date || "");
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-xs text-sky-400 hover:bg-gray-700/50 hover:text-sky-300 transition-colors"
-          >
-            <CalendarPlus size={14} /> Reschedule Meeting
-          </button>
-
-          <button
-            onClick={() => {
-              setOpenDropdownId(null);
-              handleUpdateMeetingStatus(item, "cancelled");
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-xs text-slate-400 hover:bg-gray-700/50 hover:text-slate-300 transition-colors"
-          >
-            <XCircle size={14} /> Cancel Meeting
-          </button>
-
-          <div className="border-t border-gray-700/60 my-1"></div>
 
           <button
             onClick={() => {
               setOpenDropdownId(null);
               handleDelete(item);
             }}
-            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-gray-700/50 hover:text-red-300 transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
           >
             <Trash size={15} /> Delete
           </button>
@@ -583,7 +582,9 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
           showApiData.map((item, index) => (
             <div
               key={item.id}
-              className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3"
+              className={`bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3 transition-all ${
+                openDropdownId === item.id ? "relative z-30 ring-1 ring-amber-500/30" : "relative z-10"
+              }`}
             >
               <div className="flex items-center justify-between">
                 <span className="w-7 h-7 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-bold flex items-center justify-center">

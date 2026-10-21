@@ -158,9 +158,9 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
     Swal.fire({
       icon: "success",
       title: "Copied!",
-      text: "Transaction ID copied to clipboard.",
+      text: `Transaction ID (${txnId}) copied to clipboard.`,
       showConfirmButton: false,
-      timer: 1000,
+      timer: 1200,
     });
   };
 
@@ -169,21 +169,32 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
     <div className="relative action-dropdown-container">
       <button
         onClick={ () => setOpenDropdown(openDropdown === globalIndex ? null : globalIndex) }
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md hover:brightness-110 transition-all"
       >
         Actions <ChevronDown size={ 13 } />
       </button>
 
       { openDropdown === globalIndex && (
-        <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden divide-y divide-gray-100 dark:divide-gray-700/60">
           <button
             onClick={ () => {
               handleNavigateInvoice(item.txn_id, item.client_id, item.bill_type);
               setOpenDropdown(null);
             } }
-            className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
           >
-            <EyeIcon size={ 13 } className="text-gray-500" /> Preview
+            <EyeIcon size={ 14 } className="text-gray-500 dark:text-gray-400" /> Preview
+          </button>
+
+          <button
+            onClick={ () => {
+              handleCopyInvoice(item.txn_id);
+              setOpenDropdown(null);
+            } }
+            className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+            title="Copy Transaction ID"
+          >
+            <Copy size={ 14 } className="text-gray-500 dark:text-gray-400" /> Copy Txn ID
           </button>
 
           { item.tag_received_amt !== "received" && (
@@ -192,9 +203,9 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
                 handleDeleteInvoice(item.txn_id, item.client_id);
                 setOpenDropdown(null);
               } }
-              className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
             >
-              <Trash size={ 13 } /> Delete
+              <Trash size={ 14 } /> Delete
             </button>
           ) }
         </div>
@@ -386,8 +397,9 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
                     <button
                       onClick={ () => handleCopyInvoice(item.txn_id) }
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-red-600/30 text-red-300 hover:bg-red-600/50 active:scale-95 transition-all"
+                      title="Copy Transaction ID"
                     >
-                      <Copy size={ 13 } /> Copy
+                      <Copy size={ 13 } /> Copy Txn ID
                     </button>
                     { item.tag_received_amt !== "received" && (
                       <button
