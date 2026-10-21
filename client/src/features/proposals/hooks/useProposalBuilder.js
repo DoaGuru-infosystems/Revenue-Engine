@@ -28,8 +28,119 @@ import {
 } from "../services/proposalService";
 
 const getClientRecord = (payload) => (Array.isArray(payload) ? payload[0] : payload);
+
+// Same-tab print. Mobile browsers block window.open even during a tap.
+const openPrintableProposal = (html, returnUrl) => {
+  const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+  const docTitle = titleMatch ? titleMatch[1] : "Proposal";
+  const safeReturn = JSON.stringify(returnUrl || window.location.href);
+  const toolbar = `
+    <div class="re-print-toolbar">
+      <button type="button" id="re-print-back">Back</button>
+      <button type="button" onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <style>
+      .re-print-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        align-self: stretch;
+        gap: 8px;
+        box-sizing: border-box;
+        width: 100%;
+        height: auto;
+        flex: 0 0 auto;
+        margin: -20px -20px 16px;
+        padding: 10px 12px;
+        padding-top: max(10px, env(safe-area-inset-top));
+        background: #0f172a;
+        font-family: system-ui, sans-serif;
+      }
+      @media screen {
+        body {
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: flex-start !important;
+        }
+      }
+      @media screen and (max-width: 1024px) {
+        body {
+          padding: 0 !important;
+          overflow-x: hidden;
+        }
+        .re-print-toolbar {
+          margin: 0 0 8px;
+          padding: 8px 10px;
+          padding-top: max(8px, env(safe-area-inset-top));
+        }
+        .re-print-toolbar button {
+          flex: 1 1 0;
+          min-width: 0;
+          padding: 0 10px;
+          font-size: 15px;
+        }
+      }
+      .re-print-toolbar button {
+        min-height: 44px;
+        height: 44px;
+        flex: 0 0 auto;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .re-print-toolbar button:first-child { background: #334155; }
+      .re-print-toolbar button:last-child { background: #f97316; }
+      @media print { .re-print-toolbar { display: none !important; } }
+    </style>
+    <script>
+      document.getElementById("re-print-back").addEventListener("click", function () {
+        const target = ${safeReturn};
+        if (target === window.location.href) window.location.reload();
+        else window.location.replace(target);
+      });
+      function fitProposalPage() {
+        var page = document.querySelector(".document-wrapper");
+        if (!page) return;
+        page.style.zoom = "";
+        var avail = document.documentElement.clientWidth;
+        var natural = page.getBoundingClientRect().width;
+        if (natural > avail + 1) page.style.zoom = String(avail / natural);
+      }
+      window.addEventListener("resize", fitProposalPage);
+      window.addEventListener("beforeprint", function () {
+        var page = document.querySelector(".document-wrapper");
+        if (page) page.style.zoom = "";
+      });
+      window.addEventListener("afterprint", fitProposalPage);
+      window.addEventListener("load", function () {
+        fitProposalPage();
+        setTimeout(function () { window.print(); }, 600);
+      });
+    </script>
+  `;
+  const withToolbar = /<body[^>]*>/i.test(html)
+    ? html.replace(/<body[^>]*>/i, (match) => `${match}${toolbar}`)
+    : `${toolbar}${html}`;
+
+  document.open();
+  document.write(withToolbar);
+  document.close();
+  document.title = docTitle;
+};
 export const getClientDisplayName = (client) =>
   client?.company_name || client?.client_organization || client?.client_name || "Client";
+
+export const hasRequiredPricing = (table = []) => {
+  if (!Array.isArray(table) || table.length === 0) return false;
+  const { dmTotal, adsTotal } = getBillableTotals(table);
+  return dmTotal + adsTotal > 0;
+};
 
 export const getBillableTotals = (table = []) => {
   const { dmServices, adsServices } = classifyProformaServices(table);
@@ -541,6 +652,15 @@ export function useProposalBuilder() {
   };
 
   const saveProposalAction = async (generatePdf = false, silent = false) => {
+    if (!hasRequiredPricing(pricingTable)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Pricing required",
+        text: "Add at least one pricing item with an amount greater than zero before this proposal can be saved.",
+      });
+      return false;
+    }
+
     try {
       setLoading(true);
       const { dmTotal, adsTotal } = getBillableTotals(pricingTable);
@@ -590,7 +710,7 @@ export function useProposalBuilder() {
       }
 
       if (res.data.status === "Success") {
-        if (!silent) {
+        if (!silent && !generatePdf) {
           Swal.fire({
             icon: "success",
             title: "Saved!",
@@ -604,51 +724,49 @@ export function useProposalBuilder() {
         localStorage.removeItem(draftKey);
 
         const savedId = proposalId || res.data.proposalId;
+        const returnUrl = `${window.location.origin}${window.location.pathname}${window.location.search}#${basePath}/proposal-builder/${clientId}/${savedId}`;
 
         if (!proposalId) {
           navigate(`${basePath}/proposal-builder/${clientId}/${savedId}`, { replace: true });
         }
 
         if (generatePdf) {
-          downloadPdfAction(savedId);
+          await downloadPdfAction(savedId, returnUrl);
         }
+        return true;
       }
+      return false;
     } catch (err) {
       console.error(err);
-      Swal.fire({ icon: "error", title: "Error", text: "Failed to save proposal." });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.response?.data?.message || "Failed to save proposal.",
+      });
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadPdfAction = async (idToDownload = proposalId) => {
+  const downloadPdfAction = async (idToDownload = proposalId, returnUrl = window.location.href) => {
     if (!idToDownload) return;
     try {
       setLoading(true);
       const res = await generateProposalPdf(idToDownload, token);
 
       if (res.status === "Success" && res.html) {
-        const printWindow = window.open("", "_blank");
-        printWindow.document.open();
-        printWindow.document.write(res.html);
-        printWindow.document.close();
-
-        const titleMatch = res.html.match(/<title>(.*?)<\/title>/i);
-        const docTitle = titleMatch ? titleMatch[1] : `Proposal_${getClientDisplayName(clientData)}`;
-        printWindow.document.title = docTitle;
-
-        setTimeout(() => {
-          if (!printWindow.closed) {
-            printWindow.focus();
-            printWindow.print();
-          }
-        }, 1000);
+        openPrintableProposal(res.html, returnUrl);
       } else {
-        throw new Error("Failed to generate PDF HTML");
+        throw new Error(res.message || "Failed to generate PDF HTML");
       }
     } catch (err) {
       console.error(err);
-      Swal.fire({ icon: "error", title: "PDF Error", text: "Failed to generate PDF." });
+      Swal.fire({
+        icon: "error",
+        title: "PDF Error",
+        text: err.response?.data?.message || err.message || "Failed to generate PDF.",
+      });
     } finally {
       setLoading(false);
     }
@@ -727,7 +845,8 @@ export function useProposalBuilder() {
     try {
       setLoading(true);
       if (!isReadOnly) {
-        await saveProposalAction(false, true);
+        const saved = await saveProposalAction(false, true);
+        if (!saved) return;
       }
       const res = await getProposalPreviewToken(proposalId, token);
       if (res.status === "Success" && res.token) {

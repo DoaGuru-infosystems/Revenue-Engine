@@ -153,9 +153,9 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-4">
-              {/* User Info - Hidden on small screens */}
-              <div className="hidden sm:block text-right">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* User Info - full name only when the header has room */}
+              <div className="hidden xl:block text-right">
                 <div className="text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
                   Welcome back,
                 </div>
@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
                 href="https://csms.dentalguru.software/login"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden sm:flex px-3 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-500 rounded-xl transition-colors"
+                className="hidden lg:flex px-3 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-500 rounded-xl transition-colors"
               >
                 CSMS
               </a>
@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--btn-secondary-bg)")}
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden lg:inline">Logout</span>
+                <span className="hidden xl:inline">Logout</span>
               </button>
 
               {/* Mobile Menu Button */}

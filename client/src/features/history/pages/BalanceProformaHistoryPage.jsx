@@ -98,7 +98,7 @@ const BalanceProformaHistoryPage = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="history-touch space-y-8">
       {/* Balance Proformas Table Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -107,14 +107,14 @@ const BalanceProformaHistoryPage = () => {
           </h2>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all text-sm cursor-pointer"
+            className="flex items-center justify-center gap-2 min-h-11 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/20 text-sm cursor-pointer touch-manipulation"
           >
             <Plus className="w-4 h-4" /> Create Balance Proforma
           </button>
         </div>
         
         {/* MOBILE/TABLET: Cards (hidden on lg+) */}
-        <div className="lg:hidden space-y-3">
+        <div className="history-cards xl:hidden">
           {paginatedItems.length > 0 ? (
             paginatedItems.map((item, index) => {
               const totalAmt = Number(item.total_amount || 0);
@@ -133,7 +133,7 @@ const BalanceProformaHistoryPage = () => {
                   </div>
                   <div>
                     <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Client</p>
-                    <p className="text-white font-semibold text-sm">{item.client_name || "Unknown"}</p>
+                    <p className="text-white font-semibold text-sm leading-tight break-words">{item.client_name || "Unknown"}</p>
                     {item.client_organization && <p className="text-gray-400 text-xs">{item.client_organization}</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-2 border-t border-gray-700/50 pt-2">
@@ -164,13 +164,13 @@ const BalanceProformaHistoryPage = () => {
                   <div className="flex items-center gap-2 border-t border-gray-700/50 pt-2">
                     <button
                       onClick={() => handlePreviewPdf(item)}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/40 text-amber-300 border border-amber-500/30 transition-all"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 min-h-11 px-3 py-2 rounded-xl text-sm font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 touch-manipulation"
                     >
                       <Eye size={13} /> View <ArrowUpRight size={11} />
                     </button>
                     <button
                       onClick={() => handleDelete(item)}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/20 hover:bg-red-500/40 text-red-300 border border-red-500/30 transition-all"
+                      className="inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 px-3 py-2 rounded-xl text-sm font-semibold bg-red-500/20 text-red-300 border border-red-500/30 touch-manipulation"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -187,7 +187,7 @@ const BalanceProformaHistoryPage = () => {
         </div>
 
         {/* DESKTOP: Table (lg+ only) */}
-        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        <div className="hidden xl:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <div className="overflow-auto max-h-[28rem]" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               <table className="w-full">

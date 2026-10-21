@@ -175,7 +175,7 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
   );
 
   return (
-    <div className="w-full bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden rounded-2xl min-h-[500px]">
+    <div className="history-touch w-full bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden rounded-2xl min-h-[500px]">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -211,7 +211,7 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
 
             <button
               onClick={handleOpenSelectModal}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-gray-950 font-bold text-sm rounded-xl shadow-lg shadow-amber-500/20 transition-all hover:scale-105 whitespace-nowrap w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 min-h-11 px-4 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-600 text-gray-950 font-bold text-sm rounded-xl shadow-lg shadow-amber-500/20 whitespace-nowrap w-full sm:w-auto justify-center touch-manipulation"
             >
               <IndianRupee className="w-4 h-4" />
               Record Payment
@@ -220,7 +220,7 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
         </div>
 
         {/* MOBILE/TABLET: Cards (hidden on lg+) */}
-        <div className="lg:hidden space-y-3">
+        <div className="history-cards xl:hidden">
           {paginatedPayments.length > 0 ? (
             paginatedPayments.map((p, index) => (
               <div key={p.id} className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3 hover:border-gray-600/60 transition-all duration-200">
@@ -258,7 +258,7 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
                   </div>
                   <div>
                     <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Reference</p>
-                    <p className="text-gray-400 font-mono text-xs truncate max-w-[130px]">{p.transaction_reference || "No Ref"}</p>
+                    <p className="text-gray-400 font-mono text-sm break-all">{p.transaction_reference || "No Ref"}</p>
                   </div>
                   <div>
                     <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">TDS</p>
@@ -286,7 +286,7 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
         </div>
 
         {/* DESKTOP: Table (lg+ only) */}
-        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        <div className="hidden xl:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <div className="overflow-auto max-h-[35rem]" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               <table className="w-full">

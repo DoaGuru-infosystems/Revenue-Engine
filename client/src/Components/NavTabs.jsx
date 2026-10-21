@@ -58,9 +58,9 @@ export default function NavTabs({
           backdropFilter: 'blur(16px)',
         }}
       >
-        <div className="h-full w-full px-3 lg:px-4">
+        <div className="h-full w-full px-2 lg:px-3">
           <div className="h-full overflow-x-auto no-scrollbar">
-            <div className="h-full flex items-center justify-center gap-2">
+            <div className="mx-auto flex h-full w-max items-center gap-1 px-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -69,8 +69,8 @@ export default function NavTabs({
                     key={tab.id}
                     onClick={() => handleTabClick(tab.id)}
                     className={[
-                      "flex items-center gap-2 h-9 px-4 rounded-full text-sm font-medium",
-                      "whitespace-nowrap min-w-max transition-all duration-200",
+                      "flex items-center gap-1.5 h-9 px-3 xl:px-4 rounded-full text-sm font-medium",
+                      "whitespace-nowrap transition-all duration-200",
                     ].join(" ")}
                     style={
                       isActive

@@ -543,13 +543,17 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
 
   return (
     <>
-      <div className="glass-calculator-container">
-        {/* Ambient background glows for realistic glass refraction */}
+      <div className={onServiceAdded ? "glass-calculator-container is-embedded" : "glass-calculator-container"}>
+        {!onServiceAdded && (
+          <>
         <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-br from-rose-400/25 to-pink-300/20 dark:from-rose-600/10 dark:to-pink-600/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-bl from-amber-400/25 to-orange-300/20 dark:from-amber-600/10 dark:to-orange-600/10 blur-3xl" />
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[32rem] h-[32rem] rounded-full bg-gradient-to-r from-sky-400/15 to-indigo-300/15 dark:from-sky-600/10 dark:to-indigo-600/10 blur-3xl" />
+          </>
+        )}
 
-        <div className="glass-calculator-card space-y-8">
+        <div className={onServiceAdded ? "glass-calculator-card space-y-5" : "glass-calculator-card space-y-8"}>
+          {!onServiceAdded && (
           <div className="relative flex items-center justify-center min-h-[44px]">
             {!onServiceAdded && (
               <button
@@ -563,9 +567,10 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
               </button>
             )}
             <h3 className="text-2xl sm:text-3xl font-bold text-center text-slate-900 dark:text-white">
-              📢 Ads Campaign Budget Calculator
+              Ads Campaign Budget Calculator
             </h3>
           </div>
+          )}
 
           {loading && (
             <div className="p-4 rounded-xl bg-red-500/10 text-red-600 dark:text-red-300 border border-red-500/30 backdrop-blur-md">
@@ -603,11 +608,11 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                   return (
                     <div
                       key={category}
-                      className={`glass-calculator-row flex flex-col sm:flex-row items-center gap-4 ${
+                      className={`glass-calculator-row flex flex-col items-stretch gap-2 ${
                         isThisEditing ? 'is-editing' : ''
                       }`}
                     >
-                      <label className="sm:w-56 font-semibold text-slate-900 dark:text-white text-base flex items-center justify-between w-full">
+                      <label className="font-semibold text-slate-900 dark:text-white text-base flex items-center justify-between w-full">
                         <span>{category}</span>
                         {isThisEditing && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/40">
@@ -624,7 +629,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                         onChange={(e) =>
                           handleAmountChange(category, e.target.value)
                         }
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-white/15 bg-white/95 dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500 focus:bg-white text-base font-medium shadow-inner transition-all"
+                        className="w-full min-h-11 px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-white/15 bg-white/95 dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500 focus:bg-white text-base font-medium shadow-inner transition-all touch-manipulation"
                         autoFocus={Boolean(isThisEditing)}
                       />
                     </div>
@@ -635,36 +640,28 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           )}
 
           {!loading && adsData.length > 0 && (
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
               <button
                 type="button"
                 onClick={handleCalculateAndSave}
                 disabled={loading || Object.keys(enteredAmount).length === 0}
-                className={`px-7 py-3 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 ${
+                className={`min-h-11 flex-1 px-5 py-3 rounded-xl font-bold transition-all shadow-md touch-manipulation ${
                   (loading || Object.keys(enteredAmount).length === 0)
                     ? "bg-slate-200/80 dark:bg-gray-800 text-slate-400 dark:text-gray-500 border border-slate-300/60 dark:border-transparent cursor-not-allowed"
                     : editingId
-                      ? "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0"
-                      : "bg-red-600 hover:bg-red-700 text-white shadow-red-500/25 hover:shadow-red-500/40 hover:-translate-y-0.5 active:translate-y-0"
+                      ? "bg-amber-600 hover:bg-amber-700 text-white"
+                      : "bg-red-600 hover:bg-red-700 text-white"
                 }`}
               >
-                {loading ? "Saving..." : editingId ? "Update Entry" : "Calculate & Save"}
+                {loading ? "Saving..." : editingId ? "Update entry" : "Calculate & Save"}
               </button>
-              {editingId ? (
+              {(editingId || Object.keys(enteredAmount).length > 0) && (
                 <button
                   type="button"
-                  onClick={resetEditingState}
-                  className="glass-calculator-btn-secondary"
+                  onClick={editingId ? resetEditingState : clearAll}
+                  className="min-h-11 px-4 py-3 rounded-xl border border-slate-300 dark:border-white/15 text-slate-700 dark:text-gray-200 font-semibold touch-manipulation"
                 >
-                  Cancel Edit
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  className="glass-calculator-btn-secondary"
-                >
-                  Clear All
+                  {editingId ? "Cancel" : "Clear"}
                 </button>
               )}
             </div>
@@ -681,9 +678,9 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                     key={item.id}
                     className="glass-calculator-row p-4 rounded-2xl"
                   >
-                    <div className="flex flex-wrap justify-between items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-2">
                       <h5 className="text-base font-bold text-red-600 dark:text-red-400">
-                        📢 {item.category}
+                        {item.category}
                       </h5>
                       <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
                         💼 Budget: <strong className="font-bold text-slate-950 dark:text-white">₹{item.amount.toLocaleString()}</strong>
@@ -698,20 +695,16 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                         <button
                           type="button"
                           onClick={() => handleEdit(item)}
-                          style={{ backgroundColor: "#2563eb", color: "#ffffff" }}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white"
-                          title="Edit"
+                          className="min-h-11 px-3 rounded-lg bg-blue-600 text-white text-sm font-semibold touch-manipulation"
                         >
-                          ✏️
+                          Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => removeItem(item.id)}
-                          style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white leading-none"
-                          title="Delete"
+                          className="min-h-11 px-3 rounded-lg bg-red-600 text-white text-sm font-semibold touch-manipulation"
                         >
-                          ×
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -750,9 +743,9 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                           : 'glass-calculator-saved-card'
                       }`}
                     >
-                      <div className="flex flex-wrap justify-between items-center gap-3">
+                      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-between sm:items-center gap-2">
                         <p className="font-bold text-slate-900 dark:text-white text-base">
-                          📢 {item.category}
+                          {item.category}
                         </p>
                         <p className="text-slate-800 dark:text-slate-200 text-sm font-medium">
                           💰 Budget: <strong className="font-bold text-slate-950 dark:text-white">₹{parseFloat(item.amount || 0).toLocaleString()}</strong>
@@ -768,21 +761,17 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                             <button
                               type="button"
                               onClick={() => handleEdit(item)}
-                              style={{ backgroundColor: isEditingThis ? "#f59e0b" : "#2563eb", color: "#ffffff" }}
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white"
-                              title="Edit this entry"
+                              className={`min-h-11 px-3 rounded-lg text-white text-sm font-semibold touch-manipulation ${isEditingThis ? "bg-amber-500" : "bg-blue-600"}`}
                             >
-                              ✏️
+                              Edit
                             </button>
                           )}
                           <button
                             type="button"
                             onClick={() => handleDelete(item.id)}
-                            style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-md transition-all hover:scale-110 active:scale-95 cursor-pointer !text-white leading-none"
-                            title="Delete this entry"
+                            className="min-h-11 px-3 rounded-lg bg-red-600 text-white text-sm font-semibold touch-manipulation"
                           >
-                            ×
+                            Delete
                           </button>
                         </div>
                       </div>

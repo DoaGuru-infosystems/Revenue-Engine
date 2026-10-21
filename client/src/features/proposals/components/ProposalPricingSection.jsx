@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   X,
@@ -308,9 +309,13 @@ export default function ProposalPricingSection({
               type="text"
               placeholder="Search plans..."
               value={searchQuery}
+              onClick={() => setDropdownOpen(true)}
               onFocus={() => setDropdownOpen(true)}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 sm:py-3 text-gray-900 dark:text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-sm shadow-sm"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setDropdownOpen(true);
+              }}
+              className="w-full min-h-11 bg-white dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-10 py-2.5 text-gray-900 dark:text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-base shadow-sm touch-manipulation"
             />
             {searchQuery && (
               <button
@@ -327,14 +332,16 @@ export default function ProposalPricingSection({
           {dropdownOpen && filteredPlans.length > 0 && (
             <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
               {filteredPlans.map((plan) => (
-                <div
+                <button
+                  type="button"
                   key={plan.id}
+                  onPointerDown={(e) => e.preventDefault()}
                   onClick={() => handlePlanSelect(plan)}
-                  className="p-3 border-b border-gray-150 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition"
+                  className="w-full text-left p-3 min-h-11 border-b border-gray-150 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 cursor-pointer transition touch-manipulation"
                 >
                   <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{plan.title}</h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{plan.services.length} Services Included</p>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -379,7 +386,7 @@ export default function ProposalPricingSection({
       <div className="space-y-4">
         {pricingTable.length === 0 ? (
           <div className="overflow-x-auto bg-white dark:bg-gray-900/40 rounded-xl border border-gray-200 dark:border-gray-800/50 p-6 sm:p-8 text-center text-gray-400 dark:text-gray-500 text-sm shadow-sm">
-            No services added yet.
+            Pricing is required. Add at least one service or ads budget with an amount greater than zero before saving.
           </div>
         ) : (
           <>
@@ -391,21 +398,23 @@ export default function ProposalPricingSection({
       </div>
 
       {/* Modals for Custom Calculators */}
-      {activeCalculator === "graphic" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-6xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 my-4 sm:my-8">
-            <div className="sticky top-0 z-10 flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-t-2xl">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Palette className="w-5 h-5 text-orange-500 dark:text-orange-400" /> Graphic & SEO Calculator
+      {activeCalculator === "graphic" && createPortal(
+        <div className="fixed inset-0 z-[80] flex bg-black/60 p-0 md:p-4">
+          <div className="flex flex-col w-full h-full md:max-w-3xl md:h-auto md:max-h-[calc(100dvh-2rem)] md:mx-auto md:my-auto md:rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 min-w-0">
+                <Palette className="w-5 h-5 text-orange-500 dark:text-orange-400 shrink-0" />
+                <span className="truncate">Graphic & SEO Calculator</span>
               </h2>
               <button
+                type="button"
                 onClick={() => setActiveCalculator(null)}
-                className="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition"
+                className="min-h-11 min-w-11 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition touch-manipulation"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-3 sm:p-4 max-h-[80vh] overflow-y-auto">
+            <div className="touch-form flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
               <GraphicCalculator
                 hideNotes={true}
                 onServiceAdded={handleServiceAdded}
@@ -419,24 +428,27 @@ export default function ProposalPricingSection({
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {activeCalculator === "ads" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-6xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 my-4 sm:my-8">
-            <div className="sticky top-0 z-10 flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-t-2xl">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-red-500 dark:text-red-400" /> Ads Campaign Calculator
+      {activeCalculator === "ads" && createPortal(
+        <div className="fixed inset-0 z-[80] flex bg-black/60 p-0 md:p-4">
+          <div className="flex flex-col w-full h-full md:max-w-3xl md:h-auto md:max-h-[calc(100dvh-2rem)] md:mx-auto md:my-auto md:rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 min-w-0">
+                <Megaphone className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
+                <span className="truncate">Ads Campaign Calculator</span>
               </h2>
               <button
+                type="button"
                 onClick={() => setActiveCalculator(null)}
-                className="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition"
+                className="min-h-11 min-w-11 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition touch-manipulation"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-3 sm:p-4 max-h-[80vh] overflow-y-auto">
+            <div className="touch-form flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
               <AdsCampaignCalculator
                 hideNotes={true}
                 onServiceAdded={handleServiceAdded}
@@ -445,7 +457,8 @@ export default function ProposalPricingSection({
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Summary / Totals */}

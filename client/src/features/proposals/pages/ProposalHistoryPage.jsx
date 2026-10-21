@@ -44,7 +44,7 @@ export default function ProposalHistoryPage() {
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden">
+    <div className="history-touch w-full bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -63,7 +63,7 @@ export default function ProposalHistoryPage() {
           </div>
 
           {/* Search and Action */}
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto min-w-0">
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
@@ -79,7 +79,7 @@ export default function ProposalHistoryPage() {
             </div>
             <button
               onClick={() => setShowCreateProposalModal(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold whitespace-nowrap shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-all flex items-center gap-2"
+              className="min-h-11 shrink-0 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-semibold whitespace-nowrap shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 touch-manipulation"
             >
               <Plus className="w-4 h-4" />
               Create Proposal
@@ -88,7 +88,7 @@ export default function ProposalHistoryPage() {
         </div>
 
         {/* MOBILE: Card List */}
-        <div className="block lg:hidden space-y-3 overflow-y-auto max-h-[calc(100vh-20rem)] pr-1">
+        <div className="history-cards xl:hidden">
           {currentItems.length > 0 ? (
             currentItems.map((item, index) => (
               <div
@@ -113,9 +113,9 @@ export default function ProposalHistoryPage() {
                   <div className="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4 text-amber-400" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Client</p>
-                    <p className="text-white font-semibold text-sm leading-tight">{item.client_name}</p>
+                    <p className="text-white font-semibold text-sm leading-tight break-words">{item.client_name}</p>
                   </div>
                 </div>
 
@@ -183,7 +183,7 @@ export default function ProposalHistoryPage() {
         </div>
 
         {/* DESKTOP: Table */}
-        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        <div className="hidden xl:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <div
               className="overflow-auto h-[calc(100vh-20rem)] max-h-[35rem]"

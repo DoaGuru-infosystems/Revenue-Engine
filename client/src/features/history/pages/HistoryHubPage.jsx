@@ -5,8 +5,6 @@ import {
   TrendingUp,
   Clock,
   Scale,
-  Menu,
-  X,
 } from "lucide-react";
 
 // Lazy-load actual history components
@@ -101,53 +99,49 @@ const HistoryHubPage = ({ setActiveTab }) => {
   }, [activeSubTab]);
   const [showProformaManager, setShowProformaManager] = useState(false);
   const [selectedProposalForManager, setSelectedProposalForManager] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const openProformaManager = (proposal) => {
     setSelectedProposalForManager(proposal);
     setShowProformaManager(true);
   };
 
-  const activeTabConfig = SUB_TABS.find((t) => t.id === activeSubTab);
-  const activeColor = isLight ? (activeTabConfig?.colorLight || activeTabConfig?.colorDark) : activeTabConfig?.colorDark;
-
   return (
-    <div className="w-full min-h-full flex flex-col lg:flex-row relative gap-4 lg:gap-6">
-      
-      {/* ── Mobile Top Bar ─────────────────────────────────────────────────── */}
-      <div className="lg:hidden flex items-center justify-between bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200 dark:border-gray-800/60 rounded-xl px-4 py-3 z-30">
-        <div className="flex items-center gap-2 font-semibold text-lg" style={{ color: activeColor || (isLight ? '#1a1a2e' : '#fff') }}>
-          {activeTabConfig?.icon && React.createElement(activeTabConfig.icon, { className: "w-5 h-5" })}
-          {activeTabConfig?.label}
+    <div className="history-touch w-full min-w-0 min-h-full flex flex-col xl:flex-row relative gap-4 xl:gap-6">
+      <div className="xl:hidden min-w-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {SUB_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeSubTab === tab.id;
+            const tabColor = isLight ? tab.colorLight : tab.colorDark;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveSubTab(tab.id)}
+                className="min-h-11 w-full touch-manipulation flex items-center justify-center gap-2 px-3 rounded-xl text-sm font-semibold"
+                style={
+                  isActive
+                    ? {
+                        background: tabColor + (isLight ? "18" : "22"),
+                        border: `1.5px solid ${tabColor}55`,
+                        color: tabColor,
+                      }
+                    : {
+                        background: isLight ? "#ffffff" : "rgba(17,24,39,0.8)",
+                        border: "1.5px solid rgba(148,163,184,0.35)",
+                        color: isLight ? "#1f2937" : "#e5e7eb",
+                      }
+                }
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {tab.label.trim()}
+              </button>
+            );
+          })}
         </div>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
       </div>
 
-      {/* ── Mobile Drawer Overlay Backdrop ─────────────────────────────────── */}
-      {isMobileMenuOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-20 bg-black/40 backdrop-blur-sm"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* ── Sub-tab Sidebar (Desktop & Mobile Drawer) ──────────────────────── */}
-      <div className={`
-        ${isMobileMenuOpen ? 'flex !absolute top-[60px] left-0 right-0 z-30 shadow-2xl' : 'hidden lg:flex'}
-        lg:!sticky lg:!top-0
-        w-full lg:w-56 xl:w-64 flex-col gap-2 h-fit
-        bg-white/95 dark:bg-gray-900/95 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none
-        border border-gray-200 dark:border-gray-800/60 lg:border-none
-        rounded-xl lg:rounded-none
-        p-4 lg:p-0
-        lg:border-r lg:border-gray-200 dark:lg:border-gray-800/60 lg:pr-4 xl:pr-6
-        lg:shrink-0
-      `}>
+      <div className="hidden xl:flex xl:sticky xl:top-0 w-56 xl:w-64 flex-col gap-2 h-fit shrink-0 xl:border-r xl:border-gray-200 dark:xl:border-gray-800/60 xl:pr-6">
         {SUB_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeSubTab === tab.id;
@@ -155,10 +149,8 @@ const HistoryHubPage = ({ setActiveTab }) => {
           return (
             <button
               key={tab.id}
-              onClick={() => {
-                setActiveSubTab(tab.id);
-                setIsMobileMenuOpen(false); // Close on mobile after selecting
-              }}
+              type="button"
+              onClick={() => setActiveSubTab(tab.id)}
               className={[
                 "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 w-full text-left",
                 isActive
@@ -192,8 +184,7 @@ const HistoryHubPage = ({ setActiveTab }) => {
         })}
       </div>
 
-      {/* ── Sub-tab Content ─────────────────────────────────────────────── */ }
-      <div className="flex-1 w-full overflow-hidden">
+      <div className="flex-1 w-full min-w-0">
         <Suspense
           fallback={
             <div className="flex items-center justify-center py-24">

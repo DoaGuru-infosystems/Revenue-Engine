@@ -60,8 +60,8 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
         setCreateDropdownOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
   }, []);
 
   const fetchProposalsForModal = async () => {
@@ -449,12 +449,12 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="history-touch space-y-6">
       {/* Search & Header */}
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-        <div className="flex flex-col sm:flex-row gap-3 items-center w-full lg:w-auto">
+      <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center justify-between">
+        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center w-full xl:w-auto min-w-0">
           {/* Search Input */}
-          <div className="relative w-full sm:w-80 md:w-96 group">
+          <div className="relative w-full md:flex-1 md:min-w-0 xl:w-80 group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400 group-focus-within:text-amber-400 transition-colors" />
             </div>
@@ -471,7 +471,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
           </div>
 
           {/* GST / Non-GST / All Filter Tabs */}
-          <div className="inline-flex items-center p-1 bg-gray-800/60 border border-gray-700/50 rounded-xl w-full sm:w-auto justify-center shadow-inner">
+          <div className="flex flex-wrap items-center p-1 bg-gray-800/60 border border-gray-700/50 rounded-xl w-full md:w-auto justify-center shadow-inner">
             <button
               onClick={() => {
                 setGstFilter("all");
@@ -587,7 +587,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
       </div>
 
       {/* MOBILE: Cards */}
-      <div className="lg:hidden space-y-4">
+      <div className="history-cards xl:hidden">
         {showApiData.length > 0 ? (
           showApiData.map((item, index) => (
             <div
@@ -667,7 +667,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
       </div>
 
       {/* DESKTOP: Table */}
-      <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+      <div className="hidden xl:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <div className="overflow-auto h-[calc(100vh-20rem)] max-h-[35rem]" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
             <table className="w-full">

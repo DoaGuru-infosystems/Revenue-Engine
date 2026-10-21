@@ -39,6 +39,71 @@ const { generatePublicAccessToken } = require("./re_publicController");
 const notificationService = require("../re_services/notificationService");
 const { calculateProformaTotals } = require("./re_proformaSyncHelper");
 
+function parsePricingTable(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function rowBillableAmount(row) {
+  if (!row || typeof row !== "object") return 0;
+  const complimentary =
+    row.include_in_total === false ||
+    Boolean(row.is_complimentary) ||
+    row.source === "custom_complimentary" ||
+    String(row.service_name || row.service || "").toLowerCase() === "complimentary" ||
+    String(row.service_name || row.service || "").toLowerCase().includes("(complimentary)");
+  if (complimentary) return Number(row.budget) || 0;
+
+  const qty = Number(row.quantity) || 1;
+  let addonsTotal = 0;
+  if (row.additional_services) {
+    try {
+      const addons =
+        typeof row.additional_services === "string"
+          ? JSON.parse(row.additional_services)
+          : row.additional_services;
+      if (Array.isArray(addons)) {
+        addonsTotal = addons.reduce(
+          (sum, addon) =>
+            sum +
+            (Number(addon.amount || addon.unit_price) || 0) *
+              (Number(addon.quantity) || qty),
+          0,
+        );
+      }
+    } catch {
+      addonsTotal = 0;
+    }
+  }
+  const base = Number(row.editing_type_amount || row.price || row.unit_price || 0);
+  const baseTotal = base * qty;
+  const recorded = Number(row.total_price || row.total_amount || 0);
+  const line =
+    recorded >= baseTotal + addonsTotal && recorded > 0
+      ? recorded
+      : (recorded > 0 ? recorded : baseTotal) + addonsTotal;
+  const adsBudget = Number(row.budget || row.ad_budget || row.amount || 0);
+  const adsCharge = Number(row.charge || row.ad_charge || 0);
+  return line + adsBudget + adsCharge;
+}
+
+function assertPricingRequired(pricingTable) {
+  const rows = parsePricingTable(pricingTable);
+  const total = rows.reduce((sum, row) => sum + rowBillableAmount(row), 0);
+  if (!(total > 0)) {
+    return "Add at least one pricing item with an amount greater than zero before saving this proposal.";
+  }
+  return null;
+}
+
 const isComplimentaryItem = (item) => {
   if (!item) return false;
   if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
@@ -223,6 +288,11 @@ exports.createProposal = async (req, res) => {
         .json({ status: "Failure", message: "txn_id is required" });
     }
 
+    const pricingError = assertPricingRequired(pricing_table_json);
+    if (pricingError) {
+      return res.status(400).json({ status: "Failure", message: pricingError });
+    }
+
     let final_start_date = billing_start_date;
     let final_end_date = billing_end_date;
 
@@ -320,6 +390,11 @@ exports.updateProposal = async (req, res) => {
       client_instructions,
       updated_by,
     } = req.body;
+
+    const pricingError = assertPricingRequired(pricing_table_json);
+    if (pricingError) {
+      return res.status(400).json({ status: "Failure", message: pricingError });
+    }
 
     let targetClientId = client_id;
     if (!targetClientId) {

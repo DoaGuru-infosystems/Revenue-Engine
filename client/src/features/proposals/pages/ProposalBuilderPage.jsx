@@ -15,7 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import { PROPOSAL_SECTIONS, PROPOSAL_TYPES, BILLING_TYPES } from "../../../config/proposalDefaults";
-import { useProposalBuilder, getClientDisplayName } from "../hooks/useProposalBuilder";
+import { useProposalBuilder, getClientDisplayName, hasRequiredPricing } from "../hooks/useProposalBuilder";
 import ProposalPricingSection from "../components/ProposalPricingSection";
 import ProposalMilestonesTable from "../components/ProposalMilestonesTable";
 import ProposalSendModal from "../components/ProposalSendModal";
@@ -92,7 +92,79 @@ export default function ProposalBuilderPage() {
   } = useProposalBuilder();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-white p-3 sm:p-6 pb-32 sm:pb-24">
+    <div className="touch-form h-dvh overflow-hidden flex flex-col bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <header className="shrink-0 z-30 border-b border-gray-200 dark:border-gray-800 bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-md px-5 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
+            <button
+              type="button"
+              onClick={() => navigate(isAdmin ? "/admin/dashboard" : "/BD/dashboard")}
+              className="min-h-11 min-w-11 flex items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition shadow-sm shrink-0 touch-manipulation"
+              title="Go Back"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent truncate">
+                {proposalId ? "Edit Proposal" : "Create New Proposal"}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm truncate">
+                Client: {clientData ? getClientDisplayName(clientData) : "Loading..."}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            {proposalId && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => viewProposal()}
+                  className="min-h-11 flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-600/20 dark:hover:bg-blue-600/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm touch-manipulation"
+                  title="Preview client proposal (Public View)"
+                >
+                  <Eye className="w-4 h-4 shrink-0" />
+                  <span>View</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => sendToClient()}
+                  className="min-h-11 flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-600/20 dark:hover:bg-red-600/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm touch-manipulation"
+                >
+                  <Send className="w-4 h-4 shrink-0" />
+                  <span>Send</span>
+                </button>
+                {isApproved ? (
+                  <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-xs sm:text-sm font-semibold shadow-sm">
+                    <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Approved</span>
+                  </div>
+                ) : (
+                  isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => markAsApproved()}
+                      className="min-h-11 flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-green-50 hover:bg-green-100 dark:bg-green-600/20 dark:hover:bg-green-600/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm touch-manipulation"
+                    >
+                      <CheckCircle className="w-4 h-4 shrink-0" />
+                      <span>Approve</span>
+                    </button>
+                  )
+                )}
+                <button
+                  type="button"
+                  onClick={() => downloadPdf()}
+                  className="min-h-11 flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-amber-50 hover:bg-amber-100 dark:bg-yellow-600/20 dark:hover:bg-yellow-600/30 text-amber-700 dark:text-yellow-400 border border-amber-200 dark:border-yellow-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm touch-manipulation"
+                >
+                  <Download className="w-4 h-4 shrink-0" />
+                  <span>PDF</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div className="p-3 sm:p-5 md:p-6 pb-6">
       {isReadOnly && (
         <div className="max-w-5xl mx-auto mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center gap-3 shadow-sm">
           <CheckCircle className="w-6 h-6 text-red-500 dark:text-red-400 shrink-0" />
@@ -104,71 +176,6 @@ export default function ProposalBuilderPage() {
           </div>
         </div>
       )}
-
-      {/* Header */}
-      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition shadow-sm shrink-0"
-            title="Go Back"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent truncate">
-              {proposalId ? "Edit Proposal" : "Create New Proposal"}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm truncate">
-              Client: {clientData ? getClientDisplayName(clientData) : "Loading..."}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          {proposalId && (
-            <>
-              <button
-                onClick={() => viewProposal()}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-600/20 dark:hover:bg-blue-600/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm"
-                title="Preview client proposal (Public View)"
-              >
-                <Eye className="w-4 h-4 shrink-0" />
-                <span>View</span>
-              </button>
-              <button
-                onClick={() => sendToClient()}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-600/20 dark:hover:bg-red-600/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm"
-              >
-                <Send className="w-4 h-4 shrink-0" />
-                <span>Send</span>
-              </button>
-              {isApproved ? (
-                <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-xs sm:text-sm font-semibold shadow-sm">
-                  <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>Approved</span>
-                </div>
-              ) : (
-                isAdmin && (
-                  <button
-                    onClick={() => markAsApproved()}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-green-50 hover:bg-green-100 dark:bg-green-600/20 dark:hover:bg-green-600/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm"
-                  >
-                    <CheckCircle className="w-4 h-4 shrink-0" />
-                    <span>Approve</span>
-                  </button>
-                )
-              )}
-              <button
-                onClick={() => downloadPdf()}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-amber-50 hover:bg-amber-100 dark:bg-yellow-600/20 dark:hover:bg-yellow-600/30 text-amber-700 dark:text-yellow-400 border border-amber-200 dark:border-yellow-500/30 rounded-xl transition text-xs sm:text-sm font-semibold shadow-sm"
-              >
-                <Download className="w-4 h-4 shrink-0" />
-                <span>PDF</span>
-              </button>
-            </>
-          )}
-        </div>
-      </div>
 
       <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
         {/* Basic Info Setup */}
@@ -252,16 +259,16 @@ export default function ProposalBuilderPage() {
                 key={sec.key}
                 className={`bg-white dark:bg-gray-800/30 backdrop-blur-xl border ${
                   isOpen
-                    ? "border-red-400 dark:border-red-500/50 shadow-md ring-1 ring-red-400/20"
-                    : "border-gray-200 dark:border-gray-700/50"
-                } rounded-2xl overflow-hidden transition-all duration-300 shadow-sm`}
+                    ? "border-red-400 dark:border-red-500/50 shadow-md ring-1 ring-red-400/20 overflow-visible"
+                    : "border-gray-200 dark:border-gray-700/50 overflow-hidden"
+                } rounded-2xl transition-all duration-300 shadow-sm`}
               >
                 {/* Header */}
                 <div
-                  className="flex items-center justify-between p-3.5 sm:p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  className="flex items-start sm:items-center justify-between gap-2 p-3.5 sm:p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                   onClick={() => toggleSection(sec.key)}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center text-red-500 dark:text-red-400 shrink-0">
                       {sec.key === "pricing_investment" ? (
                         <IndianRupee className="w-4 h-4" />
@@ -269,11 +276,11 @@ export default function ProposalBuilderPage() {
                         <FileText className="w-4 h-4" />
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white leading-snug">
                         {idx + 1}. {sec.label}
                       </h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 sm:line-clamp-none">{sec.description}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 sm:line-clamp-1">{sec.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -286,7 +293,7 @@ export default function ProposalBuilderPage() {
                           onChange={(e) =>
                             setToggles((prev) => ({ ...prev, [sec.key]: e.target.checked }))
                           }
-                          className="w-4 h-4 accent-red-500 cursor-pointer"
+                          className="w-5 h-5 accent-red-500 cursor-pointer touch-manipulation"
                         />
                       </label>
                     )}
@@ -657,16 +664,24 @@ export default function ProposalBuilderPage() {
           })}
         </div>
       </div>
+      </div>
+      </div>
 
-      {/* Action Bar (Sticky Bottom) */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-50 shadow-lg">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Action bar stays pinned; it does not scroll with the form */}
+      <div className="shrink-0 z-40 border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(0,0,0,0.06)] px-3 py-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 w-full sm:w-auto justify-between sm:justify-start">
             <span>Status:</span>
             <span className="text-orange-500 dark:text-orange-400 font-semibold capitalize bg-orange-50 dark:bg-orange-500/10 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-500/20">
               {proposalStatus ? proposalStatus.replace(/_/g, " ") : (proposalId ? "Draft / Saved" : "Unsaved")}
             </span>
           </div>
+          <div className="flex flex-col items-stretch sm:items-end gap-1.5 w-full sm:w-auto">
+            {!isReadOnly && !hasRequiredPricing(pricingTable) && (
+              <p className="text-[11px] sm:text-xs text-amber-600 dark:text-amber-400 text-right">
+                Pricing is required. Add a service or ads amount before saving.
+              </p>
+            )}
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
             {!isReadOnly && (
               <>
@@ -696,6 +711,7 @@ export default function ProposalBuilderPage() {
                 <Download className="w-4 h-4 shrink-0" /> Download PDF
               </button>
             )}
+          </div>
           </div>
         </div>
       </div>

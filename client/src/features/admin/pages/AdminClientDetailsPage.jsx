@@ -423,22 +423,22 @@ const AdminClientDetailsPage = () => {
 
   const handleClientClick = (client) => {
     setSelectedClient(client);
-    if (window.innerWidth < 1024) {
+    if (window.innerWidth < 1280) {
       setMobileDetailOpen(true);
     }
   };
 
   return (
     <>
-    <div className="flex flex-col h-full overflow-hidden p-2 md:p-4 gap-4">
+    <div className="flex flex-col h-[calc(100dvh-10.5rem)] lg:h-[calc(100dvh-11rem)] overflow-hidden p-2 md:p-4 gap-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
+        <div className="min-w-0">
           <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Client Management</h2>
           <p className="text-gray-400 text-sm mt-1">Manage clients, proposals and public links</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-64">
+        <div className="flex flex-row gap-3 w-full lg:w-auto">
+          <div className="relative flex-1 min-w-0 lg:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
             <input
               type="search"
@@ -453,7 +453,7 @@ const AdminClientDetailsPage = () => {
           </div>
           <button
             onClick={handleShow}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg shadow-orange-500/20 active:scale-95 transition-all font-medium w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg shadow-orange-500/20 active:scale-95 transition-all font-medium whitespace-nowrap shrink-0"
           >
             <Plus className="w-4 h-4" />
             Add Client
@@ -462,8 +462,8 @@ const AdminClientDetailsPage = () => {
       </div>
 
       {/* Main Layout */}
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden">
-        <div ref={detailRef} className="hidden lg:block w-80 xl:w-96 shrink-0 lg:order-2">
+      <div className="flex flex-col xl:flex-row gap-4 flex-1 min-h-0 overflow-hidden">
+        <div ref={detailRef} className="hidden xl:block w-80 2xl:w-96 shrink-0 xl:order-2">
           <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 min-h-[400px] flex flex-col">
             {selectedClient ? (
               <div className="flex flex-col h-full gap-6">
@@ -522,13 +522,13 @@ const AdminClientDetailsPage = () => {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 flex flex-col lg:order-1">
-          <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col xl:order-1">
+          <div className="bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden flex flex-col flex-1 min-h-0">
             <div className="p-4 border-b border-gray-700/30 bg-gray-800/40 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-white">All Clients</h3>
               <span className="text-xs text-gray-500">{filteredItems.length} total</span>
             </div>
-            <div className="p-2 md:p-4 grid grid-cols-1 gap-2 md:gap-3 overflow-y-auto no-scrollbar flex-1 min-h-0" style={{ maxHeight: 'calc(100vh - 340px)' }}>
+            <div className="p-2 md:p-4 grid grid-cols-1 gap-2 md:gap-3 overflow-y-auto no-scrollbar flex-1 min-h-0">
               {loading ? (
                 <div className="flex items-center justify-center h-48">
                   <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
@@ -544,64 +544,68 @@ const AdminClientDetailsPage = () => {
                         : "bg-gray-800/40 border-gray-700/50 hover:bg-gray-700/40 hover:border-gray-600/50"
                     }`}
                   >
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-                        <div className={`w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 ${
-                          selectedClient?.id === client.id ? "bg-gradient-to-br from-orange-500 to-red-600 text-white" : "bg-gray-700/50 text-gray-400"
-                        }`}>
-                          <User className="w-4 h-4 md:w-6 md:h-6" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-white truncate text-xs md:text-base leading-tight">
-                            {client.client_organization || client.client_name}
-                          </h4>
-                          <p className="text-[10px] md:text-sm text-gray-400 truncate">
-                            {client.client_organization ? client.client_name : "—"}
-                          </p>
-                        </div>
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                        selectedClient?.id === client.id ? "bg-gradient-to-br from-orange-500 to-red-600 text-white" : "bg-gray-700/50 text-gray-400"
+                      }`}>
+                        <User className="w-5 h-5" />
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] md:text-sm text-gray-400 mt-1 md:mt-0">
-                        <span className="flex items-center gap-1 md:gap-1.5 truncate">
-                          <Phone className="w-3 h-3 md:w-3.5 md:h-3.5 text-amber-400 shrink-0" />
-                          {client.phone}
-                        </span>
-                        {client.email && (
-                          <span className="hidden md:flex items-center gap-1.5 truncate">
-                            <Mail className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                            {client.email}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-white truncate text-sm md:text-base leading-tight">
+                              {client.client_organization || client.client_name}
+                            </h4>
+                            <p className="text-xs md:text-sm text-gray-400 truncate mt-0.5">
+                              {client.client_organization ? client.client_name : "—"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setFormData({
+                                  client_name: client.client_name,
+                                  client_organization: client.client_organization,
+                                  email: client.email,
+                                  phone: client.phone,
+                                  address: client.address,
+                                  dg_employee: client.dg_employee,
+                                });
+                                setIsEditing(true);
+                                setShowModal(true);
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-700/50 hover:bg-gray-600/80 text-white transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteClient(client.id); }}
+                              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs md:text-sm text-gray-400">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>{client.phone || "—"}</span>
                           </span>
-                        )}
-                        <span className="hidden lg:flex items-center gap-1.5 truncate">
-                          <Calendar className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                          {client.dg_employee}
-                        </span>
-                      </div>
-                      <div className={`flex flex-col md:flex-row gap-1.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity ${selectedClient?.id === client.id ? 'md:opacity-100' : ''}`}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedClient(client);
-                            setFormData({
-                              client_name: client.client_name,
-                              client_organization: client.client_organization,
-                              email: client.email,
-                              phone: client.phone,
-                              address: client.address,
-                              dg_employee: client.dg_employee,
-                            });
-                            setIsEditing(true);
-                            setShowModal(true);
-                          }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-700/50 hover:bg-gray-600/80 text-white transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteClient(client.id); }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
-                        >
-                          Delete
-                        </button>
+                          {client.email && (
+                            <span className="inline-flex items-center gap-1.5 min-w-0 max-w-full">
+                              <Mail className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                              <span className="truncate max-w-[14rem] sm:max-w-[20rem] md:max-w-[24rem]">{client.email}</span>
+                            </span>
+                          )}
+                          {client.dg_employee && (
+                            <span className="inline-flex items-center gap-1.5 min-w-0">
+                              <Calendar className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                              <span className="truncate max-w-[12rem]">{client.dg_employee}</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -613,7 +617,7 @@ const AdminClientDetailsPage = () => {
                 </div>
               )}
             </div>
-            <div className="p-3 border-t border-gray-700/30 bg-gray-800/40 flex items-center justify-center gap-3">
+            <div className="p-3 border-t border-gray-700/30 bg-gray-800/40 flex items-center justify-center gap-3 shrink-0">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                 disabled={currentPage === 0}
@@ -744,7 +748,7 @@ const AdminClientDetailsPage = () => {
 
       {/* ── MOBILE Client Detail Bottom Sheet ── */}
       {mobileDetailOpen && selectedClient && (
-        <div className="fixed inset-0 z-[90] lg:hidden">
+        <div className="fixed inset-0 z-[90] xl:hidden">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileDetailOpen(false)} />
           <div className="absolute bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700/60 rounded-t-3xl p-5 pb-20 space-y-4 max-h-[85vh] overflow-y-auto">
             <div className="w-10 h-1 bg-gray-700 rounded-full mx-auto mb-2" />

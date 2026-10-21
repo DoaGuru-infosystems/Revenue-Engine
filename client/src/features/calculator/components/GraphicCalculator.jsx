@@ -170,8 +170,9 @@ const GraphicCalculator = ({
     return name;
   };
 
+  const embedded = Boolean(onServiceAdded);
   const selectCls =
-    "w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:bg-gray-800 disabled:text-gray-500";
+    "w-full min-h-11 rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-base text-white focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:bg-gray-800 disabled:text-gray-500 touch-manipulation";
   const labelCls =
     "block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1";
   const cardCls = "bg-gray-800 rounded-xl border border-gray-700 shadow-sm p-5";
@@ -191,10 +192,10 @@ const GraphicCalculator = ({
 
   return (
     <>
-      <div className="min-h-screen bg-gray-900">
-        <div className="max-w-3xl mx-auto px-4 py-8 space-y-5">
+      <div className={embedded ? "w-full bg-transparent" : "min-h-screen bg-gray-900"}>
+        <div className={embedded ? "w-full space-y-4" : "max-w-3xl mx-auto px-4 py-8 space-y-5"}>
 
-          {/* Header */ }
+          {!embedded && (
           <div className="flex items-center gap-3">
             {!onServiceAdded && (
               <button
@@ -212,12 +213,13 @@ const GraphicCalculator = ({
               <p className="text-xs text-gray-500">Build &amp; save service quotations</p>
             </div>
           </div>
+          )}
 
           {/* Service Type Toggle */ }
           <div className="flex gap-2 p-1 bg-gray-800 rounded-xl border border-gray-700">
             { [{ val: "paid", label: " Paid Service" }, { val: "complimentary", label: " Complimentary" }].map(({ val, label }) => (
               <button key={ val } onClick={ () => setServiceType(val) }
-                className={ `flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${serviceType === val ? "bg-red-600 text-white shadow" : "text-gray-400 hover:text-white hover:bg-gray-700"}` }>
+                className={ `flex-1 min-h-11 py-2.5 rounded-lg text-sm font-semibold transition-all touch-manipulation ${serviceType === val ? "bg-red-600 text-white shadow" : "text-gray-400 hover:text-white hover:bg-gray-700"}` }>
                 { label }
               </button>
             )) }
@@ -233,7 +235,7 @@ const GraphicCalculator = ({
                 </p>
 
                 {/* Row 1: Service + Category */ }
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className={ labelCls }>Service</label>
                     <select value={ selectedService } disabled={ !!editId } className={ selectCls }
@@ -266,7 +268,7 @@ const GraphicCalculator = ({
                 </div>
 
                 {/* Row 2: Editing Type + Quantity */ }
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   { (getSelectedCategory?.editing_types?.some(et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A") || (getSelectedCategory?.editing_types?.length > 1)) && (
                     <div>
                       <label className={ labelCls }>Editing Type <span className="text-red-500 font-bold">*</span></label>
@@ -313,16 +315,17 @@ const GraphicCalculator = ({
                         .map((opt) => {
                           const key = opt.editing_type_name.toLowerCase().replace(/\s+/g, "_");
                           return (
-                            <div key={ key } className="flex items-center gap-1.5 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2">
-                              <span className="text-sm text-white font-medium">{ getServiceDisplayName(opt.editing_type_name) }</span>
-                              <span className="text-xs text-gray-400">₹{ opt.amount }</span>
-                              <div className="flex gap-1 ml-2">
-                                <button type="button" onClick={ () => setAddons((p) => ({ ...p, [key]: true })) }
-                                  className={ `px-3 py-1 rounded-md text-xs font-bold transition ${addons[key] ? "bg-green-500 text-white" : "bg-gray-600 text-gray-300 hover:bg-green-900"}` }>YES</button>
-                                <button type="button" onClick={ () => setAddons((p) => ({ ...p, [key]: false })) }
-                                  className={ `px-3 py-1 rounded-md text-xs font-bold transition ${!addons[key] ? "bg-red-500 text-white" : "bg-gray-600 text-gray-300 hover:bg-red-900"}` }>NO</button>
-                              </div>
-                            </div>
+                            <button
+                              type="button"
+                              key={ key }
+                              onClick={ () => setAddons((p) => ({ ...p, [key]: !p[key] })) }
+                              className={ `min-h-11 flex items-center justify-between gap-3 bg-gray-700 border rounded-lg px-3 py-2 touch-manipulation ${addons[key] ? "border-green-500" : "border-gray-600"}` }
+                            >
+                              <span className="text-sm text-white font-medium text-left">{ getServiceDisplayName(opt.editing_type_name) }</span>
+                              <span className={ `shrink-0 text-xs font-bold px-2.5 py-1 rounded-md ${addons[key] ? "bg-green-600 text-white" : "bg-gray-600 text-gray-200"}` }>
+                                { addons[key] ? `Added · ₹${opt.amount}` : `Add · ₹${opt.amount}` }
+                              </span>
+                            </button>
                           );
                         }) }
                     </div>
@@ -403,15 +406,17 @@ const GraphicCalculator = ({
                 ) }
 
                 {/* Buttons */ }
-                <div className="flex gap-2 pt-1">
-                  <button onClick={ handleSave } disabled={ loading }
-                    className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition shadow-sm text-sm">
-                    { loading ? "Saving..." : editId ? "✔ Update Entry" : "💾 Calculate & Save" }
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <button type="button" onClick={ handleSave } disabled={ loading }
+                    className="flex-1 min-h-11 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition shadow-sm text-base touch-manipulation">
+                    { loading ? "Saving..." : editId ? "Update entry" : "Calculate & Save" }
                   </button>
-                  <button onClick={ resetForm }
-                    className="px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition text-sm font-medium">
-                    Reset
+                  {editId && (
+                  <button type="button" onClick={ resetForm }
+                    className="min-h-11 px-4 py-2.5 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 transition text-sm font-medium touch-manipulation">
+                    Cancel
                   </button>
+                  )}
                 </div>
               </div>
 
@@ -451,7 +456,7 @@ const GraphicCalculator = ({
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Package className="w-4 h-4 text-red-400" />Saved Services</h3>
                   { getData.filter(order => !isComplimentaryItem(order)).map((order) => (
                     <div key={ order.id } className={ cardCls + " hover:border-red-500/50 transition" }>
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-white text-sm">{ order.service_name } → { order.category_name }</p>
                           <p className="text-xs text-gray-400 mt-0.5">🎬 { order.editing_type_name } × { order.quantity }</p>
@@ -479,10 +484,10 @@ const GraphicCalculator = ({
                             })() }
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="font-bold text-green-600 text-base">₹{ parseFloat(order.total_amount).toLocaleString() }</span>
-                          <button onClick={ () => handleEdit(order) } className="w-8 h-8 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
-                          <button onClick={ () => handleDelete(order.id) } className="w-8 h-8 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-bold text-green-600 text-base mr-auto sm:mr-0">₹{ parseFloat(order.total_amount).toLocaleString() }</span>
+                          <button type="button" onClick={ () => handleEdit(order) } className="min-h-11 min-w-11 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition touch-manipulation" title="Edit"><Pencil className="w-4 h-4" /></button>
+                          <button type="button" onClick={ () => handleDelete(order.id) } className="min-h-11 min-w-11 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center transition touch-manipulation" title="Delete"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </div>
                     </div>
@@ -498,18 +503,18 @@ const GraphicCalculator = ({
 
                     {/* Predefined Note Dropdown */ }
                     <div className="relative" ref={ dropdownRef }>
-                      <div onClick={ () => setIsOpen(!isOpen) }
-                        className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg border border-gray-600 bg-gray-700 text-sm cursor-pointer hover:border-gray-500 transition">
+                      <button type="button" onClick={ () => setIsOpen(!isOpen) }
+                        className="flex items-center justify-between w-full min-h-11 px-3 py-2.5 rounded-lg border border-gray-600 bg-gray-700 text-base cursor-pointer hover:border-gray-500 transition touch-manipulation">
                         <span className="text-gray-300 truncate">{ selectedNote ? selectedNote.note_text : "Select a predefined note to add..." }</span>
                         { isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" /> }
-                      </div>
+                      </button>
                       { isOpen && (
                         <div className="absolute z-20 w-full mt-1 max-h-56 overflow-auto rounded-lg border border-gray-600 bg-gray-800 shadow-2xl">
                           { uniquePredefinedNotes.length === 0
                             ? <p className="text-center text-gray-500 text-sm py-4">No more predefined notes</p>
                             : uniquePredefinedNotes.map((note) => (
-                              <div key={ note.id } onClick={ () => handleSelect(note) }
-                                className="px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0 transition">{ note.note_text }</div>
+                              <button type="button" key={ note.id } onPointerDown={ (e) => e.preventDefault() } onClick={ () => handleSelect(note) }
+                                className="w-full text-left px-4 py-3 min-h-11 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0 transition touch-manipulation">{ note.note_text }</button>
                             )) }
                         </div>
                       ) }

@@ -88,8 +88,8 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
         setOpenDropdown(null);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
   }, []);
 
   const getFilteredItems = () => {
@@ -219,7 +219,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden">
+    <div className="history-touch min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
@@ -272,7 +272,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
         </div>
 
         {/* ── Desktop Table (hidden on mobile) ──────────────────────────────── */ }
-        <div className="hidden lg:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+        <div className="hidden xl:block bg-gray-800/30 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
           <div className="p-4 lg:p-8">
             <div className="overflow-auto h-[35rem]" style={ { scrollbarWidth: 'none', msOverflowStyle: 'none' } }>
               <table className="w-full">
@@ -352,7 +352,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
         </div>
 
         {/* ── Mobile Cards (visible only on mobile) ─────────────────────────── */ }
-        <div className="lg:hidden space-y-3">
+        <div className="history-cards xl:hidden">
           { showApiData.length > 0 ? (
             showApiData.map((item, index) => {
               const globalIndex = currentPage * clientPerPage + index;
@@ -392,16 +392,16 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 pt-2 border-t border-gray-700/40">
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-700/40">
                     <button
                       onClick={ () => handleNavigateInvoice(item.txn_id, item.client_id, item.bill_type) }
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-gray-700/60 text-gray-200 hover:bg-gray-600/60 active:scale-95 transition-all"
+                      className="flex-1 min-w-[8rem] min-h-11 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold bg-gray-700/60 text-gray-200 active:scale-95 transition-all touch-manipulation"
                     >
                       <EyeIcon size={ 13 } /> Preview
                     </button>
                     <button
                       onClick={ () => handleCopyInvoice(item.txn_id) }
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-red-600/30 text-red-300 hover:bg-red-600/50 active:scale-95 transition-all"
+                      className="flex-1 min-w-[8rem] min-h-11 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold bg-red-600/30 text-red-300 active:scale-95 transition-all touch-manipulation"
                       title="Copy Transaction ID"
                     >
                       <Copy size={ 13 } /> Copy Txn ID
@@ -409,7 +409,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
                     { item.tag_received_amt !== "received" && (
                       <button
                         onClick={ () => handleDeleteInvoice(item.txn_id, item.client_id) }
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold bg-red-600/30 text-red-300 hover:bg-red-600/50 active:scale-95 transition-all"
+                        className="flex-1 min-w-[8rem] min-h-11 flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold bg-red-600/30 text-red-300 active:scale-95 transition-all touch-manipulation"
                       >
                         <Trash size={ 13 } /> Delete
                       </button>
