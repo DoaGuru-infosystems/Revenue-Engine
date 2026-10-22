@@ -15,11 +15,9 @@ export default function App() {
 }
 
 const Wrapper = styled.div`
-  height: 100%;
-  height: 100dvh;
   width: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary, #111827);
