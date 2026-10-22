@@ -3,10 +3,15 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.SMTP_HOST || "mail.siarasystems.com",
+  port: Number(process.env.SMTP_PORT) || 465,
+  secure: true,
   auth: {
     user: process.env.EMAILSENDER,
     pass: process.env.EMAILPASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
   logger: true,
   debug: true,
