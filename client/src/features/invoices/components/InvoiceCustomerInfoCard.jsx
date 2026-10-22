@@ -52,7 +52,7 @@ export default function InvoiceCustomerInfoCard({
       </div>
 
       {/* Client Details */}
-      <div className="flex justify-between text-xs mb-1 print:mb-0.5 print:text-[11px] print:leading-tight">
+      <div className="flex justify-between text-xs mb-1 print:mb-0.5 print:text-[11px] print:leading-tight text-gray-900">
         <div className="space-y-1 print:space-y-0.5">
           {clientData?.payment_mode && (
             <p>

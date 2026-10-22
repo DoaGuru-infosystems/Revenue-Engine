@@ -81,6 +81,86 @@
   color-scheme: dark;
 }
 
+/* ── Force-Light Scope (Public Proposal & Paper Documents) ── */
+.theme-force-light,
+.theme-force-light *,
+.proposal-public-view,
+.proposal-public-view * {
+  color-scheme: light;
+}
+
+.theme-force-light,
+.proposal-public-view {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}
+
+[data-theme="dark"] .theme-force-light,
+[data-theme="dark"] .proposal-public-view {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}
+
+[data-theme="dark"] .proposal-public-view .proposal-card,
+[data-theme="dark"] .proposal-public-view .bg-white {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+[data-theme="dark"] .proposal-public-view .text-slate-800 {
+  color: #1e293b !important;
+}
+
+[data-theme="dark"] .proposal-public-view .text-slate-700 {
+  color: #334155 !important;
+}
+
+[data-theme="dark"] .proposal-public-view .text-slate-600 {
+  color: #475569 !important;
+}
+
+/* ── Invoice, Proforma, Balance Proforma Paper Document Protection ── */
+.page-wrapper,
+#invoice-content {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
+.page-wrapper table,
+#invoice-content table {
+  color: #111827 !important;
+}
+
+.page-wrapper td,
+.page-wrapper th,
+#invoice-content td,
+#invoice-content th {
+  color: #111827;
+}
+
+.page-wrapper td [class*="text-"],
+.page-wrapper th [class*="text-"],
+.page-wrapper [class*="text-red-"],
+.page-wrapper [class*="text-purple-"],
+.page-wrapper [class*="text-green-"],
+.page-wrapper [class*="text-amber-"],
+.page-wrapper [class*="text-blue-"],
+#invoice-content td [class*="text-"],
+#invoice-content th [class*="text-"],
+#invoice-content [class*="text-red-"],
+#invoice-content [class*="text-purple-"],
+#invoice-content [class*="text-green-"],
+#invoice-content [class*="text-amber-"],
+#invoice-content [class*="text-blue-"] {
+  color: initial;
+}
+
 /* ── Premium Light Theme ──────────────────────────────────── */
 [data-theme="light"] {
   --bg-primary: #f8f4ef;

@@ -21,7 +21,6 @@ const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary, #111827);
-  color: var(--text-primary, #ffffff);
 
   .loading-container {
     position: fixed;

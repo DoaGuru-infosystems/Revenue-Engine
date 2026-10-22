@@ -6,9 +6,10 @@ export default function QuotationComplimentaryTable({
   if (!complimentaryData || complimentaryData.length === 0) return null;
 
   return (
-    <section className="mb-2 mt-4 text-sm">
-      <table className="w-full border text-xs">
+    <section className="mb-2 mt-4 text-sm text-gray-900">
+      <table className="w-full border text-xs text-gray-900">
         <thead
+          className="text-gray-900"
           style={{
             background: "#E8EDFF",
             printColorAdjust: "exact",
@@ -114,7 +115,7 @@ export default function QuotationComplimentaryTable({
 
             return (
               <React.Fragment key={`compl-${eidx}`}>
-                <tr className="bg-gray-50">
+                <tr className="bg-gray-50 text-gray-900">
                   <td className="border px-2 py-1 font-medium">{finalService}</td>
                   <td className="border px-2 py-1">{finalCategory}</td>
                   <td className="border px-2 py-1 text-right">{qty}</td>

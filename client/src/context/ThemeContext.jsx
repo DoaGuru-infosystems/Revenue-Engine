@@ -15,24 +15,25 @@ export function ThemeProvider({ children }) {
   });
 
   const [forceDark, setForceDark] = useState(false);
+  const [forceLight, setForceLight] = useState(false);
 
-  // Apply data-theme attribute on <html> whenever theme or forceDark changes
+  // Apply data-theme attribute on <html> whenever theme, forceDark, or forceLight changes
   useEffect(() => {
-    const effectiveTheme = forceDark ? "dark" : theme;
+    const effectiveTheme = forceLight ? "light" : forceDark ? "dark" : theme;
     document.documentElement.setAttribute("data-theme", effectiveTheme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
     } catch {
       // localStorage unavailable
     }
-  }, [theme, forceDark]);
+  }, [theme, forceDark, forceLight]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, forceDark, setForceDark }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, forceDark, setForceDark, forceLight, setForceLight }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -55,6 +56,21 @@ export function useForceDark() {
     ctx.setForceDark(true);
     return () => {
       ctx.setForceDark(false);
+    };
+  }, [ctx]);
+}
+
+/**
+ * Hook to enforce light/paper theme on document pages (e.g. Public Proposal)
+ * regardless of the global light/dark toggle, restoring user theme on unmount.
+ */
+export function useForceLight() {
+  const ctx = useContext(ThemeContext);
+  useEffect(() => {
+    if (!ctx?.setForceLight) return;
+    ctx.setForceLight(true);
+    return () => {
+      ctx.setForceLight(false);
     };
   }, [ctx]);
 }

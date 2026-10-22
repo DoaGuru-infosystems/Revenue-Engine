@@ -18,8 +18,8 @@ export default function InvoiceServicesTable({
   }
 
   return (
-    <section className="mb-2 text-sm">
-      <table className="w-full border text-xs">
+    <section className="mb-2 text-sm text-gray-900">
+      <table className="w-full border text-xs text-gray-900">
         <thead
           style={{
             background: "#E8EDFF",
@@ -109,7 +109,7 @@ export default function InvoiceServicesTable({
                     : baseTotal;
 
                   return (
-                    <tr key={`graphic-${idx}-${eidx}`} className="bg-white">
+                    <tr key={`graphic-${idx}-${eidx}`} className="bg-white text-gray-900">
                       {eidx === 0 && (
                         <td
                           className="border px-2 py-1 align-middle text-left"

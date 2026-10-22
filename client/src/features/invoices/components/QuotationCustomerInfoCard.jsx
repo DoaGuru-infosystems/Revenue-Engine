@@ -27,7 +27,7 @@ export default function QuotationCustomerInfoCard({
       )}
 
       {/* Client Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 print:grid-cols-2 print:gap-1 print:mb-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3 print:grid-cols-2 print:gap-1 print:mb-1 text-gray-900">
         <div className="break-words text-xs print:text-[11px] print:leading-tight">
           <h3 className="text-md print:text-xs font-bold">Client Details</h3>
           <p className="break-words">

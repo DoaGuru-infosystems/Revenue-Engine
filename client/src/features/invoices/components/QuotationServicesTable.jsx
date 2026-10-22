@@ -7,9 +7,9 @@ export default function QuotationServicesTable({
   if (!graphicData || graphicData.length === 0) return null;
 
   return (
-    <section className="mb-2 text-sm">
-      <table className="w-full border text-xs">
-        <thead className="bg-orange-100">
+    <section className="mb-2 text-sm text-gray-900">
+      <table className="w-full border text-xs text-gray-900">
+        <thead className="bg-orange-100 text-gray-900">
           <tr>
             <th className="border w-[10rem] px-2 py-1 text-left">Services</th>
             <th className="border w-[20rem] px-2 py-1 text-left">Categories</th>
@@ -64,7 +64,7 @@ export default function QuotationServicesTable({
                       : baseTotal;
 
                   return (
-                    <tr key={`graphic-${idx}-${eidx}`} className="bg-white">
+                    <tr key={`graphic-${idx}-${eidx}`} className="bg-white text-gray-900">
                       {eidx === 0 && (
                         <td
                           className="border px-2 py-1 align-middle text-left"

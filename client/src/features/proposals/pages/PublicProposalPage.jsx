@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import img3 from "../../../assets/DOAGuru IT Solution.png";
 import { usePublicProposal } from "../hooks/usePublicProposal";
+import { useForceLight } from "../../../context/ThemeContext";
 
 /** Horizontal table scroller with always-visible scrollbar + slide hint */
 function ScrollableTable({ children, className = "" }) {
@@ -47,6 +48,7 @@ function ScrollableTable({ children, className = "" }) {
 }
 
 export default function PublicProposalPage() {
+  useForceLight();
   const {
     data,
     loading,
@@ -284,15 +286,29 @@ export default function PublicProposalPage() {
 
   const renderContent = (content) => {
     if (!content) return null;
-    const htmlContent = typeof content === "object" ? content.content : content;
-    if (!htmlContent) return null;
-    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+    const text = typeof content === "object" ? content.content : content;
+    if (!text || typeof text !== "string" || !text.trim()) return null;
+
+    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(text);
+    if (hasHtmlTags) {
+      return (
+        <div
+          className="prose-html leading-relaxed text-slate-700 text-sm sm:text-base break-words"
+          dangerouslySetInnerHTML={{ __html: text }}
+        />
+      );
+    }
+    return (
+      <div className="whitespace-pre-line leading-relaxed text-slate-700 text-sm sm:text-base break-words">
+        {text}
+      </div>
+    );
   };
 
   const hasContent = (content) => {
     if (!content) return false;
-    const htmlContent = typeof content === "object" ? content.content : content;
-    return !!htmlContent && htmlContent.trim() !== "";
+    const text = typeof content === "object" ? content.content : content;
+    return !!text && String(text).trim() !== "";
   };
 
   const SectionTitle = ({ children }) => (
@@ -307,7 +323,11 @@ export default function PublicProposalPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 py-6 sm:py-12 px-2.5 sm:px-4 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div
+      data-theme="light"
+      className="proposal-public-view theme-force-light min-h-screen bg-slate-50 py-6 sm:py-12 px-2.5 sm:px-4 font-sans selection:bg-blue-100 selection:text-blue-900"
+      style={{ colorScheme: "light", color: "#1e293b", backgroundColor: "#f8fafc" }}
+    >
       <div className="max-w-4xl mx-auto mb-4 sm:mb-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
         <div></div>
         <button
@@ -319,7 +339,10 @@ export default function PublicProposalPage() {
         </button>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden border border-slate-100">
+      <div
+        className="proposal-card max-w-4xl mx-auto bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden border border-slate-100"
+        style={{ backgroundColor: "#ffffff", color: "#1e293b" }}
+      >
         <div className="p-4 sm:p-8 md:p-16">
           {/* Header Info Table */}
           <div className="mb-10 sm:mb-16">
@@ -332,23 +355,23 @@ export default function PublicProposalPage() {
                 <tbody className="divide-y divide-slate-100/50">
                   <tr>
                     <td className="py-2.5 sm:py-3 font-semibold text-slate-800 w-2/5">Client Name:</td>
-                    <td className="py-2.5 sm:py-3 break-words">{clientName}</td>
+                    <td className="py-2.5 sm:py-3 break-words text-slate-700">{clientName}</td>
                   </tr>
                   <tr>
                     <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Organization:</td>
-                    <td className="py-2.5 sm:py-3 break-words">{organization}</td>
+                    <td className="py-2.5 sm:py-3 break-words text-slate-700">{organization}</td>
                   </tr>
                   <tr>
                     <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Duration:</td>
-                    <td className="py-2.5 sm:py-3">{duration}</td>
+                    <td className="py-2.5 sm:py-3 text-slate-700">{duration}</td>
                   </tr>
                   <tr>
                     <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Proposal Date:</td>
-                    <td className="py-2.5 sm:py-3">{propDate}</td>
+                    <td className="py-2.5 sm:py-3 text-slate-700">{propDate}</td>
                   </tr>
                   <tr>
                     <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Proposal Validity:</td>
-                    <td className="py-2.5 sm:py-3">{validity}</td>
+                    <td className="py-2.5 sm:py-3 text-slate-700">{validity}</td>
                   </tr>
                   <tr>
                     <td className="py-2.5 sm:py-3 font-semibold text-slate-800">Prepared By:</td>
@@ -369,13 +392,89 @@ export default function PublicProposalPage() {
 
           <style>
             {`
-              .prose-custom p { margin-bottom: 1rem; color: #475569; line-height: 1.7; font-size: 0.9375rem; }
-              .prose-custom ul { padding-left: 1.25rem; margin-bottom: 1rem; color: #475569; list-style-type: disc; }
-              .prose-custom li { margin-bottom: 0.5rem; font-size: 0.9375rem; }
-              .prose-custom strong { color: #1e293b; font-weight: 600; }
-              .prose-custom h3, .prose-custom h4 { color: #0f172a; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; font-size: 1.05rem; }
+              .proposal-public-view {
+                color-scheme: light !important;
+                background-color: #f8fafc !important;
+                color: #1e293b !important;
+              }
+              .proposal-public-view .proposal-card {
+                background-color: #ffffff !important;
+                color: #1e293b !important;
+              }
+              .prose-custom,
+              .prose-custom *,
+              .prose-html,
+              .prose-html * {
+                color: #334155 !important;
+              }
+              .prose-custom p,
+              .prose-html p {
+                margin-bottom: 1rem;
+                color: #334155 !important;
+                line-height: 1.7;
+                font-size: 0.9375rem;
+                white-space: pre-line;
+              }
+              .prose-custom ul,
+              .prose-html ul {
+                padding-left: 1.25rem;
+                margin-bottom: 1rem;
+                color: #334155 !important;
+                list-style-type: disc;
+              }
+              .prose-custom ol,
+              .prose-html ol {
+                padding-left: 1.25rem;
+                margin-bottom: 1rem;
+                color: #334155 !important;
+                list-style-type: decimal;
+              }
+              .prose-custom li,
+              .prose-html li {
+                margin-bottom: 0.5rem;
+                font-size: 0.9375rem;
+                color: #334155 !important;
+              }
+              .prose-custom strong,
+              .prose-custom b,
+              .prose-html strong,
+              .prose-html b {
+                color: #0f172a !important;
+                font-weight: 600;
+              }
+              .prose-custom h1,
+              .prose-custom h2,
+              .prose-custom h3,
+              .prose-custom h4,
+              .prose-html h1,
+              .prose-html h2,
+              .prose-html h3,
+              .prose-html h4 {
+                color: #0f172a !important;
+                font-weight: 700;
+                margin-top: 1.5rem;
+                margin-bottom: 0.75rem;
+              }
+              .prose-custom h3,
+              .prose-custom h4,
+              .prose-html h3,
+              .prose-html h4 {
+                font-size: 1.05rem;
+              }
+              .prose-custom a,
+              .prose-html a {
+                color: #2563eb !important;
+                text-decoration: underline;
+              }
               @media (max-width: 640px) {
-                .prose-custom p, .prose-custom li { font-size: 0.85rem; }
+                .prose-custom,
+                .prose-custom p,
+                .prose-custom li,
+                .prose-html,
+                .prose-html p,
+                .prose-html li {
+                  font-size: 0.85rem;
+                }
               }
 
               /* Always-visible horizontal scrollbar on proposal tables */

@@ -7,8 +7,8 @@ export default function InvoiceComplimentaryTable({
   if (!complimentaryData || complimentaryData.length === 0) return null;
 
   return (
-    <section className="text-sm mt-2">
-      <table className="w-full border text-xs">
+    <section className="text-sm mt-2 text-gray-900">
+      <table className="w-full border text-xs text-gray-900">
         <thead
           style={{
             background: "#E8EDFF",
@@ -97,7 +97,7 @@ export default function InvoiceComplimentaryTable({
 
             return (
               <React.Fragment key={`comp-${idx}`}>
-                <tr className="bg-white">
+                <tr className="bg-white text-gray-900">
                   <td className="border px-2 py-1 font-medium">
                     {finalService}
                   </td>

@@ -5,6 +5,20 @@ export const InvoicePrintWrapper = styled.div`
   min-height: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  color: #111827;
+
+  .page-wrapper {
+    color: #111827 !important;
+  }
+
+  table {
+    color: #111827;
+  }
+
+  th,
+  td {
+    color: inherit;
+  }
 
   @media print {
     height: auto !important;
