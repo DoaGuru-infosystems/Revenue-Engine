@@ -2,20 +2,32 @@ const moment = require("moment-timezone");
 const nodemailer = require("nodemailer");
 const path = require("path");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "mail.siarasystems.com",
-  port: Number(process.env.SMTP_PORT) || 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAILSENDER,
-    pass: process.env.EMAILPASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  logger: true,
-  debug: true,
-});
+const transporter = nodemailer.createTransport(
+  process.env.EMAILHOST
+    ? {
+        host: process.env.EMAILHOST,
+        port: Number(process.env.EMAILPORT) || 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAILSENDER,
+          pass: process.env.EMAILPASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        logger: true,
+        debug: true,
+      }
+    : {
+        service: "gmail",
+        auth: {
+          user: process.env.EMAILSENDER,
+          pass: process.env.EMAILPASSWORD,
+        },
+        logger: true,
+        debug: true,
+      }
+);
 
 const TZ = "Asia/Kolkata";
 
