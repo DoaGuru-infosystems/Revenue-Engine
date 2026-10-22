@@ -10,31 +10,8 @@ import { persistor, store } from "./app/app.store.js";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 
-// Global window scroll & overscroll lock for iOS/iPadOS/Android touch devices
+// Global handlers
 if (typeof window !== "undefined") {
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (window.scrollY !== 0 || window.scrollX !== 0) {
-        window.scrollTo(0, 0);
-      }
-    },
-    { passive: false }
-  );
-
-  document.addEventListener(
-    "touchmove",
-    (e) => {
-      const isScrollable = e.target.closest(
-        "main, .overflow-y-auto, .overflow-x-auto, textarea, input, select, [data-scrollable]"
-      );
-      if (!isScrollable) {
-        e.preventDefault();
-      }
-    },
-    { passive: false }
-  );
-
   // Automatically recover if a dynamic module fails to fetch (e.g. server restart, Wi-Fi reconnect)
   window.addEventListener("vite:preloadError", (event) => {
     event.preventDefault();
