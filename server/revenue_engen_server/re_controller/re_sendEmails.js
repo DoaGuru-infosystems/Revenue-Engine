@@ -1,6 +1,7 @@
 const moment = require("moment-timezone");
 const nodemailer = require("nodemailer");
 const path = require("path");
+const fs = require("fs");
 
 const transporter = nodemailer.createTransport(
   process.env.EMAILHOST
@@ -35,12 +36,41 @@ function isEmail(v) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v || "");
 }
 
-// Logo attachment common to all emails
-const getLogoAttachment = () => ({
-  filename: 'logo.png',
-  path: path.join(__dirname, '../../../client/public/logo.png'),
-  cid: 'logo'
-});
+// Logo attachment common to all emails (Safe guard for cPanel server)
+const getLogoAttachment = () => {
+  const candidatePaths = [
+    path.join(__dirname, "logo.png"),
+    path.join(__dirname, "../assets/logo.png"),
+    path.join(__dirname, "../../public/logo.png"),
+    path.join(__dirname, "../../../client/public/logo.png"),
+    path.join(__dirname, "../../../client/dist/logo.png"),
+    path.join(process.cwd(), "public/logo.png"),
+    path.join(process.cwd(), "logo.png"),
+    path.join(process.cwd(), "client/public/logo.png"),
+  ];
+
+  for (const candidate of candidatePaths) {
+    if (fs.existsSync(candidate)) {
+      return {
+        filename: "logo.png",
+        path: candidate,
+        cid: "logo",
+      };
+    }
+  }
+
+  // Safe fallback if logo.png is not uploaded to server:
+  // Return transparent 1x1 PNG Buffer so Nodemailer never throws ENOENT
+  return {
+    filename: "logo.png",
+    content: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      "base64"
+    ),
+    cid: "logo",
+    contentType: "image/png",
+  };
+};
 
 async function resolveOwnerEmail() {
   try {
