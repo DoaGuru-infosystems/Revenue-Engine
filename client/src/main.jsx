@@ -34,6 +34,23 @@ if (typeof window !== "undefined") {
     },
     { passive: false }
   );
+
+  // Automatically recover if a dynamic module fails to fetch (e.g. server restart, Wi-Fi reconnect)
+  window.addEventListener("vite:preloadError", (event) => {
+    event.preventDefault();
+    window.location.reload();
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    if (
+      event.reason &&
+      (String(event.reason.message).includes("Failed to fetch dynamically imported module") ||
+        String(event.reason.message).includes("error loading dynamically imported module"))
+    ) {
+      event.preventDefault();
+      window.location.reload();
+    }
+  });
 }
 
 const router = createHashRouter([
