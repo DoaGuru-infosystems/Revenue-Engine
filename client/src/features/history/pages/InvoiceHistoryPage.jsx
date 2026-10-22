@@ -345,7 +345,7 @@ const InvoiceHistoryPage = ({ setActiveTab }) => {
         </div>
 
         {/* ── Mobile Cards (visible only on mobile) ─────────────────────────── */ }
-        <div className="history-cards xl:hidden">
+        <div className="history-cards xl:hidden pb-40">
           { showApiData.length > 0 ? (
             showApiData.map((item, index) => {
               const globalIndex = currentPage * clientPerPage + index;

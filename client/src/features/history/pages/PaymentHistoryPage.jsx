@@ -213,7 +213,7 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
         </div>
 
         {/* MOBILE/TABLET: Cards (hidden on lg+) */}
-        <div className="history-cards xl:hidden">
+        <div className="history-cards xl:hidden pb-40">
           {paginatedPayments.length > 0 ? (
             paginatedPayments.map((p, index) => (
               <div key={p.id} className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-4 space-y-3 hover:border-gray-600/60 transition-all duration-200">

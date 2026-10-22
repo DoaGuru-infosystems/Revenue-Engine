@@ -289,7 +289,7 @@ const RevenueHistoryPage = () => {
             </div>
           </div>
 
-          <div className="history-cards xl:hidden">
+          <div className="history-cards xl:hidden pb-40">
             { filteredClients.map((client, idx) => {
               const totalAmt = client.total_amount !== undefined && client.total_amount !== null
                 ? Number(client.total_amount)

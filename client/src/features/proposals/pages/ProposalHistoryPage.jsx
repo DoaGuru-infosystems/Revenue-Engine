@@ -80,7 +80,7 @@ export default function ProposalHistoryPage() {
         </div>
 
         {/* MOBILE: Card List */}
-        <div className="history-cards xl:hidden">
+        <div className="history-cards xl:hidden pb-40">
           {currentItems.length > 0 ? (
             currentItems.map((item, index) => (
               <div

@@ -47,6 +47,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   const clientPerPage = 10;
   
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [dropdownPlacement, setDropdownPlacement] = useState({});
   const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
   const [showProformaModal, setShowProformaModal] = useState(false);
   const [proposalsList, setProposalsList] = useState([]);
@@ -346,18 +347,40 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
     setRescheduleModalItem(null);
   };
 
-  // Dropdown for Actions
-  const ActionDropdown = ({ item }) => (
-    <div className="relative action-dropdown-container">
-      <button
-        onClick={() => setOpenDropdownId(openDropdownId === item.id ? null : item.id)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-white transition-all shadow-sm shadow-black/20"
-      >
-        Actions <ChevronDown size={13} />
-      </button>
+  const handleToggleDropdown = (e, id) => {
+    e.stopPropagation();
+    if (openDropdownId === id) {
+      setOpenDropdownId(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const placement = spaceBelow < 340 && rect.top > 300 ? "top" : "bottom";
+      setDropdownPlacement((prev) => ({ ...prev, [id]: placement }));
+      setOpenDropdownId(id);
+    }
+  };
 
-      {openDropdownId === item.id && (
-        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700/60 max-h-60 sm:max-h-72 overflow-y-auto custom-scrollbar z-[60] divide-y divide-gray-100 dark:divide-gray-700/60">
+  // Dropdown for Actions
+  const ActionDropdown = ({ item }) => {
+    const isTop = dropdownPlacement[item.id] === "top";
+    return (
+      <div className="relative action-dropdown-container" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={(e) => handleToggleDropdown(e, item.id)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-white transition-all shadow-sm shadow-black/20"
+        >
+          Actions <ChevronDown size={13} className={`transition-transform duration-200 ${openDropdownId === item.id ? "rotate-180" : ""}`} />
+        </button>
+
+        {openDropdownId === item.id && (
+          <div
+            className={`absolute right-0 ${
+              isTop ? "bottom-full mb-2" : "top-full mt-2"
+            } w-60 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700/60 max-h-[min(34rem,75vh)] overflow-y-auto custom-scrollbar z-[100] divide-y divide-gray-100 dark:divide-gray-700/60`}
+            style={{
+              boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5), 0 0 15px rgba(0,0,0,0.3)",
+            }}
+          >
           <button
             onClick={() => {
               setOpenDropdownId(null);
@@ -443,10 +466,11 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
           >
             <Trash size={15} /> Delete
           </button>
-        </div>
-      )}
-    </div>
-  );
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="history-touch w-full min-h-full flex-1 space-y-6">
@@ -587,7 +611,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
       </div>
 
       {/* MOBILE: Cards */}
-      <div className="history-cards xl:hidden">
+      <div className="history-cards xl:hidden pb-40">
         {showApiData.length > 0 ? (
           showApiData.map((item, index) => (
             <div

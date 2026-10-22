@@ -125,6 +125,7 @@ export default function AdminDashboardPage() {
 
       <header
         className="fixed top-0 left-0 right-0 z-30 h-16 select-none"
+        onTouchMove={(e) => e.preventDefault()}
         style={{
           position: "fixed",
           top: 0,
@@ -332,6 +333,9 @@ export default function AdminDashboardPage() {
 
       <div
         className="lg:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] select-none"
+        onTouchMove={(e) => {
+          if (!e.target.closest('.no-scrollbar')) e.preventDefault();
+        }}
         style={{
           position: "fixed",
           bottom: 0,
