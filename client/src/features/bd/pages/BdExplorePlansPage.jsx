@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ArrowRight, User, Phone, Mail, MapPin, X, Building, CheckCircle2, List } from "lucide-react";
+import { ArrowRight, User, Phone, Mail, MapPin, X, Building, CheckCircle2, List, Search, ChevronDown } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import Swal from "sweetalert2";
@@ -13,6 +13,8 @@ export default function BdExplorePlansPage() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [planid, setPlanId] = useState("");
   const [planName, setPlanName] = useState("");
   const [formData, setFormData] = useState({
@@ -65,6 +67,7 @@ export default function BdExplorePlansPage() {
 
   const plans = groupByPlan(getPlanData);
   const activePlan = plans.find((p) => p.id === selectedPlanId);
+  const filteredPlans = plans.filter((p) => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   useEffect(() => { fetchPlanData(); }, []);
 
@@ -239,34 +242,107 @@ export default function BdExplorePlansPage() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 overflow-hidden text-gray-900 dark:text-white">
-        <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar">
-          {plans.map((plan) => (
-            <button
-              key={plan.id}
-              onClick={() => setSelectedPlanId(plan.id)}
-              className={`text-left p-4 rounded-2xl border transition-all duration-200 ${
-                selectedPlanId === plan.id
-                  ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/50 shadow-lg text-amber-900 dark:text-yellow-300"
-                  : "bg-white/90 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm"
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-6 flex-1 min-h-0 overflow-hidden text-gray-900 dark:text-white">
+        <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col shrink-0 overflow-visible">
+          <div className="lg:hidden relative w-full mb-2">
+            <div 
+              className={`flex items-center justify-between w-full p-4 border rounded-2xl cursor-pointer transition-all ${
+                isDropdownOpen 
+                  ? "bg-amber-50/70 dark:bg-white/10 border-amber-500/40 dark:border-white/20 shadow-lg" 
+                  : "bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 shadow-sm"
               }`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${selectedPlanId === plan.id ? "bg-amber-500 text-slate-950 font-bold" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"}`}>
-                  <List size={20} />
+              <div className="flex items-center gap-3 overflow-hidden">
+                <Search className="text-gray-400 dark:text-white/50 w-5 h-5 shrink-0" />
+                <span className="text-gray-900 dark:text-white font-semibold truncate">{activePlan ? activePlan.title : "Search & Select Plan..."}</span>
+              </div>
+              <ChevronDown className={`text-gray-500 dark:text-white/50 w-5 h-5 shrink-0 transition-transform ${isDropdownOpen ? "rotate-180 text-amber-500" : ""}`} />
+            </div>
+
+            {isDropdownOpen && (
+              <div className="absolute z-50 w-full mt-2 bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-from-top-2 duration-200">
+                <div className="p-3 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
+                  <input 
+                    type="text" 
+                    placeholder="Search plans by name..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white dark:bg-black/20 border border-gray-200 dark:border-white/5 rounded-xl py-2.5 px-4 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-amber-500 text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                    autoFocus
+                  />
                 </div>
-                <div>
-                  <h3 className={`font-semibold ${selectedPlanId === plan.id ? "text-amber-800 dark:text-yellow-400" : "text-gray-900 dark:text-white/80"}`}>
-                    {plan.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-white/40 mt-1 font-medium">₹{plan.totalAmount.toLocaleString()}</p>
+                <div className="p-2 space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
+                  {filteredPlans.length > 0 ? filteredPlans.map(plan => (
+                    <button
+                      key={plan.id}
+                      onClick={() => {
+                        setSelectedPlanId(plan.id);
+                        setIsDropdownOpen(false);
+                        setSearchQuery("");
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
+                        selectedPlanId === plan.id 
+                          ? "bg-amber-500/15 text-amber-900 dark:text-yellow-300 font-bold border border-amber-500/30" 
+                          : "hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-white/70 border border-transparent font-medium"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="truncate">{plan.title}</span>
+                        <span className="text-xs shrink-0 bg-amber-500/10 dark:bg-black/20 text-amber-800 dark:text-yellow-300 font-bold px-2 py-1 rounded-md">
+                          ₹{plan.totalAmount.toLocaleString()}
+                        </span>
+                      </div>
+                    </button>
+                  )) : <div className="p-6 text-center text-gray-400 dark:text-white/40 text-sm">No plans match your search</div>}
                 </div>
               </div>
-            </button>
-          ))}
+            )}
+          </div>
+
+          <div className="hidden lg:flex flex-col gap-3 h-full pb-2">
+            <div className="relative shrink-0">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/40 w-4 h-4" />
+              <input 
+                type="text" 
+                placeholder="Search plans..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-amber-500 transition-colors shadow-sm"
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
+              {filteredPlans.map((plan) => (
+                <button
+                  key={plan.id}
+                  onClick={() => setSelectedPlanId(plan.id)}
+                  className={`text-left p-3 md:p-4 rounded-xl md:rounded-2xl border transition-all duration-200 shrink-0 ${
+                    selectedPlanId === plan.id
+                      ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/50 shadow-lg text-amber-900 dark:text-yellow-300"
+                      : "bg-white/90 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg shrink-0 ${selectedPlanId === plan.id ? "bg-amber-500 text-slate-950 font-bold" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"}`}>
+                      <List size={18} />
+                    </div>
+                    <div className="overflow-hidden">
+                      <h3 className={`font-semibold truncate text-sm md:text-base ${selectedPlanId === plan.id ? "text-amber-800 dark:text-yellow-400" : "text-gray-900 dark:text-white/80"}`}>
+                        {plan.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-white/40 mt-0.5 md:mt-1 font-medium">₹{plan.totalAmount.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+              {filteredPlans.length === 0 && <div className="p-4 text-center text-gray-400 dark:text-white/40 text-sm border border-dashed border-gray-200 dark:border-white/10 rounded-xl mt-2">No plans found</div>}
+            </div>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-white/10 p-4 sm:p-6 lg:p-8 custom-scrollbar shadow-sm">
+        <div className="flex-1 overflow-y-auto bg-white/90 dark:bg-white/5 backdrop-blur-md rounded-2xl md:rounded-3xl border border-gray-200 dark:border-white/10 p-5 md:p-8 custom-scrollbar shadow-sm">
           {activePlan ? (
             <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">

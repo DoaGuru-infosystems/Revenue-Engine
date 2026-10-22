@@ -156,7 +156,7 @@ body {
   background-color: var(--bg-primary, #111827);
   color: var(--text-primary, #ffffff);
   -webkit-tap-highlight-color: transparent;
-  -webkit-overflow-scrolling: touch;
+  touch-action: none;
 }
 
 #root {
@@ -175,6 +175,18 @@ body {
   background-color: var(--bg-primary, #111827);
   display: flex;
   flex-direction: column;
+  touch-action: none;
+}
+
+main,
+.overflow-y-auto {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.overflow-x-auto {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
 }
 
 [data-theme="dark"] html,

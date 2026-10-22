@@ -271,30 +271,31 @@ const AdminAdsCampaign = () => {
 
   return (
     <div className="space-y-6 text-gray-900 dark:text-white transition-colors">
-      <section className="rounded-3xl border border-amber-500/20 dark:border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-600/15 dark:from-slate-900/85 dark:via-slate-800/70 dark:to-amber-900/60 p-4 sm:p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] font-bold text-amber-700 dark:text-amber-300/80">
+      <section className="rounded-3xl border border-amber-500/20 dark:border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-600/15 dark:from-slate-900/85 dark:via-slate-800/70 dark:to-amber-900/60 p-5 sm:p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-xl">
+            <span className="inline-block text-[11px] uppercase tracking-[0.2em] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
               Dashboard Module
-            </p>
-            <h2 className="mt-2 text-2xl font-bold sm:text-3xl text-gray-900 dark:text-white">Ads Campaign Services</h2>
-            <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">
-              Manage campaign slabs, percentage rules, and keep pricing structured for sales
-              teams.
+            </span>
+            <h2 className="mt-2 text-2xl font-bold sm:text-3xl text-gray-900 dark:text-white tracking-tight">
+              Ads Campaign Services
+            </h2>
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
+              Manage campaign slabs, percentage rules, and keep pricing structured for sales teams.
             </p>
           </div>
-          <div className="grid w-full grid-cols-3 gap-2 sm:gap-3 md:w-auto">
-            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/80 dark:bg-white/5 p-2.5 sm:px-4 sm:py-3 shadow-sm text-center sm:text-left">
-              <div className="text-[10px] sm:text-xs uppercase font-medium text-gray-500 dark:text-slate-400">Services</div>
-              <div className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.totalRows}</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/90 dark:bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3 shadow-sm min-w-[4.8rem] sm:min-w-[6.5rem] text-center sm:text-left">
+              <div className="text-[10px] sm:text-xs uppercase font-semibold text-gray-500 dark:text-slate-400 whitespace-nowrap">Services</div>
+              <div className="mt-1 text-lg sm:text-2xl font-black text-gray-900 dark:text-white leading-none">{stats.totalRows}</div>
             </div>
-            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/80 dark:bg-white/5 p-2.5 sm:px-4 sm:py-3 shadow-sm text-center sm:text-left">
-              <div className="text-[10px] sm:text-xs uppercase font-medium text-gray-500 dark:text-slate-400">Categories</div>
-              <div className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.uniqueCategories}</div>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/90 dark:bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3 shadow-sm min-w-[4.8rem] sm:min-w-[6.5rem] text-center sm:text-left">
+              <div className="text-[10px] sm:text-xs uppercase font-semibold text-gray-500 dark:text-slate-400 whitespace-nowrap">Categories</div>
+              <div className="mt-1 text-lg sm:text-2xl font-black text-gray-900 dark:text-white leading-none">{stats.uniqueCategories}</div>
             </div>
-            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/80 dark:bg-white/5 p-2.5 sm:px-4 sm:py-3 shadow-sm text-center sm:text-left">
-              <div className="text-[10px] sm:text-xs uppercase font-medium text-gray-500 dark:text-slate-400">Avg. %</div>
-              <div className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.avgPercentage}%</div>
+            <div className="rounded-2xl border border-amber-500/20 dark:border-white/10 bg-white/90 dark:bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3 shadow-sm min-w-[5.2rem] sm:min-w-[7rem] text-center sm:text-left">
+              <div className="text-[10px] sm:text-xs uppercase font-semibold text-gray-500 dark:text-slate-400 whitespace-nowrap">Avg. %</div>
+              <div className="mt-1 text-lg sm:text-2xl font-black text-amber-600 dark:text-amber-400 leading-none whitespace-nowrap">{stats.avgPercentage}%</div>
             </div>
           </div>
         </div>

@@ -95,7 +95,7 @@ export default function BusinessDeveloperDashboardPage() {
 
   return (
     <div
-      className="h-screen h-dvh w-full relative overflow-hidden"
+      className="fixed inset-0 flex flex-col overflow-hidden select-none"
       style={{
         background: `linear-gradient(to bottom right, var(--gradient-from), var(--gradient-via), var(--gradient-to))`,
         overscrollBehavior: "none",
@@ -123,13 +123,9 @@ export default function BusinessDeveloperDashboardPage() {
       </div>
 
       <header
-        className="fixed top-0 left-0 right-0 z-30 h-16 select-none"
+        className="shrink-0 h-16 z-30 select-none relative"
         onTouchMove={(e) => e.preventDefault()}
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
           touchAction: "none",
           overscrollBehavior: "none",
           backgroundColor: isLight ? "#ffffff" : "var(--bg-header)",
@@ -214,7 +210,8 @@ export default function BusinessDeveloperDashboardPage() {
         tabs={tabs}
         activeTab={activeTab}
         onChange={handleTabChange}
-        fixedUnderHeader
+        fixedUnderHeader={false}
+        className="shrink-0 z-20"
         persistKey="bd-active-tab"
       />
 
@@ -286,13 +283,14 @@ export default function BusinessDeveloperDashboardPage() {
       </div>
 
       <main
-        className="fixed inset-x-0 top-16 lg:top-28 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-0 z-10 overflow-y-auto overscroll-contain"
+        className="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain z-10 relative"
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehavior: "contain",
+          touchAction: "pan-y",
         }}
       >
-        <div className="w-full min-h-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div className="w-full min-h-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8 pb-24 lg:pb-8">
           <React.Suspense
             fallback={
               <div className="flex items-center justify-center py-20 text-orange-400">
@@ -312,15 +310,11 @@ export default function BusinessDeveloperDashboardPage() {
       </main>
 
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] select-none"
+        className="lg:hidden shrink-0 z-30 backdrop-blur-xl h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] select-none relative"
         onTouchMove={(e) => {
           if (!e.target.closest('.no-scrollbar')) e.preventDefault();
         }}
         style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
           touchAction: "pan-x",
           overscrollBehavior: "none",
           backgroundColor: "var(--bg-bottom-nav)",
