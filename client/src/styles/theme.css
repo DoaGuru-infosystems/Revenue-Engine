@@ -136,6 +136,52 @@
 /* REMOVED: Using [data-theme] * causes severe performance lag due to calculating transitions on every DOM element simultaneously. 
    Transitions should be applied locally via Tailwind utility classes (e.g., transition-colors) on specific elements. */
 /* ================================================================
+   GLOBAL BASE LAYOUT & CANVAS STYLING
+   Ensures seamless background everywhere (prevents white strips on tablet/mobile)
+   ================================================================ */
+html,
+body {
+  height: 100%;
+  height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--bg-primary, #111827);
+  color: var(--text-primary, #ffffff);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  height: 100%;
+  height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--bg-primary, #111827);
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] html,
+[data-theme="dark"] body,
+[data-theme="dark"] #root {
+  background-color: #111827;
+  color: #ffffff;
+}
+
+[data-theme="light"] html,
+[data-theme="light"] body,
+[data-theme="light"] #root {
+  background-color: #fdf6ec;
+  color: #1a1a2e;
+}
+
+/* ================================================================
    PREMIUM LIGHT MODE — Animated Background
    ================================================================ */
 
@@ -1933,18 +1979,13 @@
 .history-touch {
   min-width: 0;
 }
-.history-cards {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-}
-@media (min-width: 768px) and (max-width: 1279px) {
-  .history-cards {
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-}
+
 @media (max-width: 1279px) {
+  .history-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
   .history-touch button,
   .history-touch select {
     min-height: 44px;
@@ -1963,5 +2004,37 @@
   .history-cards span {
     overflow-wrap: anywhere;
   }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .history-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .history-cards {
+    display: none !important;
+  }
+}
+
+/* Custom sleek scrollbar across app (prevents native Windows white scrollbar gutter) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
 }
 

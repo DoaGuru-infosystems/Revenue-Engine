@@ -1,7 +1,15 @@
 import styled from "styled-components";
 
 export const InvoicePrintWrapper = styled.div`
+  width: 100%;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
   @media print {
+    height: auto !important;
+    overflow: visible !important;
     @page {
       size: A4;
       margin: 0 0 20mm 0;

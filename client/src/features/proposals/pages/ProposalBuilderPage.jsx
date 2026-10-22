@@ -93,7 +93,10 @@ export default function ProposalBuilderPage() {
 
   return (
     <div className="touch-form h-dvh overflow-hidden flex flex-col bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      <header className="shrink-0 z-30 border-b border-gray-200 dark:border-gray-800 bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-md px-5 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+      <header
+        className="shrink-0 z-30 border-b border-gray-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900 px-5 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 relative isolate"
+        style={{ transform: "translateZ(0)", willChange: "transform" }}
+      >
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
             <button
@@ -668,7 +671,10 @@ export default function ProposalBuilderPage() {
       </div>
 
       {/* Action bar stays pinned; it does not scroll with the form */}
-      <div className="shrink-0 z-40 border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(0,0,0,0.06)] px-3 py-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div
+        className="shrink-0 z-40 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] px-3 py-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] relative isolate"
+        style={{ transform: "translateZ(0)", willChange: "transform" }}
+      >
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 w-full sm:w-auto justify-between sm:justify-start">
             <span>Status:</span>

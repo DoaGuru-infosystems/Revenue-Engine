@@ -44,16 +44,8 @@ export default function ProposalHistoryPage() {
   };
 
   return (
-    <div className="history-touch w-full bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
-
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Header Section */}
+    <div className="history-touch w-full min-h-full flex-1 space-y-6">
+      {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -323,7 +315,6 @@ export default function ProposalHistoryPage() {
             />
           </PaginationContainer>
         )}
-      </div>
 
       <CreateProposalModal
         isOpen={showCreateProposalModal}

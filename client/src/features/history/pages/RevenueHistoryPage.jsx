@@ -98,7 +98,7 @@ const RevenueHistoryPage = () => {
   );
 
   return (
-    <div className="history-touch font-body selection:bg-primary/30 antialiased overflow-x-hidden min-h-screen text-[#dee2f3]">
+    <div className="history-touch font-body selection:bg-primary/30 antialiased w-full min-h-full flex-1 text-[#dee2f3]">
       <style>{ `
         .glass-card {
           background: rgba(48, 53, 65, 0.4);
@@ -213,7 +213,7 @@ const RevenueHistoryPage = () => {
         }
       `}</style>
 
-      <main className="pt-4 sm:pt-8 pb-8 sm:pb-16 px-3 sm:px-6 max-w-7xl mx-auto">
+      <div className="py-2 sm:py-4 px-1 sm:px-2 max-w-7xl mx-auto space-y-6">
         <section className="grid grid-cols-2 xl:grid-cols-12 gap-3 md:gap-6 mb-8">
 
           <div className="col-span-2 sm:col-span-1 xl:col-span-4 relative overflow-hidden rounded-[1.5rem] xl:rounded-[2rem] bg-gradient-to-br from-[#31e193]/20 to-[#090e19] rev-hero-card p-4 sm:p-6 xl:p-8 shadow-2xl">
@@ -404,7 +404,7 @@ const RevenueHistoryPage = () => {
             </div>
           </div>
         </section>
-      </main>
+      </div>
 
       <div className="fixed top-1/4 -left-20 w-96 h-96 bg-[#31e193]/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
     </div>

@@ -399,7 +399,12 @@ export default function ProposalPricingSection({
 
       {/* Modals for Custom Calculators */}
       {activeCalculator === "graphic" && createPortal(
-        <div className="fixed inset-0 z-[80] flex bg-black/60 p-0 md:p-4">
+        <div
+          className="fixed inset-0 z-[80] flex bg-black/60 p-0 md:p-4 isolate"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveCalculator(null);
+          }}
+        >
           <div className="flex flex-col w-full h-full md:max-w-3xl md:h-auto md:max-h-[calc(100dvh-2rem)] md:mx-auto md:my-auto md:rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
             <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
               <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 min-w-0">
@@ -433,7 +438,12 @@ export default function ProposalPricingSection({
       )}
 
       {activeCalculator === "ads" && createPortal(
-        <div className="fixed inset-0 z-[80] flex bg-black/60 p-0 md:p-4">
+        <div
+          className="fixed inset-0 z-[80] flex bg-black/60 p-0 md:p-4 isolate"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveCalculator(null);
+          }}
+        >
           <div className="flex flex-col w-full h-full md:max-w-3xl md:h-auto md:max-h-[calc(100dvh-2rem)] md:mx-auto md:my-auto md:rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
             <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
               <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 min-w-0">

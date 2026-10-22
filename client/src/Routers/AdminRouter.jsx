@@ -101,6 +101,15 @@ const AdminRouter = () => {
 
 export default AdminRouter;
 const Wrapper = styled.div`
+  height: 100%;
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary, #111827);
+
   .spinner-wrapper {
     position: fixed;
     top: 0;

@@ -175,15 +175,8 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
   );
 
   return (
-    <div className="history-touch w-full bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 relative overflow-hidden rounded-2xl min-h-[500px]">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Header Section */}
+    <div className="history-touch w-full min-h-full flex-1 space-y-6">
+      {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent flex items-center gap-3">
@@ -407,7 +400,6 @@ const PaymentHistoryPage = ({ openProformaManager }) => {
             />
           </PaginationContainer>
         )}
-      </div>
 
 
       {/* ── Select Proforma Modal (List of Partially Paid Proformas) ─────────────── */}

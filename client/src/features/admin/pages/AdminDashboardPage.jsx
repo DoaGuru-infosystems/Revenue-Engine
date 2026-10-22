@@ -94,8 +94,11 @@ export default function AdminDashboardPage() {
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden"
-      style={{ background: `linear-gradient(to bottom right, var(--gradient-from), var(--gradient-via), var(--gradient-to))` }}
+      className="h-screen h-dvh w-full relative overflow-hidden"
+      style={{
+        background: `linear-gradient(to bottom right, var(--gradient-from), var(--gradient-via), var(--gradient-to))`,
+        overscrollBehavior: "none",
+      }}
     >
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div
@@ -121,12 +124,14 @@ export default function AdminDashboardPage() {
       </div>
 
       <header
-        className="fixed top-0 left-0 right-0 z-30 h-16"
+        className="fixed top-0 left-0 right-0 z-30 h-16 select-none"
         style={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
+          touchAction: "none",
+          overscrollBehavior: "none",
           backgroundColor: isLight ? "#ffffff" : "var(--bg-header)",
           borderBottom: isLight
             ? "1px solid rgba(234, 88, 12, 0.25)"
@@ -287,52 +292,61 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <main className="fixed inset-x-0 top-16 lg:top-28 bottom-14 lg:bottom-0 z-10">
-        <div className="h-full overflow-y-auto w-full">
-          <div className="w-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-            <React.Suspense
-              fallback={
-                <div className="flex items-center justify-center py-20 text-orange-400">
-                  <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              }
-            >
-              {activeTab === "clients" && <AdminClientDetails />}
-              {activeTab === "registerbd" && <RegisterBD />}
-              {activeTab === "AddADSCamp" && <AdminAdsCampign />}
-              {activeTab === "AddServices" && <AdminAddServices />}
-              {activeTab === "servicehistory" && <AdminServicesHistory />}
-              {activeTab === "addplan" && <AdminAddPlan />}
-              {activeTab === "exploreplan" && <AdminExplorePlans />}
-              {activeTab === "history" && (
-                <HistoryHub setActiveTab={handleTabChange} />
-              )}
-              {activeTab === "assign" && <AssignQuotation />}
-              {activeTab === "createteam" && <CreateTeam />}
-              {activeTab === "generatelink" && <GenerateLinkHistory />}
-              {activeTab === "seo" && <SeoServicesA />}
-              {activeTab === "createinvoice" && (
-                <InstantProforma onBack={() => handleTabChange("history")} />
-              )}
-              {activeTab === "convert-letterhead" && <ConvertLetterhead />}
-              {activeTab === "dashboardsettings" && <AdmindashBoardSettings />}
-            </React.Suspense>
-          </div>
+      <main
+        className="fixed inset-x-0 top-16 lg:top-28 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))] lg:bottom-0 z-10 overflow-y-auto overscroll-contain"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+        }}
+      >
+        <div className="w-full min-h-full px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <React.Suspense
+            fallback={
+              <div className="flex items-center justify-center py-20 text-orange-400">
+                <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            }
+          >
+            {activeTab === "clients" && <AdminClientDetails />}
+            {activeTab === "registerbd" && <RegisterBD />}
+            {activeTab === "AddADSCamp" && <AdminAdsCampign />}
+            {activeTab === "AddServices" && <AdminAddServices />}
+            {activeTab === "servicehistory" && <AdminServicesHistory />}
+            {activeTab === "addplan" && <AdminAddPlan />}
+            {activeTab === "exploreplan" && <AdminExplorePlans />}
+            {activeTab === "history" && (
+              <HistoryHub setActiveTab={handleTabChange} />
+            )}
+            {activeTab === "assign" && <AssignQuotation />}
+            {activeTab === "createteam" && <CreateTeam />}
+            {activeTab === "generatelink" && <GenerateLinkHistory />}
+            {activeTab === "seo" && <SeoServicesA />}
+            {activeTab === "createinvoice" && (
+              <InstantProforma onBack={() => handleTabChange("history")} />
+            )}
+            {activeTab === "convert-letterhead" && <ConvertLetterhead />}
+            {activeTab === "dashboardsettings" && <AdmindashBoardSettings />}
+          </React.Suspense>
         </div>
       </main>
 
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl h-14"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] select-none"
         style={{
           position: "fixed",
           bottom: 0,
           left: 0,
           right: 0,
+          touchAction: "pan-x",
+          overscrollBehavior: "none",
           backgroundColor: "var(--bg-bottom-nav)",
           borderTop: "1px solid var(--border-color)",
         }}
       >
-        <div className="h-full flex items-center overflow-x-auto no-scrollbar px-2 gap-1 justify-start sm:justify-around">
+        <div
+          className="h-14 flex items-center overflow-x-auto no-scrollbar px-2 gap-1 justify-start sm:justify-around"
+          style={{ touchAction: "pan-x", overscrollBehavior: "contain" }}
+        >
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

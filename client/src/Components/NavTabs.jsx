@@ -44,10 +44,12 @@ export default function NavTabs({
         className={[
           "hidden lg:block",
           containerStyles,
-          "h-12",
+          "h-12 select-none",
           className,
         ].join(" ")}
         style={{
+          touchAction: "pan-x",
+          overscrollBehavior: "contain",
           backgroundColor: isLight ? '#ffffff' : 'var(--bg-nav)',
           borderBottom: isLight
             ? '2px solid rgba(234, 88, 12, 0.2)'
@@ -59,7 +61,7 @@ export default function NavTabs({
         }}
       >
         <div className="h-full w-full px-2 lg:px-3">
-          <div className="h-full overflow-x-auto no-scrollbar">
+          <div className="h-full overflow-x-auto no-scrollbar" style={{ touchAction: "pan-x", overscrollBehavior: "contain" }}>
             <div className="mx-auto flex h-full w-max items-center gap-1 px-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon;

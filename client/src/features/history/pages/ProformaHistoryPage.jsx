@@ -449,7 +449,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   );
 
   return (
-    <div className="history-touch space-y-6">
+    <div className="history-touch w-full min-h-full flex-1 space-y-6">
       {/* Search & Header */}
       <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center justify-between">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center w-full xl:w-auto min-w-0">

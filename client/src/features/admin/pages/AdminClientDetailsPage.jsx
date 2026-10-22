@@ -430,7 +430,7 @@ const AdminClientDetailsPage = () => {
 
   return (
     <>
-    <div className="flex flex-col h-[calc(100dvh-10.5rem)] lg:h-[calc(100dvh-11rem)] overflow-hidden p-2 md:p-4 gap-4">
+    <div className="flex flex-col min-h-[calc(100dvh-10.5rem)] lg:min-h-[calc(100dvh-11rem)] w-full flex-1 overflow-hidden p-2 md:p-4 gap-4">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
         <div className="min-w-0">
