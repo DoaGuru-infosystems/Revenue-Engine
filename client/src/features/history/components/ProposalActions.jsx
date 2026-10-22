@@ -8,9 +8,24 @@ import API_BASE_URL from "../../../config/apiBaseUrl";
 
 const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromProposal, openProformaManager, fullWidth = false }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.user);
+
+  const toggleDropdown = () => {
+    if (!isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      // If less than 240px below and more room above, open upwards on mobile/desktop
+      if (spaceBelow < 240 && rect.top > spaceBelow) {
+        setOpenUpwards(true);
+      } else {
+        setOpenUpwards(false);
+      }
+    }
+    setIsOpen(!isOpen);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -19,7 +34,11 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const handleAction = async (actionType) => {
@@ -272,9 +291,9 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
   };
 
   return (
-    <div className={`relative text-left ${fullWidth ? "block w-full" : "inline-block"} ${isOpen ? "z-40" : "z-10"}`} ref={dropdownRef}>
+    <div className={`relative text-left ${fullWidth ? "block w-full" : "inline-block"} ${isOpen ? "z-50" : "z-10"}`} ref={dropdownRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         className={`inline-flex items-center justify-center px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-sm font-semibold bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/25 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
           fullWidth ? "w-full" : ""
         }`}
@@ -286,9 +305,16 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
         const status = proposal.status?.toLowerCase() || "";
         const isAdmin = !window.location.pathname.includes('/BD/');
         return (
-          <div className={`absolute mt-2 w-full min-w-[13rem] max-w-[18rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-xl z-50 py-1 max-h-64 overflow-y-auto custom-scrollbar ${
-            fullWidth ? "left-0 right-0" : "left-0 sm:left-auto sm:right-0"
-          }`}>
+          <div
+            className={`absolute ${openUpwards ? "bottom-full mb-2" : "top-full mt-2"} w-full min-w-[13rem] max-w-[18rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-50 py-1.5 max-h-[46vh] sm:max-h-64 overflow-y-auto overscroll-contain ${
+              fullWidth ? "left-0 right-0" : "left-0 sm:left-auto sm:right-0"
+            }`}
+            style={{
+              WebkitOverflowScrolling: "touch",
+              overscrollBehavior: "contain",
+              touchAction: "pan-y",
+            }}
+          >
             <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
               <li>
                 <button onClick={() => handleAction("view")} className="w-full text-left px-4 py-2.5 sm:py-2 hover:bg-gray-100 dark:hover:bg-gray-800/80 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-2">

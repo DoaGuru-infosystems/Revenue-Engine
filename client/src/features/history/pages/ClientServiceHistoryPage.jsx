@@ -114,7 +114,7 @@ const ClientServiceHistoryPage = () => {
         <Header />
 
         {/* pt-20/24 clears fixed Header (h-16) so page title is never clipped */}
-        <div className="relative z-10 px-3 pb-3 sm:px-6 sm:pb-6 space-y-4 sm:space-y-6 pt-20 sm:pt-24 max-w-7xl mx-auto w-full">
+        <div className="relative z-10 px-3 pb-24 sm:px-6 sm:pb-20 space-y-4 sm:space-y-6 pt-20 sm:pt-24 max-w-7xl mx-auto w-full">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="min-w-0">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
