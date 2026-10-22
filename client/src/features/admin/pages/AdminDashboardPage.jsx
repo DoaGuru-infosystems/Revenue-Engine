@@ -52,6 +52,39 @@ export default function AdminDashboardPage() {
     return saved || "clients";
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mainContentRef = React.useRef(null);
+
+  React.useEffect(() => {
+    // Lock viewport strictly to app shell while on dashboard
+    document.documentElement.classList.add("dashboard-active");
+    document.body.classList.add("dashboard-active");
+    const rootEl = document.getElementById("root");
+    if (rootEl) rootEl.classList.add("dashboard-active");
+
+    window.scrollTo(0, 0);
+
+    const handleWindowScroll = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleWindowScroll);
+      document.documentElement.classList.remove("dashboard-active");
+      document.body.classList.remove("dashboard-active");
+      if (rootEl) rootEl.classList.remove("dashboard-active");
+    };
+  }, []);
+
+  // When activeTab changes: reset both window scroll and main container scroll
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
@@ -291,6 +324,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <main
+        ref={mainContentRef}
         className="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain z-10 relative"
         style={{
           WebkitOverflowScrolling: "touch",
