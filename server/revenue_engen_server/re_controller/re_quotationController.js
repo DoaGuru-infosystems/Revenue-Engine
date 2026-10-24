@@ -112,6 +112,7 @@ exports.getQuotationsByClient = async (req, res) => {
     const rows = await runQuery(
       `SELECT q.*,
               (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_id,
+              (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) AS proforma_count,
               (SELECT is_gst FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst
        FROM re_quotation q
        WHERE q.client_id = ?
@@ -133,6 +134,7 @@ exports.getAllQuotations = async (req, res) => {
     let q = `SELECT q.*,
                      c.client_name, c.client_organization, c.email, c.phone,
                      (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_id,
+                     (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) AS proforma_count,
                      (SELECT is_gst FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst
               FROM re_quotation q
               LEFT JOIN re_revenue_engine_client_details c ON q.client_id = c.id`;
@@ -184,7 +186,7 @@ exports.deleteQuotation = async (req, res) => {
     if (proformaCheck.length > 0) {
       return res.status(400).json({
         status: "Failure",
-        message: "Please delete the proforma first before deleting the quotation.",
+        message: "Please delete all proformas first before deleting the quotation.",
       });
     }
 

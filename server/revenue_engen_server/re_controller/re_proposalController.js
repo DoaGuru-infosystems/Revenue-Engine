@@ -1437,7 +1437,7 @@ exports.deleteProforma = async (req, res) => {
 
         if (remainingProformas.length === 0) {
           await runQuery(
-            `UPDATE re_quotation SET status = 'approved', updated_at = NOW() WHERE id = ?`,
+            `UPDATE re_quotation SET status = 'draft', updated_at = NOW() WHERE id = ?`,
             [quotationId],
           );
         } else {

@@ -306,9 +306,9 @@ const ProposalActions = ({ proposal, fetchProposals, handleCreateProformaFromPro
         const isAdmin = !window.location.pathname.includes('/BD/');
         return (
           <div
-            className={`absolute ${openUpwards ? "bottom-full mb-2" : "top-full mt-2"} w-full min-w-[13rem] max-w-[18rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-50 py-1.5 max-h-[46vh] sm:max-h-64 overflow-y-auto overscroll-contain ${
-              fullWidth ? "left-0 right-0" : "left-0 sm:left-auto sm:right-0"
-            }`}
+            className={`absolute ${openUpwards ? "bottom-full mb-2" : "top-full mt-2"} ${
+              fullWidth ? "left-0 right-0 w-full" : "right-0 w-56 sm:w-60"
+            } bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-[100] py-1.5 max-h-[46vh] sm:max-h-72 overflow-y-auto overscroll-contain`}
             style={{
               WebkitOverflowScrolling: "touch",
               overscrollBehavior: "contain",

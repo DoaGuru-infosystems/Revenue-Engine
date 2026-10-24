@@ -23,6 +23,7 @@ import Swal from "sweetalert2";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../config/apiBaseUrl";
+import ClientSelectorModal from "./ClientSelectorModal";
 
 const paymentModes = ["Payment Cheque", "Net Banking", "UPI", "Cash"];
 
@@ -42,18 +43,7 @@ const baseProformaForm = {
   notes_snapshot: [],
 };
 
-const baseClientForm = {
-  client_name: "",
-  client_organization: "",
-  email: "",
-  phone: "",
-  address: "",
-  dg_employee: "",
-};
-
 // ── Shared style tokens ───────────────────────────────────────────────────
-// Centralised so every field / button in this screen stays visually
-// consistent and themes (light + dark) in one place.
 const inputClass =
   "w-full rounded-xl border border-[var(--border-light)] bg-transparent px-4 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] transition-all duration-200 ease-out focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 hover:border-[var(--border-color)]";
 
@@ -80,14 +70,12 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   const { currentUser, token } = useSelector((state) => state.user);
 
   const [proformaForm, setProformaForm] = useState(baseProformaForm);
-  const [clientForm, setClientForm] = useState(baseClientForm);
   const [clients, setClients] = useState([]);
   const [keyword, setKeyword] = useState("");
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [step, setStep] = useState("client"); // "client" | "form"
   const [loadingClients, setLoadingClients] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
-  const [savingClient, setSavingClient] = useState(false);
   const [predefinedNotes, setPredefinedNotes] = useState([]);
   const [customNote, setCustomNote] = useState("");
   const [selectedPredefinedNote, setSelectedPredefinedNote] = useState("");
@@ -250,45 +238,11 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   };
 
   const openAddClientModal = () => {
-    setClientForm({ ...baseClientForm, dg_employee: currentUser?.name || "" });
     setShowClientModal(true);
   };
 
   const closeAddClientModal = () => {
     setShowClientModal(false);
-    setClientForm({ ...baseClientForm, dg_employee: currentUser?.name || "" });
-  };
-
-  const handleAddClient = async (e) => {
-    e.preventDefault();
-    setSavingClient(true);
-    try {
-      const payload = { ...clientForm, dg_employee: clientForm.dg_employee || currentUser?.name || "" };
-      const response = await axios.post(`${baseURL}/auth/api/re_calculator/insertClientDetails`, payload, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      });
-      if (response?.data?.status !== "Success") {
-        Swal.fire({ icon: "error", title: "Error", text: response?.data?.message || "Failed to add client." });
-        return;
-      }
-      const latestClients = await fetchClients();
-      const matched = latestClients.find(
-        (item) =>
-          (item.client_name || "").trim().toLowerCase() === (payload.client_name || "").trim().toLowerCase() &&
-          String(item.phone || "").trim() === String(payload.phone || "").trim()
-      );
-      if (matched) {
-        applyClient(matched);
-        setStep("form");
-      }
-      closeAddClientModal();
-      Swal.fire({ icon: "success", title: "Client Added", text: "Client saved and selected.", showConfirmButton: false, timer: 1200 });
-    } catch (error) {
-      if (error.response?.status === 401) handleSessionExpired();
-      else Swal.fire({ icon: "error", title: "Error", text: "Something went wrong while adding client." });
-    } finally {
-      setSavingClient(false);
-    }
   };
 
   const resetProformaForm = () => {
@@ -953,111 +907,25 @@ function InstantProforma({ onBack, handleSessionExpired }) {
       )}
 
       {/* ─── Add Client Modal ─── */}
-      {showClientModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4 backdrop-blur-sm"
-          onClick={closeAddClientModal}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border shadow-2xl backdrop-blur-xl" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between border-b border-[var(--border-light)] bg-transparent p-6">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Add New Client</h3>
-                <p className="mt-0.5 text-[11.5px] text-gray-400 dark:text-gray-500">Fill in the client's information</p>
-              </div>
-              <button type="button" onClick={closeAddClientModal} aria-label="Close" className={iconBtn}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddClient} className="flex flex-col gap-3.5 p-6">
-              <div>
-                <label htmlFor="modal_client_name" className={labelClass}>
-                  Client Name
-                </label>
-                <input
-                  id="modal_client_name"
-                  name="client_name"
-                  value={clientForm.client_name}
-                  onChange={handleClientChange}
-                  className={inputClass}
-                  placeholder="Full name"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="modal_client_organization" className={labelClass}>
-                  Organization
-                </label>
-                <input
-                  id="modal_client_organization"
-                  name="client_organization"
-                  value={clientForm.client_organization}
-                  onChange={handleClientChange}
-                  className={inputClass}
-                  placeholder="Company / Organization"
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="modal_email" className={labelClass}>
-                    Email
-                  </label>
-                  <input
-                    id="modal_email"
-                    name="email"
-                    type="email"
-                    value={clientForm.email}
-                    onChange={handleClientChange}
-                    className={inputClass}
-                    placeholder="email@example.com"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="modal_phone" className={labelClass}>
-                    Phone
-                  </label>
-                  <input
-                    id="modal_phone"
-                    name="phone"
-                    value={clientForm.phone}
-                    onChange={handleClientChange}
-                    className={inputClass}
-                    placeholder="10-digit"
-                    maxLength={10}
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="modal_address" className={labelClass}>
-                  Address
-                </label>
-                <textarea
-                  id="modal_address"
-                  name="address"
-                  value={clientForm.address}
-                  onChange={handleClientChange}
-                  rows={2}
-                  className={inputClass}
-                  placeholder="Full address"
-                />
-              </div>
-
-              <div className="mt-1 flex justify-end gap-2.5 border-t border-gray-200 dark:border-white/10 pt-4">
-                <button type="button" onClick={closeAddClientModal} className={btnSecondary}>
-                  Cancel
-                </button>
-                <button type="submit" disabled={savingClient} className={btnPrimary}>
-                  <Plus size={14} /> {savingClient ? "Saving..." : "Create Client"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <ClientSelectorModal
+        isOpen={showClientModal}
+        onClose={() => setShowClientModal(false)}
+        title="Add New Client"
+        initialTab="new"
+        actionText="Select Client"
+        onProceed={(client) => {
+          applyClient(client);
+          setStep("form");
+          setShowClientModal(false);
+          Swal.fire({
+            icon: "success",
+            title: "Client Selected",
+            text: `${client.client_name} selected for proforma.`,
+            timer: 1200,
+            showConfirmButton: false,
+          });
+        }}
+      />
     </div>
   );
 }

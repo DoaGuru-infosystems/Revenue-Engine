@@ -19,11 +19,18 @@ const QuotationActions = ({
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.user);
 
+  const qStatus = String(quotation.status || "").toLowerCase();
+  const hasProforma = Boolean(
+    quotation.proforma_id ||
+    Number(quotation.proforma_count) > 0 ||
+    ["proforma_generated", "proforma_sent", "payment_awaited", "payment_received", "partially_paid", "paid", "invoiced"].includes(qStatus)
+  );
+
   const toggleDropdown = () => {
     if (!isOpen && dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      setOpenUpwards(spaceBelow < 240 && rect.top > spaceBelow);
+      setOpenUpwards(spaceBelow < 280 && rect.top > spaceBelow);
     }
     setIsOpen(!isOpen);
   };
@@ -158,16 +165,17 @@ const QuotationActions = ({
           `${basePath}/quotation/${quotation.client_id}/${quotation.id}?doc=quotation&source=new_quotation`
         );
       } else if (actionType === "delete_quotation") {
-        if (quotation.proforma_id) {
+        if (hasProforma) {
           Swal.fire({
             icon: "warning",
             title: "Cannot Delete",
-            text: "Please delete the proforma first before deleting the quotation.",
+            text: "Please delete all proformas first before deleting the quotation.",
           });
           return;
         }
         const confirm = await Swal.fire({
           title: "Delete this quotation?",
+          text: "Are you sure you want to delete this quotation?",
           icon: "warning",
           showCancelButton: true,
           confirmButtonText: "Yes, delete it",
@@ -202,21 +210,23 @@ const QuotationActions = ({
       </button>
       {isOpen && (
         <div
-          className={`absolute ${openUpwards ? "bottom-full mb-2" : "top-full mt-2"} w-full min-w-[13rem] max-w-[18rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-50 py-1.5 max-h-[46vh] sm:max-h-64 overflow-y-auto ${fullWidth ? "left-0 right-0" : "left-0 sm:right-0"}`}
+          className={`absolute ${openUpwards ? "bottom-full mb-2" : "top-full mt-2"} ${
+            fullWidth ? "left-0 right-0 w-full" : "right-0 w-56 sm:w-60"
+          } bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-[100] py-1.5 max-h-[46vh] sm:max-h-72 overflow-y-auto`}
         >
           <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
             <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view")}><Eye size={14} /> View Quotation</button></li>
             <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("edit_services")}><Pencil size={14} /> Edit Services</button></li>
-            {["draft", "sent", "changes", "rejected"].includes(String(quotation.status || "").toLowerCase()) && (
+            {["draft", "sent", "changes", "rejected"].includes(qStatus) && (
               <>
                 <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("send_to_client")}><Send size={14} /> Send to client</button></li>
                 <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_approved")}><CheckCircle size={14} /> Mark approved</button></li>
               </>
             )}
-            {String(quotation.status || "").toLowerCase() === "sent" && (
+            {qStatus === "sent" && (
               <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_client_response")}><FileText size={14} /> Mark client response</button></li>
             )}
-            {["approved", "client_approved", "proforma_generated", "proforma_sent", "payment_awaited", "payment_received", "partially_paid", "paid", "invoiced"].includes(String(quotation.status || "").toLowerCase()) && (
+            {qStatus !== "rejected" && (
               <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("generate_proforma")}><FilePlus size={14} /> Generate Proforma</button></li>
             )}
             <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view_proformas")}><FileText size={14} /> View Proformas</button></li>
@@ -224,8 +234,13 @@ const QuotationActions = ({
             <li>
               <button
                 type="button"
-                disabled={!!quotation.proforma_id}
-                className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 text-red-600 disabled:opacity-40"
+                disabled={hasProforma}
+                title={hasProforma ? "Cannot delete while proforma exists. Delete all proformas first." : "Delete quotation"}
+                className={`w-full text-left px-4 py-2.5 flex items-center gap-2 text-red-600 ${
+                  hasProforma
+                    ? "opacity-40 cursor-not-allowed hover:bg-transparent"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                }`}
                 onClick={() => handleAction("delete_quotation")}
               >
                 <Trash size={14} /> Delete

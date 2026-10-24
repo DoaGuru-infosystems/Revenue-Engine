@@ -670,6 +670,7 @@ exports.insertClientDetails = async (req, res) => {
         res.status(201).json({
           status: "Success",
           message: "Client added successfully",
+          clientId: result.insertId,
         });
       },
     );

@@ -6,6 +6,7 @@ export { default as NavTabs } from "../Components/NavTabs";
 export { default as ConvertLetterhead } from "../Components/ConvertLetterhead";
 export { default as InstantProforma } from "../Components/InstantProforma";
 export { default as InvoiceServices } from "../Components/InvoiceServices";
+export { default as ClientSelectorModal } from "../Components/ClientSelectorModal";
 
 export { default as DiscountSetting } from "./DiscountSetting";
 export { default as NoteSection } from "./NoteSection";

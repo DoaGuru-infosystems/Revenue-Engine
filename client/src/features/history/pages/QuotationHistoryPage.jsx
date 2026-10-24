@@ -76,7 +76,7 @@ export default function QuotationHistoryPage() {
             setShowModal(false);
             setSelectedQuotationId(null);
           }}
-          quotationsList={quotations.filter((q) => APPROVED.includes(q.status))}
+          quotationsList={quotations.filter((q) => q.status !== "rejected")}
           initialSelectedQuotationId={selectedQuotationId}
           proposalsList={[]}
         />
