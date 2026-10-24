@@ -349,6 +349,46 @@ Mark the meeting as Done or Reschedule in Revenue Engine once updated.
 
 ---
 
+## Template: Quotation Sent to Client
+
+Register this in Meta Business Manager before WhatsApp send will succeed. This is not the proposal template.
+
+**Template Name (Register in Meta):** `quotation_review_request`
+**Language:** `en`
+**Category:** `UTILITY`
+
+```
+🌟 *DOAGuru InfoSystems*
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Dear *{{1}}*! 🙏
+
+A new *Quotation* has been prepared for you.
+
+📋 *Quotation Details:*
+• Client ID      : {{2}}
+• Quotation No.  : {{3}}
+
+Please review your quotation using the link below:
+
+🔗 {{4}}
+
+Feel free to contact us if you have any questions.
+We are always ready to serve you! 🚀
+
+*— Team DOAGuru InfoSystems*
+```
+
+**Variables Mapping:**
+| Variable | Value |
+|---|---|
+| {{1}} | Client name |
+| {{2}} | Client ID |
+| {{3}} | Quotation number, for example QTN-6 |
+| {{4}} | Public URL `CLIENT_BASE_URL/#/public/quotation/<token>` |
+
+---
+
 ## 📌 Code Integration Status
 
 | Template                   | Trigger                                  | Server File                      | Status       |
@@ -356,6 +396,7 @@ Mark the meeting as Done or Reschedule in Revenue Engine once updated.
 | `meeting_reminder_alert`   | Daily at 10 AM, 12 PM, 3 PM (7 days prior)| `re_reminders.js`                | ✅ Integrated |
 | `final_invoice_admin_notify`| Upon auto-sending final invoice         | `notificationService.js`         | ✅ Integrated |
 | `proposal_admin_notify`    | Upon sending a proposal                  | `re_proposalController.js`       | ✅ Integrated |
+| `quotation_review_request` | Upon sending a quotation to the client   | `re_quotationController.js`      | ✅ Integrated (needs Meta approval) |
 | `periodic_payment_summary` | Every 5 days 10:30 AM (cron)             | `re_reminders.js`                | ✅ Integrated |
 | `payment_received_alert`   | Upon recording a payment                 | `re_workflowcontroller.JS`       | ✅ Integrated |
 

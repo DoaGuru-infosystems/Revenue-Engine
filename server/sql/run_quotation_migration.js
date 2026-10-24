@@ -117,6 +117,21 @@ async function migrate() {
       console.log('ℹ️  Index idx_pf_quotation_id already exists.');
     }
 
+    const qtnCols = await runQuery(`SHOW COLUMNS FROM re_quotation`);
+    const qtnColNames = qtnCols.map((c) => c.Field);
+    if (!qtnColNames.includes('public_token_hash')) {
+      await runQuery(`ALTER TABLE re_quotation ADD COLUMN public_token_hash VARCHAR(64) DEFAULT NULL`);
+      console.log('✅ Added re_quotation.public_token_hash.');
+    }
+    if (!qtnColNames.includes('public_token_expires')) {
+      await runQuery(`ALTER TABLE re_quotation ADD COLUMN public_token_expires DATETIME DEFAULT NULL`);
+      console.log('✅ Added re_quotation.public_token_expires.');
+    }
+    if (!qtnColNames.includes('public_snapshot_json')) {
+      await runQuery(`ALTER TABLE re_quotation ADD COLUMN public_snapshot_json LONGTEXT DEFAULT NULL`);
+      console.log('✅ Added re_quotation.public_snapshot_json.');
+    }
+
     console.log('\n🎉 Quotation flow migration complete!\n');
     process.exit(0);
   } catch (err) {

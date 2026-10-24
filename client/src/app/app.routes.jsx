@@ -6,6 +6,7 @@ import PremiumLoader from "../Components/PremiumLoader";
 const PublicRequirementForm = lazy(() => import("../Client/PublicRequirementForm"));
 const PublicInvoice = lazy(() => import("../Client/PublicInvoice"));
 const PublicProposal = lazy(() => import("../features/proposals/pages/PublicProposalPage"));
+const PublicQuotation = lazy(() => import("../features/history/pages/PublicQuotationPage"));
 const Login = lazy(() => import("../features/auth/pages/LoginPage"));
 const RegisterAdmin = lazy(() => import("../features/auth/pages/RegisterAdminPage"));
 const ForgotPassword = lazy(() => import("../features/auth/pages/ForgotPasswordPage"));
@@ -38,6 +39,7 @@ export default function AppRoutes() {
         <Route path="/public/r/:slug" element={<PublicRequirementForm />} />
         <Route path="/public/re_invoice/:token" element={<PublicInvoice />} />
         <Route path="/public/proposal/:token" element={<PublicProposal />} />
+        <Route path="/public/quotation/:token" element={<PublicQuotation />} />
 
         {/* Home / Login */}
         <Route

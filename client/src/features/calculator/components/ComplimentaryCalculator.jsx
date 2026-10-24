@@ -44,8 +44,11 @@ const dispatch = useDispatch();
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
   const { id, clientId, proposalId } = useParams();
-  const searchParams = new URLSearchParams(useLocation().search);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
   const docTypeFromURL = searchParams.get("doc");
+  const isQuotationMode =
+    location.state?.mode === "quotation" || searchParams.get("mode") === "quotation";
   const effectiveClientId = id || clientId;
   const effectiveProposalId = proposalIdOverride || proposalId;
   const [data, setData] = useState([]);
@@ -838,6 +841,21 @@ const dispatch = useDispatch();
     }
     if (!effectiveClientId || !effectiveProposalId) return;
     try {
+      if (isQuotationMode) {
+        const { data } = await axios.get(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const services = data.data?.services || [];
+        const filtered = services.filter(
+          (item) =>
+            item.source === "custom_complimentary" ||
+            item.is_complimentary === true ||
+            String(item.service_name || "").toLowerCase() === "complimentary"
+        );
+        setGetData(filtered);
+        return;
+      }
       let endpoint = `${baseURL}/auth/api/re_calculator/getByIDComplimentaryData/${effectiveProposalId}/${effectiveClientId}`;
       if (docTypeFromURL === "proforma") {
         endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`;

@@ -131,6 +131,7 @@ const GraphicCalculator = ({
     proposalId,
     grandTotal,
     token,
+    mode: isQuotationMode ? "quotation" : undefined,
   });
 
   const {

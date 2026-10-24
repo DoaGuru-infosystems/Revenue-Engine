@@ -562,9 +562,56 @@ async function sendMeetingReminderEmail({
   }
 }
 
+// Quotation mail is separate from sendProposalEmail. Do not share that HTML.
+async function sendQuotationEmail({ to, clientName, quotationNumber, quotationLink }) {
+  if (!isEmail(to)) return { ok: false, error: "Invalid email" };
+
+  const subject = `Your Quotation is Ready • ${quotationNumber || "Quotation"}`;
+  const html = `
+    <div style="font-family: Georgia, 'Times New Roman', serif; background-color: #eef2ff; padding: 40px 16px; color: #1e1b4b;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #c7d2fe;">
+        <div style="background: #312e81; padding: 28px 24px; text-align: center;">
+          <img src="cid:logo" alt="DOAGuru InfoSystems" style="height: 46px; width: auto;" />
+          <p style="margin: 14px 0 0; color: #c7d2fe; letter-spacing: 2px; font-size: 12px; font-family: 'Segoe UI', sans-serif;">QUOTATION</p>
+        </div>
+        <div style="padding: 36px 28px; font-family: 'Segoe UI', Tahoma, sans-serif;">
+          <h1 style="margin: 0 0 16px; color: #312e81; font-size: 22px; font-weight: 700;">Your quotation is ready</h1>
+          <p style="font-size: 16px; line-height: 1.6; color: #334155; margin: 0 0 12px;">Hello <b>${clientName || "there"}</b>,</p>
+          <p style="font-size: 16px; line-height: 1.6; color: #334155; margin: 0 0 20px;">We have prepared quotation <b>${quotationNumber || ""}</b> for you. Open the link below to review the services, ads, and notes.</p>
+          <p style="margin: 0 0 24px; font-size: 14px; color: #4338ca; background: #eef2ff; border-radius: 8px; padding: 12px 16px;">Quotation number: <b>${quotationNumber || "-"}</b></p>
+          ${quotationLink ? `
+          <div style="text-align: center; margin: 8px 0 12px;">
+            <a href="${quotationLink}" style="display: inline-block; padding: 14px 28px; background-color: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 999px; font-weight: 700; font-size: 15px;">View Quotation</a>
+          </div>
+          ` : ""}
+        </div>
+        <div style="background: #f8fafc; padding: 16px; text-align: center; font-size: 12px; color: #64748b; font-family: 'Segoe UI', sans-serif;">
+          DOAGuru InfoSystems · ${new Date().getFullYear()}
+        </div>
+      </div>
+    </div>
+  `;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAILSENDER,
+      to,
+      subject,
+      html,
+      attachments: [getLogoAttachment()],
+    });
+    console.log("[MAIL] Quotation sent to:", to);
+    return { ok: true };
+  } catch (err) {
+    console.error("[MAIL ERROR] Quotation:", err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
 module.exports = {
   sendFinalInvoiceEmail,
   sendProposalEmail,
+  sendQuotationEmail,
   sendProposalAdminNotifyEmail,
   sendDailyPaymentSummaryEmail,
   sendPaymentReceivedAlertEmail,

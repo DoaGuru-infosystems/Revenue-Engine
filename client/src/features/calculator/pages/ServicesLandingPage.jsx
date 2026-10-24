@@ -237,7 +237,13 @@ export default function ServicesLandingPage() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data.status === "Success") {
-          setGetData(res.data.data?.services || []);
+          const services = res.data.data?.services || [];
+          const isComplimentary = (item) =>
+            item.source === "custom_complimentary" ||
+            item.is_complimentary === true ||
+            String(item.service_name || "").toLowerCase() === "complimentary";
+          setGetData(services.filter((item) => !isComplimentary(item)));
+          setGetComplimenatryData(services.filter(isComplimentary));
         }
       } else if (docTypeFromURL === "proforma") {
         const { data } = await axios.get(
@@ -321,6 +327,7 @@ export default function ServicesLandingPage() {
   };
 
   const fetchClientNotes = async () => {
+    if (isQuotationMode) return;
     if (docTypeFromURL === "proforma") return;
     if (!id || !proposalId) return;
     try {
@@ -335,6 +342,7 @@ export default function ServicesLandingPage() {
   };
 
   const fetchComplimenatryData = async () => {
+    if (isQuotationMode) return;
     if (!id || !proposalId) return;
     try {
       if (docTypeFromURL === "proforma") {

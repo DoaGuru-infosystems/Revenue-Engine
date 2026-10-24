@@ -342,10 +342,10 @@ exports.saveQuotationNotes = async (req, res) => {
 exports.sendQuotationToClientNew = async (req, res) => {
   try {
     const { id } = req.params;
-    const { channel } = req.body; // 'email' | 'whatsapp' | 'both'
+    const { channel } = req.body;
 
     const qtnRows = await runQuery(
-      `SELECT q.*, c.client_name, c.email, c.phone
+      `SELECT q.*, c.client_name, c.client_organization, c.email, c.phone
        FROM re_quotation q
        LEFT JOIN re_revenue_engine_client_details c ON q.client_id = c.id
        WHERE q.id = ?`,
@@ -353,6 +353,79 @@ exports.sendQuotationToClientNew = async (req, res) => {
     );
     if (qtnRows.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Quotation not found" });
+    }
+
+    const quotation = qtnRows[0];
+    const services = await runQuery(
+      `SELECT * FROM re_quotation_services WHERE quotation_id = ? ORDER BY id ASC`,
+      [id]
+    );
+    const ads = await runQuery(
+      `SELECT * FROM re_quotation_ads WHERE quotation_id = ? ORDER BY id ASC`,
+      [id]
+    );
+    let notes = [];
+    try {
+      const raw = quotation.notes_json;
+      notes = typeof raw === "string" ? JSON.parse(raw || "[]") : raw || [];
+    } catch (e) {
+      notes = [];
+    }
+
+    const clientName = quotation.client_organization || quotation.client_name;
+    const snapshot = {
+      id: quotation.id,
+      quotation_number: quotation.quotation_number,
+      txn_id: quotation.txn_id,
+      grand_total_excl_gst: quotation.grand_total_excl_gst,
+      discount_json: quotation.discount_json,
+      notes,
+      client_name: quotation.client_name,
+      client_organization: quotation.client_organization,
+      services,
+      ads,
+    };
+
+    const { generatePublicAccessToken } = require("./re_publicController");
+    const { sendQuotationEmail } = require("./re_sendEmails");
+    const { sendQuotationWhatsApp } = require("./re_sendWhatsApp");
+    const baseUrl = process.env.CLIENT_BASE_URL || "http://localhost:5173";
+    const token = await generatePublicAccessToken(
+      quotation.client_id,
+      quotation.id,
+      "quotation",
+      JSON.stringify(snapshot)
+    );
+    const quotationLink = `${baseUrl}/#/public/quotation/${token}`;
+
+    let emailStatus = null;
+    let waStatus = null;
+
+    if (channel === "email" || channel === "both") {
+      if (quotation.email) {
+        emailStatus = await sendQuotationEmail({
+          to: quotation.email,
+          clientName,
+          quotationNumber: quotation.quotation_number,
+          quotationLink,
+        });
+      } else {
+        emailStatus = { ok: false, error: "Client email missing" };
+      }
+    }
+
+    if (channel === "whatsapp" || channel === "both") {
+      if (quotation.phone) {
+        waStatus = await sendQuotationWhatsApp({
+          toPhone: quotation.phone,
+          clientName,
+          clientId: quotation.client_id,
+          quotationNumber: quotation.quotation_number,
+          link: quotationLink,
+        });
+      } else {
+        waStatus = { ok: false, error: "Client phone missing" };
+      }
     }
 
     await runQuery(
@@ -363,8 +436,8 @@ exports.sendQuotationToClientNew = async (req, res) => {
     res.status(200).json({
       status: "Success",
       message: "Quotation sent to client",
-      emailStatus: { ok: true },
-      waStatus: { ok: true },
+      emailStatus,
+      waStatus,
     });
   } catch (error) {
     console.error("sendQuotationToClientNew error:", error);

@@ -52,13 +52,63 @@ const QuotationActions = ({
           { state: { mode: "quotation", quotationId: quotation.id } }
         );
       } else if (actionType === "send_to_client") {
+        const { value: channel } = await Swal.fire({
+          title: "Send Quotation to Client",
+          background: "#1f2937",
+          color: "#f3f4f6",
+          html: `
+            <div class="flex flex-col gap-3 mt-4 text-left">
+              <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-600 hover:bg-gray-700 cursor-pointer transition-all">
+                <input type="radio" name="swal-channel" value="email" class="w-4 h-4">
+                <span class="text-sm font-semibold text-gray-200">Email only</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-600 hover:bg-gray-700 cursor-pointer transition-all">
+                <input type="radio" name="swal-channel" value="whatsapp" class="w-4 h-4">
+                <span class="text-sm font-semibold text-gray-200">WhatsApp only</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-600 hover:bg-gray-700 cursor-pointer transition-all">
+                <input type="radio" name="swal-channel" value="both" class="w-4 h-4">
+                <span class="text-sm font-semibold text-gray-200">Email and WhatsApp</span>
+              </label>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonColor: "#4f46e5",
+          cancelButtonColor: "#4b5563",
+          confirmButtonText: "Send now",
+          preConfirm: () => {
+            const selected = document.querySelector('input[name="swal-channel"]:checked');
+            if (!selected) {
+              Swal.showValidationMessage("Please select a channel");
+              return false;
+            }
+            return selected.value;
+          },
+        });
+        if (!channel) return;
+        Swal.fire({ title: "Sending...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         const res = await axios.post(
           `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotation.id}/send`,
-          { channel: "email" },
+          { channel },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data.status === "Success") {
-          Swal.fire({ icon: "success", title: "Sent", text: "Quotation marked as sent.", timer: 1400, showConfirmButton: false });
+          const failed = [];
+          const success = [];
+          const { emailStatus, waStatus } = res.data;
+          if (emailStatus && !emailStatus.ok) failed.push("Email");
+          else if (emailStatus && emailStatus.ok) success.push("Email");
+          if (waStatus && !waStatus.ok) failed.push("WhatsApp");
+          else if (waStatus && waStatus.ok) success.push("WhatsApp");
+          if (failed.length > 0) {
+            Swal.fire({
+              icon: success.length ? "warning" : "error",
+              title: success.length ? "Partial send" : "Not delivered",
+              html: `<div style="text-align:left;font-size:14px"><p>Failed: ${failed.join(", ")}</p>${success.length ? `<p>Sent: ${success.join(", ")}</p>` : ""}<p style="margin-top:8px">Quotation status is sent. WhatsApp needs the Meta template quotation_review_request.</p></div>`,
+            });
+          } else {
+            Swal.fire({ icon: "success", title: "Sent", text: "Quotation sent to the client.", timer: 1400, showConfirmButton: false });
+          }
           fetchQuotations?.();
         }
       } else if (actionType === "mark_approved") {

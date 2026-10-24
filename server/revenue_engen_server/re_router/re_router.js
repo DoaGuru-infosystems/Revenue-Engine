@@ -208,6 +208,7 @@ const {
   getPublicInvoicePdf,
   getPublicProposalData,
   getPublicProposalPdf,
+  getPublicQuotationData,
 } = require("../re_controller/re_publicController");
 
 const authenticateToken = require("../re_middleware/re_authenticateToken");
@@ -292,6 +293,7 @@ const router = express.Router();
 router.get("/public/invoice/:token", getPublicInvoiceData);
 router.post("/public/invoice/:token/pdf", getPublicInvoicePdf);
 router.get("/public/proposal/:token", getPublicProposalData);
+router.get("/public/quotation/:token", getPublicQuotationData);
 router.get("/public/proposal/:token/pdf", getPublicProposalPdf);
 router.post("/public/proposal/:token/pdf", getPublicProposalPdf);
 

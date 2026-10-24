@@ -7,7 +7,7 @@ import {
   deleteDiscountById,
 } from "../services/calculatorService";
 
-export function useGraphicCalculatorDiscount({ id, proposalId, grandTotal, token }) {
+export function useGraphicCalculatorDiscount({ id, proposalId, grandTotal, token, mode }) {
   const [selecteddiscount, setSelecteddiscount] = useState(null);
   const [discountDataSet, setDiscountDataSet] = useState(null);
   const [showModalDiscount, setShowModalDiscount] = useState(false);
@@ -19,6 +19,10 @@ export function useGraphicCalculatorDiscount({ id, proposalId, grandTotal, token
   });
 
   const fetchDiscount = async () => {
+    if (mode === "quotation") {
+      setSelecteddiscount(null);
+      return;
+    }
     if (!id || !proposalId || !token) return;
     try {
       const res = await getGraphicDiscount(proposalId, id, token);
@@ -50,7 +54,7 @@ export function useGraphicCalculatorDiscount({ id, proposalId, grandTotal, token
   useEffect(() => {
     fetchDiscount();
     fetchDiscountSettingData();
-  }, [id, proposalId, token]);
+  }, [id, proposalId, token, mode]);
 
   const discountAmount = selecteddiscount
     ? selecteddiscount.discount_type === "percent"

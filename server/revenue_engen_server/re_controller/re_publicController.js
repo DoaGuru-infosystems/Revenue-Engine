@@ -91,6 +91,13 @@ exports.generatePublicAccessToken = async (
     `;
     // For re_proposals, txn_id acts as proposal id in this context
     await queryDb(q, [tokenHash, mysqlDatetime, finalSnapshot, txn_id]);
+  } else if (doc_type === "quotation") {
+    const q = `
+      UPDATE re_quotation
+      SET public_token_hash = ?, public_token_expires = ?, public_snapshot_json = ?
+      WHERE id = ?
+    `;
+    await queryDb(q, [tokenHash, mysqlDatetime, finalSnapshot, txn_id]);
   } else {
     const table =
       doc_type === "proforma" ? "re_proposal_proforma" : "re_invoice";
@@ -134,6 +141,10 @@ const validateTokenAndGetPayload = async (token, expectedDocTypes = []) => {
     q =
       "SELECT public_token_hash, public_snapshot_json FROM re_proposals WHERE id = ? LIMIT 1";
     params = [decoded.txn_id]; // txn_id acts as proposal id
+  } else if (decoded.doc_type === "quotation") {
+    q =
+      "SELECT public_token_hash, public_snapshot_json FROM re_quotation WHERE id = ? LIMIT 1";
+    params = [decoded.txn_id];
   } else {
     const table =
       decoded.doc_type === "proforma" ? "re_proposal_proforma" : "re_invoice";
@@ -473,5 +484,45 @@ exports.getPublicProposalPdf = async (req, res) => {
     res
       .status(500)
       .json({ status: "Failure", message: "Server error generating PDF" });
+  }
+};
+
+exports.getPublicQuotationData = async (req, res) => {
+  const { token } = req.params;
+  try {
+    const { decoded, record } = await validateTokenAndGetPayload(token, [
+      "quotation",
+    ]);
+    await logPublicAccess("quotation", decoded.txn_id, req, "Success");
+
+    let snapshot = {};
+    if (record.public_snapshot_json) {
+      try {
+        let jsonStr = record.public_snapshot_json;
+        if (jsonStr.startsWith("GZIP:")) {
+          const zlib = require("zlib");
+          jsonStr = zlib
+            .gunzipSync(Buffer.from(jsonStr.substring(5), "base64"))
+            .toString("utf-8");
+        }
+        snapshot = JSON.parse(jsonStr);
+      } catch (e) {}
+    }
+
+    res.json({ status: "Success", data: snapshot });
+  } catch (error) {
+    await logPublicAccess("quotation", null, req, "403: " + error.message);
+    if (
+      error.message === "Document not found" ||
+      error.message === "Invalid or expired token" ||
+      error.message === "Token revoked or overwritten" ||
+      error.message === "Invalid document type for this endpoint"
+    ) {
+      return res
+        .status(403)
+        .json({ status: "Failure", message: error.message });
+    }
+    console.error(error);
+    res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };

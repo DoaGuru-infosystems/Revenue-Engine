@@ -67,6 +67,33 @@ async function sendProposalWhatsApp({
   });
 }
 
+async function sendQuotationWhatsApp({
+  toPhone,
+  clientName,
+  clientId,
+  quotationNumber,
+  link,
+}) {
+  const components = [
+    {
+      type: "body",
+      parameters: [
+        { type: "text", text: String(clientName || "there") },
+        { type: "text", text: String(clientId || "-") },
+        { type: "text", text: String(quotationNumber || "-") },
+        { type: "text", text: String(link || "-") },
+      ],
+    },
+  ];
+
+  return sendWhatsAppTemplate({
+    to: toPhone,
+    templateName: "quotation_review_request",
+    components,
+    lang: "en",
+  });
+}
+
 // If you're unsure which translation exists, we can try the list below in order
 const DEFAULT_LANG_FALLBACK = ["en_US", "en", "hi"];
 
@@ -423,6 +450,7 @@ module.exports = {
   sendWhatsAppTemplate,
   sendInvoiceWhatsApp,
   sendProposalWhatsApp,
+  sendQuotationWhatsApp,
   sendProposalAdminNotifyWA,
   sendPeriodicPaymentSummaryWA,
   sendPaymentReceivedAlertWA,
