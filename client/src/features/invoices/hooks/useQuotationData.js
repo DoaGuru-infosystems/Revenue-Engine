@@ -23,6 +23,8 @@ import {
   deletePlanClientNotes,
   updateBalanceProformaNotes,
   updateProformaNotes,
+  fetchQuotationById,
+  updateQuotationNotes,
 } from "../api";
 
 export function useQuotationData({
@@ -83,6 +85,10 @@ export function useQuotationData({
   const [showMetaAd, setShowMetaAd] = useState(true);
   const [showGoogleAd, setShowGoogleAd] = useState(true);
   const [proformaMeta, setProformaMeta] = useState(null);
+  const [quotationLines, setQuotationLines] = useState(null);
+  const [quotationNumber, setQuotationNumber] = useState("");
+  const [quotationDiscount, setQuotationDiscount] = useState(null);
+  const isPlainQuotation = Array.isArray(quotationLines);
 
   // Default notes that should appear automatically for regular quotation
   const defaultNotes = [
@@ -745,10 +751,13 @@ export function useQuotationData({
   const fetchNewQuotationDocument = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${baseURL}/auth/api/re_calculator/quotation/${txn_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = res.data?.data || {};
+      const res = await fetchQuotationById(txn_id, token);
+      const data = res?.data;
+      if (res?.status !== "Success" || !data?.id) {
+        setQuotationLines(null);
+        setQuotationNumber("");
+        return false;
+      }
       const services = (data.services || []).map((row) => ({
         ...row,
         service_type: "Graphic Service",
@@ -762,54 +771,177 @@ export function useQuotationData({
         budget: row.budget,
         total_amount: row.total,
       }));
+      const lines = [
+        ...services.map((row) => {
+          const quantity = Number(row.quantity) || 1;
+          const rate = Number(row.editing_type_amount) || 0;
+          const stored = Number(row.total_amount);
+          return {
+            service_name: row.service_name || "Service",
+            category_name: row.category_name || row.editing_type_name || "—",
+            quantity,
+            rate,
+            amount: stored > 0 ? stored : rate * quantity,
+          };
+        }),
+        ...ads.map((row) => {
+          const quantity = Number(row.duration_months || row.quantity || 1) || 1;
+          const amount = Number(row.total || row.total_amount || row.budget || 0);
+          return {
+            service_name: "Ads",
+            category_name: row.category_name || "Ads",
+            quantity,
+            rate: quantity ? amount / quantity : amount,
+            amount,
+          };
+        }),
+      ];
       setServiceData([...services, ...ads]);
+      setQuotationLines(lines);
+      setQuotationNumber(data.quotation_number || "");
       setClientData({
         client_name: data.client_name,
         client_organization: data.client_organization,
         email: data.email,
         phone: data.phone,
         address: data.address,
+        quotation_number: data.quotation_number,
       });
       let notes = [];
       try {
         const parsed = typeof data.notes_json === "string" ? JSON.parse(data.notes_json) : data.notes_json;
-        if (Array.isArray(parsed)) notes = parsed;
-        else if (parsed) notes = [parsed];
+        const list = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
+        notes = list
+          .map((item, index) => {
+            if (typeof item === "string") return { id: index, note_name: item };
+            const note_name = item?.note_name || item?.note || item?.text || "";
+            return note_name ? { id: item.id || index, note_name } : null;
+          })
+          .filter(Boolean);
       } catch (e) {
         notes = [];
       }
       setNotesData(notes);
+
+      let discountObj = null;
+      try {
+        const rawDisc = data.discount_json;
+        const parsed = typeof rawDisc === "string" ? JSON.parse(rawDisc) : rawDisc;
+        if (parsed && (Number(parsed.value || parsed.discount_amt || parsed.discount_per) > 0)) {
+          discountObj = parsed;
+        }
+      } catch (e) {
+        discountObj = null;
+      }
+      setQuotationDiscount(discountObj);
+
+      setLoading(false);
+      return true;
     } catch (err) {
-      console.error("fetchNewQuotationDocument", err);
-      setServiceData([]);
+      setQuotationLines(null);
+      setQuotationNumber("");
+      setQuotationDiscount(null);
+      return false;
+    }
+  };
+
+  const handleSaveQuotationDiscount = async (discountPayload, newGrandTotal) => {
+    try {
+      setLoading(true);
+      const res = await updateQuotationNotes(
+        txn_id,
+        {
+          discount_json: discountPayload,
+          grand_total_excl_gst: newGrandTotal,
+        },
+        token
+      );
+      if (res?.status === "Success") {
+        setQuotationDiscount(discountPayload);
+        Swal.fire({
+          icon: "success",
+          title: "Discount Saved",
+          text: "Quotation discount updated successfully.",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({ icon: "error", title: "Error", text: "Failed to update discount." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteQuotationDiscount = async (newGrandTotal) => {
+    try {
+      setLoading(true);
+      const res = await updateQuotationNotes(
+        txn_id,
+        {
+          discount_json: null,
+          grand_total_excl_gst: newGrandTotal,
+        },
+        token
+      );
+      if (res?.status === "Success") {
+        setQuotationDiscount(null);
+        Swal.fire({
+          icon: "success",
+          title: "Discount Removed",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({ icon: "error", title: "Error", text: "Failed to remove discount." });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (isBalanceProforma) {
-      fetchBalanceProformaData();
-      fetchPredefinedNotes();
+    let cancelled = false;
+    const load = async () => {
+      if (isBalanceProforma) {
+        fetchBalanceProformaData();
+        fetchPredefinedNotes();
+        fetchDiscountSetting();
+        return;
+      }
+      if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
+        setQuotationLines(null);
+        setQuotationNumber("");
+        setQuotationDiscount(null);
+        fetchProformaData();
+        fetchPredefinedNotes();
+        fetchDiscountSetting();
+        return;
+      }
       fetchDiscountSetting();
-    } else if (sourceFromURL === "new_quotation") {
-      fetchNewQuotationDocument();
-      fetchPredefinedNotes();
-      fetchDiscountSetting();
-    } else if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
-      fetchProformaData();
-      fetchPredefinedNotes();
-      fetchDiscountSetting();
-    } else {
-      fetchServices();
-      fetchClient();
-      fetchClientNotesData();
-      fetchComplimentary();
-      fetchDiscount();
-      fetchDiscountSetting();
-      fetchClientReceived();
-      fetchPredefinedNotes();
-    }
+      const loadedNew = await fetchNewQuotationDocument();
+      if (cancelled || loadedNew || sourceFromURL === "new_quotation") {
+        if (!loadedNew && sourceFromURL === "new_quotation") setLoading(false);
+        return;
+      }
+      await Promise.all([
+        fetchServices(),
+        fetchClient(),
+        fetchClientNotesData(),
+        fetchComplimentary(),
+        fetchDiscount(),
+        fetchDiscountSetting(),
+        fetchClientReceived(),
+        fetchPredefinedNotes(),
+      ]);
+      if (!cancelled) setLoading(false);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id, txn_id, docTypeFromURL, sourceFromURL, isBalanceProforma]);
 
   // Group graphic services
@@ -1026,6 +1158,10 @@ export function useQuotationData({
   const handleEdit = () => {
     if (docTypeFromURL === "proforma") {
       navigate(`${basePath}/${servicesPath}/${id}/${txn_id}?doc=proforma`);
+    } else if (isPlainQuotation || sourceFromURL === "new_quotation" || quotationLines) {
+      navigate(`${basePath}/${servicesPath}/${id}/${txn_id}?mode=quotation`, {
+        state: { mode: "quotation", quotationId: txn_id },
+      });
     } else {
       navigate(`${basePath}/${servicesPath}/${id}/${txn_id}`);
     }
@@ -1984,6 +2120,12 @@ export function useQuotationData({
 
   return {
     loading,
+    quotationLines,
+    isPlainQuotation,
+    quotationNumber,
+    quotationDiscount,
+    handleSaveQuotationDiscount,
+    handleDeleteQuotationDiscount,
     clientData,
     clientDataReceived,
     proformaMeta,

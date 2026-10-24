@@ -299,7 +299,7 @@ const ClientServiceHistoryPage = () => {
               }}
               clientData={clientData}
               proposalsList={proposals.filter((p) => approvedStatuses.includes(p.status))}
-              quotationsList={quotations.filter((q) => approvedStatuses.includes(q.status) || String(q.id) === String(initialSelectedQuotationId))}
+              quotationsList={quotations.filter((q) => approvedStatuses.includes(q.status))}
               initialSelectedProposalId={initialSelectedProposalId}
               initialSelectedQuotationId={initialSelectedQuotationId}
             />

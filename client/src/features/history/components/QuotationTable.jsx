@@ -1,6 +1,7 @@
 import React from "react";
 import moment from "moment";
 import { Search, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PROPOSAL_STATUS_MAP } from "../../../config/proposalStatuses";
 import QuotationActions from "./QuotationActions";
 
@@ -12,6 +13,8 @@ const QuotationTable = ({
   handleCreateProformaFromQuotation,
   openProformaManager,
 }) => {
+  const navigate = useNavigate();
+  const basePath = window.location.pathname.includes("/BD/") ? "/BD" : "/admin";
   const filtered = (quotations || []).filter((q) => {
     const searchString = `${q.quotation_number || ""} ${q.id} ${q.client_name || ""} ${q.client_organization || ""}`.toLowerCase();
     return searchString.includes((keyword || "").toLowerCase());
@@ -60,7 +63,13 @@ const QuotationTable = ({
                 <div key={row.id} className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl overflow-visible">
                   <div className="lg:hidden p-3.5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">{row.quotation_number || `QTN-${row.id}`}</p>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`${basePath}/quotation/${row.client_id}/${row.id}?doc=quotation&source=new_quotation`)}
+                        className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline text-left cursor-pointer"
+                      >
+                        {row.quotation_number || `QTN-${row.id}`}
+                      </button>
                       <span className="text-[11px] font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}>{statusInfo.label}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -76,7 +85,15 @@ const QuotationTable = ({
                     />
                   </div>
                   <div className="hidden lg:grid grid-cols-5 gap-4 items-center px-4 py-3">
-                    <div className="font-semibold text-blue-600 dark:text-blue-400">{row.quotation_number || `QTN-${row.id}`}</div>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`${basePath}/quotation/${row.client_id}/${row.id}?doc=quotation&source=new_quotation`)}
+                        className="font-semibold text-blue-600 dark:text-blue-400 hover:underline text-left cursor-pointer"
+                      >
+                        {row.quotation_number || `QTN-${row.id}`}
+                      </button>
+                    </div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">{row.created_at ? moment(row.created_at).format("DD MMM YYYY") : "—"}</div>
                     <div className="text-right font-semibold">₹{amount}</div>
                     <div className="text-center">

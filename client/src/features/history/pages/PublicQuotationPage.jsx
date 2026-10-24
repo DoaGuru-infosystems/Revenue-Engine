@@ -62,6 +62,31 @@ export default function PublicQuotationPage() {
   const notes = asArray(data.notes);
   const clientLabel = data.client_organization || data.client_name || "Client";
 
+  const servicesSubtotal = services.reduce(
+    (sum, row) => sum + Number(row.total_amount || row.total_price || (Number(row.editing_type_amount || 0) * Number(row.quantity || 1)) || 0),
+    0
+  );
+  const adsSubtotal = ads.reduce(
+    (sum, row) => sum + Number(row.total || row.charge || row.budget || 0),
+    0
+  );
+  const rawSubtotal = servicesSubtotal + adsSubtotal;
+
+  let discountAmt = 0;
+  let discountLabel = "";
+  if (data?.discount_json) {
+    try {
+      const d = typeof data.discount_json === "string" ? JSON.parse(data.discount_json) : data.discount_json;
+      if (d && (Number(d.value) > 0 || Number(d.discount_amt) > 0 || Number(d.discount_per) > 0)) {
+        const isPer = d.type === "Percentage" || d.discount_type === "percent";
+        const val = Number(d.value || (isPer ? d.discount_per : d.discount_amt) || 0);
+        discountAmt = isPer ? (servicesSubtotal * val) / 100 : val;
+        discountLabel = isPer ? `(${val}%)` : `(₹${val.toLocaleString("en-IN")})`;
+      }
+    } catch (e) {}
+  }
+  const finalTotal = data.grand_total_excl_gst ? Number(data.grand_total_excl_gst) : Math.max(0, rawSubtotal - discountAmt);
+
   return (
     <main className="min-h-screen bg-indigo-50 text-slate-900 px-4 py-8">
       <article className="max-w-3xl mx-auto bg-white border border-indigo-100 rounded-2xl overflow-hidden shadow-sm">
@@ -71,7 +96,6 @@ export default function PublicQuotationPage() {
           <p className="mt-1 text-indigo-100">{clientLabel}</p>
         </header>
         <section className="px-6 py-6 space-y-6">
-          <p className="text-sm text-slate-600">Total excluding GST: <span className="font-semibold text-slate-900">{money(data.grand_total_excl_gst)}</span></p>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Services</h2>
             {services.length === 0 ? <p className="text-sm text-slate-500">No services on this quotation.</p> : (
@@ -81,8 +105,7 @@ export default function PublicQuotationPage() {
                     <tr>
                       <th className="py-2 pr-3">Service</th>
                       <th className="py-2 pr-3">Category</th>
-                      <th className="py-2 pr-3">Qty</th>
-                      <th className="py-2 text-right">Amount</th>
+                      <th className="py-2 pr-3 text-right">Quantity</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -90,8 +113,7 @@ export default function PublicQuotationPage() {
                       <tr key={row.id || `${row.service_name}-${row.category_name}`} className="border-t border-slate-100">
                         <td className="py-2 pr-3">{row.service_name || row.editing_type_name || "Service"}</td>
                         <td className="py-2 pr-3">{row.category_name || "-"}</td>
-                        <td className="py-2 pr-3">{row.quantity || 1}</td>
-                        <td className="py-2 text-right">{money(row.total_amount || row.total_price)}</td>
+                        <td className="py-2 pr-3 text-right">{row.quantity || 1}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -99,23 +121,41 @@ export default function PublicQuotationPage() {
               </div>
             )}
           </div>
-          <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Ads</h2>
-            {ads.length === 0 ? <p className="text-sm text-slate-500">No ads on this quotation.</p> : (
+          {ads.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Ads Campaign</h2>
               <ul className="text-sm space-y-1">
                 {ads.map((row) => (
                   <li key={row.id || row.category_name} className="flex justify-between gap-4 border-t border-slate-100 py-2">
                     <span>{row.category_name || "Ads"}</span>
-                    <span>{money(row.total || row.charge || row.budget)}</span>
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          <div className="border-t border-slate-200 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Pricing</h2>
+            {discountAmt > 0 && (
+              <div className="space-y-1 text-sm text-slate-700">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{money(rawSubtotal)}</span>
+                </div>
+                <div className="flex justify-between text-red-600">
+                  <span>Discount {discountLabel}</span>
+                  <span>- {money(discountAmt)}</span>
+                </div>
+              </div>
             )}
+            <div className="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-slate-300 mt-2">
+              <span>Total (Excl. GST)</span>
+              <span>{money(finalTotal)}</span>
+            </div>
           </div>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Notes</h2>
             {notes.length === 0 ? <p className="text-sm text-slate-500">No notes.</p> : (
-              <ul className="text-sm list-disc pl-5 space-y-1">
+              <ul className="text-sm list-disc pl-5 space-y-1 text-slate-700">
                 {notes.map((note, index) => (
                   <li key={note.id || index}>{typeof note === "string" ? note : note.note_name || note.note || ""}</li>
                 ))}

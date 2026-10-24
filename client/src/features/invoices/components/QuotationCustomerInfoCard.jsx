@@ -8,6 +8,7 @@ export default function QuotationCustomerInfoCard({
   sourceFromURL = null,
   proformaMeta = null,
   txn_id = null,
+  quotationNumber = "",
 }) {
   return (
     <>
@@ -50,7 +51,8 @@ export default function QuotationCustomerInfoCard({
 
         <div className="text-end text-xs print:text-[11px] print:leading-tight">
           <p className="font-bold">
-            {sourceFromURL === "proposal" ||
+            {quotationNumber ||
+            sourceFromURL === "proposal" ||
             docTypeFromURL === "proforma" ||
             isBalanceProforma ? null : (
               <span className="font-bold text-amber-600 border border-amber-600 px-1 py-0.5 rounded mr-1">
@@ -64,7 +66,8 @@ export default function QuotationCustomerInfoCard({
               : "Quotation: "}{" "}
             {isBalanceProforma
               ? proformaMeta?.balance_proforma_number || clientData?.proforma_number
-              : proformaMeta?.proforma_number ||
+              : quotationNumber ||
+                proformaMeta?.proforma_number ||
                 clientData?.proforma_number ||
                 txn_id}
           </p>

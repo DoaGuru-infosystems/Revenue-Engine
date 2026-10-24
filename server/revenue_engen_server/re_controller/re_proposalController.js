@@ -902,6 +902,23 @@ exports.createProforma = async (req, res) => {
         return res.status(404).json({ status: "Failure", message: "Quotation not found" });
       }
       const quotation = qtnRows[0];
+      const quotationProformaStatuses = new Set([
+        "approved",
+        "client_approved",
+        "proforma_generated",
+        "proforma_sent",
+        "payment_awaited",
+        "payment_received",
+        "partially_paid",
+        "paid",
+        "invoiced",
+      ]);
+      if (!quotationProformaStatuses.has(String(quotation.status || "").toLowerCase())) {
+        return res.status(400).json({
+          status: "Failure",
+          message: "Approve the quotation before creating a proforma",
+        });
+      }
 
       const rawServices = await runQuery(
         `SELECT * FROM re_quotation_services WHERE quotation_id = ? ORDER BY id ASC`,
@@ -1351,11 +1368,12 @@ exports.deleteProforma = async (req, res) => {
     }
 
     const proforma = await runQuery(
-      "SELECT proposal_id FROM re_proposal_proforma WHERE id = ?",
+      "SELECT proposal_id, quotation_id FROM re_proposal_proforma WHERE id = ?",
       [id],
     );
     if (proforma.length > 0) {
       const proposalId = proforma[0].proposal_id;
+      const quotationId = proforma[0].quotation_id;
       await runQuery(`DELETE FROM re_proposal_proforma WHERE id = ?`, [id]);
       
       if (proposalId) {
@@ -1409,6 +1427,59 @@ exports.deleteProforma = async (req, res) => {
           await runQuery(
             `UPDATE re_proposals SET status = ? WHERE id = ?`,
             [nextStatus, proposalId],
+          );
+        }
+      } else if (quotationId) {
+        const remainingProformas = await runQuery(
+          `SELECT id, total_amount, status, payment_status FROM re_proposal_proforma WHERE quotation_id = ?`,
+          [quotationId],
+        );
+
+        if (remainingProformas.length === 0) {
+          await runQuery(
+            `UPDATE re_quotation SET status = 'approved', updated_at = NOW() WHERE id = ?`,
+            [quotationId],
+          );
+        } else {
+          let allPaid = true;
+          let anyPaymentReceived = false;
+
+          for (const pf of remainingProformas) {
+            const pfPayments = await runQuery(
+              `SELECT SUM(amount) as paid FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+              [pf.id],
+            );
+            const paid = Number(pfPayments[0]?.paid || 0);
+            const pfTot = Number(pf.total_amount || 0);
+            const isPfPaid =
+              pf.status === "paid" ||
+              pf.payment_status === "fully-paid" ||
+              (paid >= pfTot - 0.05 && pfTot > 0);
+
+            if (
+              paid > 0 ||
+              ["paid", "partially_paid", "payment_received", "invoiced"].includes(
+                pf.status,
+              ) ||
+              pf.payment_status === "partial" ||
+              pf.payment_status === "fully-paid"
+            ) {
+              anyPaymentReceived = true;
+            }
+            if (!isPfPaid) {
+              allPaid = false;
+            }
+          }
+
+          let nextStatus = "proforma_generated";
+          if (allPaid) {
+            nextStatus = "invoiced";
+          } else if (anyPaymentReceived) {
+            nextStatus = "partially_paid";
+          }
+          await runQuery(
+            `UPDATE re_quotation SET status = ?, updated_at = NOW() WHERE id = ?`,
+            [nextStatus, quotationId],
           );
         }
       }

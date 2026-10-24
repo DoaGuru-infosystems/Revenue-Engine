@@ -407,4 +407,27 @@ export const updateProformaNotes = async (proformaId, notes, token) => {
   return response.data;
 };
 
+/**
+ * Fetch quotation by ID (re_quotation with services and ads)
+ */
+export const fetchQuotationById = async (quotationId, token) => {
+  const response = await axios.get(
+    `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
+/**
+ * Update quotation notes, discount, and grand total excl gst
+ */
+export const updateQuotationNotes = async (quotationId, payload, token) => {
+  const response = await axios.patch(
+    `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/notes`,
+    payload,
+    { headers: getAuthHeaders(token) }
+  );
+  return response.data;
+};
+
 

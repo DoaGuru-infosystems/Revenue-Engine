@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import img2 from "../../../assets/Dg 2copy.png";
@@ -9,6 +9,7 @@ import DocumentBankDetails from "../../../shared/document/DocumentBankDetails";
 import InvoicePrintWrapper from "../../../shared/invoice/InvoicePrintWrapper";
 import InvoiceDiscountModal from "../../../shared/invoice/InvoiceDiscountModal";
 import InvoiceAdjustmentModal from "../../../shared/invoice/InvoiceAdjustmentModal";
+import ProposalDiscountModal from "../../proposals/components/ProposalDiscountModal";
 
 // Layer 2: Hook
 import { useQuotationData } from "../hooks/useQuotationData";
@@ -46,6 +47,11 @@ export default function QuotationPage() {
 
   const {
     loading,
+    quotationLines,
+    quotationNumber,
+    quotationDiscount,
+    handleSaveQuotationDiscount,
+    handleDeleteQuotationDiscount,
     clientData,
     clientDataReceived,
     proformaMeta,
@@ -125,6 +131,13 @@ export default function QuotationPage() {
     navigate,
   });
 
+  const [showProposalDiscountModal, setShowProposalDiscountModal] = useState(false);
+  const [proposalDiscountForm, setProposalDiscountForm] = useState({
+    discount_type: "amount",
+    discount_amt: "",
+    discount_per: "",
+  });
+
   if (loading) {
     return (
       <div className="text-center p-10 font-semibold text-gray-700">
@@ -133,13 +146,82 @@ export default function QuotationPage() {
     );
   }
 
+  const isPlainQuotation = Array.isArray(quotationLines);
+  const quotationSubtotal = (quotationLines || []).reduce(
+    (sum, line) => sum + Number(line.amount || 0),
+    0
+  );
+
+  let discountAmt = 0;
+  let discountLabel = "";
+  if (quotationDiscount) {
+    const isPercent =
+      quotationDiscount.type === "Percentage" ||
+      quotationDiscount.discount_type === "percent";
+    const val = Number(
+      quotationDiscount.value ||
+      (isPercent ? quotationDiscount.discount_per : quotationDiscount.discount_amt) ||
+      0
+    );
+    if (val > 0) {
+      discountAmt = isPercent ? (quotationSubtotal * val) / 100 : val;
+      discountLabel = isPercent ? `(${val}%)` : `(₹${Number(val).toLocaleString("en-IN")})`;
+    }
+  }
+
+  const finalQuotationTotal = Math.max(0, quotationSubtotal - discountAmt);
+  const formatInr = (value) =>
+    `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
   const isReceived = clientDataReceived?.tag_received_amt === "received";
   const hasInvoice = docTypeFromURL === "proforma" && proformaMeta?.has_invoice;
   const canEdit = !isReceived && !hasInvoice;
 
+  const openProposalDiscountModal = () => {
+    if (quotationDiscount) {
+      const isPercent =
+        quotationDiscount.type === "Percentage" ||
+        quotationDiscount.discount_type === "percent";
+      setProposalDiscountForm({
+        discount_type: isPercent ? "percent" : "amount",
+        discount_amt: isPercent ? "" : (quotationDiscount.value || quotationDiscount.discount_amt || ""),
+        discount_per: isPercent ? (quotationDiscount.value || quotationDiscount.discount_per || "") : "",
+      });
+    } else {
+      setProposalDiscountForm({
+        discount_type: "amount",
+        discount_amt: "",
+        discount_per: "",
+      });
+    }
+    setShowProposalDiscountModal(true);
+  };
+
+  const handleProposalDiscountSubmit = async (e) => {
+    e.preventDefault();
+    const isPercent = proposalDiscountForm.discount_type === "percent";
+    const val = Number(isPercent ? proposalDiscountForm.discount_per : proposalDiscountForm.discount_amt) || 0;
+    const calcRupee = isPercent ? (quotationSubtotal * val) / 100 : val;
+    const newTotal = Math.max(0, quotationSubtotal - calcRupee);
+    const payload = {
+      type: isPercent ? "Percentage" : "Amount",
+      value: val,
+      discount_type: isPercent ? "percent" : "amount",
+      discount_amt: isPercent ? 0 : val,
+      discount_per: isPercent ? val : 0,
+      calculatedAmount: calcRupee,
+    };
+    await handleSaveQuotationDiscount(payload, newTotal);
+    setShowProposalDiscountModal(false);
+  };
+
+  const handleProposalDiscountDelete = async () => {
+    await handleDeleteQuotationDiscount(quotationSubtotal);
+    setShowProposalDiscountModal(false);
+  };
+
   return (
     <InvoicePrintWrapper>
-      <div className="page-wrapper w-[210mm] min-h-[297mm] flex flex-col justify-between p-4 mx-auto bg-white print:p-0 print:m-0">
+      <div className="page-wrapper w-[210mm] min-h-[297mm] flex flex-col justify-start p-4 mx-auto bg-white print:p-0 print:m-0">
         {/* Top Action Buttons */}
         <InvoiceActionButtons
           handlePrintPage={handlePrintPage}
@@ -151,13 +233,13 @@ export default function QuotationPage() {
         {/* Table for proper header/footer repetition */}
         <table className="print:table print:border-collapse w-full">
           {/* Repeating Header */}
-          <DocumentHeaderBanner isGST={isGST} />
+          <DocumentHeaderBanner isGST={isPlainQuotation ? false : isGST} />
 
           {/* Main Content */}
           <tbody className="print:table-row-group">
             <tr>
               <td className="p-0 m-0 align-top">
-                <div className="flex flex-col justify-between h-full px-6 py-1 print:px-4 print:block print:h-auto">
+                <div className="flex flex-col justify-start px-6 py-1 print:px-4 print:block">
                   <div className="flex-grow print:block">
                     {/* Header & Client Info */}
                     <QuotationCustomerInfoCard
@@ -167,8 +249,74 @@ export default function QuotationPage() {
                       sourceFromURL={sourceFromURL}
                       proformaMeta={proformaMeta}
                       txn_id={txn_id}
+                      quotationNumber={quotationNumber}
                     />
 
+                    {isPlainQuotation && (
+                      <>
+                        <section className="mb-3 text-sm text-gray-900">
+                          <table className="w-full border text-xs">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="border px-2 py-1 text-left">Service</th>
+                                <th className="border px-2 py-1 text-left">Category</th>
+                                <th className="border px-2 py-1 text-right">Quantity</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {quotationLines.length === 0 && (
+                                <tr>
+                                  <td className="border px-2 py-2 text-center" colSpan={3}>No services added</td>
+                                </tr>
+                              )}
+                              {quotationLines.map((line, index) => (
+                                <tr key={`${line.service_name}-${index}`} className="bg-white">
+                                  <td className="border px-2 py-1">{line.service_name}</td>
+                                  <td className="border px-2 py-1">{line.category_name}</td>
+                                  <td className="border px-2 py-1 text-right">{line.quantity}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </section>
+                        <section className="mb-3 border-t border-gray-300 pt-2 text-xs text-gray-900">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="font-bold text-sm">Pricing</p>
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={openProposalDiscountModal}
+                                className="print:hidden text-[11px] font-semibold px-2.5 py-1 bg-yellow-50 text-yellow-700 border border-yellow-300 rounded hover:bg-yellow-100 transition shadow-sm"
+                              >
+                                {discountAmt > 0 ? "Edit Discount" : "+ Apply Discount"}
+                              </button>
+                            )}
+                          </div>
+
+                          {discountAmt > 0 && (
+                            <>
+                              <div className="flex justify-between gap-3 py-0.5">
+                                <span className="text-gray-600">Subtotal</span>
+                                <span>{formatInr(quotationSubtotal)}</span>
+                              </div>
+                              <div className="flex justify-between gap-3 py-0.5 text-red-600">
+                                <span>Discount {discountLabel}</span>
+                                <span>- {formatInr(discountAmt)}</span>
+                              </div>
+                            </>
+                          )}
+
+                          <div className="flex justify-between gap-3 border-t border-gray-400 mt-1 pt-1 font-bold text-sm">
+                            <span>Total</span>
+                            <span>{formatInr(finalQuotationTotal)}</span>
+                          </div>
+                        </section>
+                        <QuotationNotesSection notesData={notesData} isProforma={false} clientData={clientData} />
+                      </>
+                    )}
+
+                    {!isPlainQuotation && (
+                    <>
                     {/* Graphic & Service Table */}
                     <QuotationServicesTable
                       graphicData={graphicData}
@@ -251,6 +399,8 @@ export default function QuotationPage() {
                       onEditNote={handleOpenEditNoteModal}
                       onDeleteNote={handleDeleteClientNote}
                     />
+                    </>
+                    )}
                   </div>
                 </div>
               </td>
@@ -307,6 +457,21 @@ export default function QuotationPage() {
           selectedAdjustment={selectedAdjustment}
           maxAdjustment={dmTotalAfterDiscount}
           loading={loading}
+        />
+
+        {/* Proposal Discount Modal for Quotation */}
+        <ProposalDiscountModal
+          show={showProposalDiscountModal}
+          onClose={() => setShowProposalDiscountModal(false)}
+          onSubmit={handleProposalDiscountSubmit}
+          onDelete={discountAmt > 0 ? handleProposalDiscountDelete : undefined}
+          formDataDis={proposalDiscountForm}
+          handleChangeDis={(e) => {
+            const { name, value } = e.target;
+            setProposalDiscountForm((prev) => ({ ...prev, [name]: value }));
+          }}
+          grandTotal={quotationSubtotal}
+          discountDataSet={discountDataSet}
         />
       </div>
     </InvoicePrintWrapper>

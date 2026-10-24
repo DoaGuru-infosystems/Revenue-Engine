@@ -8,6 +8,7 @@ export default function InvoiceActionButtons({
   basePath,
   onProposalHistory,
   onEdit,
+  onDiscount,
 }) {
   const navigate = useNavigate();
 
@@ -24,6 +25,16 @@ export default function InvoiceActionButtons({
           className="bg-red-600 !text-white rounded-full px-4 py-2 hover:bg-red-700 transition-colors font-medium shadow-sm"
         >
           🖨️ Print
+        </button>
+      )}
+
+      {onDiscount && (
+        <button
+          onClick={onDiscount}
+          style={{ color: "#ffffff" }}
+          className="bg-amber-600 !text-white rounded-full px-4 py-2 hover:bg-amber-700 transition-colors font-medium shadow-sm"
+        >
+          🏷️ Apply Discount
         </button>
       )}
 

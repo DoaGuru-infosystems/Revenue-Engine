@@ -76,7 +76,9 @@ exports.getQuotationById = async (req, res) => {
     const { id } = req.params;
     const rows = await runQuery(
       `SELECT q.*,
-              c.client_name, c.client_organization, c.email, c.phone, c.address
+              c.client_name, c.client_organization, c.email, c.phone, c.address,
+              (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_id,
+              (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) AS proforma_count
        FROM re_quotation q
        LEFT JOIN re_revenue_engine_client_details c ON q.client_id = c.id
        WHERE q.id = ?`,
@@ -303,7 +305,7 @@ exports.saveQuotationAds = async (req, res) => {
 exports.saveQuotationNotes = async (req, res) => {
   try {
     const { id } = req.params;
-    const { notes_json, discount_json } = req.body;
+    const { notes_json, discount_json, grand_total_excl_gst } = req.body;
 
     const updates = [];
     const params = [];
@@ -311,14 +313,26 @@ exports.saveQuotationNotes = async (req, res) => {
     if (notes_json !== undefined) {
       updates.push("notes_json = ?");
       params.push(
-        typeof notes_json === "string" ? notes_json : JSON.stringify(notes_json)
+        !notes_json
+          ? null
+          : typeof notes_json === "string"
+          ? notes_json
+          : JSON.stringify(notes_json)
       );
     }
     if (discount_json !== undefined) {
       updates.push("discount_json = ?");
       params.push(
-        typeof discount_json === "string" ? discount_json : JSON.stringify(discount_json)
+        !discount_json
+          ? null
+          : typeof discount_json === "string"
+          ? discount_json
+          : JSON.stringify(discount_json)
       );
+    }
+    if (grand_total_excl_gst !== undefined) {
+      updates.push("grand_total_excl_gst = ?");
+      params.push(Number(grand_total_excl_gst) || 0);
     }
 
     if (updates.length === 0) {

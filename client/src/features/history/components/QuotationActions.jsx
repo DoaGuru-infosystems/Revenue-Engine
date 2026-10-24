@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Eye, Send, FilePlus, CheckCircle, Trash, FileText } from "lucide-react";
+import { ChevronDown, Eye, Pencil, Send, FilePlus, CheckCircle, Trash, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -47,6 +47,10 @@ const QuotationActions = ({
     const basePath = window.location.pathname.includes("/BD/") ? "/BD" : "/admin";
     try {
       if (actionType === "view") {
+        navigate(
+          `${basePath}/quotation/${quotation.client_id}/${quotation.id}?doc=quotation&source=new_quotation`
+        );
+      } else if (actionType === "edit_services") {
         navigate(
           `${basePath}/ServicesLanding/${quotation.client_id}/${quotation.id}?mode=quotation`,
           { state: { mode: "quotation", quotationId: quotation.id } }
@@ -201,11 +205,20 @@ const QuotationActions = ({
           className={`absolute ${openUpwards ? "bottom-full mb-2" : "top-full mt-2"} w-full min-w-[13rem] max-w-[18rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-50 py-1.5 max-h-[46vh] sm:max-h-64 overflow-y-auto ${fullWidth ? "left-0 right-0" : "left-0 sm:right-0"}`}
         >
           <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view")}><Eye size={14} /> View / Edit</button></li>
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("send_to_client")}><Send size={14} /> Send to client</button></li>
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_approved")}><CheckCircle size={14} /> Mark approved</button></li>
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_client_response")}><FileText size={14} /> Mark client response</button></li>
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("generate_proforma")}><FilePlus size={14} /> Generate Proforma</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view")}><Eye size={14} /> View Quotation</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("edit_services")}><Pencil size={14} /> Edit Services</button></li>
+            {["draft", "sent", "changes", "rejected"].includes(String(quotation.status || "").toLowerCase()) && (
+              <>
+                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("send_to_client")}><Send size={14} /> Send to client</button></li>
+                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_approved")}><CheckCircle size={14} /> Mark approved</button></li>
+              </>
+            )}
+            {String(quotation.status || "").toLowerCase() === "sent" && (
+              <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_client_response")}><FileText size={14} /> Mark client response</button></li>
+            )}
+            {["approved", "client_approved", "proforma_generated", "proforma_sent", "payment_awaited", "payment_received", "partially_paid", "paid", "invoiced"].includes(String(quotation.status || "").toLowerCase()) && (
+              <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("generate_proforma")}><FilePlus size={14} /> Generate Proforma</button></li>
+            )}
             <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view_proformas")}><FileText size={14} /> View Proformas</button></li>
             <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("download_pdf")}><FileText size={14} /> Download PDF</button></li>
             <li>

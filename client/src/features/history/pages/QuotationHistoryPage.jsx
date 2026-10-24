@@ -62,7 +62,7 @@ export default function QuotationHistoryPage() {
             setShowModal(false);
             setSelectedQuotationId(null);
           }}
-          quotationsList={quotations.filter((q) => APPROVED.includes(q.status) || String(q.id) === String(selectedQuotationId))}
+          quotationsList={quotations.filter((q) => APPROVED.includes(q.status))}
           initialSelectedQuotationId={selectedQuotationId}
           proposalsList={[]}
         />

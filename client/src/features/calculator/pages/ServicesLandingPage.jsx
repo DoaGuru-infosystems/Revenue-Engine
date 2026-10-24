@@ -59,8 +59,12 @@ export default function ServicesLandingPage() {
   // ─── Quotation Mode Detection ─────────────────────────────────────────────
   const locationState = location.state || {};
   const quotationSearch = new URLSearchParams(location.search);
-  const isQuotationMode =
-    locationState.mode === "quotation" || quotationSearch.get("mode") === "quotation";
+  const isQuotationExplicit =
+    locationState.mode === "quotation" ||
+    quotationSearch.get("mode") === "quotation" ||
+    quotationSearch.get("doc") === "quotation";
+  const [isDetectedQuotation, setIsDetectedQuotation] = useState(false);
+  const isQuotationMode = isQuotationExplicit || isDetectedQuotation;
   const quotationId = locationState.quotationId || (isQuotationMode ? proposalId : null);
   // When in quotation mode, use quotationId as the "proposalId" for all fetch/navigate calls
   const effectiveProposalId = isQuotationMode ? quotationId : proposalId;
@@ -244,6 +248,21 @@ export default function ServicesLandingPage() {
             String(item.service_name || "").toLowerCase() === "complimentary";
           setGetData(services.filter((item) => !isComplimentary(item)));
           setGetComplimenatryData(services.filter(isComplimentary));
+
+          const qtn = res.data.data;
+          if (qtn?.discount_json) {
+            try {
+              const d = typeof qtn.discount_json === "string" ? JSON.parse(qtn.discount_json) : qtn.discount_json;
+              if (d && (Number(d.value) > 0 || Number(d.discount_amt) > 0 || Number(d.discount_per) > 0)) {
+                const isPer = d.type === "Percentage" || d.discount_type === "percent";
+                setDiscountType(isPer ? "Percentage" : "Amount");
+                setDiscountValue(Number(d.value || (isPer ? d.discount_per : d.discount_amt) || 0));
+              }
+            } catch (e) {}
+          } else {
+            setDiscountType("Amount");
+            setDiscountValue(0);
+          }
         }
       } else if (docTypeFromURL === "proforma") {
         const { data } = await axios.get(
@@ -282,8 +301,48 @@ export default function ServicesLandingPage() {
           `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${effectiveProposalId}/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setGetData(data.data || []);
-        setPlanName(data.data?.[0]?.plan_name || "");
+        if (data?.data && data.data.length > 0) {
+          setGetData(data.data || []);
+          setPlanName(data.data?.[0]?.plan_name || "");
+        } else {
+          // If no proposal transactions, check if effectiveProposalId is a quotation ID
+          try {
+            const qRes = await axios.get(
+              `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (qRes.data?.status === "Success" && qRes.data?.data?.id) {
+              setIsDetectedQuotation(true);
+              const services = qRes.data.data?.services || [];
+              const isComplimentary = (item) =>
+                item.source === "custom_complimentary" ||
+                item.is_complimentary === true ||
+                String(item.service_name || "").toLowerCase() === "complimentary";
+              setGetData(services.filter((item) => !isComplimentary(item)));
+              setGetComplimenatryData(services.filter(isComplimentary));
+              setGetAdsData(qRes.data.data?.ads || []);
+              const qtn = qRes.data.data;
+              if (qtn?.discount_json) {
+                try {
+                  const d = typeof qtn.discount_json === "string" ? JSON.parse(qtn.discount_json) : qtn.discount_json;
+                  if (d && (Number(d.value) > 0 || Number(d.discount_amt) > 0 || Number(d.discount_per) > 0)) {
+                    const isPer = d.type === "Percentage" || d.discount_type === "percent";
+                    setDiscountType(isPer ? "Percentage" : "Amount");
+                    setDiscountValue(Number(d.value || (isPer ? d.discount_per : d.discount_amt) || 0));
+                  }
+                } catch (e) {}
+              } else {
+                setDiscountType("Amount");
+                setDiscountValue(0);
+              }
+              return;
+            }
+          } catch (qErr) {
+            // Not a quotation
+          }
+          setGetData([]);
+          setPlanName("");
+        }
       }
     } catch (error) {
       if (error.response?.status === 401) handleUnauthorized();
@@ -488,6 +547,43 @@ export default function ServicesLandingPage() {
       } finally {
         setLoading(false);
       }
+    } else if (isQuotationMode) {
+      try {
+        setLoading(true);
+        const calcRupee = isPercent ? (grandTotal * val) / 100 : val;
+        const newTotal = Math.max(0, grandTotal - calcRupee) + grandAdsTotal;
+        const discountPayload = {
+          type: isPercent ? "Percentage" : "Amount",
+          value: val,
+          discount_type: isPercent ? "percent" : "amount",
+          discount_amt: isPercent ? 0 : val,
+          discount_per: isPercent ? val : 0,
+          calculatedAmount: calcRupee,
+        };
+        await axios.patch(
+          `${baseURL}/auth/api/re_calculator/quotation/${quotationId}/notes`,
+          {
+            discount_json: discountPayload,
+            grand_total_excl_gst: newTotal,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setDiscountType(isPercent ? "Percentage" : "Amount");
+        setDiscountValue(val);
+        setShowDiscountModal(false);
+        Swal.fire({
+          icon: "success",
+          title: "Discount Updated!",
+          text: "Quotation discount saved successfully.",
+          timer: 1200,
+          showConfirmButton: false,
+        });
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: "error", title: "Error", text: "Failed to update discount." });
+      } finally {
+        setLoading(false);
+      }
     } else {
       setDiscountType(isPercent ? "Percentage" : "Amount");
       setDiscountValue(val);
@@ -521,6 +617,33 @@ export default function ServicesLandingPage() {
             showConfirmButton: false,
           });
         }
+      } catch (err) {
+        console.error(err);
+        Swal.fire({ icon: "error", title: "Error", text: "Failed to remove discount." });
+      } finally {
+        setLoading(false);
+      }
+    } else if (isQuotationMode) {
+      try {
+        setLoading(true);
+        const newTotal = grandTotal + grandAdsTotal;
+        await axios.patch(
+          `${baseURL}/auth/api/re_calculator/quotation/${quotationId}/notes`,
+          {
+            discount_json: null,
+            grand_total_excl_gst: newTotal,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setDiscountType("Amount");
+        setDiscountValue(0);
+        setShowDiscountModal(false);
+        Swal.fire({
+          icon: "success",
+          title: "Discount Removed!",
+          timer: 1200,
+          showConfirmButton: false,
+        });
       } catch (err) {
         console.error(err);
         Swal.fire({ icon: "error", title: "Error", text: "Failed to remove discount." });
@@ -877,7 +1000,7 @@ export default function ServicesLandingPage() {
           </button>
 
           {/* Stats row */}
-          <div className={`flex-1 flex overflow-x-auto sm:grid ${docTypeFromURL === "proforma" ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2 pb-1 pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent`}>
+          <div className={`flex-1 flex overflow-x-auto sm:grid ${(docTypeFromURL === "proforma" || isQuotationMode) ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2 pb-1 pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent`}>
             {/* Total Amount */}
             <div className="min-w-[130px] sm:min-w-0 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-xl p-2.5 border border-white/10 hover:border-yellow-400/30 flex items-center gap-2 transition-all duration-200">
               <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-r" />
@@ -893,8 +1016,8 @@ export default function ServicesLandingPage() {
               </div>
             </div>
 
-            {/* Discount Card (in proforma mode) */}
-            {docTypeFromURL === "proforma" && (
+            {/* Discount Card (in proforma or quotation mode) */}
+            {(docTypeFromURL === "proforma" || isQuotationMode) && (
               <div className="min-w-[130px] sm:min-w-0 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-xl p-2.5 border border-white/10 hover:border-yellow-400/30 transition-all duration-200">
                 <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-amber-400 to-yellow-500 rounded-r" />
                 <button onClick={openDiscountModal} className="w-full text-left flex items-center justify-between gap-1.5 group/disc">
@@ -941,7 +1064,13 @@ export default function ServicesLandingPage() {
             <div className="min-w-[140px] sm:min-w-0 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-xl p-2.5 border border-white/10 hover:border-amber-400/30 transition-all duration-200">
               <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-amber-400 to-orange-500 rounded-r" />
               {finalLength ? (
-                <button onClick={() => setShowModal(true)} className="w-full text-left flex items-center gap-2">
+                <button onClick={() => {
+                  if (isQuotationMode && docTypeFromURL !== "proforma") {
+                    navigate(`${basePath}/quotation/${id}/${proposalId}?doc=quotation&source=new_quotation`);
+                    return;
+                  }
+                  setShowModal(true);
+                }} className="w-full text-left flex items-center gap-2">
                   <div className="w-8 h-8 bg-amber-500/15 rounded-lg flex items-center justify-center shrink-0">
                     <Eye className="w-4 h-4 text-amber-400" />
                   </div>
