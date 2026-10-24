@@ -884,20 +884,20 @@ const AdminClientDetailsPage = () => {
               </button>
             </div>
             
-            <div className="p-5 flex gap-3 border-b border-gray-800">
+            <div className="p-5 flex gap-3 border-b border-gray-200 dark:border-gray-800">
               <button 
                 onClick={() => navigate(`/admin/proposal-builder/${selectedClient.id}`)}
-                className="flex-1 py-3 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-bold transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-orange-600 hover:bg-orange-500 !text-white text-white rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-sm"
               >
-                <Plus className="w-5 h-5" /> Create New Proposal
+                <Plus className="w-5 h-5 !text-white text-white" /> <span className="!text-white text-white">Create New Proposal</span>
               </button>
               <button 
                 onClick={handleCreateQuotation}
                 disabled={creatingQuotation}
-                className="flex-1 py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl font-bold transition flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 !text-white text-white rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-sm"
                 id="admin-create-quotation-btn"
               >
-                <FileText className="w-5 h-5" /> {creatingQuotation ? "Creating..." : "Create Quotation"}
+                <FileText className="w-5 h-5 !text-white text-white" /> <span className="!text-white text-white">{creatingQuotation ? "Creating..." : "Create Quotation"}</span>
               </button>
             </div>
 

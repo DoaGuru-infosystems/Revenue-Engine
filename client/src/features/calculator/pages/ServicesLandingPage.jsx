@@ -831,6 +831,31 @@ export default function ServicesLandingPage() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
+      if (isQuotationMode) {
+        const qRes = await axios.get(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const allServices = qRes.data?.data?.services || [];
+        const isComp = (r) =>
+          r.source === "custom_complimentary" ||
+          r.is_complimentary === true ||
+          String(r.service_name || "").toLowerCase().includes("(complimentary)") ||
+          String(r.service_name || "").toLowerCase() === "complimentary";
+        const updatedServices = allServices.filter((s) => String(s.id) !== String(entryId));
+        const paidGrandTotal = updatedServices
+          .filter((s) => !isComp(s))
+          .reduce((sum, r) => sum + Number(r.total_amount || r.total_price || 0), 0);
+        await axios.post(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}/services`,
+          { services: updatedServices, grand_total_excl_gst: paidGrandTotal },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+        Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
+        fetchData();
+        return;
+      }
       if (docTypeFromURL === "proforma") {
         const res = await axios.put(
           `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
@@ -868,6 +893,31 @@ export default function ServicesLandingPage() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
+      if (isQuotationMode) {
+        const qRes = await axios.get(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const allServices = qRes.data?.data?.services || [];
+        const isComp = (r) =>
+          r.source === "custom_complimentary" ||
+          r.is_complimentary === true ||
+          String(r.service_name || "").toLowerCase().includes("(complimentary)") ||
+          String(r.service_name || "").toLowerCase() === "complimentary";
+        const updatedServices = allServices.filter((s) => String(s.id) !== String(entryId));
+        const paidGrandTotal = updatedServices
+          .filter((s) => !isComp(s))
+          .reduce((sum, r) => sum + Number(r.total_amount || r.total_price || 0), 0);
+        await axios.post(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}/services`,
+          { services: updatedServices, grand_total_excl_gst: paidGrandTotal },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setGetComplimenatryData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+        Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", showConfirmButton: false, timer: 1000 });
+        fetchData();
+        return;
+      }
       if (docTypeFromURL === "proforma") {
         const res = await axios.put(
           `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
@@ -921,6 +971,25 @@ export default function ServicesLandingPage() {
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you really want to delete this entry?", icon: "warning", showCancelButton: true, confirmButtonColor: "#e11d48", cancelButtonColor: "#6b7280", confirmButtonText: "Yes, delete it!" });
     if (!confirm.isConfirmed) return;
     try {
+      if (isQuotationMode) {
+        const remaining = getAdsData.filter((item) => String(item.id) !== String(entryId));
+        const adsPayload = remaining.map((row) => ({
+          category_name: row.category || row.category_name,
+          budget: row.amount || row.budget || 0,
+          percent: row.percent || 0,
+          charge: row.charge || 0,
+          total: row.total || row.total_amount || 0,
+        }));
+        await axios.post(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}/ads`,
+          { ads: adsPayload },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setGetAdsData(remaining);
+        Swal.fire({ icon: "success", title: "Deleted!", text: "Entry has been deleted.", timer: 1000, showConfirmButton: false });
+        fetchAdsData();
+        return;
+      }
       if (docTypeFromURL === "proforma") {
         const res = await axios.put(
           `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
@@ -958,11 +1027,12 @@ export default function ServicesLandingPage() {
 
   return (
     <div
-      className="h-screen relative overflow-hidden flex flex-col"
+      className="min-h-screen lg:h-screen relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex flex-col"
       style={{
         background: isLight
           ? 'linear-gradient(135deg, #fdf6ec 0%, #fef3e8 50%, #fdf6ec 100%)'
           : 'linear-gradient(to bottom right, #030712, #0f172a, #030712)',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {/* Animated background */}
@@ -973,7 +1043,7 @@ export default function ServicesLandingPage() {
       </div>
 
       {/* ── MAIN LAYOUT: flex-col, fills screen ─────────────────────────── */}
-      <div className="relative z-10 flex flex-col h-full px-4 sm:px-6 py-3 gap-3 overflow-hidden">
+      <div className="relative z-10 flex flex-col min-h-screen lg:h-full px-4 sm:px-6 py-3 pb-28 lg:pb-3 gap-3 overflow-visible lg:overflow-hidden">
 
         {/* ── ROW 1: Back + Stats ───────────────────────────────────────── */}
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -1066,7 +1136,7 @@ export default function ServicesLandingPage() {
               {finalLength ? (
                 <button onClick={() => {
                   if (isQuotationMode && docTypeFromURL !== "proforma") {
-                    navigate(`${basePath}/quotation/${id}/${proposalId}?doc=quotation&source=new_quotation`);
+                    navigate(`${basePath}/quotation/${id}/${effectiveProposalId}?doc=quotation&source=new_quotation`);
                     return;
                   }
                   setShowModal(true);
@@ -1186,7 +1256,7 @@ export default function ServicesLandingPage() {
                     onClick={() => handleCustomServiceNavigate(service)}>
                     <div className={`absolute left-0 top-0 w-[3px] h-full bg-gradient-to-b ${service.gradient} rounded-r opacity-70`} />
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${service.gradient} shadow flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105`}>
-                      <IconComponent className="w-4 h-4 text-white" />
+                      <IconComponent className="w-4 h-4 !text-white text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`font-semibold text-xs truncate leading-tight ${isLight ? "text-gray-900" : "text-white"}`}>{service.title}</p>
@@ -1228,9 +1298,9 @@ export default function ServicesLandingPage() {
           </div>
 
           {/* Right: Data Tables (wider) */}
-          <div className="lg:col-span-4 flex flex-col gap-2 min-h-0 overflow-hidden">
+          <div className="lg:col-span-4 flex flex-col gap-2 min-h-0 overflow-visible lg:overflow-hidden">
             <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.15em] flex-shrink-0">Recent Orders</p>
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="flex-1 overflow-visible lg:overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
 
               {/* Inline Selected Plan */}
               {selectedPlan && (
@@ -1365,7 +1435,17 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
-                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "paid", editItem: order } })}>Edit</button>
+                                  onClick={() => {
+                                    const navUrl = docTypeFromURL === "proforma"
+                                      ? `${basePath}/calculator/${id}/${effectiveProposalId}?doc=proforma`
+                                      : `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                                    const navState = {
+                                      servicetype: "paid",
+                                      editItem: order,
+                                      ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                                    };
+                                    navigate(navUrl, { state: navState });
+                                  }}>Edit</button>
                                 <button onClick={() => handleDelete(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
                               </div>
                             </td>
@@ -1389,7 +1469,13 @@ export default function ServicesLandingPage() {
                       <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">₹{grandAdsTotal.toLocaleString()}</span>
                       <button
                         type="button"
-                        onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/Adscalculator/${id}/${proposalId}?doc=proforma` : `${basePath}/Adscalculator/${id}/${proposalId}`)}
+                        onClick={() => {
+                          const navUrl = docTypeFromURL === "proforma"
+                            ? `${basePath}/Adscalculator/${id}/${effectiveProposalId}?doc=proforma`
+                            : `${basePath}/Adscalculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                          const navState = isQuotationMode ? { mode: "quotation", quotationId } : undefined;
+                          navigate(navUrl, { state: navState });
+                        }}
                         className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-600/80 hover:bg-red-600 text-white flex items-center gap-1 transition-all"
                       >
                         + Add Campaign
@@ -1410,15 +1496,24 @@ export default function ServicesLandingPage() {
                           <tr key={order.id} className="hover:bg-white/5 transition-colors">
                             <td className="px-3 py-2">{index + 1}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.created_at}</td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.category}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">₹{order.amount}</td>
+                            <td className="px-3 py-2 min-w-[100px]">{order.category || order.category_name}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">₹{order.amount ?? order.budget}</td>
                             <td className="px-3 py-2 whitespace-nowrap">{order.percent}%</td>
                             <td className="px-3 py-2 whitespace-nowrap">₹{order.charge}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total}</td>
+                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total ?? order.total_amount}</td>
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
-                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/Adscalculator/${id}/${proposalId}?doc=proforma` : `${basePath}/Adscalculator/${id}/${proposalId}`, { state: { editItem: order } })}>Edit</button>
+                                  onClick={() => {
+                                    const navUrl = docTypeFromURL === "proforma"
+                                      ? `${basePath}/Adscalculator/${id}/${effectiveProposalId}?doc=proforma`
+                                      : `${basePath}/Adscalculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                                    const navState = {
+                                      editItem: order,
+                                      ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                                    };
+                                    navigate(navUrl, { state: navState });
+                                  }}>Edit</button>
                                 <button onClick={() => handleDeleteads(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
                               </div>
                             </td>
@@ -1465,7 +1560,17 @@ export default function ServicesLandingPage() {
                             <td className="px-3 py-2 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
-                                  onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "complimentary", editItem: order } })}>Edit</button>
+                                  onClick={() => {
+                                    const navUrl = docTypeFromURL === "proforma"
+                                      ? `${basePath}/calculator/${id}/${effectiveProposalId}?doc=proforma`
+                                      : `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                                    const navState = {
+                                      servicetype: "complimentary",
+                                      editItem: order,
+                                      ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                                    };
+                                    navigate(navUrl, { state: navState });
+                                  }}>Edit</button>
                                 <button onClick={() => handleDeleteComplimenatry(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
                               </div>
                             </td>
@@ -1526,13 +1631,28 @@ export default function ServicesLandingPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-white/30 text-[10px] font-bold uppercase tracking-wider">Or create manually:</span>
                       <button
-                        onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/calculator/${id}/${proposalId}?doc=proforma` : `${basePath}/calculator/${id}/${proposalId}`, { state: { servicetype: "paid" } })}
+                        onClick={() => {
+                          const navUrl = docTypeFromURL === "proforma"
+                            ? `${basePath}/calculator/${id}/${effectiveProposalId}?doc=proforma`
+                            : `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                          const navState = {
+                            servicetype: "paid",
+                            ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                          };
+                          navigate(navUrl, { state: navState });
+                        }}
                         className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-1.5"
                       >
                         <Palette className="w-3 h-3" /> Add Graphic
                       </button>
                       <button
-                        onClick={() => navigate(docTypeFromURL === "proforma" ? `${basePath}/Adscalculator/${id}/${proposalId}?doc=proforma` : `${basePath}/Adscalculator/${id}/${proposalId}`)}
+                        onClick={() => {
+                          const navUrl = docTypeFromURL === "proforma"
+                            ? `${basePath}/Adscalculator/${id}/${effectiveProposalId}?doc=proforma`
+                            : `${basePath}/Adscalculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                          const navState = isQuotationMode ? { mode: "quotation", quotationId } : undefined;
+                          navigate(navUrl, { state: navState });
+                        }}
                         className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-1.5"
                       >
                         <Megaphone className="w-3 h-3" /> Add Campaign
@@ -1558,7 +1678,7 @@ export default function ServicesLandingPage() {
                             className="group rounded-2xl border border-white/15 bg-gradient-to-br from-white/[0.07] via-white/[0.03] to-transparent px-5 py-5 shadow-[0_12px_34px_rgba(3,8,26,0.45)] hover:border-white/25 transition-all duration-300 flex flex-col"
                           >
                             <div className={`w-11 h-11 rounded-xl bg-gradient-to-r ${card.gradient} flex items-center justify-center shadow-lg mb-4`}>
-                              <IconComponent className="w-5 h-5 text-white" />
+                              <IconComponent className="w-5 h-5 !text-white text-white" />
                             </div>
 
                             <h4 className="text-white text-2xl font-bold leading-tight">{card.title}</h4>
@@ -1581,10 +1701,10 @@ export default function ServicesLandingPage() {
 
                             <button
                               onClick={() => handleCustomServiceNavigate(card)}
-                              className={`mt-auto w-full rounded-xl py-2.5 text-sm font-semibold text-white bg-gradient-to-r ${card.buttonGradient} hover:brightness-110 transition-all duration-200 flex items-center justify-center gap-2`}
+                              className={`mt-auto w-full rounded-xl py-2.5 text-sm font-semibold !text-white text-white bg-gradient-to-r ${card.buttonGradient} hover:brightness-110 shadow-md transition-all duration-200 flex items-center justify-center gap-2`}
                             >
-                              Get Started
-                              <ArrowRight className="w-4 h-4" />
+                              <span className="!text-white text-white font-semibold">Get Started</span>
+                              <ArrowRight className="w-4 h-4 !text-white text-white" />
                             </button>
                           </div>
                         );

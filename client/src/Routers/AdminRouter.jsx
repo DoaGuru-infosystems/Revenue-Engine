@@ -101,14 +101,20 @@ const AdminRouter = () => {
 
 export default AdminRouter;
 const Wrapper = styled.div`
-  height: 100%;
-  height: 100dvh;
+  min-height: 100%;
+  min-height: 100dvh;
   width: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary, #111827);
+
+  #root.dashboard-active & {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
 
   .spinner-wrapper {
     position: fixed;

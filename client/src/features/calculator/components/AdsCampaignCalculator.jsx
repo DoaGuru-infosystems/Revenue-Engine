@@ -19,8 +19,12 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const docTypeFromURL = searchParams.get("doc");
-  const isQuotationMode =
-    location.state?.mode === "quotation" || searchParams.get("mode") === "quotation";
+  const isQuotationInitial =
+    location.state?.mode === "quotation" ||
+    searchParams.get("mode") === "quotation" ||
+    searchParams.get("doc") === "quotation";
+  const [isQuotationDetected, setIsQuotationDetected] = useState(false);
+  const isQuotationMode = isQuotationInitial || isQuotationDetected;
   const { currentUser, token } = useSelector((state) => state.user);
 
   const userName = currentUser?.name;
@@ -30,7 +34,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [getData, setGetData] = useState([]);
-  const [editingId, setEditingId] = useState(null); // For proforma edit mode
+  const [editingId, setEditingId] = useState(null); // For edit mode
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -38,12 +42,12 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
     if (location.state?.editItem) {
       const item = location.state.editItem;
       const cat = item.category || item.category_name;
-      const amt = item.amount || item.budget;
-      if (cat && amt) {
-        setEnteredAmount((prev) => ({ ...prev, [cat]: amt }));
+      const amt = item.amount ?? item.budget;
+      if (cat && amt !== undefined && amt !== null) {
+        setEnteredAmount({ [cat]: amt });
         setEditingId(item.id);
       }
-    } else if (docTypeFromURL === "proforma" && getData.length > 0 && Object.keys(enteredAmount).length === 0 && !editingId) {
+    } else if ((docTypeFromURL === "proforma" || isQuotationMode) && getData.length > 0 && Object.keys(enteredAmount).length === 0 && !editingId) {
       const initialAmounts = {};
       getData.forEach((item) => {
         const cat = item.category || item.category_name;
@@ -56,7 +60,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
         setEnteredAmount(initialAmounts);
       }
     }
-  }, [location.state, getData, docTypeFromURL]);
+  }, [location.state, getData, docTypeFromURL, isQuotationMode]);
 
   // Sync embeddedData
   useEffect(() => {
@@ -445,20 +449,41 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const fetchData = async () => {
     if (!id || !proposalId) return;
     try {
-      let endpoint = `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`;
-      if (isQuotationMode) {
-        endpoint = `${baseURL}/auth/api/re_calculator/quotation/${proposalId}`;
-      } else if (docTypeFromURL === "proforma") {
-        endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`;
-      }
-      const res = await axios.get(endpoint, {
+      let isQuo = isQuotationMode;
+      let endpoint = isQuo
+        ? `${baseURL}/auth/api/re_calculator/quotation/${proposalId}`
+        : docTypeFromURL === "proforma"
+        ? `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`
+        : `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`;
+
+      let res = await axios.get(endpoint, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
+
+      // Auto-detect quotation if regular proposal returned empty
+      if (!isQuo && docTypeFromURL !== "proforma" && (!res.data?.data || res.data.data.length === 0)) {
+        try {
+          const qRes = await axios.get(`${baseURL}/auth/api/re_calculator/quotation/${proposalId}`, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (qRes.data?.status === "Success" && qRes.data?.data?.id) {
+            isQuo = true;
+            setIsQuotationDetected(true);
+            res = qRes;
+          }
+        } catch (e) {
+          // not quotation
+        }
+      }
+
       if (res.data.status === "Success") {
-        if (isQuotationMode) {
+        if (isQuo) {
           const ads = res.data.data?.ads || [];
           setGetData(
             ads.map((item) => ({
@@ -479,7 +504,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
           }));
           setGetData(normalized);
         } else {
-          setGetData(res.data.data);
+          setGetData(res.data.data || []);
         }
       }
     } catch (error) {
@@ -516,6 +541,48 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
     if (!confirm.isConfirmed) return;
 
     try {
+      if (isQuotationMode) {
+        const remaining = getData.filter((item) => String(item.id) !== String(entryId));
+        const adsPayload = remaining.map((row) => ({
+          category_name: row.category || row.category_name,
+          budget: row.amount || row.budget || 0,
+          percent: row.percent || 0,
+          charge: row.charge || 0,
+          total: row.total || row.total_amount || 0,
+        }));
+        const response = await axios.post(
+          `${baseURL}/auth/api/re_calculator/quotation/${proposalId}/ads`,
+          { ads: adsPayload },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.data.status === "Success") {
+          setGetData(remaining);
+          if (editingId && String(editingId) === String(entryId)) {
+            resetEditingState();
+          }
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Entry has been deleted.",
+            timer: 1000,
+            showConfirmButton: false,
+          });
+          fetchData();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Failed!",
+            text: response.data.message || "Failed to delete entry.",
+          });
+        }
+        return;
+      }
+
       let res;
       if (docTypeFromURL === "proforma") {
         res = await axios.put(
@@ -538,6 +605,9 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
 
       if (result.status === "Success") {
         setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+        if (editingId && String(editingId) === String(entryId)) {
+          resetEditingState();
+        }
 
         Swal.fire({
           icon: "success",
@@ -570,11 +640,13 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
       navigate(-1);
     } else {
       const base = getBasePathFromLocation(location);
-      const fallbackUrl =
-        docTypeFromURL === "proforma"
-          ? servicesLandingPath(base, id, proposalId, "doc=proforma")
-          : servicesLandingPath(base, id, proposalId);
-      navigate(fallbackUrl);
+      const query = docTypeFromURL === "proforma"
+        ? "doc=proforma"
+        : isQuotationMode
+        ? "mode=quotation"
+        : "";
+      const fallbackUrl = servicesLandingPath(base, id, proposalId, query);
+      navigate(fallbackUrl, { state: isQuotationMode ? { mode: "quotation", quotationId: proposalId } : undefined });
     }
   };
 
@@ -603,7 +675,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                 <span className="text-sm font-semibold hidden sm:inline">Back</span>
               </button>
             )}
-            <h3 className="text-2xl sm:text-3xl font-bold text-center text-slate-900 dark:text-white">
+            <h3 className="text-xl sm:text-3xl font-bold text-center text-slate-900 dark:text-white px-10 sm:px-0">
               Ads Campaign Budget Calculator
             </h3>
           </div>
@@ -690,7 +762,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                       : "bg-red-600 hover:bg-red-700 text-white"
                 }`}
               >
-                {loading ? "Saving..." : editingId ? "Update entry" : isQuotationMode ? "Save Quotation" : "Calculate & Save"}
+                {loading ? "Saving..." : editingId ? "Update entry" : "Calculate & Save"}
               </button>
               {(editingId || Object.keys(enteredAmount).length > 0) && (
                 <button
@@ -794,15 +866,13 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                           🧾 Total: ₹{parseFloat(item.total || 0).toLocaleString()}
                         </p>
                         <div className="flex items-center gap-2">
-                          {docTypeFromURL === "proforma" && (
-                            <button
-                              type="button"
-                              onClick={() => handleEdit(item)}
-                              className={`min-h-11 px-3 rounded-lg text-white text-sm font-semibold touch-manipulation ${isEditingThis ? "bg-amber-500" : "bg-blue-600"}`}
-                            >
-                              Edit
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(item)}
+                            className={`min-h-11 px-3 rounded-lg text-white text-sm font-semibold touch-manipulation ${isEditingThis ? "bg-amber-500" : "bg-blue-600"}`}
+                          >
+                            Edit
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(item.id)}

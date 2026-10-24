@@ -553,6 +553,7 @@ main,
 [data-theme="light"] button.bg-red-500,
 [data-theme="light"] button.bg-red-600,
 [data-theme="light"] button.bg-red-700,
+[data-theme="light"] button.bg-red-800,
 [data-theme="light"] button.bg-orange-500,
 [data-theme="light"] button.bg-orange-600,
 [data-theme="light"] button.bg-orange-700,
@@ -561,11 +562,16 @@ main,
 [data-theme="light"] button.bg-emerald-700,
 [data-theme="light"] button.bg-blue-600,
 [data-theme="light"] button.bg-blue-700,
+[data-theme="light"] button.bg-blue-800,
 [data-theme="light"] button.bg-indigo-600,
+[data-theme="light"] button.bg-indigo-700,
 [data-theme="light"] button.bg-purple-600,
 [data-theme="light"] button.bg-purple-700,
 [data-theme="light"] button.bg-amber-600,
 [data-theme="light"] button.bg-yellow-600,
+[data-theme="light"] button.bg-slate-600,
+[data-theme="light"] button.bg-slate-700,
+[data-theme="light"] button.bg-slate-800,
 [data-theme="light"] a.bg-red-600,
 [data-theme="light"] a.bg-orange-600,
 [data-theme="light"] a.bg-blue-600,
@@ -573,6 +579,7 @@ main,
 [data-theme="light"] button.bg-red-500 *,
 [data-theme="light"] button.bg-red-600 *,
 [data-theme="light"] button.bg-red-700 *,
+[data-theme="light"] button.bg-red-800 *,
 [data-theme="light"] button.bg-orange-500 *,
 [data-theme="light"] button.bg-orange-600 *,
 [data-theme="light"] button.bg-orange-700 *,
@@ -580,9 +587,17 @@ main,
 [data-theme="light"] button.bg-emerald-600 *,
 [data-theme="light"] button.bg-emerald-700 *,
 [data-theme="light"] button.bg-blue-600 *,
+[data-theme="light"] button.bg-blue-700 *,
+[data-theme="light"] button.bg-blue-800 *,
+[data-theme="light"] button.bg-indigo-600 *,
+[data-theme="light"] button.bg-indigo-700 *,
 [data-theme="light"] button.bg-purple-600 *,
+[data-theme="light"] button.bg-purple-700 *,
 [data-theme="light"] button.bg-amber-600 *,
 [data-theme="light"] button.bg-yellow-600 *,
+[data-theme="light"] button.bg-slate-600 *,
+[data-theme="light"] button.bg-slate-700 *,
+[data-theme="light"] button.bg-slate-800 *,
 [data-theme="light"] a.bg-red-600 *,
 [data-theme="light"] a.bg-orange-600 *,
 [data-theme="light"] a.bg-blue-600 *,
@@ -601,17 +616,47 @@ main,
 [data-theme="light"] button[class*="from-blue"],
 [data-theme="light"] button[class*="from-blue"] *,
 [data-theme="light"] button[class*="from-purple"],
+[data-theme="light"] button[class*="from-purple"] *,
+[data-theme="light"] button[class*="from-slate"],
+[data-theme="light"] button[class*="from-slate"] *,
+[data-theme="light"] button[class*="from-gray"],
+[data-theme="light"] button[class*="from-gray"] *,
+[data-theme="light"] button[class*="gradient"],
+[data-theme="light"] button[class*="gradient"] *,
+[data-theme="light"] div[class*="from-orange"] svg,
 [data-theme="light"] div[class*="from-orange"] > svg,
+[data-theme="light"] div[class*="from-red"] svg,
 [data-theme="light"] div[class*="from-red"] > svg,
+[data-theme="light"] div[class*="from-emerald"] svg,
 [data-theme="light"] div[class*="from-emerald"] > svg,
+[data-theme="light"] div[class*="from-blue"] svg,
 [data-theme="light"] div[class*="from-blue"] > svg,
+[data-theme="light"] div[class*="from-purple"] svg,
 [data-theme="light"] div[class*="from-purple"] > svg,
-[data-theme="light"] div[class*="bg-red-600"] > svg,
-[data-theme="light"] div[class*="bg-orange-500"] > svg,
-[data-theme="light"] div[class*="bg-orange-600"] > svg,
-[data-theme="light"] div[class*="bg-emerald-600"] > svg,
-[data-theme="light"] div[class*="bg-blue-600"] > svg,
-[data-theme="light"] div[class*="bg-purple-600"] > svg,
+[data-theme="light"] div[class*="from-slate"] svg,
+[data-theme="light"] div[class*="from-slate"] > svg,
+[data-theme="light"] div[class*="from-gray"] svg,
+[data-theme="light"] div[class*="from-gray"] > svg,
+[data-theme="light"] div[class*="to-slate"] svg,
+[data-theme="light"] div[class*="to-gray"] svg,
+[data-theme="light"] div[class*="bg-red-"] svg,
+[data-theme="light"] div[class*="bg-red-"] > svg,
+[data-theme="light"] div[class*="bg-orange-"] svg,
+[data-theme="light"] div[class*="bg-orange-"] > svg,
+[data-theme="light"] div[class*="bg-emerald-"] svg,
+[data-theme="light"] div[class*="bg-emerald-"] > svg,
+[data-theme="light"] div[class*="bg-blue-"] svg,
+[data-theme="light"] div[class*="bg-blue-"] > svg,
+[data-theme="light"] div[class*="bg-purple-"] svg,
+[data-theme="light"] div[class*="bg-purple-"] > svg,
+[data-theme="light"] div[class*="bg-slate-"] svg,
+[data-theme="light"] div[class*="bg-slate-"] > svg,
+[data-theme="light"] div[class*="bg-gradient"] svg,
+[data-theme="light"] div[class*="bg-gradient"] > svg,
+[data-theme="light"] #admin-create-quotation-btn,
+[data-theme="light"] #admin-create-quotation-btn *,
+[data-theme="light"] #bd-create-quotation-btn,
+[data-theme="light"] #bd-create-quotation-btn *,
 [data-theme="light"] .\!text-white,
 [data-theme="light"] .\!text-white *,
 [data-theme="light"] .keep-text-white,
@@ -619,6 +664,7 @@ main,
 [data-theme="light"] .theme-force-dark,
 [data-theme="light"] .theme-force-dark * {
   color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 /* Explicit dark text on amber/bright buttons */
@@ -1680,7 +1726,7 @@ main,
 /* Primary action buttons stay as-is (orange/green/red gradient) */
 
 /* ── Light mode: general button text fixes ─────────────────── */
-[data-theme="light"] button.text-white:not(.bg-orange-600):not(.bg-orange-500):not(.bg-green-600):not(.bg-green-500):not(.bg-red-600):not(.bg-red-500):not(.bg-blue-600):not([class*="gradient"]) {
+[data-theme="light"] button.text-white:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-orange"]):not([class*="bg-green"]):not([class*="bg-emerald"]):not([class*="bg-purple"]):not([class*="bg-indigo"]):not([class*="bg-slate"]):not([class*="bg-gray-8"]):not([class*="bg-gray-9"]):not([class*="gradient"]):not([class*="from-"]):not(.\!text-white):not(.keep-text-white) {
   color: #1a1a2e !important;
 }
 
@@ -1780,12 +1826,29 @@ main,
 
 .glass-calculator-container {
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 1.25rem 0.75rem 6rem 0.75rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 640px) {
+  .glass-calculator-container {
+    padding: 2rem 1.5rem 6rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) and (min-height: 850px) {
+  .glass-calculator-container {
+    align-items: center;
+    padding: 2.5rem 1.5rem;
+  }
 }
 
 [data-theme="light"] .glass-calculator-container {
@@ -1808,8 +1871,14 @@ main,
   width: 100%;
   max-width: 56rem;
   border-radius: 1.75rem;
-  padding: 2.25rem;
+  padding: 1.25rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 640px) {
+  .glass-calculator-card {
+    padding: 2.25rem;
+  }
 }
 
 [data-theme="light"] .glass-calculator-card {

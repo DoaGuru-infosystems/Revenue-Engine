@@ -86,6 +86,7 @@ export function useQuotationData({
   const [showGoogleAd, setShowGoogleAd] = useState(true);
   const [proformaMeta, setProformaMeta] = useState(null);
   const [quotationLines, setQuotationLines] = useState(null);
+  const [adBudgetLines, setAdBudgetLines] = useState([]);
   const [quotationNumber, setQuotationNumber] = useState("");
   const [quotationDiscount, setQuotationDiscount] = useState(null);
   const isPlainQuotation = Array.isArray(quotationLines);
@@ -758,21 +759,111 @@ export function useQuotationData({
         setQuotationNumber("");
         return false;
       }
-      const services = (data.services || []).map((row) => ({
-        ...row,
-        service_type: "Graphic Service",
-      }));
-      const ads = (data.ads || []).map((row) => ({
-        ...row,
-        service_name: row.category_name || "Ads",
-        category_name: row.category_name,
-        service_type: "Ads Campaign",
-        amount: row.budget,
-        budget: row.budget,
-        total_amount: row.total,
-      }));
+      const rawServices = data.services || [];
+      const isComp = (item) => {
+        if (!item) return false;
+        if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+          return Boolean(item.is_complimentary);
+        }
+        if (item.source === "custom_complimentary" || item.source === "complimentary") return true;
+        if (item.include_in_total === false) return true;
+        const s = String(item.service_name || item.service || "").toLowerCase();
+        return (
+          s.includes("(complimentary)") ||
+          s.includes("(complimntory)") ||
+          s === "complimentary"
+        );
+      };
+
+      const compServices = rawServices
+        .filter(isComp)
+        .map((item) => ({
+          ...item,
+          is_complimentary: true,
+          service_type: "Complimentary",
+          editing_type_amount:
+            item.editing_type_amount && Number(item.editing_type_amount) > 0
+              ? Number(item.editing_type_amount)
+              : item.unit_price && Number(item.unit_price) > 0
+              ? Number(item.unit_price)
+              : 0,
+          total_amount: 0,
+        }));
+
+      const paidServices = rawServices
+        .filter((r) => !isComp(r))
+        .map((row) => ({
+          ...row,
+          service_type: "Graphic Service",
+        }));
+
+      const rawAds = data.ads || [];
+      const adChargeLines = [];
+      const adChargeServiceItems = [];
+      const budgetLines = [];
+      const adBudgetServiceItems = [];
+
+      rawAds.forEach((row) => {
+        const budget = Number(row.budget || row.amount || 0);
+        const charge = Number(row.charge || 0);
+        const rawPercent =
+          row.percent !== undefined && row.percent !== null
+            ? String(row.percent).trim()
+            : "";
+        const percentStr =
+          rawPercent && rawPercent !== "N/A" ? ` (${rawPercent}%)` : "";
+        const category = row.category_name || "Ads";
+
+        // 1. Service Charge goes into Services Table
+        if (charge > 0) {
+          adChargeLines.push({
+            service_name: "Ads Service Charge",
+            category_name: `${category}${percentStr}`,
+            quantity: 1,
+            rate: charge,
+            amount: charge,
+            is_ad_charge: true,
+          });
+
+          adChargeServiceItems.push({
+            service_type: "Graphic Service",
+            service_name: "Ads Service Charge",
+            category_name: category,
+            editing_type_name: `${category} Management & Optimization${percentStr}`,
+            editing_type_amount: charge,
+            quantity: 1,
+            total_amount: charge,
+            source: "custom_ads",
+          });
+        }
+
+        // 2. Ad Budget strictly goes to Ads Budget Table / Rows
+        budgetLines.push({
+          service_name: "Ads Campaign",
+          category_name: category,
+          quantity: 1,
+          budget,
+          amount: budget,
+          rate: budget,
+          charge,
+          percent: row.percent,
+        });
+
+        adBudgetServiceItems.push({
+          service_type: "Ads Campaign",
+          service_name: "Ads Campaign",
+          category_name: category,
+          amount: budget,
+          budget,
+          total_amount: budget,
+          charge,
+          percent: row.percent,
+          source: "custom_ads",
+        });
+      });
+
       const lines = [
-        ...services.map((row) => {
+        ...paidServices.map((row) => {
           const quantity = Number(row.quantity) || 1;
           const rate = Number(row.editing_type_amount) || 0;
           const stored = Number(row.total_amount);
@@ -784,19 +875,13 @@ export function useQuotationData({
             amount: stored > 0 ? stored : rate * quantity,
           };
         }),
-        ...ads.map((row) => {
-          const quantity = Number(row.duration_months || row.quantity || 1) || 1;
-          const amount = Number(row.total || row.total_amount || row.budget || 0);
-          return {
-            service_name: "Ads",
-            category_name: row.category_name || "Ads",
-            quantity,
-            rate: quantity ? amount / quantity : amount,
-            amount,
-          };
-        }),
+        ...adChargeLines,
       ];
-      setServiceData([...services, ...ads]);
+
+      setServiceData([...paidServices, ...adChargeServiceItems, ...adBudgetServiceItems]);
+      setAdsData(rawAds);
+      setAdBudgetLines(budgetLines);
+      setComplimentaryData(compServices);
       setQuotationLines(lines);
       setQuotationNumber(data.quotation_number || "");
       setClientData({
@@ -839,6 +924,7 @@ export function useQuotationData({
       return true;
     } catch (err) {
       setQuotationLines(null);
+      setAdBudgetLines([]);
       setQuotationNumber("");
       setQuotationDiscount(null);
       return false;
@@ -921,6 +1007,7 @@ export function useQuotationData({
         return;
       }
       fetchDiscountSetting();
+      fetchPredefinedNotes();
       const loadedNew = await fetchNewQuotationDocument();
       if (cancelled || loadedNew || sourceFromURL === "new_quotation") {
         if (!loadedNew && sourceFromURL === "new_quotation") setLoading(false);
@@ -1899,6 +1986,48 @@ export function useQuotationData({
       return;
     }
 
+    if (isPlainQuotation) {
+      // Save notes to quotation's notes_json field
+      try {
+        const combined = [
+          ...notesData,
+          ...selectedNotes.map((item, idx) => ({
+            id: item.id || Date.now() + idx,
+            note_name: item.note_name,
+          })),
+        ];
+        const res = await updateQuotationNotes(
+          txn_id,
+          { notes_json: combined.map((n) => ({ note_name: n.note_name })) },
+          token
+        );
+        if (res?.status === "Success") {
+          setNotesData(combined);
+          setSelectedNotes([]);
+          setManualNote("");
+          Swal.fire({
+            icon: "success",
+            title: "Notes Saved",
+            text: "Notes saved to quotation successfully!",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Failed to save notes to quotation.",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        }
+      } catch (err) {
+        console.error("Error saving quotation notes:", err);
+        Swal.fire({ icon: "error", title: "Error", text: "An error occurred while saving notes.", showConfirmButton: false, timer: 1000 });
+      }
+      return;
+    }
+
     if (docTypeFromURL === "proforma") {
       try {
         const combined = [
@@ -2094,6 +2223,24 @@ export function useQuotationData({
       return;
     }
 
+    if (isPlainQuotation) {
+      const updated = notesData.filter((item) => item.id !== noteId);
+      try {
+        const res = await updateQuotationNotes(
+          txn_id,
+          { notes_json: updated.map((n) => ({ note_name: n.note_name })) },
+          token
+        );
+        if (res?.status === "Success") {
+          setNotesData(updated);
+          Swal.fire({ icon: "success", title: "Deleted!", text: "Note has been deleted.", timer: 1000, showConfirmButton: false });
+        }
+      } catch (error) {
+        Swal.fire({ icon: "error", title: "Error", text: "An error occurred while deleting note.", showConfirmButton: false, timer: 1000 });
+      }
+      return;
+    }
+
     try {
       const result = await deletePlanClientNotes(noteId, token);
       if (result.status === "Success") {
@@ -2121,6 +2268,7 @@ export function useQuotationData({
   return {
     loading,
     quotationLines,
+    adBudgetLines,
     isPlainQuotation,
     quotationNumber,
     quotationDiscount,

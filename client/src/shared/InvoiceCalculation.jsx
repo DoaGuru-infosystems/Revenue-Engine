@@ -550,7 +550,7 @@ const InvoiceCalculation = () => {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white p-6">
+      <div className="min-h-screen min-h-dvh flex items-start sm:items-center justify-center bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 text-white p-4 sm:p-6 pb-28 sm:pb-8 overflow-y-auto">
         <div className="w-full max-w-2xl bg-white/10 backdrop-blur rounded-xl px-10 py-8 space-y-6 shadow-2xl">
           <div>
             <h2 className="text-3xl font-bold text-white text-center mb-6">

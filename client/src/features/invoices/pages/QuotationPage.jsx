@@ -48,6 +48,7 @@ export default function QuotationPage() {
   const {
     loading,
     quotationLines,
+    adBudgetLines,
     quotationNumber,
     quotationDiscount,
     handleSaveQuotationDiscount,
@@ -147,8 +148,12 @@ export default function QuotationPage() {
   }
 
   const isPlainQuotation = Array.isArray(quotationLines);
-  const quotationSubtotal = (quotationLines || []).reduce(
+  const quotationServicesSubtotal = (quotationLines || []).reduce(
     (sum, line) => sum + Number(line.amount || 0),
+    0
+  );
+  const quotationAdsBudgetTotal = (adBudgetLines || []).reduce(
+    (sum, ad) => sum + Number(ad.budget || ad.amount || 0),
     0
   );
 
@@ -164,12 +169,13 @@ export default function QuotationPage() {
       0
     );
     if (val > 0) {
-      discountAmt = isPercent ? (quotationSubtotal * val) / 100 : val;
+      discountAmt = isPercent ? (quotationServicesSubtotal * val) / 100 : val;
       discountLabel = isPercent ? `(${val}%)` : `(₹${Number(val).toLocaleString("en-IN")})`;
     }
   }
 
-  const finalQuotationTotal = Math.max(0, quotationSubtotal - discountAmt);
+  const servicesAfterDiscount = Math.max(0, quotationServicesSubtotal - discountAmt);
+  const finalQuotationTotal = servicesAfterDiscount + quotationAdsBudgetTotal;
   const formatInr = (value) =>
     `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
   const isReceived = clientDataReceived?.tag_received_amt === "received";
@@ -200,8 +206,8 @@ export default function QuotationPage() {
     e.preventDefault();
     const isPercent = proposalDiscountForm.discount_type === "percent";
     const val = Number(isPercent ? proposalDiscountForm.discount_per : proposalDiscountForm.discount_amt) || 0;
-    const calcRupee = isPercent ? (quotationSubtotal * val) / 100 : val;
-    const newTotal = Math.max(0, quotationSubtotal - calcRupee);
+    const calcRupee = isPercent ? (quotationServicesSubtotal * val) / 100 : val;
+    const newTotal = Math.max(0, quotationServicesSubtotal - calcRupee) + quotationAdsBudgetTotal;
     const payload = {
       type: isPercent ? "Percentage" : "Amount",
       value: val,
@@ -215,7 +221,8 @@ export default function QuotationPage() {
   };
 
   const handleProposalDiscountDelete = async () => {
-    await handleDeleteQuotationDiscount(quotationSubtotal);
+    const newTotal = quotationServicesSubtotal + quotationAdsBudgetTotal;
+    await handleDeleteQuotationDiscount(newTotal);
     setShowProposalDiscountModal(false);
   };
 
@@ -254,6 +261,7 @@ export default function QuotationPage() {
 
                     {isPlainQuotation && (
                       <>
+                        {/* 1. Services Table (DM Services + Ads Service Charges) */}
                         <section className="mb-3 text-sm text-gray-900">
                           <table className="w-full border text-xs">
                             <thead className="bg-gray-100">
@@ -271,7 +279,7 @@ export default function QuotationPage() {
                               )}
                               {quotationLines.map((line, index) => (
                                 <tr key={`${line.service_name}-${index}`} className="bg-white">
-                                  <td className="border px-2 py-1">{line.service_name}</td>
+                                  <td className="border px-2 py-1 font-medium">{line.service_name}</td>
                                   <td className="border px-2 py-1">{line.category_name}</td>
                                   <td className="border px-2 py-1 text-right">{line.quantity}</td>
                                 </tr>
@@ -279,6 +287,62 @@ export default function QuotationPage() {
                             </tbody>
                           </table>
                         </section>
+
+                        {/* 2. Ads Budget Table (Dedicated table for Ads Campaign Budgets) */}
+                        {adBudgetLines && adBudgetLines.length > 0 && (
+                          <section className="mb-3 text-sm text-gray-900">
+                            <div className="font-semibold text-xs text-gray-700 uppercase tracking-wider mb-1">
+                              Ads Budget
+                            </div>
+                            <table className="w-full border text-xs">
+                              <thead className="bg-gray-100">
+                                <tr>
+                                  <th className="border px-2 py-1 text-left">Campaign Platform</th>
+                                  <th className="border px-2 py-1 text-left">Category</th>
+                                  <th className="border px-2 py-1 text-right">Quantity</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {adBudgetLines.map((ad, index) => (
+                                  <tr key={`ad-budget-${index}`} className="bg-white">
+                                    <td className="border px-2 py-1 font-medium">{ad.service_name || "Ads Campaign"}</td>
+                                    <td className="border px-2 py-1">{ad.category_name}</td>
+                                    <td className="border px-2 py-1 text-right">{ad.quantity || 1}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </section>
+                        )}
+
+                        {/* 3. Complimentary Services Table (if any) */}
+                        {complimentaryData && complimentaryData.length > 0 && (
+                          <section className="mb-3 text-sm text-gray-900">
+                            <div className="font-semibold text-xs text-gray-700 uppercase tracking-wider mb-1">
+                              Complimentary Services
+                            </div>
+                            <table className="w-full border text-xs">
+                              <thead className="bg-gray-100">
+                                <tr>
+                                  <th className="border px-2 py-1 text-left">Service</th>
+                                  <th className="border px-2 py-1 text-left">Category</th>
+                                  <th className="border px-2 py-1 text-right">Quantity</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {complimentaryData.map((comp, index) => (
+                                  <tr key={`comp-${index}`} className="bg-white">
+                                    <td className="border px-2 py-1 font-medium">{comp.service_name}</td>
+                                    <td className="border px-2 py-1">{comp.category_name || "—"}</td>
+                                    <td className="border px-2 py-1 text-right">{comp.quantity || 1}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </section>
+                        )}
+
+                        {/* 4. Pricing Summary */}
                         <section className="mb-3 border-t border-gray-300 pt-2 text-xs text-gray-900">
                           <div className="flex justify-between items-center mb-1">
                             <p className="font-bold text-sm">Pricing</p>
@@ -293,17 +357,30 @@ export default function QuotationPage() {
                             )}
                           </div>
 
+                          <div className="flex justify-between gap-3 py-0.5">
+                            <span className="text-gray-600">Subtotal</span>
+                            <span>{formatInr(quotationServicesSubtotal)}</span>
+                          </div>
+
                           {discountAmt > 0 && (
-                            <>
-                              <div className="flex justify-between gap-3 py-0.5">
-                                <span className="text-gray-600">Subtotal</span>
-                                <span>{formatInr(quotationSubtotal)}</span>
-                              </div>
-                              <div className="flex justify-between gap-3 py-0.5 text-red-600">
-                                <span>Discount {discountLabel}</span>
-                                <span>- {formatInr(discountAmt)}</span>
-                              </div>
-                            </>
+                            <div className="flex justify-between gap-3 py-0.5 text-red-600">
+                              <span>Discount {discountLabel}</span>
+                              <span>- {formatInr(discountAmt)}</span>
+                            </div>
+                          )}
+
+                          {/* Ads Budget rows in Pricing */}
+                          {adBudgetLines && adBudgetLines.length > 0 && (
+                            adBudgetLines.map((ad, idx) => {
+                              let catName = ad.category_name || "Ads";
+                              catName = catName.replace(/\badd\b/gi, "Ad");
+                              return (
+                                <div key={`pricing-ad-${idx}`} className="flex justify-between gap-3 py-0.5 text-gray-700">
+                                  <span>{catName} Budget</span>
+                                  <span className="font-medium">{formatInr(ad.budget || ad.amount)}</span>
+                                </div>
+                              );
+                            })
                           )}
 
                           <div className="flex justify-between gap-3 border-t border-gray-400 mt-1 pt-1 font-bold text-sm">
@@ -311,7 +388,24 @@ export default function QuotationPage() {
                             <span>{formatInr(finalQuotationTotal)}</span>
                           </div>
                         </section>
-                        <QuotationNotesSection notesData={notesData} isProforma={false} clientData={clientData} />
+                        {/* Notes Dropdown for Quotation */}
+                        <QuotationNotesDropdown
+                          docTypeFromURL={docTypeFromURL}
+                          isBalanceProforma={isBalanceProforma}
+                          predefinedNotes={predefinedNotes}
+                          notesData={notesData}
+                          selectedNotes={selectedNotes}
+                          manualNote={manualNote}
+                          setManualNote={setManualNote}
+                          handleSelect={handleSelectPredefinedNote}
+                          handleAddManualNote={handleAddManualNote}
+                          handleRemoveNote={handleRemoveNote}
+                          handleSaveNotes={handleSaveNotes}
+                        />
+                        <QuotationNotesSection notesData={notesData} isProforma={false} clientData={clientData}
+                          onEditNote={handleOpenEditNoteModal}
+                          onDeleteNote={handleDeleteClientNote}
+                        />
                       </>
                     )}
 
@@ -470,7 +564,7 @@ export default function QuotationPage() {
             const { name, value } = e.target;
             setProposalDiscountForm((prev) => ({ ...prev, [name]: value }));
           }}
-          grandTotal={quotationSubtotal}
+          grandTotal={quotationServicesSubtotal}
           discountDataSet={discountDataSet}
         />
       </div>

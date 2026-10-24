@@ -38,6 +38,8 @@ const ComplimentaryCalculator = ({
   onServiceAdded,
   onServiceDeleted,
   embeddedData,
+  isQuotationMode: isQuotationModeProp,
+  quotationId: quotationIdProp,
 }) => {
    const baseURL = API_BASE_URL;
 const dispatch = useDispatch();
@@ -47,10 +49,36 @@ const dispatch = useDispatch();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const docTypeFromURL = searchParams.get("doc");
-  const isQuotationMode =
-    location.state?.mode === "quotation" || searchParams.get("mode") === "quotation";
+  const isQuotationExplicit = Boolean(
+    isQuotationModeProp ||
+    location.state?.mode === "quotation" ||
+    searchParams.get("mode") === "quotation" ||
+    searchParams.get("doc") === "quotation" ||
+    docTypeFromURL === "quotation"
+  );
+  const [isDetectedQuotation, setIsDetectedQuotation] = useState(false);
+  const isQuotationMode = isQuotationExplicit || isDetectedQuotation;
   const effectiveClientId = id || clientId;
   const effectiveProposalId = proposalIdOverride || proposalId;
+  const effectiveQuotationId =
+    quotationIdProp ||
+    location.state?.quotationId ||
+    (isQuotationMode ? effectiveProposalId : null);
+
+  const isComplimentaryRecord = (item) => {
+    if (!item) return false;
+    if (item.is_complimentary !== undefined && item.is_complimentary !== null) {
+      return Boolean(item.is_complimentary);
+    }
+    if (item.source === "custom_complimentary" || item.source === "complimentary") return true;
+    if (item.include_in_total === false) return true;
+    const s = String(item.service_name || item.service || "").toLowerCase();
+    return (
+      s.includes("(complimentary)") ||
+      s.includes("(complimntory)") ||
+      s === "complimentary"
+    );
+  };
   const [data, setData] = useState([]);
 
   const [selectedService, setSelectedService] = useState("");
@@ -536,7 +564,117 @@ const dispatch = useDispatch();
       employee: userName,
     };
 
-    // ✅ Only Quotation API (no invoice)
+    if (isQuotationMode) {
+      (async () => {
+        try {
+          const qId = effectiveQuotationId || effectiveProposalId;
+          const qRes = await axios.get(
+            `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const existingServices = qRes.data?.data?.services || [];
+
+          // Duplicate check among complimentary services in quotation
+          if (!editId) {
+            const dupRow = existingServices.find((r) => {
+              if (!isComplimentaryRecord(r)) return false;
+              const rClean = String(r.service_name || r.service || "")
+                .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
+                .trim()
+                .toLowerCase();
+              return (
+                rClean === finalServiceName.toLowerCase() &&
+                String(r.category_name || "").trim().toLowerCase() ===
+                  String(selectedCategory || "").trim().toLowerCase() &&
+                String(r.editing_type_name || "").trim().toLowerCase() ===
+                  String(effectiveEditingType.editing_type_name || "").trim().toLowerCase()
+              );
+            });
+            if (dupRow) {
+              Swal.fire({
+                icon: "warning",
+                title: "Already Exists",
+                text: "This complimentary service already exists.",
+                showConfirmButton: false,
+                timer: 1500,
+              });
+              setLoading(false);
+              return;
+            }
+          }
+
+          const quotationItem = {
+            ...payload,
+            id: editId || Date.now(),
+            service_name: finalServiceName,
+            category_name: selectedCategory,
+            editing_type_name: effectiveEditingType.editing_type_name || null,
+            editing_type_amount: effectiveEditingType.amount || 0,
+            quantity,
+            additional_services: formattedAdditionalServices,
+            total_amount: finalAmount,
+            unit_price: baseUnit,
+            source: "custom_complimentary",
+            is_complimentary: true,
+            include_in_total: false,
+          };
+
+          let updatedServices = [];
+          if (editId) {
+            updatedServices = existingServices.map((s) =>
+              String(s.id) === String(editId) ? { ...s, ...quotationItem } : s
+            );
+          } else {
+            updatedServices = [...existingServices, quotationItem];
+          }
+
+          const paidGrandTotal = updatedServices
+            .filter((s) => !isComplimentaryRecord(s))
+            .reduce(
+              (sum, r) => sum + Number(r.total_amount || r.total_price || 0),
+              0
+            );
+
+          const saveRes = await axios.post(
+            `${baseURL}/auth/api/re_calculator/quotation/${qId}/services`,
+            {
+              services: updatedServices,
+              grand_total_excl_gst: paidGrandTotal,
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          if (saveRes.data?.status === "Success") {
+            Swal.fire({
+              icon: "success",
+              title: editId ? "Updated!" : "Saved!",
+              text: editId
+                ? "Complimentary updated successfully"
+                : "Complimentary saved successfully",
+              showConfirmButton: false,
+              timer: 1000,
+            });
+            resetForm();
+            fetchData();
+            if (onSaveComplete) onSaveComplete();
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: saveRes.data?.message || "Failed to save complimentary service.",
+            });
+          }
+        } catch (err) {
+          console.error("Quotation complimentary save error:", err);
+          Swal.fire("Error!", "Something went wrong while saving.", "error");
+        } finally {
+          setLoading(false);
+        }
+      })();
+      return;
+    }
+
+    // ✅ Snapshot (proforma) or Legacy Proposal API
     let quotationRequest;
     if (docTypeFromURL === "proforma") {
       quotationRequest = axios.put(
@@ -755,6 +893,29 @@ const dispatch = useDispatch();
         note_name: item.note_name,
       }));
 
+      if (isQuotationMode) {
+        const qId = effectiveQuotationId || effectiveProposalId;
+        const res = await axios.patch(
+          `${baseURL}/auth/api/re_calculator/quotation/${qId}/notes`,
+          { notes_json: planNotes },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data?.status === "Success") {
+          Swal.fire({
+            icon: "success",
+            title: "Notes Saved",
+            text: "Notes saved successfully!",
+            showConfirmButton: false,
+            timer: 1000,
+          });
+          getAllPlanNotes();
+          setManualNote("");
+          setSelectedNotes([]);
+          fetchPredefinedNotes();
+        }
+        return;
+      }
+
       const payload = {
         txn_id: effectiveProposalId,
         client_id: effectiveClientId,
@@ -842,17 +1003,13 @@ const dispatch = useDispatch();
     if (!effectiveClientId || !effectiveProposalId) return;
     try {
       if (isQuotationMode) {
+        const qId = effectiveQuotationId || effectiveProposalId;
         const { data } = await axios.get(
-          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`,
+          `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const services = data.data?.services || [];
-        const filtered = services.filter(
-          (item) =>
-            item.source === "custom_complimentary" ||
-            item.is_complimentary === true ||
-            String(item.service_name || "").toLowerCase() === "complimentary"
-        );
+        const filtered = services.filter(isComplimentaryRecord);
         setGetData(filtered);
         return;
       }
@@ -860,38 +1017,51 @@ const dispatch = useDispatch();
       if (docTypeFromURL === "proforma") {
         endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`;
       }
-      const { data } = await axios.get(endpoint, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      try {
+        const { data } = await axios.get(endpoint, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (docTypeFromURL === "proforma") {
-        const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
-        // Only get complimentary services
-        const filtered = parsed.filter(
-          item => item.source === 'custom_complimentary' || 
-                  item.is_complimentary === true ||
-                  item.service_name?.toLowerCase() === 'complimentary' ||
-                  item.service_name?.toLowerCase().includes('complimentary') ||
-                  item.service_name?.toLowerCase().includes('complimntory')
-        );
-        setGetData(filtered);
-      } else {
-        setGetData(data.data || []);
+        if (docTypeFromURL === "proforma") {
+          const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
+          const filtered = parsed.filter(isComplimentaryRecord);
+          setGetData(filtered);
+        } else {
+          setGetData(data.data || []);
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 401) {
+          throw err;
+        }
+        // If not found in proposal complimentary and not proforma, check if effectiveProposalId is a quotation ID
+        if (err.response?.status === 404 && docTypeFromURL !== "proforma") {
+          try {
+            const qRes = await axios.get(
+              `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (qRes.data?.status === "Success" && qRes.data?.data?.id) {
+              setIsDetectedQuotation(true);
+              const services = qRes.data.data?.services || [];
+              setGetData(services.filter(isComplimentaryRecord));
+              return;
+            }
+          } catch (qErr) {}
+        }
+        setGetData([]);
       }
     } catch (error) {
       console.log(error);
       if (error.response && error.response.status === 401) {
-        // Token is invalid or expired
         Swal.fire({
           title: "Session Expired",
           text: "Please login again.",
           icon: "warning",
           showConfirmButton: false,
           timer: 1000,
-          // timerProgressBar: true,
         }).then(() => {
           dispatch(clearUser());
           localStorage.removeItem("token");
@@ -904,6 +1074,32 @@ const dispatch = useDispatch();
     if (hideNotes) return;
     if (!effectiveClientId || !effectiveProposalId) return;
     try {
+      if (isQuotationMode) {
+        const qId = effectiveQuotationId || effectiveProposalId;
+        const res = await axios.get(
+          `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data?.status === "Success" && res.data?.data?.notes_json) {
+          try {
+            const notes = typeof res.data.data.notes_json === "string"
+              ? JSON.parse(res.data.data.notes_json)
+              : res.data.data.notes_json;
+            setAllClientNote(
+              Array.isArray(notes)
+                ? notes.map((n, i) => ({ id: i + 1, note_name: typeof n === "string" ? n : n.note_name }))
+                : []
+            );
+            return;
+          } catch {
+            setAllClientNote([]);
+          }
+        } else {
+          setAllClientNote([]);
+        }
+        return;
+      }
+
       if (docTypeFromURL === "proforma") {
         try {
           const snapRes = await axios.get(
@@ -984,6 +1180,43 @@ const dispatch = useDispatch();
     if (!confirm.isConfirmed) return;
 
     try {
+      if (isQuotationMode) {
+        const qId = effectiveQuotationId || effectiveProposalId;
+        const qRes = await axios.get(
+          `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const existingServices = qRes.data?.data?.services || [];
+        const updatedServices = existingServices.filter(
+          (s) => String(s.id) !== String(entryId)
+        );
+        const paidGrandTotal = updatedServices
+          .filter((s) => !isComplimentaryRecord(s))
+          .reduce(
+            (sum, r) => sum + Number(r.total_amount || r.total_price || 0),
+            0
+          );
+
+        await axios.post(
+          `${baseURL}/auth/api/re_calculator/quotation/${qId}/services`,
+          {
+            services: updatedServices,
+            grand_total_excl_gst: paidGrandTotal,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Entry has been deleted.",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+        if (onSaveComplete) onSaveComplete();
+        return;
+      }
+
       let res;
       if (docTypeFromURL === "proforma") {
         res = await axios.put(
@@ -1050,6 +1283,25 @@ const dispatch = useDispatch();
     if (!confirm.isConfirmed) return;
 
     try {
+      if (isQuotationMode) {
+        const qId = effectiveQuotationId || effectiveProposalId;
+        const remaining = allClientNote.filter((item) => item.id !== noteId);
+        setAllClientNote(remaining);
+        await axios.patch(
+          `${baseURL}/auth/api/re_calculator/quotation/${qId}/notes`,
+          { notes_json: remaining.map((n) => ({ note_name: n.note_name })) },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Note has been deleted.",
+          timer: 1000,
+          showConfirmButton: false,
+        });
+        return;
+      }
+
       if (docTypeFromURL === "proforma") {
         const remaining = allClientNote.filter((item) => item.id !== noteId);
         setAllClientNote(remaining);

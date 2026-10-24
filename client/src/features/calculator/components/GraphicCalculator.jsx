@@ -204,8 +204,8 @@ const GraphicCalculator = ({
 
   return (
     <>
-      <div className={embedded ? "w-full bg-transparent" : "min-h-screen bg-gray-900"}>
-        <div className={embedded ? "w-full space-y-4" : "max-w-3xl mx-auto px-4 py-8 space-y-5"}>
+      <div className={embedded ? "w-full bg-transparent" : "min-h-screen min-h-dvh bg-gray-900 overflow-x-hidden overflow-y-auto"}>
+        <div className={embedded ? "w-full space-y-4" : "max-w-3xl mx-auto px-3 sm:px-4 pt-4 sm:pt-8 pb-32 sm:pb-12 space-y-5"}>
 
           {!embedded && (
           <div className="flex items-center gap-3">
@@ -586,6 +586,8 @@ const GraphicCalculator = ({
               onServiceAdded={ onServiceAdded }
               onServiceDeleted={ onServiceDeleted }
               embeddedData={ embeddedData ? embeddedData.filter(r => r.is_complimentary || r.source === 'custom_complimentary') : undefined }
+              isQuotationMode={ isQuotationMode }
+              quotationId={ quotationId }
             />
           ) : null }
 

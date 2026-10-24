@@ -516,14 +516,24 @@ export function useGraphicCalculatorData({
       if (mode === "quotation" && quotationId) {
         const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
         const axios = (await import("axios")).default;
+        let existingComp = [];
+        try {
+          const currentQ = await axios.get(
+            `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          existingComp = (currentQ.data?.data?.services || []).filter(isComplimentaryItem);
+        } catch (e) {}
         const kept = (getData || []).filter(
           (row) => editId == null || String(row.id) !== String(editId)
         );
-        const services = [...kept, payload];
-        const grandTotal = services.reduce(
-          (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
-          0
-        );
+        const services = [...kept, payload, ...existingComp];
+        const grandTotal = services
+          .filter((s) => !isComplimentaryItem(s))
+          .reduce(
+            (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
+            0
+          );
         const qRes = await axios.post(
           `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/services`,
           { services, grand_total_excl_gst: grandTotal },
@@ -613,11 +623,22 @@ export function useGraphicCalculatorData({
       if (mode === "quotation" && quotationId) {
         const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
         const axios = (await import("axios")).default;
-        const services = (getData || []).filter((row) => String(row.id) !== String(entryId));
-        const grandTotal = services.reduce(
-          (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
-          0
-        );
+        let existingComp = [];
+        try {
+          const currentQ = await axios.get(
+            `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          existingComp = (currentQ.data?.data?.services || []).filter(isComplimentaryItem);
+        } catch (e) {}
+        const kept = (getData || []).filter((row) => String(row.id) !== String(entryId));
+        const services = [...kept, ...existingComp];
+        const grandTotal = services
+          .filter((s) => !isComplimentaryItem(s))
+          .reduce(
+            (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
+            0
+          );
         const qRes = await axios.post(
           `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/services`,
           { services, grand_total_excl_gst: grandTotal },
