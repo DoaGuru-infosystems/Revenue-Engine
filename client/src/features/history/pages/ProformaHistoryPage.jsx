@@ -641,7 +641,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
               <div className="grid grid-cols-2 gap-2 border-t border-gray-700/50 pt-2">
                 <div>
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Proposal ID</p>
-                  <p className="text-yellow-400 font-bold text-xs font-mono">{item.proposal_id ? `PROP-${item.proposal_id}` : <span className="text-gray-500 italic">Manual</span>}</p>
+                  <p className="text-yellow-400 font-bold text-xs font-mono">{item.quotation_id ? (item.quotation_number || `QTN-${item.quotation_id}`) : item.proposal_id ? `PROP-${item.proposal_id}` : <span className="text-gray-500 italic">Manual</span>}</p>
                 </div>
                 <div>
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">Proforma No</p>
@@ -732,7 +732,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-1.5 text-yellow-400 bg-yellow-400/10 px-2.5 py-1 rounded-lg w-fit border border-yellow-500/20 whitespace-nowrap">
                           <Hash className="w-3.5 h-3.5" />
-                          <span className="font-bold text-xs font-mono">{item.proposal_id ? `PROP-${item.proposal_id}` : <span className="text-gray-500 italic">Manual</span>}</span>
+                          <span className="font-bold text-xs font-mono">{item.quotation_id ? (item.quotation_number || `QTN-${item.quotation_id}`) : item.proposal_id ? `PROP-${item.proposal_id}` : <span className="text-gray-500 italic">Manual</span>}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">

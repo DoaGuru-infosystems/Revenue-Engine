@@ -36,6 +36,8 @@ export function useGraphicCalculatorData({
   onSaveComplete,
   embeddedData,
   locationState,
+  mode,
+  quotationId,
 }) {
   const [data, setData] = useState([]);
   const [optionalServices, setOptionalServices] = useState([]);
@@ -98,10 +100,21 @@ export function useGraphicCalculatorData({
       setGetData(embeddedData.filter((r) => !isComplimentaryItem(r)));
       return;
     }
-    if (!id || !proposalId || !token) return;
+    if (!id || (!proposalId && !quotationId) || !token) return;
 
     try {
-      if (docTypeFromURL === "proforma") {
+      if (mode === "quotation" && quotationId) {
+        // Quotation mode: fetch from re_quotation_services via getQuotationById
+        const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
+        const axios = (await import("axios")).default;
+        const res = await axios.get(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          setGetData((res.data.data?.services || []).filter((r) => !isComplimentaryItem(r)));
+        }
+      } else if (docTypeFromURL === "proforma") {
         const res = await getProformaSnapshot(proposalId, token);
         const parsed = JSON.parse(res?.data?.pricing_snapshot || "[]");
         setGetData(parsed.filter((r) => !isComplimentaryItem(r)));
@@ -500,7 +513,24 @@ export function useGraphicCalculatorData({
 
     try {
       let res;
-      if (docTypeFromURL === "proforma") {
+      if (mode === "quotation" && quotationId) {
+        const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
+        const axios = (await import("axios")).default;
+        const kept = (getData || []).filter(
+          (row) => editId == null || String(row.id) !== String(editId)
+        );
+        const services = [...kept, payload];
+        const grandTotal = services.reduce(
+          (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
+          0
+        );
+        const qRes = await axios.post(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/services`,
+          { services, grand_total_excl_gst: grandTotal },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        res = qRes.data;
+      } else if (docTypeFromURL === "proforma") {
         res = await updateProformaSnapshot(
           {
             proformaId: proposalId,
@@ -580,7 +610,21 @@ export function useGraphicCalculatorData({
 
     try {
       let res;
-      if (docTypeFromURL === "proforma") {
+      if (mode === "quotation" && quotationId) {
+        const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
+        const axios = (await import("axios")).default;
+        const services = (getData || []).filter((row) => String(row.id) !== String(entryId));
+        const grandTotal = services.reduce(
+          (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
+          0
+        );
+        const qRes = await axios.post(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/services`,
+          { services, grand_total_excl_gst: grandTotal },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        res = qRes.data;
+      } else if (docTypeFromURL === "proforma") {
         res = await updateProformaSnapshot(
           {
             proformaId: proposalId,

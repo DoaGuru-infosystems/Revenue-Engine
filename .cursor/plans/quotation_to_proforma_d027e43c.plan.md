@@ -1,28 +1,28 @@
 ---
 name: Quotation to Proforma
-overview: "Add a quotation path beside proposals: calculators and notes fill new re_quotation tables, client history and Accounts list them, and Create Proforma can start from either a proposal or a quotation into the existing proforma, balance, and invoice chain."
+overview: "Add a quotation path beside proposals into the existing proforma chain. New re_quotation tables (do not restore re_calculator_transactions). Dedicated controller, mode=quotation workspace, history tabs, Create Proforma from proposal or quotation."
 todos:
   - id: sql-quotation-tables
-    content: Add re_quotation, re_quotation_services, re_quotation_ads, and nullable quotation_id on re_proposal_proforma
+    content: "Migration SQL: re_quotation + services + ads, QTN counter, nullable proposal_id + quotation_id on re_proposal_proforma"
     status: pending
   - id: quotation-api
-    content: CRUD, status, numbering, and calculator/ads/notes saves for quotations
+    content: "re_quotationController CRUD/status/send/notes/services/ads; createProforma quotation_id path; proposal_id IS NOT NULL guards"
     status: pending
   - id: quotation-workspace
-    content: Wire Create Quotation to Services Landing plus graphic and ads calculators in quotation mode
+    content: "Activate Create Quotation; ServicesLanding + Graphic/Ads/notes via location.state mode=quotation"
     status: pending
   - id: history-tabs
-    content: Client history Proposals/Quotations tabs and Accounts Quotation tab with proposal-equivalent actions
+    content: "QuotationTable + QuotationActions; client history tabs; HistoryHub QuotationHistoryPage"
     status: pending
   - id: proforma-from-quotation
-    content: Create Proforma picker and createProforma snapshot path from either proposal or quotation
+    content: "GenerateProformaModal source picker; ProformaManagerModal quotation filter; ProformaHistory QTN-n column"
     status: pending
 isProject: false
 ---
 
 # Quotation flow beside Proposal
 
-Quotation becomes a third way to start a **normal proforma**. Instant proforma stays as it is. Proposal, balance proforma, payment, and invoice keep using `re_proposal_proforma` snapshots, so a quotation-backed proforma behaves like a proposal-backed one.
+Quotation becomes a third way to start a **normal proforma**. Instant proforma stays as it is. Proposal, balance, payment, and invoice keep using `re_proposal_proforma` snapshots.
 
 ```mermaid
 flowchart LR
@@ -36,36 +36,70 @@ flowchart LR
   proforma --> invoice[Invoice]
 ```
 
+## Locked decisions (from Oct 24 analysis)
+
+- Notes → `re_quotation.notes_json` only (not `re_plan_client_notes`)
+- Mode via `location.state.mode = 'quotation'`
+- QTN numbering via `re_proforma_counters` (`QTN`)
+- PDF via existing [QuotationPage.jsx](client/src/features/invoices/pages/QuotationPage.jsx) (`docTypeFromURL`)
+- New `QuotationActions` / `QuotationTable` (mirror proposals; do not overload ProposalActions)
+- Assign-to-BD unchanged; Instant Proforma not wired to quotations
+
+## What was removed (do not restore)
+
+- `82b7906`: `re_calculator_transactions` dropped
+- Later commits retired quotation UI / Assign Quotation / Coming Soon (`4320708`)
+- Do not revive `re_quotation_status` as primary store — use `re_quotation.status`
+- See [QUOTATION_FLOW_REMOVAL_ANALYSIS.md](docs/QUOTATION_FLOW_REMOVAL_ANALYSIS.md)
+
+## Reuse
+
+- `classifyProformaServices`, ads helpers, `getNextProformaNumber` pattern
+- Mirror `sendProposalToClient` for quotation (do not revive old workflow → `re_quotation_status`)
+- Extend [GenerateProformaModal.jsx](client/src/features/history/components/GenerateProformaModal.jsx), do not rewrite
+
 ## Data
 
-New SQL migration, do not restore `re_calculator_transactions`.
+New file: [server/sql/2026-10-quotation-tables.sql](server/sql/2026-10-quotation-tables.sql)
 
-- `re_quotation`: `id`, `client_id`, `quotation_number` (`QTN-n`), `txn_id`, `status` (same values proposals use: draft, sent, approved, client_approved, proforma_generated, and the later payment statuses), `grand_total_excl_gst`, `discount_json`, `notes_json`, `created_by`, timestamps.
-- `re_quotation_services`: graphic / SEO rows the service calculator already collects (service, category, editing type, qty, addons, additional services, total).
-- `re_quotation_ads`: ads calculator rows (category, budget, percent, charge, total).
-- `re_proposal_proforma`: `proposal_id` becomes nullable; add nullable `quotation_id`. Exactly one of the two is set. Snapshots (`pricing_snapshot`, `ads_snapshot`, `notes_snapshot`, `discount_snapshot`) stay the columns proforma, balance, and invoice already read.
+- `re_quotation`: `QTN-n`, `txn_id`, proposal-matching status ENUM, totals, `discount_json`, `notes_json`, `created_by`
+- `re_quotation_services` / `re_quotation_ads` with FK CASCADE
+- `INSERT IGNORE` QTN into `re_proforma_counters`
+- `re_proposal_proforma`: nullable `proposal_id` + nullable `quotation_id`; exactly one set
 
-## Create and edit
+## API
 
-The dead **Create Quotation** button in [AdminClientDetailsPage.jsx](client/src/features/admin/pages/AdminClientDetailsPage.jsx) and [BDClientDetailsPage.jsx](client/src/features/bd/pages/BDClientDetailsPage.jsx) creates a draft row and opens the workspace. The same choice is added next to **New Proposal** on [ClientServiceHistoryPage.jsx](client/src/features/history/pages/ClientServiceHistoryPage.jsx).
+New [re_quotationController.js](server/revenue_engen_server/re_controller/re_quotationController.js) + [re_router.js](server/revenue_engen_server/re_router/re_router.js): create, getById, byClient, getAll, status, delete (block if proforma), save services/ads/notes, send.
 
-Workspace reuses [ServicesLandingPage.jsx](client/src/features/calculator/pages/ServicesLandingPage.jsx), [GraphicCalculator.jsx](client/src/features/calculator/components/GraphicCalculator.jsx), the ads calculator, and [useGraphicCalculatorNotes.js](client/src/features/calculator/hooks/useGraphicCalculatorNotes.js). A `mode=quotation` flag sends saves to the new tables. Default calculator saves stay on their current endpoints so proposal and instant proforma are unchanged. Notes UI stays; persistence goes to `re_quotation.notes_json` so a quotation id cannot collide with a proposal id in `re_plan_client_notes`.
+[createProforma](server/revenue_engen_server/re_controller/re_proposalController.js): `proposal_id` **or** `quotation_id`; same snapshot shape; quotation status → `proforma_generated`.
 
-View / Edit from history opens this same workspace.
+**High risk:** after `proposal_id` becomes nullable, keep proposal subqueries (~L488–573, delete ~L598, ~L1253) correctly scoped; [ProformaManagerModal.jsx](client/src/features/history/components/ProformaManagerModal.jsx) must filter by `quotation_id` for quotation-backed rows.
 
-## Same actions as a proposal
+## Workspace
 
-Quotation rows get the action set in [ProposalActions.jsx](client/src/features/history/components/ProposalActions.jsx): View/Edit, Send to client, Mark approved, Mark client response, Generate Proforma, View Proformas, Download PDF, Delete (blocked once a proforma exists). Status updates hit `re_quotation`. PDF prints the existing quotation document in [QuotationPage.jsx](client/src/features/invoices/pages/QuotationPage.jsx) from the new rows, with the GST / non-GST letterhead chosen on that open. Assign-to-BD is left as it is today.
+Activate Create Quotation on Admin/BD client details + New Quotation on [ClientServiceHistoryPage.jsx](client/src/features/history/pages/ClientServiceHistoryPage.jsx): POST draft → navigate ServicesLanding with `{ mode: 'quotation', quotationId }`.
 
-## Lists
+Wire [ServicesLandingPage.jsx](client/src/features/calculator/pages/ServicesLandingPage.jsx), [GraphicCalculator.jsx](client/src/features/calculator/components/GraphicCalculator.jsx), [AdsCampaignCalculator.jsx](client/src/features/calculator/components/AdsCampaignCalculator.jsx), [useGraphicCalculatorNotes.js](client/src/features/calculator/hooks/useGraphicCalculatorNotes.js). Default calculator endpoints unchanged.
 
-- Client history ([ClientServiceHistoryPage.jsx](client/src/features/history/pages/ClientServiceHistoryPage.jsx)): tabs **Proposals** and **Quotations**, each with its own table and count.
-- Accounts sidebar ([HistoryHubPage.jsx](client/src/features/history/pages/HistoryHubPage.jsx)): **Quotation** directly under **Proposal**, listing every quotation (client, number, date, amount, status, the same actions).
+## Lists / proforma
 
-## Create Proforma from either source
+- Client history Proposals | Quotations; Accounts [HistoryHubPage.jsx](client/src/features/history/pages/HistoryHubPage.jsx) Quotation sub-tab → `QuotationHistoryPage.jsx`
+- GenerateProformaModal source picker; ProformaHistory shows `QTN-n` when `quotation_id` set
 
-[GenerateProformaModal.jsx](client/src/features/history/components/GenerateProformaModal.jsx) picker shows two groups: approved proposals and approved quotations. Choosing one fills the same service preview and the same amount math (`classifyProformaServices`, discount, previous balance, GST 18% on the service total).
+## Build order
 
-[createProforma](server/revenue_engen_server/re_controller/re_proposalController.js) accepts `quotation_id` or `proposal_id`. For a quotation it builds `serviceItems` and `adsItems` in the same JSON shape it already snapshots from `pricing_table_json`, including ads service-charge rows. It writes one `re_proposal_proforma` row, then sets that quotation’s status to `proforma_generated` the way it already does for proposals. The opened document stays `doc=proforma`. Proforma history’s proposal column shows `QTN-n` when `quotation_id` is set.
+1. SQL migration
+2. Quotation controller + routes
+3. createProforma quotation path + proposal query guards
+4. Create Quotation + calculator mode
+5. Client history Quotation tab + actions
+6. HistoryHub Quotation page
+7. GenerateProformaModal + ProformaManagerModal + ProformaHistory QTN-n
 
-Instant Proforma is not wired to quotations.
+## New files
+
+- `server/sql/2026-10-quotation-tables.sql`
+- `server/revenue_engen_server/re_controller/re_quotationController.js`
+- `client/src/features/history/components/QuotationTable.jsx`
+- `client/src/features/history/components/QuotationActions.jsx`
+- `client/src/features/history/pages/QuotationHistoryPage.jsx`

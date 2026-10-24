@@ -56,7 +56,16 @@ export default function ServicesLandingPage() {
   const userName = currentUser?.name;
   const dispatch = useDispatch();
 
-  // ─── Discount State ───────────────────────────────────────────────────────
+  // ─── Quotation Mode Detection ─────────────────────────────────────────────
+  const locationState = location.state || {};
+  const quotationSearch = new URLSearchParams(location.search);
+  const isQuotationMode =
+    locationState.mode === "quotation" || quotationSearch.get("mode") === "quotation";
+  const quotationId = locationState.quotationId || (isQuotationMode ? proposalId : null);
+  // When in quotation mode, use quotationId as the "proposalId" for all fetch/navigate calls
+  const effectiveProposalId = isQuotationMode ? quotationId : proposalId;
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [discountType, setDiscountType] = useState("Amount");
   const [discountValue, setDiscountValue] = useState(0);
   const [discountSettings, setDiscountSettings] = useState([]);
@@ -86,7 +95,7 @@ export default function ServicesLandingPage() {
       icon: Palette,
       gradient: "from-slate-600 to-gray-700",
       bgPattern: "bg-gradient-to-br from-slate-50 to-gray-50",
-      navigation: `${basePath}/calculator/${id}/${proposalId}`,
+      navigation: `${basePath}/calculator/${id}/${effectiveProposalId}`,
       navigationState: { servicetype: "paid" },
       features: [
         "Logo Design",
@@ -105,7 +114,7 @@ export default function ServicesLandingPage() {
       icon: Megaphone,
       gradient: "from-red-600 to-slate-700",
       bgPattern: "bg-gradient-to-br from-red-50 to-slate-50",
-      navigation: `${basePath}/Adscalculator/${id}/${proposalId}`,
+      navigation: `${basePath}/Adscalculator/${id}/${effectiveProposalId}`,
       features: [
         "Social Media Ads",
         "Google Ads",
@@ -126,8 +135,10 @@ export default function ServicesLandingPage() {
       gradient: "from-slate-500 to-gray-600",
       buttonGradient: "from-slate-600 to-gray-600",
       features: ["Logo Design", "Brand Identity", "Print Materials", "Digital Graphics", "SEO Services"],
-      navigation: `${basePath}/calculator/${id}/${proposalId}`,
-      navigationState: { servicetype: "paid" },
+      navigation: `${basePath}/calculator/${id}/${effectiveProposalId}`,
+      navigationState: isQuotationMode
+        ? { servicetype: "paid", mode: "quotation", quotationId }
+        : { servicetype: "paid" },
     },
     {
       id: "ads",
@@ -139,7 +150,8 @@ export default function ServicesLandingPage() {
       gradient: "from-red-500 to-orange-600",
       buttonGradient: "from-red-600 to-slate-600",
       features: ["Social Media Ads", "Google Ads", "Campaign Strategy", "Analytics & ROI"],
-      navigation: `${basePath}/Adscalculator/${id}/${proposalId}`,
+      navigation: `${basePath}/Adscalculator/${id}/${effectiveProposalId}`,
+      navigationState: isQuotationMode ? { mode: "quotation", quotationId } : undefined,
     },
     // {
     //   id: "notes",
@@ -160,12 +172,16 @@ export default function ServicesLandingPage() {
 
   const handleCustomServiceNavigate = (card) => {
     let target = card.navigation;
-    if (!target.includes(`/${id}/${proposalId}`)) {
-      target = `${target}/${id}/${proposalId}`;
+    if (!target.includes(`/${id}/${effectiveProposalId}`)) {
+      target = `${target}/${id}/${effectiveProposalId}`;
     }
-    const navUrl = docTypeFromURL === "proforma" ? `${target}?doc=proforma` : target;
-    if (card.navigationState) {
-      navigate(navUrl, { state: card.navigationState });
+    let navUrl = docTypeFromURL === "proforma" ? `${target}?doc=proforma` : target;
+    if (isQuotationMode) {
+      navUrl += `${navUrl.includes("?") ? "&" : "?"}mode=quotation`;
+    }
+    const navState = card.navigationState || (isQuotationMode ? { mode: "quotation", quotationId } : undefined);
+    if (navState) {
+      navigate(navUrl, { state: navState });
       return;
     }
     navigate(navUrl);
@@ -212,11 +228,20 @@ export default function ServicesLandingPage() {
   const clientName = clientData?.client_name;
 
   const fetchData = async () => {
-    if (!id || !proposalId) return;
+    if (!id || !effectiveProposalId) return;
     try {
-      if (docTypeFromURL === "proforma") {
+      if (isQuotationMode) {
+        // Quotation mode: fetch services from re_quotation_services
+        const res = await axios.get(
+          `${baseURL}/auth/api/re_calculator/quotation/${quotationId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          setGetData(res.data.data?.services || []);
+        }
+      } else if (docTypeFromURL === "proforma") {
         const { data } = await axios.get(
-          `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`,
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const parsed = JSON.parse(data.data?.pricing_snapshot || "[]");
@@ -248,7 +273,7 @@ export default function ServicesLandingPage() {
         }
       } else {
         const { data } = await axios.get(
-          `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${proposalId}/${id}`,
+          `${baseURL}/auth/api/re_calculator/getByIDCalculatorTransactions/${effectiveProposalId}/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setGetData(data.data || []);
@@ -260,11 +285,17 @@ export default function ServicesLandingPage() {
   };
 
   const fetchAdsData = async () => {
-    if (!id || !proposalId) return;
+    if (!id || !effectiveProposalId) return;
     try {
-      if (docTypeFromURL === "proforma") {
+      if (isQuotationMode) {
         const res = await axios.get(
-          `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`,
+          `${baseURL}/auth/api/re_calculator/quotation/${quotationId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") setGetAdsData(res.data.data?.ads || []);
+      } else if (docTypeFromURL === "proforma") {
+        const res = await axios.get(
+          `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data.status === "Success") {
@@ -279,7 +310,7 @@ export default function ServicesLandingPage() {
         }
       } else {
         const res = await axios.get(
-          `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`,
+          `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${effectiveProposalId}/${id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data.status === "Success") setGetAdsData(res.data.data || []);

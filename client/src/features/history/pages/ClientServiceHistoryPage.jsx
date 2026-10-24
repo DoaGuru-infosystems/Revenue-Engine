@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { ArrowLeft, Plus, ListChecks } from "lucide-react";
+import { ArrowLeft, Plus, ListChecks, FileText } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import Header from "../../../Components/Header";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import ProposalTable from "../components/ProposalTable";
+import QuotationTable from "../components/QuotationTable";
 import PaymentModal from "../components/PaymentModal";
 import ProformaManagerModal from "../components/ProformaManagerModal";
 import GenerateProformaModal from "../components/GenerateProformaModal";
@@ -26,6 +27,9 @@ const ClientServiceHistoryPage = () => {
   const [activeTab, setActiveTab] = useState("proposals");
   const [proposals, setProposals] = useState([]);
   const [proposalKeyword, setProposalKeyword] = useState("");
+  const [quotations, setQuotations] = useState([]);
+  const [quotationKeyword, setQuotationKeyword] = useState("");
+  const [creatingQuotation, setCreatingQuotation] = useState(false);
   const [clientData, setClientData] = useState(null);
 
   // Modals
@@ -33,6 +37,7 @@ const ClientServiceHistoryPage = () => {
   const [selectedProposalForManager, setSelectedProposalForManager] = useState(null);
   const [showModalInvoiceClient, setShowModalInvoiceClient] = useState(false);
   const [initialSelectedProposalId, setInitialSelectedProposalId] = useState(null);
+  const [initialSelectedQuotationId, setInitialSelectedQuotationId] = useState(null);
 
   const openProformaManager = (proposal) => {
     setSelectedProposalForManager(proposal);
@@ -40,12 +45,51 @@ const ClientServiceHistoryPage = () => {
   };
 
   const handleCreateProformaFromProposal = (proposal) => {
+    setInitialSelectedQuotationId(null);
     setInitialSelectedProposalId(proposal.id);
     setShowModalInvoiceClient(true);
   };
 
+  const handleCreateProformaFromQuotation = (quotation) => {
+    setInitialSelectedProposalId(null);
+    setInitialSelectedQuotationId(quotation.id);
+    setShowModalInvoiceClient(true);
+  };
+
+  const approvedStatuses = [
+    "approved",
+    "client_approved",
+    "proforma_generated",
+    "proforma_sent",
+    "payment_awaited",
+    "partially_paid",
+  ];
+
   const handleCreateProposal = () => {
     navigate(`${basePath}/proposal-builder/${id}`);
+  };
+
+  const handleCreateQuotation = async () => {
+    setCreatingQuotation(true);
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/auth/api/re_calculator/quotation`,
+        { client_id: id, created_by: token ? "BD" : "Admin" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.status === "Success") {
+        const quotationId = res.data.quotationId;
+        navigate(`${basePath}/ServicesLanding/${id}/${quotationId}?mode=quotation`, {
+          state: { mode: "quotation", quotationId },
+        });
+      } else {
+        Swal.fire({ icon: "error", title: "Error", text: res.data.message || "Failed to create quotation", timer: 1500, showConfirmButton: false });
+      }
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Error", text: err?.response?.data?.message || "Failed to create quotation", timer: 1500, showConfirmButton: false });
+    } finally {
+      setCreatingQuotation(false);
+    }
   };
 
   const fetchClient = useCallback(async () => {
@@ -94,10 +138,24 @@ const ClientServiceHistoryPage = () => {
     }
   }, [baseURL, id, token]);
 
+  const fetchQuotations = useCallback(async () => {
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/quotations/client/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.status === "Success") {
+        setQuotations(res.data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching quotations", error);
+    }
+  }, [baseURL, id, token]);
+
   useEffect(() => {
     fetchClient();
     fetchProposals();
-  }, [fetchClient, fetchProposals]);
+    fetchQuotations();
+  }, [fetchClient, fetchProposals, fetchQuotations]);
 
   const clientLabel =
     clientData?.client_organization || clientData?.client_name || "";
@@ -156,6 +214,16 @@ const ClientServiceHistoryPage = () => {
                 <Plus className="w-4 h-4 shrink-0" />
                 New Proposal
               </button>
+
+              <button
+                id="new-quotation-btn"
+                onClick={handleCreateQuotation}
+                disabled={creatingQuotation}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white shadow-md transition"
+              >
+                <FileText className="w-4 h-4 shrink-0" />
+                {creatingQuotation ? "Creating..." : "New Quotation"}
+              </button>
             </div>
           </div>
 
@@ -178,6 +246,23 @@ const ClientServiceHistoryPage = () => {
                     </span>
                   )}
                 </button>
+
+                <button
+                  id="quotations-tab-btn"
+                  onClick={() => setActiveTab("quotations")}
+                  className={`pb-2 px-1 font-semibold text-sm whitespace-nowrap transition-colors border-b-2 shrink-0 ${
+                    activeTab === "quotations"
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  }`}
+                >
+                  Quotations
+                  {quotations.length > 0 && (
+                    <span className="ml-1.5 text-xs font-medium text-gray-400 dark:text-gray-500">
+                      ({quotations.length})
+                    </span>
+                  )}
+                </button>
               </div>
 
               {activeTab === "proposals" && (
@@ -190,6 +275,17 @@ const ClientServiceHistoryPage = () => {
                   openProformaManager={openProformaManager}
                 />
               )}
+
+              {activeTab === "quotations" && (
+                <QuotationTable
+                  quotations={quotations}
+                  keyword={quotationKeyword}
+                  setKeyword={setQuotationKeyword}
+                  fetchQuotations={fetchQuotations}
+                  handleCreateProformaFromQuotation={handleCreateProformaFromQuotation}
+                  openProformaManager={(quotation) => openProformaManager({ ...quotation, isQuotation: true })}
+                />
+              )}
             </div>
           </div>
 
@@ -199,19 +295,13 @@ const ClientServiceHistoryPage = () => {
               onClose={() => {
                 setShowModalInvoiceClient(false);
                 setInitialSelectedProposalId(null);
+                setInitialSelectedQuotationId(null);
               }}
               clientData={clientData}
-              proposalsList={proposals.filter((p) =>
-                [
-                  "approved",
-                  "client_approved",
-                  "proforma_generated",
-                  "proforma_sent",
-                  "payment_awaited",
-                  "partially_paid",
-                ].includes(p.status)
-              )}
+              proposalsList={proposals.filter((p) => approvedStatuses.includes(p.status))}
+              quotationsList={quotations.filter((q) => approvedStatuses.includes(q.status) || String(q.id) === String(initialSelectedQuotationId))}
               initialSelectedProposalId={initialSelectedProposalId}
+              initialSelectedQuotationId={initialSelectedQuotationId}
             />
           )}
         </div>

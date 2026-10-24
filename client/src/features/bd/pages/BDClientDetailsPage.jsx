@@ -58,6 +58,7 @@ const BDClientDetailsPage = () => {
   const clientPerPage = 10;
   const [isEditing, setIsEditing] = useState(false);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+  const [creatingQuotation, setCreatingQuotation] = useState(false);
 
   const handleClose = () => {
     setShowModal(false);
@@ -351,6 +352,32 @@ const BDClientDetailsPage = () => {
   };
 
   const showApiData = filterPagination();
+
+  // ── Create Quotation handler ────────────────────────────────────────────────
+  const handleCreateQuotation = async () => {
+    if (!selectedClient) return;
+    setCreatingQuotation(true);
+    try {
+      const res = await axios.post(
+        `${baseURL}/auth/api/re_calculator/quotation`,
+        { client_id: selectedClient.id, created_by: currentUser?.name || "System" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.status === "Success") {
+        const quotationId = res.data.quotationId;
+        setShowProposalModal(false);
+        navigate(`/BD/ServicesLanding/${selectedClient.id}/${quotationId}?mode=quotation`, {
+          state: { mode: "quotation", quotationId },
+        });
+      } else {
+        Swal.fire({ icon: "error", title: "Error", text: res.data.message || "Failed to create quotation", timer: 1500, showConfirmButton: false });
+      }
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Error", text: err?.response?.data?.message || "Failed to create quotation", timer: 1500, showConfirmButton: false });
+    } finally {
+      setCreatingQuotation(false);
+    }
+  };
 
   const handleCreateProposal = async () => {
     if (!selectedClient) return;
@@ -895,12 +922,13 @@ const BDClientDetailsPage = () => {
               >
                 <Plus className="w-5 h-5" /> Create New Proposal
               </button>
-              <button 
-                onClick={() => {}}
-                className="flex-1 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-xl font-bold transition flex items-center justify-center gap-2 cursor-pointer"
-                title="Create Quotation (Coming Soon)"
+              <button
+                onClick={handleCreateQuotation}
+                disabled={creatingQuotation}
+                className="flex-1 py-3 bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl font-bold transition flex items-center justify-center gap-2"
+                id="bd-create-quotation-btn"
               >
-                <FileText className="w-5 h-5" /> Create Quotation
+                <FileText className="w-5 h-5" /> {creatingQuotation ? "Creating..." : "Create Quotation"}
               </button>
             </div>
 

@@ -36,7 +36,7 @@ const DEFAULT_NOTES = [
   },
 ];
 
-export function useGraphicCalculatorNotes({ id, proposalId, token, hideNotes }) {
+export function useGraphicCalculatorNotes({ id, proposalId, token, hideNotes, mode, quotationId }) {
   const [allClientNote, setAllClientNote] = useState([]);
   const [predefinedNotes, setPredefinedNotes] = useState([]);
   const [selectedNotes, setSelectedNotes] = useState(DEFAULT_NOTES);
@@ -65,7 +65,33 @@ export function useGraphicCalculatorNotes({ id, proposalId, token, hideNotes }) 
   };
 
   const getAllPlanNotes = async () => {
-    if (hideNotes || !id || !proposalId || !token) return;
+    if (hideNotes) return;
+    if (mode === "quotation" && quotationId) {
+      // Quotation mode: get notes from re_quotation.notes_json
+      try {
+        const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
+        const axios = (await import("axios")).default;
+        const res = await axios.get(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success" && res.data.data?.notes_json) {
+          try {
+            const notes = typeof res.data.data.notes_json === "string"
+              ? JSON.parse(res.data.data.notes_json)
+              : res.data.data.notes_json;
+            setAllClientNote(Array.isArray(notes) ? notes.map((n, i) => ({ id: i + 1, note_name: typeof n === "string" ? n : n.note_name })) : []);
+          } catch { setAllClientNote([]); }
+        } else {
+          setAllClientNote([]);
+        }
+      } catch (error) {
+        console.error("getAllPlanNotes quotation error:", error);
+        setAllClientNote([]);
+      }
+      return;
+    }
+    if (!id || !proposalId || !token) return;
     try {
       const res = await getClientNotesById(proposalId, id, token);
       setAllClientNote(res?.data || []);
@@ -144,6 +170,27 @@ export function useGraphicCalculatorNotes({ id, proposalId, token, hideNotes }) 
       const planNotes = selectedNotes.map((item) => ({
         note_name: item.note_name,
       }));
+
+      if (mode === "quotation" && quotationId) {
+        // Quotation mode: save notes to re_quotation.notes_json
+        const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
+        const axios = (await import("axios")).default;
+        const notesArr = planNotes.map((n) => n.note_name);
+        const res = await axios.patch(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/notes`,
+          { notes_json: planNotes },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = res.data;
+        if (data?.status === "Success") {
+          Swal.fire({ icon: "success", title: "Notes Saved", text: "Notes saved to quotation!", showConfirmButton: false, timer: 1000 });
+          getAllPlanNotes();
+          setManualNote("");
+        } else {
+          Swal.fire({ icon: "error", title: "Error", text: data?.message || "Failed to save notes.", showConfirmButton: false, timer: 1000 });
+        }
+        return;
+      }
 
       const payload = {
         txn_id: proposalId,

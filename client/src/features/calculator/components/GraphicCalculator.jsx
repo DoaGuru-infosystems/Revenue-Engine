@@ -62,6 +62,13 @@ const GraphicCalculator = ({
   const searchParams = new URLSearchParams(location.search);
   const docTypeFromURL = searchParams.get("doc");
 
+  // Quotation mode from location.state
+  const locationState = location.state || {};
+  const quotationSearch = new URLSearchParams(location.search);
+  const isQuotationMode =
+    locationState.mode === "quotation" || quotationSearch.get("mode") === "quotation";
+  const quotationId = locationState.quotationId || (isQuotationMode ? proposalId : null);
+
   // ── Layer 2: Custom Hooks ────────────────────────────────────────────────
   const {
     data,
@@ -102,6 +109,8 @@ const GraphicCalculator = ({
     onSaveComplete,
     embeddedData,
     locationState: location.state,
+    mode: isQuotationMode ? "quotation" : undefined,
+    quotationId: isQuotationMode ? quotationId : undefined,
   });
 
   const {
@@ -156,6 +165,8 @@ const GraphicCalculator = ({
     proposalId,
     token,
     hideNotes,
+    mode: isQuotationMode ? "quotation" : undefined,
+    quotationId: isQuotationMode ? quotationId : undefined,
   });
 
   const loading = loadingData || loadingDiscount || loadingNotes;
@@ -409,7 +420,7 @@ const GraphicCalculator = ({
                 <div className="flex flex-col sm:flex-row gap-2 pt-1">
                   <button type="button" onClick={ handleSave } disabled={ loading }
                     className="flex-1 min-h-11 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition shadow-sm text-base touch-manipulation">
-                    { loading ? "Saving..." : editId ? "Update entry" : "Calculate & Save" }
+                    { loading ? "Saving..." : editId ? "Update entry" : isQuotationMode ? "Save Quotation" : "Calculate & Save" }
                   </button>
                   {editId && (
                   <button type="button" onClick={ resetForm }

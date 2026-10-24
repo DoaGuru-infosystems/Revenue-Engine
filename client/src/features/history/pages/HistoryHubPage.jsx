@@ -9,6 +9,7 @@ import {
 
 // Lazy-load actual history components
 const ProposalHistory = lazy(() => import("./ProposalHistoryPage"));
+const QuotationHistory = lazy(() => import("./QuotationHistoryPage"));
 const InvoiceHistory = lazy(() => import("./InvoiceHistoryPage"));
 const ProformaHistory = lazy(() => import("./ProformaHistoryPage"));
 const RevenueHistory = lazy(() => import("./RevenueHistoryPage"));
@@ -48,6 +49,13 @@ const SUB_TABS = [
     icon: FileText,
     colorDark: "#a78bfa", // violet
     colorLight: "#6d28d9",
+  },
+  {
+    id: "quotations",
+    label: "Quotation",
+    icon: FileText,
+    colorDark: "#fb923c",
+    colorLight: "#ea580c",
   },
   {
     id: "proforma",
@@ -193,6 +201,7 @@ const HistoryHubPage = ({ setActiveTab }) => {
           }
         >
           { activeSubTab === "proposals" && <ProposalHistory /> }
+          { activeSubTab === "quotations" && <QuotationHistory /> }
           { activeSubTab === "proforma" && <ProformaHistory openProformaManager={ openProformaManager } setActiveTab={setActiveTab} /> }
 
           { activeSubTab === "invoices" && <InvoiceHistory /> }

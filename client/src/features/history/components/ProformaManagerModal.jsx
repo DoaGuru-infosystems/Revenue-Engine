@@ -82,6 +82,17 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
         }
       }
 
+      if (proposal?.isQuotation && proposal?.id) {
+        const { data } = await axios.get(`${baseURL}/auth/api/re_calculator/quotation/${proposal.id}/proformas`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const rows = (data.status === "Success" && Array.isArray(data.data) ? data.data : [])
+          .filter((row) => String(row.quotation_id) === String(proposal.id));
+        setProformas(rows);
+        setLoading(false);
+        return;
+      }
+
       // 2. If opened for a specific proposal, ensure that proposal's proforma is included even if client lookup differed
       if (proposal?.id && !proposal?.isDirectProforma) {
         try {

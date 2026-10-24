@@ -17,7 +17,9 @@ const GenerateProformaModal = ({
   onClose,
   clientData,
   proposalsList = EMPTY_ARRAY,
+  quotationsList = EMPTY_ARRAY,
   initialSelectedProposalId = null,
+  initialSelectedQuotationId = null,
   selectedTxn = null,
   txnPreviewData = EMPTY_ARRAY, // Optional preview data for Txn
   handleCreateInvoiceForTxn = null
@@ -48,6 +50,8 @@ const GenerateProformaModal = ({
   const [availableTeams, setAvailableTeams] = useState([]);
 
   const [selectedProposalForProforma, setSelectedProposalForProforma] = useState(null);
+  const [sourceKind, setSourceKind] = useState("proposal");
+  const [selectedQuotationForProforma, setSelectedQuotationForProforma] = useState(null);
   const [quotationServicesPreview, setQuotationServicesPreview] = useState([]);
   const [quotationPreviewLoading, setQuotationPreviewLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -175,6 +179,41 @@ const GenerateProformaModal = ({
     ).replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim();
   };
 
+  const loadQuotationForProforma = async (quotation) => {
+    if (!quotation?.id) return;
+    setQuotationPreviewLoading(true);
+    setSelectedProposalForProforma(null);
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/quotation/${quotation.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = res.data?.data || quotation;
+      setSelectedQuotationForProforma(data);
+      const services = (data.services || []).map((row) => ({
+        ...row,
+        service_type: "Graphic Service",
+      }));
+      const ads = (data.ads || []).map((row) => ({
+        ...row,
+        service_name: row.category_name,
+        category_name: row.category_name,
+        service_type: "Ads Campaign",
+        amount: row.budget,
+        budget: row.budget,
+        percent: row.percent,
+        charge: row.charge,
+        total: row.total,
+      }));
+      setQuotationServicesPreview([...services, ...ads]);
+      const cid = data.client_id || clientData?.id;
+      if (cid) fetchPreviousBalance(cid);
+    } catch (err) {
+      console.error("Failed to load quotation for proforma", err);
+    } finally {
+      setQuotationPreviewLoading(false);
+    }
+  };
+
   const isInitialized = useRef(false);
 
   useEffect(() => {
@@ -215,7 +254,11 @@ const GenerateProformaModal = ({
           fetchPreviousBalance(effectiveCid);
         }
 
-        if (initialSelectedProposalId) {
+        if (initialSelectedQuotationId) {
+          setSourceKind("quotation");
+          const qtn = quotationsList.find((q) => String(q.id) === String(initialSelectedQuotationId));
+          loadQuotationForProforma(qtn || { id: initialSelectedQuotationId });
+        } else if (initialSelectedProposalId) {
           const prop = proposalsList.find((p) => String(p.id) === String(initialSelectedProposalId));
           if (prop) {
             handleCreateProformaFromProposal(prop);
@@ -237,7 +280,7 @@ const GenerateProformaModal = ({
     } else {
       isInitialized.current = false;
     }
-  }, [isOpen, initialSelectedProposalId, proposalsList, clientData, selectedTxn, userName, txnPreviewData]);
+  }, [isOpen, initialSelectedProposalId, initialSelectedQuotationId, proposalsList, quotationsList, clientData, selectedTxn, userName, txnPreviewData]);
 
   const handleCreateProformaFromProposal = (proposal) => {
     setSelectedProposalForProforma(proposal);
@@ -294,6 +337,64 @@ const GenerateProformaModal = ({
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    if (sourceKind === "quotation" && selectedQuotationForProforma) {
+      try {
+        const dmServices = quotationServicesPreview.filter((s) => s.service_type !== "Ads Campaign");
+        const adsServices = quotationServicesPreview.filter((s) => s.service_type === "Ads Campaign");
+        const dmTotal = dmServices.reduce((sum, svc) => sum + Number(svc.editing_type_amount || 0) * Number(svc.quantity || 1), 0);
+        let discountAmt = 0;
+        try {
+          const disc = typeof selectedQuotationForProforma.discount_json === "string"
+            ? JSON.parse(selectedQuotationForProforma.discount_json)
+            : selectedQuotationForProforma.discount_json;
+          if (disc && Number(disc.value || disc.discount_amt || disc.discount_per) > 0) {
+            const isPercent = disc.type === "Percentage" || disc.discount_type === "percent";
+            const val = Number(disc.value || (isPercent ? disc.discount_per : disc.discount_amt) || 0);
+            discountAmt = isPercent ? (dmTotal * val) / 100 : val;
+          }
+        } catch (err) {
+          discountAmt = 0;
+        }
+        const isGST = formData.bill_type === "GST";
+        const prevBalToApply = previousBalance.include ? Number(previousBalance.customAmount || 0) : 0;
+        const dmTotalAfterDiscount = Math.max(0, dmTotal - discountAmt);
+        const adsTotalBudget = adsServices.reduce((sum, svc) => sum + Number(svc.budget || svc.amount || 0), 0);
+        const finalBaseAmount = dmTotalAfterDiscount + adsTotalBudget;
+        const finalGstAmount = isGST ? dmTotalAfterDiscount * 0.18 : 0;
+        const payload = {
+          quotation_id: selectedQuotationForProforma.id,
+          client_id: selectedQuotationForProforma.client_id,
+          base_amount: finalBaseAmount,
+          gst_amount: finalGstAmount,
+          total_amount: finalBaseAmount + finalGstAmount + prevBalToApply,
+          is_gst: isGST ? 1 : 0,
+          gst_rate: 18,
+          duration_start_date: formData.duration_start_date,
+          duration_end_date: formData.duration_end_date,
+          assigned_team: formData.assigned_team || null,
+          previous_balance_amount: prevBalToApply,
+        };
+        const res = await axios.post(`${baseURL}/auth/api/re_calculator/proforma`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data.status === "Success") {
+          Swal.fire({ icon: "success", title: "Saved!", text: "Proforma Generated Successfully", timer: 1500, showConfirmButton: false });
+          onClose();
+          navigate(rolePath(
+            basePath,
+            "quotation",
+            selectedQuotationForProforma.client_id,
+            res.data.proformaId,
+            `doc=proforma&source=quotation&gst=${isGST ? 1 : 0}`
+          ));
+        }
+      } catch (err) {
+        Swal.fire({ icon: "error", title: "Error", text: err?.response?.data?.message || "Failed to create proforma." });
+      }
+      setLoading(false);
+      return;
+    }
 
     if (selectedProposalForProforma) {
       try {
@@ -1009,14 +1110,41 @@ const GenerateProformaModal = ({
             onSubmit={ handleCreateInvoice }
             className="ci-form-body ci-scroll"
           >
-            { (!selectedTxn || selectedProposalForProforma) && (
+            { (!selectedTxn || selectedProposalForProforma || selectedQuotationForProforma) && (
               <div style={ { marginBottom: 16 } }>
-                <label className="ci-label">Select Proposal</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <button
+                    type="button"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${sourceKind === "proposal" ? "bg-orange-500 text-white border-orange-500" : "border-gray-400 text-gray-600"}`}
+                    onClick={() => {
+                      setSourceKind("proposal");
+                      setSelectedQuotationForProforma(null);
+                    }}
+                  >
+                    From Proposal
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${sourceKind === "quotation" ? "bg-blue-600 text-white border-blue-600" : "border-gray-400 text-gray-600"}`}
+                    onClick={() => {
+                      setSourceKind("quotation");
+                      setSelectedProposalForProforma(null);
+                    }}
+                  >
+                    From Quotation
+                  </button>
+                </div>
+                <label className="ci-label">{sourceKind === "quotation" ? "Select Quotation" : "Select Proposal"}</label>
                 <div className="ci-input-icon">
                   <select
                     className="ci-input"
-                    value={ selectedProposalForProforma?.id || "" }
+                    value={ (sourceKind === "quotation" ? selectedQuotationForProforma?.id : selectedProposalForProforma?.id) || "" }
                     onChange={ (e) => {
+                      if (sourceKind === "quotation") {
+                        const qtn = quotationsList.find(q => String(q.id) === String(e.target.value));
+                        if (qtn) loadQuotationForProforma(qtn);
+                        return;
+                      }
                       const prop = proposalsList.find(p => String(p.id) === String(e.target.value));
                       if (prop) handleCreateProformaFromProposal(prop);
                     } }
@@ -1026,7 +1154,11 @@ const GenerateProformaModal = ({
                         Proposal #{ selectedProposalForProforma.id } - { selectedProposalForProforma.grand_total_excl_gst } INR ({ selectedProposalForProforma.proposal_type }) - { selectedProposalForProforma.client_name || currentClientName }
                       </option>
                     ) }
-                    { proposalsList.map(p => (
+                    { sourceKind === "quotation" ? quotationsList.map(q => (
+                      <option key={ q.id } value={ q.id }>
+                        { q.quotation_number || `QTN-${q.id}` } - { q.grand_total_excl_gst } INR
+                      </option>
+                    )) : proposalsList.map(p => (
                       <option key={ p.id } value={ p.id }>Proposal #{ p.id } - { p.grand_total_excl_gst } INR ({ p.proposal_type }) - { p.client_name }</option>
                     )) }
                   </select>
@@ -1752,8 +1884,8 @@ const GenerateProformaModal = ({
               <button
                 type="submit"
                 className="ci-btn-primary"
-                disabled={ loading || !selectedProposalForProforma }
-                style={ { opacity: (loading || !selectedProposalForProforma) ? 0.7 : 1 } }
+                disabled={ loading || (!selectedProposalForProforma && !selectedQuotationForProforma) }
+                style={ { opacity: (loading || (!selectedProposalForProforma && !selectedQuotationForProforma)) ? 0.7 : 1 } }
               >
                 { loading ? (
                   <Loader2 size={ 14 } style={ { animation: "spin 1s linear infinite" } } />

@@ -1,0 +1,178 @@
+import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown, Eye, Send, FilePlus, CheckCircle, Trash, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import API_BASE_URL from "../../../config/apiBaseUrl";
+
+const QuotationActions = ({
+  quotation,
+  fetchQuotations,
+  handleCreateProformaFromQuotation,
+  openProformaManager,
+  fullWidth = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [openUpwards, setOpenUpwards] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const { token } = useSelector((state) => state.user);
+
+  const toggleDropdown = () => {
+    if (!isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUpwards(spaceBelow < 240 && rect.top > spaceBelow);
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
+  const handleAction = async (actionType) => {
+    setIsOpen(false);
+    const basePath = window.location.pathname.includes("/BD/") ? "/BD" : "/admin";
+    try {
+      if (actionType === "view") {
+        navigate(
+          `${basePath}/ServicesLanding/${quotation.client_id}/${quotation.id}?mode=quotation`,
+          { state: { mode: "quotation", quotationId: quotation.id } }
+        );
+      } else if (actionType === "send_to_client") {
+        const res = await axios.post(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotation.id}/send`,
+          { channel: "email" },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          Swal.fire({ icon: "success", title: "Sent", text: "Quotation marked as sent.", timer: 1400, showConfirmButton: false });
+          fetchQuotations?.();
+        }
+      } else if (actionType === "mark_approved") {
+        const confirm = await Swal.fire({
+          title: "Approve Quotation?",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Yes, Approve",
+        });
+        if (!confirm.isConfirmed) return;
+        const res = await axios.put(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotation.id}/status`,
+          { status: "approved" },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          Swal.fire({ icon: "success", title: "Approved", timer: 1200, showConfirmButton: false });
+          fetchQuotations?.();
+        }
+      } else if (actionType === "mark_client_response") {
+        const { value: decision } = await Swal.fire({
+          title: "Mark Client Response",
+          input: "select",
+          inputOptions: { client_approved: "Approved", changes: "Changes Requested", rejected: "Rejected" },
+          showCancelButton: true,
+        });
+        if (!decision) return;
+        const res = await axios.put(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotation.id}/status`,
+          { status: decision },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          Swal.fire({ icon: "success", title: "Updated", timer: 1200, showConfirmButton: false });
+          fetchQuotations?.();
+        }
+      } else if (actionType === "generate_proforma") {
+        handleCreateProformaFromQuotation?.(quotation);
+      } else if (actionType === "view_proformas") {
+        openProformaManager?.({ ...quotation, isQuotation: true });
+      } else if (actionType === "download_pdf") {
+        navigate(
+          `${basePath}/quotation/${quotation.client_id}/${quotation.id}?doc=quotation&source=new_quotation`
+        );
+      } else if (actionType === "delete_quotation") {
+        if (quotation.proforma_id) {
+          Swal.fire({
+            icon: "warning",
+            title: "Cannot Delete",
+            text: "Please delete the proforma first before deleting the quotation.",
+          });
+          return;
+        }
+        const confirm = await Swal.fire({
+          title: "Delete this quotation?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes, delete it",
+        });
+        if (!confirm.isConfirmed) return;
+        const res = await axios.delete(
+          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotation.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.data.status === "Success") {
+          Swal.fire({ icon: "success", title: "Deleted", timer: 1000, showConfirmButton: false });
+          fetchQuotations?.();
+        }
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Action Failed",
+        text: err.response?.data?.message || "Failed to perform action",
+      });
+    }
+  };
+
+  return (
+    <div className={`relative text-left ${fullWidth ? "block w-full" : "inline-block"} ${isOpen ? "z-50" : "z-10"}`} ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={toggleDropdown}
+        className={`inline-flex items-center justify-center px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-full text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 ${fullWidth ? "w-full" : ""}`}
+      >
+        Actions <ChevronDown size={16} className={`ml-2 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      {isOpen && (
+        <div
+          className={`absolute ${openUpwards ? "bottom-full mb-2" : "top-full mt-2"} w-full min-w-[13rem] max-w-[18rem] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-50 py-1.5 max-h-[46vh] sm:max-h-64 overflow-y-auto ${fullWidth ? "left-0 right-0" : "left-0 sm:right-0"}`}
+        >
+          <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view")}><Eye size={14} /> View / Edit</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("send_to_client")}><Send size={14} /> Send to client</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_approved")}><CheckCircle size={14} /> Mark approved</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_client_response")}><FileText size={14} /> Mark client response</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("generate_proforma")}><FilePlus size={14} /> Generate Proforma</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view_proformas")}><FileText size={14} /> View Proformas</button></li>
+            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("download_pdf")}><FileText size={14} /> Download PDF</button></li>
+            <li>
+              <button
+                type="button"
+                disabled={!!quotation.proforma_id}
+                className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2 text-red-600 disabled:opacity-40"
+                onClick={() => handleAction("delete_quotation")}
+              >
+                <Trash size={14} /> Delete
+              </button>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default QuotationActions;

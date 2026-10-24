@@ -821,56 +821,163 @@ exports.createProforma = async (req, res) => {
       assigned_team,
     } = req.body;
 
-    // Fetch parent proposal to snapshot data
-    const propQuery = `SELECT * FROM re_proposals WHERE id = ?`;
-    const propResults = await runQuery(propQuery, [proposal_id]);
-    if (propResults.length === 0) {
-      return res
-        .status(404)
-        .json({ status: "Failure", message: "Proposal not found" });
+    // ── NEW: also read quotation_id ───────────────────────────────────────────
+    const quotation_id = req.body.quotation_id || null;
+
+    // ── Validation: exactly one source must be provided ───────────────────────
+    const hasProposal = proposal_id != null && proposal_id !== "";
+    const hasQuotation = quotation_id != null && quotation_id !== "";
+
+    if (!hasProposal && !hasQuotation) {
+      return res.status(400).json({ status: "Failure", message: "Either proposal_id or quotation_id is required" });
     }
-    const proposal = propResults[0];
+    if (hasProposal && hasQuotation) {
+      return res.status(400).json({ status: "Failure", message: "Provide either proposal_id or quotation_id, not both" });
+    }
 
-    // Split pricing_table_json into services and ads at generation time
-    let allPricingItems = [];
-    try { allPricingItems = JSON.parse(proposal.pricing_table_json || "[]"); } catch(e) { allPricingItems = []; }
-    const serviceItems = allPricingItems.filter(i => i.source !== 'custom_ads' && i.service_name !== 'Ads Campaign');
-    const adsItems = allPricingItems.filter(i => i.source === 'custom_ads' || i.service_name === 'Ads Campaign');
-
-    // Also add Service Charge items for ads with charge > 0 into serviceItems
-    adsItems.forEach(ad => {
-      const charge = Number(ad.charge || ad.ad_charge || 0);
-      if (charge > 0) {
-        const catName = ad.category_name || ad.service_name || ad.service || "Ads Campaign";
-        let campName = catName;
-        if (!campName.toLowerCase().includes("campaign")) {
-          campName = campName + " Campaign";
-        }
-        const percent = ad.percent !== undefined && ad.percent !== null ? ad.percent : (ad.charge_percentage || ad.ad_percent || "N/A");
-        serviceItems.push({
-          source: "custom_service_charge",
-          service_type: "Graphic Service",
-          service_name: "Service Charge",
-          category_name: catName,
-          editing_type_name: `${campName} Management & Optimization (${percent}%)`,
-          quantity: 1,
-          unit_price: charge,
-          editing_type_amount: charge,
-          total_price: charge,
-          total_amount: charge,
-          include_in_total: true,
-        });
-      }
-    });
-
+    // ── Variables populated by whichever source path runs ─────────────────────
+    let serviceItems = [];
+    let adsItems = [];
+    let notesJson = null;
+    let termsJson = null;
+    let remarksJson = null;
+    let clientInstructions = null;
     let discountSnapshot = null;
-    try {
-      const sec = typeof proposal.sections_json === "string" ? JSON.parse(proposal.sections_json) : proposal.sections_json;
-      if (sec && sec.pricing_discount && Number(sec.pricing_discount.value) > 0) {
-        discountSnapshot = JSON.stringify(sec.pricing_discount);
-      }
-    } catch(e) {}
 
+    if (hasProposal) {
+      // ─── EXISTING PROPOSAL PATH (unchanged) ──────────────────────────────
+      const propQuery = `SELECT * FROM re_proposals WHERE id = ?`;
+      const propResults = await runQuery(propQuery, [proposal_id]);
+      if (propResults.length === 0) {
+        return res
+          .status(404)
+          .json({ status: "Failure", message: "Proposal not found" });
+      }
+      const proposal = propResults[0];
+
+      let allPricingItems = [];
+      try { allPricingItems = JSON.parse(proposal.pricing_table_json || "[]"); } catch(e) { allPricingItems = []; }
+      serviceItems = allPricingItems.filter(i => i.source !== 'custom_ads' && i.service_name !== 'Ads Campaign');
+      adsItems = allPricingItems.filter(i => i.source === 'custom_ads' || i.service_name === 'Ads Campaign');
+
+      adsItems.forEach(ad => {
+        const charge = Number(ad.charge || ad.ad_charge || 0);
+        if (charge > 0) {
+          const catName = ad.category_name || ad.service_name || ad.service || "Ads Campaign";
+          let campName = catName;
+          if (!campName.toLowerCase().includes("campaign")) campName = campName + " Campaign";
+          const percent = ad.percent !== undefined && ad.percent !== null ? ad.percent : (ad.charge_percentage || ad.ad_percent || "N/A");
+          serviceItems.push({
+            source: "custom_service_charge",
+            service_type: "Graphic Service",
+            service_name: "Service Charge",
+            category_name: catName,
+            editing_type_name: `${campName} Management & Optimization (${percent}%)`,
+            quantity: 1,
+            unit_price: charge,
+            editing_type_amount: charge,
+            total_price: charge,
+            total_amount: charge,
+            include_in_total: true,
+          });
+        }
+      });
+
+      try {
+        const sec = typeof proposal.sections_json === "string" ? JSON.parse(proposal.sections_json) : proposal.sections_json;
+        if (sec && sec.pricing_discount && Number(sec.pricing_discount.value) > 0) {
+          discountSnapshot = JSON.stringify(sec.pricing_discount);
+        }
+      } catch(e) {}
+
+      notesJson = proposal.notes_json;
+      termsJson = proposal.terms_notes_json;
+      remarksJson = proposal.additional_remarks;
+      clientInstructions = proposal.client_instructions;
+
+    } else {
+      // ─── NEW QUOTATION PATH ───────────────────────────────────────────────
+      const qtnRows = await runQuery(`SELECT * FROM re_quotation WHERE id = ?`, [quotation_id]);
+      if (qtnRows.length === 0) {
+        return res.status(404).json({ status: "Failure", message: "Quotation not found" });
+      }
+      const quotation = qtnRows[0];
+
+      const rawServices = await runQuery(
+        `SELECT * FROM re_quotation_services WHERE quotation_id = ? ORDER BY id ASC`,
+        [quotation_id]
+      );
+      serviceItems = rawServices.map(s => ({
+        source: s.source || "graphic",
+        service_name: s.service_name,
+        category_name: s.category_name,
+        editing_type_name: s.editing_type_name,
+        editing_type_amount: Number(s.editing_type_amount || 0),
+        quantity: Number(s.quantity || 1),
+        additional_services: s.additional_services,
+        total_amount: Number(s.total_amount || 0),
+        total_price: Number(s.total_amount || 0),
+        include_in_total: true,
+      }));
+
+      const rawAds = await runQuery(
+        `SELECT * FROM re_quotation_ads WHERE quotation_id = ? ORDER BY id ASC`,
+        [quotation_id]
+      );
+      adsItems = rawAds.map(a => ({
+        source: "custom_ads",
+        service_name: "Ads Campaign",
+        category_name: a.category_name,
+        budget: Number(a.budget || 0),
+        amount: Number(a.budget || 0),
+        percent: Number(a.percent || 0),
+        charge: Number(a.charge || 0),
+        total: Number(a.total || 0),
+      }));
+
+      adsItems.forEach(ad => {
+        const charge = Number(ad.charge || 0);
+        if (charge > 0) {
+          const catName = ad.category_name || "Ads Campaign";
+          let campName = catName;
+          if (!campName.toLowerCase().includes("campaign")) campName = campName + " Campaign";
+          const percent = ad.percent !== undefined && ad.percent !== null ? ad.percent : "N/A";
+          serviceItems.push({
+            source: "custom_service_charge",
+            service_type: "Graphic Service",
+            service_name: "Service Charge",
+            category_name: catName,
+            editing_type_name: `${campName} Management & Optimization (${percent}%)`,
+            quantity: 1,
+            unit_price: charge,
+            editing_type_amount: charge,
+            total_price: charge,
+            total_amount: charge,
+            include_in_total: true,
+          });
+        }
+      });
+
+      if (quotation.discount_json) {
+        try {
+          const dObj = typeof quotation.discount_json === "string"
+            ? JSON.parse(quotation.discount_json)
+            : quotation.discount_json;
+          if (dObj && Number(dObj.value) > 0) {
+            discountSnapshot = typeof quotation.discount_json === "string"
+              ? quotation.discount_json
+              : JSON.stringify(quotation.discount_json);
+          }
+        } catch(e) {}
+      }
+
+      notesJson = quotation.notes_json;
+      termsJson = null;
+      remarksJson = null;
+      clientInstructions = null;
+    }
+
+    // ── Amount calculation (shared) ───────────────────────────────────────────
     const prevBal = Number(previous_balance_amount) || 0;
     let finalBaseAmount = base_amount;
     let finalGstAmount = gst_amount;
@@ -916,21 +1023,19 @@ exports.createProforma = async (req, res) => {
       finalTotalAmount = finalBaseAmount + finalGstAmount + prevBal;
     }
 
-    // Generate a unique txn_id for this proforma so each proforma has its own distinct identity
     const proformaTxnId = String(Date.now());
-
-    // Generate concurrency-safe sequential proforma number
     const proformaNumber = await getNextProformaNumber(is_gst);
 
     const q = `
       INSERT INTO re_proposal_proforma 
-      (proposal_id, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
+      (proposal_id, quotation_id, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
        pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
        duration_start_date, duration_end_date, discount_snapshot, previous_balance_amount, assigned_team)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
-      proposal_id,
+      hasProposal ? proposal_id : null,
+      hasQuotation ? quotation_id : null,
       client_id,
       proformaTxnId,
       proformaNumber,
@@ -941,10 +1046,10 @@ exports.createProforma = async (req, res) => {
       finalTotalAmount,
       JSON.stringify(serviceItems),
       JSON.stringify(adsItems),
-      proposal.notes_json,
-      proposal.terms_notes_json,
-      proposal.additional_remarks,
-      proposal.client_instructions,
+      notesJson,
+      termsJson,
+      remarksJson,
+      clientInstructions,
       created_by || "System",
       duration_start_date || null,
       duration_end_date || null,
@@ -953,8 +1058,6 @@ exports.createProforma = async (req, res) => {
       assigned_team || null,
     ]);
 
-    // If previous_balance_amount was carried forward into this new proforma,
-    // mark earlier pending proformas as carried_forward and freeze payment recording on them
     if (prevBal > 0) {
       try {
         const pendingPfs = await runQuery(`
@@ -979,23 +1082,28 @@ exports.createProforma = async (req, res) => {
       }
     }
 
-    // Update proposal status and billing dates
-    let updateFields = ["status = 'proforma_generated'"];
-    let updateParams = [];
-    if (duration_start_date) {
-      updateFields.push("billing_start_date = ?");
-      updateParams.push(duration_start_date);
+    if (hasProposal) {
+      let updateFields = ["status = 'proforma_generated'"];
+      let updateParams = [];
+      if (duration_start_date) {
+        updateFields.push("billing_start_date = ?");
+        updateParams.push(duration_start_date);
+      }
+      if (duration_end_date) {
+        updateFields.push("billing_end_date = ?");
+        updateParams.push(duration_end_date);
+      }
+      updateParams.push(proposal_id);
+      await runQuery(
+        `UPDATE re_proposals SET ${updateFields.join(", ")} WHERE id = ?`,
+        updateParams,
+      );
+    } else {
+      await runQuery(
+        `UPDATE re_quotation SET status = 'proforma_generated', updated_at = NOW() WHERE id = ?`,
+        [quotation_id]
+      );
     }
-    if (duration_end_date) {
-      updateFields.push("billing_end_date = ?");
-      updateParams.push(duration_end_date);
-    }
-    updateParams.push(proposal_id);
-
-    await runQuery(
-      `UPDATE re_proposals SET ${updateFields.join(", ")} WHERE id = ?`,
-      updateParams,
-    );
 
     res.status(200).json({
       status: "Success",
@@ -1007,6 +1115,7 @@ exports.createProforma = async (req, res) => {
     res.status(500).json({ status: "Failure", message: "Server error" });
   }
 };
+
 
 const healOrphanedCarriedForwardProformas = async (clientId = null) => {
   try {
@@ -1121,7 +1230,7 @@ exports.getAllProformas = async (req, res) => {
   try {
     await healOrphanedCarriedForwardProformas();
     const q = `
-      SELECT p.*, c.client_name, c.client_organization,
+      SELECT p.*, c.client_name, c.client_organization, qtn.quotation_number,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              CASE
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (p.total_amount - 0.05) AND p.total_amount > 0
@@ -1133,6 +1242,7 @@ exports.getAllProformas = async (req, res) => {
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
+      LEFT JOIN re_quotation qtn ON qtn.id = p.quotation_id
       ORDER BY p.created_at DESC
     `;
     const results = await runQuery(q, []);

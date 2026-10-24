@@ -270,6 +270,22 @@ const {
   uploadAndConvert: genratecoatetion,
   generateInvoicePdf,
 } = require("../re_controller/re_genratecoatetion");
+
+// ── Quotation Controller (new) ────────────────────────────────────────────────
+const {
+  createQuotation,
+  getQuotationById,
+  getQuotationsByClient,
+  getAllQuotations,
+  updateQuotationStatus,
+  deleteQuotation,
+  saveQuotationServices,
+  saveQuotationAds,
+  saveQuotationNotes,
+  sendQuotationToClientNew,
+  getProformasByQuotation,
+} = require("../re_controller/re_quotationController");
+
 const router = express.Router();
 
 // ---- Public Routes (no auth) ----
@@ -758,6 +774,19 @@ router.get("/balance-proforma/source/:source_proforma_id", authenticateToken, ge
 router.get("/balance-proforma/:id", authenticateToken, getBalanceProformaById);
 router.put("/balance-proforma/:id/notes", authenticateToken, updateBalanceProformaNotes);
 router.delete("/balance-proforma/:id", authenticateToken, deleteBalanceProforma);
+
+// ---- Quotation Routes (new) ----
+router.post("/quotation", authenticateToken, createQuotation);
+router.get("/quotations/all", authenticateToken, getAllQuotations);
+router.get("/quotations/client/:clientId", authenticateToken, getQuotationsByClient);
+router.get("/quotation/:id", authenticateToken, getQuotationById);
+router.put("/quotation/:id/status", authenticateToken, updateQuotationStatus);
+router.delete("/quotation/:id", authenticateToken, deleteQuotation);
+router.post("/quotation/:id/services", authenticateToken, saveQuotationServices);
+router.post("/quotation/:id/ads", authenticateToken, saveQuotationAds);
+router.patch("/quotation/:id/notes", authenticateToken, saveQuotationNotes);
+router.post("/quotation/:id/send", authenticateToken, sendQuotationToClientNew);
+router.get("/quotation/:id/proformas", authenticateToken, getProformasByQuotation);
 
 // ---- Proposal Invoices ----
 router.get("/proposal-invoices", authenticateToken, getProposalInvoices);

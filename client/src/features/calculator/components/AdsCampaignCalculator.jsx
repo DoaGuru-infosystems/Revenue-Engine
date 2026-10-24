@@ -19,6 +19,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const docTypeFromURL = searchParams.get("doc");
+  const isQuotationMode =
+    location.state?.mode === "quotation" || searchParams.get("mode") === "quotation";
   const { currentUser, token } = useSelector((state) => state.user);
 
   const userName = currentUser?.name;
@@ -372,6 +374,29 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
               }
             );
           }
+        } else if (isQuotationMode) {
+          const kept = (getData || []).filter((row) => {
+            const cat = row.category || row.category_name;
+            return !results.some((r) => r.category === cat);
+          });
+          const ads = [...kept, ...results].map((row) => ({
+            category_name: row.category || row.category_name,
+            budget: row.amount || row.budget || 0,
+            percent: row.percent || 0,
+            charge: row.charge || 0,
+            total: row.total || 0,
+          }));
+          response = await fetch(
+            `${API_BASE_URL}/auth/api/re_calculator/quotation/${proposalId}/ads`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ ads }),
+            }
+          );
         } else {
           response = await fetch(
             `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
@@ -421,7 +446,9 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
     if (!id || !proposalId) return;
     try {
       let endpoint = `${baseURL}/auth/api/re_calculator/getByIDAdsCampaignDetails/${proposalId}/${id}`;
-      if (docTypeFromURL === "proforma") {
+      if (isQuotationMode) {
+        endpoint = `${baseURL}/auth/api/re_calculator/quotation/${proposalId}`;
+      } else if (docTypeFromURL === "proforma") {
         endpoint = `${baseURL}/auth/api/re_calculator/proformas/snapshot/${proposalId}`;
       }
       const res = await axios.get(endpoint, {
@@ -431,7 +458,17 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
         },
       });
       if (res.data.status === "Success") {
-        if (docTypeFromURL === "proforma") {
+        if (isQuotationMode) {
+          const ads = res.data.data?.ads || [];
+          setGetData(
+            ads.map((item) => ({
+              ...item,
+              category: item.category || item.category_name,
+              amount: item.amount || item.budget,
+              total: item.total || item.total_amount || item.budget,
+            }))
+          );
+        } else if (docTypeFromURL === "proforma") {
           // Ads data is now stored in the dedicated ads_snapshot column
           const parsed = JSON.parse(res.data.data.ads_snapshot || "[]");
           const normalized = parsed.map(item => ({
@@ -653,7 +690,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
                       : "bg-red-600 hover:bg-red-700 text-white"
                 }`}
               >
-                {loading ? "Saving..." : editingId ? "Update entry" : "Calculate & Save"}
+                {loading ? "Saving..." : editingId ? "Update entry" : isQuotationMode ? "Save Quotation" : "Calculate & Save"}
               </button>
               {(editingId || Object.keys(enteredAmount).length > 0) && (
                 <button

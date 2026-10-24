@@ -742,9 +742,58 @@ export function useQuotationData({
     }
   };
 
+  const fetchNewQuotationDocument = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/quotation/${txn_id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = res.data?.data || {};
+      const services = (data.services || []).map((row) => ({
+        ...row,
+        service_type: "Graphic Service",
+      }));
+      const ads = (data.ads || []).map((row) => ({
+        ...row,
+        service_name: row.category_name || "Ads",
+        category_name: row.category_name,
+        service_type: "Ads Campaign",
+        amount: row.budget,
+        budget: row.budget,
+        total_amount: row.total,
+      }));
+      setServiceData([...services, ...ads]);
+      setClientData({
+        client_name: data.client_name,
+        client_organization: data.client_organization,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+      });
+      let notes = [];
+      try {
+        const parsed = typeof data.notes_json === "string" ? JSON.parse(data.notes_json) : data.notes_json;
+        if (Array.isArray(parsed)) notes = parsed;
+        else if (parsed) notes = [parsed];
+      } catch (e) {
+        notes = [];
+      }
+      setNotesData(notes);
+    } catch (err) {
+      console.error("fetchNewQuotationDocument", err);
+      setServiceData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isBalanceProforma) {
       fetchBalanceProformaData();
+      fetchPredefinedNotes();
+      fetchDiscountSetting();
+    } else if (sourceFromURL === "new_quotation") {
+      fetchNewQuotationDocument();
       fetchPredefinedNotes();
       fetchDiscountSetting();
     } else if (docTypeFromURL === "proforma" || sourceFromURL === "proposal") {
