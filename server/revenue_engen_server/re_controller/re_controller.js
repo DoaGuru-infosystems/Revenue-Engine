@@ -4071,6 +4071,13 @@ exports.saveDirectProforma = async (req, res) => {
     let finalBase = base_amount;
     let finalGst = gst_amount;
     let finalTotal = total_amount;
+    let finalServiceAmount = req.body.service_amount !== undefined && req.body.service_amount !== null
+      ? Number(req.body.service_amount)
+      : null;
+    let finalAdBudgetAmount = req.body.ad_budget_amount !== undefined && req.body.ad_budget_amount !== null
+      ? Number(req.body.ad_budget_amount)
+      : null;
+
     try {
       const { calculateProformaTotals } = require("./re_proformaSyncHelper");
       const pItems = typeof pricing_snapshot === "string" ? JSON.parse(pricing_snapshot || "[]") : (pricing_snapshot || []);
@@ -4080,17 +4087,30 @@ exports.saveDirectProforma = async (req, res) => {
       finalBase = computed.baseAmount;
       finalGst = computed.gstAmount;
       finalTotal = computed.totalAmount + prevBal;
+      if (finalServiceAmount === null) {
+        finalServiceAmount = (computed.dmAfterAdjustment || 0) + prevBal;
+      }
+      if (finalAdBudgetAmount === null) {
+        finalAdBudgetAmount = computed.adBudgetAmount || 0;
+      }
     } catch (calcErr) {
       console.warn("Could not recalculate proforma totals in saveDirectProforma:", calcErr.message);
       finalTotal = Number(finalBase || 0) + Number(finalGst || 0) + prevBal;
+      if (finalServiceAmount === null) {
+        finalServiceAmount = Math.max(0, Number(finalBase || 0) - Number(finalAdBudgetAmount || 0)) + prevBal;
+      }
+      if (finalAdBudgetAmount === null) {
+        finalAdBudgetAmount = 0;
+      }
     }
 
     const query = `
       INSERT INTO re_proposal_proforma (
         client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
+        service_amount, ad_budget_amount,
         created_at, pricing_snapshot, ads_snapshot, discount_snapshot, notes_snapshot, terms_snapshot,
         source_type, duration_start_date, duration_end_date, client_instructions_snapshot, previous_balance_amount
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?, ?, ?)
     `;
 
     const values = [
@@ -4102,6 +4122,8 @@ exports.saveDirectProforma = async (req, res) => {
       finalBase,
       finalGst || 0,
       finalTotal,
+      finalServiceAmount,
+      finalAdBudgetAmount,
       createdAt,
       typeof pricing_snapshot === "string" ? pricing_snapshot : JSON.stringify(pricing_snapshot || []),
       ads_snapshot ? (typeof ads_snapshot === "string" ? ads_snapshot : JSON.stringify(ads_snapshot)) : null,

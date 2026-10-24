@@ -1040,15 +1040,58 @@ exports.createProforma = async (req, res) => {
       finalTotalAmount = finalBaseAmount + finalGstAmount + prevBal;
     }
 
+    // Calculate service_amount and ad_budget_amount
+    const dmTotalForBreakdown = serviceItems.reduce((sum, item) => {
+      if (isComplimentaryItem(item)) return sum;
+      const qty = Number(item.quantity) || 1;
+      let addonsTotal = 0;
+      if (item.additional_services) {
+        try {
+          const addons = typeof item.additional_services === "string" ? JSON.parse(item.additional_services) : item.additional_services;
+          if (Array.isArray(addons)) {
+            addonsTotal = addons.reduce((as, a) => as + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+          }
+        } catch {}
+      }
+      const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+      const baseTotal = base * qty;
+      const recorded = Number(item.total_amount || item.total_price || 0);
+      const effective = (recorded >= baseTotal + addonsTotal && recorded > 0)
+        ? recorded
+        : (recorded > 0 ? recorded : baseTotal) + addonsTotal;
+      return sum + effective;
+    }, 0);
+    const adsTotalForBreakdown = adsItems.reduce((sum, item) => sum + Number(item.amount || item.budget || item.total || 0), 0);
+    let discAmtForBreakdown = 0;
+    if (discountSnapshot) {
+      try {
+        const dObj = JSON.parse(discountSnapshot);
+        if (dObj.type === "Percentage") {
+          discAmtForBreakdown = (dmTotalForBreakdown * Number(dObj.value)) / 100;
+        } else {
+          discAmtForBreakdown = Number(dObj.value);
+        }
+      } catch(e) {}
+    }
+    const dmAfterDiscCalculated = Math.max(0, dmTotalForBreakdown - discAmtForBreakdown);
+
+    const finalServiceAmount = req.body.service_amount !== undefined && req.body.service_amount !== null
+      ? Number(req.body.service_amount)
+      : (dmAfterDiscCalculated + prevBal);
+    const finalAdBudgetAmount = req.body.ad_budget_amount !== undefined && req.body.ad_budget_amount !== null
+      ? Number(req.body.ad_budget_amount)
+      : adsTotalForBreakdown;
+
     const proformaTxnId = String(Date.now());
     const proformaNumber = await getNextProformaNumber(is_gst);
 
     const q = `
       INSERT INTO re_proposal_proforma 
       (proposal_id, quotation_id, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
+       service_amount, ad_budget_amount,
        pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
        duration_start_date, duration_end_date, discount_snapshot, previous_balance_amount, assigned_team)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
       hasProposal ? proposal_id : null,
@@ -1061,6 +1104,8 @@ exports.createProforma = async (req, res) => {
       finalBaseAmount,
       finalGstAmount || 0,
       finalTotalAmount,
+      finalServiceAmount,
+      finalAdBudgetAmount,
       JSON.stringify(serviceItems),
       JSON.stringify(adsItems),
       notesJson,
@@ -1151,7 +1196,9 @@ const healOrphanedCarriedForwardProformas = async (clientId = null) => {
         ELSE 'proforma_generated'
       END,
       p.payment_status = CASE 
-        WHEN (SELECT COALESCE(SUM(amount), 0) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved') >= (p.total_amount - 0.05) AND p.total_amount > 0 THEN 'fully-paid'
+        WHEN (SELECT COALESCE(SUM(amount), 0) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved') >= (
+          IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
+        ) AND p.total_amount > 0 THEN 'fully-paid'
         WHEN (SELECT COALESCE(SUM(amount), 0) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved') > 0 THEN 'partial'
         ELSE 'pending'
       END,
@@ -1174,7 +1221,9 @@ exports.getClientPreviousBalance = async (req, res) => {
     await healOrphanedCarriedForwardProformas(clientId);
     const q = `
       SELECT p.id, p.proforma_number, p.client_id, p.total_amount, p.base_amount, p.is_gst, p.status, p.created_at,
-             COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid
+             p.service_amount, p.gst_amount, p.ad_budget_amount,
+             COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid,
+             COALESCE((SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_realized_ad_budget
       FROM re_proposal_proforma p
       WHERE p.client_id = ? 
         AND (p.is_carried_forward IS NULL OR p.is_carried_forward = 0)
@@ -1184,21 +1233,50 @@ exports.getClientPreviousBalance = async (req, res) => {
     const rows = await runQuery(q, [clientId]);
     let totalPending = 0;
     const pendingProformas = [];
+    let totalAdBudgetPending = 0;
+    const pendingAdBudgetProformas = [];
 
     rows.forEach(r => {
       const tot = Number(r.total_amount || 0);
-      const paid = Number(r.total_paid || 0);
-      const pending = Math.max(0, tot - paid);
-      if (pending > 0.05) {
-        totalPending += pending;
+      const totalPaid = Number(r.total_paid || 0);
+      const svcAmount = Number(r.service_amount || 0);
+      const gstAmount = Number(r.gst_amount || 0);
+      const adBudgetTotal = Number(r.ad_budget_amount || 0);
+      const adBudgetRealized = Number(r.total_realized_ad_budget || 0);
+
+      let servicePending = 0;
+      let adBudgetPending = 0;
+
+      // EDGE CASE SAFETY: Agar kisi purane proforma ka service_amount aur ad_budget_amount dono 0/NULL hain lekin total_amount > 0 hai
+      if (svcAmount === 0 && adBudgetTotal === 0 && tot > 0) {
+        servicePending = Math.max(0, tot - totalPaid);
+        adBudgetPending = 0;
+      } else {
+        const serviceAndGst = svcAmount + gstAmount;
+        const servicePaidSoFar = Math.max(0, totalPaid - adBudgetRealized);
+        servicePending = Math.max(0, serviceAndGst - servicePaidSoFar);
+        adBudgetPending = Math.max(0, adBudgetTotal - adBudgetRealized);
+      }
+
+      if (servicePending > 0.05) {
+        totalPending += servicePending;
         pendingProformas.push({
           id: r.id,
           proforma_number: r.proforma_number,
           total_amount: tot,
-          total_paid: paid,
-          pending: Math.round(pending * 100) / 100,
+          total_paid: totalPaid,
+          pending: Math.round(servicePending * 100) / 100,
           is_gst: r.is_gst,
           created_at: r.created_at,
+        });
+      }
+
+      if (adBudgetPending > 0.05) {
+        totalAdBudgetPending += adBudgetPending;
+        pendingAdBudgetProformas.push({
+          id: r.id,
+          proforma_number: r.proforma_number,
+          ad_budget_pending: Math.round(adBudgetPending * 100) / 100,
         });
       }
     });
@@ -1208,6 +1286,8 @@ exports.getClientPreviousBalance = async (req, res) => {
       data: {
         totalPending: Math.round(totalPending * 100) / 100,
         pendingProformas,
+        totalAdBudgetPending: Math.round(totalAdBudgetPending * 100) / 100,
+        pendingAdBudgetProformas,
       }
     });
   } catch (error) {
@@ -1224,12 +1304,18 @@ exports.getProformasByClient = async (req, res) => {
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              CASE
-               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (p.total_amount - 0.05) AND p.total_amount > 0
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
+                 IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
+               ) AND p.total_amount > 0
                THEN 'fully-paid'
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) > 0
                THEN 'partial'
                ELSE 'pending'
              END AS payment_status,
+             GREATEST(0, p.ad_budget_amount - IFNULL((
+               SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records 
+               WHERE proforma_id = p.id AND status = 'approved'
+             ), 0)) AS ad_budget_pending,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       WHERE p.client_id = ?
@@ -1250,12 +1336,18 @@ exports.getAllProformas = async (req, res) => {
       SELECT p.*, c.client_name, c.client_organization, qtn.quotation_number,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              CASE
-               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (p.total_amount - 0.05) AND p.total_amount > 0
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
+                 IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
+               ) AND p.total_amount > 0
                THEN 'fully-paid'
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) > 0
                THEN 'partial'
                ELSE 'pending'
              END AS payment_status,
+             GREATEST(0, p.ad_budget_amount - IFNULL((
+               SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records 
+               WHERE proforma_id = p.id AND status = 'approved'
+             ), 0)) AS ad_budget_pending,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
@@ -1295,12 +1387,18 @@ exports.getProformasByProposal = async (req, res) => {
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              CASE
-               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (p.total_amount - 0.05) AND p.total_amount > 0
+               WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
+                 IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
+               ) AND p.total_amount > 0
                THEN 'fully-paid'
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) > 0
                THEN 'partial'
                ELSE 'pending'
              END AS payment_status,
+             GREATEST(0, p.ad_budget_amount - IFNULL((
+               SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records 
+               WHERE proforma_id = p.id AND status = 'approved'
+             ), 0)) AS ad_budget_pending,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       WHERE p.proposal_id = ?
@@ -1560,17 +1658,16 @@ exports.recordProposalPayment = async (req, res) => {
       });
     }
 
-    // Validate that total ad budget realized leaves at least 1 rupee for service amount
+    // Validate that total ad budget realized does not exceed the payment amount
     const totalAdBudget = (Number(realized_google_budget) || 0) + (Number(realized_meta_budget) || 0);
-    if (totalAdBudget > 0) {
-      const maxAllowedAdBudget = Math.max(0, Number(amount) - 1);
-      if (totalAdBudget > maxAllowedAdBudget) {
-        return res.status(400).json({
-          status: "Failure",
-          message: `Total realized ad budget (₹${totalAdBudget.toLocaleString()}) cannot exceed ₹${maxAllowedAdBudget.toLocaleString()}. Minimum ₹1 must be reserved for service amount.`
-        });
-      }
+    const adBudgetToRecord = totalAdBudget > 0 ? totalAdBudget : (Number(realized_ad_budget) || 0);
+    if (adBudgetToRecord > Number(amount)) {
+      return res.status(400).json({
+        status: "Failure",
+        message: `Total realized ad budget (₹${adBudgetToRecord.toLocaleString()}) cannot exceed the payment amount (₹${Number(amount).toLocaleString()}).`
+      });
     }
+    const realizedServiceAmount = Math.max(0, Number(amount) - adBudgetToRecord);
 
     const proposalRows = await runQuery(
       `SELECT * FROM re_proposals WHERE id = ?`,
@@ -1599,8 +1696,8 @@ exports.recordProposalPayment = async (req, res) => {
       // 3.2 Record payment with 'pending_approval' status
       const paymentQ = `
         INSERT INTO re_proposal_payment_records 
-        (proforma_id, proposal_id, client_id, amount, is_gst, tds_applicable, tds_percentage, tds_amount, final_amount, payment_date, payment_mode, transaction_reference, remark, created_by, txn_id, status, realized_ad_budget, realized_google_budget, realized_meta_budget)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', ?, ?, ?)
+        (proforma_id, proposal_id, client_id, amount, is_gst, tds_applicable, tds_percentage, tds_amount, final_amount, payment_date, payment_mode, transaction_reference, remark, created_by, txn_id, status, realized_ad_budget, realized_google_budget, realized_meta_budget, realized_service_amount)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_approval', ?, ?, ?, ?)
       `;
       const insertResult = await runQuery(paymentQ, [
         proforma_id,
@@ -1618,9 +1715,10 @@ exports.recordProposalPayment = async (req, res) => {
         remark,
         created_by || "System",
         invoice_txn_id,
-        realized_ad_budget || 0,
+        adBudgetToRecord,
         realized_google_budget || 0,
         realized_meta_budget || 0,
+        realizedServiceAmount,
       ]);
 
       const timelineRemark = `Payment Recorded (Pending Approval)\nAmount : ₹${amount}\nTime : ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`;
@@ -1937,6 +2035,11 @@ exports.approvePayment = async (req, res) => {
           : Math.max(previous_amt - received_amt, 0);
 
       const PAYMENT_TOLERANCE = 0.05;
+      const totalPaidSoFar = totalPastPayments + received_amt;
+      const targetServiceAndGst = Number(proforma.service_amount || 0) > 0
+        ? Number(proforma.service_amount || 0) + Number(proforma.gst_amount || 0)
+        : Number(proforma.total_amount || 0);
+      const isServiceFullyPaid = totalPaidSoFar >= (targetServiceAndGst - PAYMENT_TOLERANCE);
       const isFullyPaid = current_amt <= PAYMENT_TOLERANCE;
       const newStatus = isFullyPaid ? "paid" : "partially_paid";
 
@@ -2226,7 +2329,7 @@ exports.approvePayment = async (req, res) => {
       }
 
       // 8. UPDATE statuses
-      const paymentStatusForProforma = isFullyPaid ? "fully-paid" : "partial";
+      const paymentStatusForProforma = isServiceFullyPaid ? "fully-paid" : (totalPaidSoFar > 0 ? "partial" : "pending");
       await runQuery(
         `UPDATE re_proposal_proforma SET status = ?, payment_status = ? WHERE id = ?`,
         [newStatus, paymentStatusForProforma, payment.proforma_id],
@@ -3337,6 +3440,16 @@ exports.getRevenueHistory = async (req, res) => {
            WHERE ppr.proforma_id = pp.id AND ppr.status = 'approved'
          ), 0) AS total_received_for_proforma,
          IFNULL((
+           SELECT SUM(ppr.realized_service_amount)
+           FROM re_proposal_payment_records ppr
+           WHERE ppr.proforma_id = pp.id AND ppr.status = 'approved'
+         ), 0) AS service_revenue_for_proforma,
+         IFNULL((
+           SELECT SUM(ppr.realized_ad_budget)
+           FROM re_proposal_payment_records ppr
+           WHERE ppr.proforma_id = pp.id AND ppr.status = 'approved'
+         ), 0) AS ad_budget_collected_for_proforma,
+         IFNULL((
            SELECT SUM(ppr.tds_amount)
            FROM re_proposal_payment_records ppr
            WHERE ppr.proforma_id = pp.id AND ppr.status = 'approved'
@@ -3368,6 +3481,8 @@ exports.getRevenueHistory = async (req, res) => {
 
     // ── Step 3: Aggregate totals and client-wise ledger by client_id
     let totalReceived = 0;
+    let totalServiceRevenue = 0;
+    let totalAdBudgetCollected = 0;
     let totalPending = 0;
     let totalTds = 0;
     let totalAmount = 0;
@@ -3377,6 +3492,8 @@ exports.getRevenueHistory = async (req, res) => {
       const cid = pf.client_id;
       const tot = Number(pf.total_amount || 0);
       const rec = Number(pf.total_received_for_proforma || 0);
+      const servRev = Number(pf.service_revenue_for_proforma || 0);
+      const adBudColl = Number(pf.ad_budget_collected_for_proforma || 0);
       const isCarriedForward = pf.proforma_status === 'carried_forward' || pf.is_carried_forward === 1;
       const pend = isCarriedForward ? 0 : Number(pf.current_pending_for_proforma || 0);
       const effectiveTot = isCarriedForward ? rec : tot;
@@ -3385,6 +3502,8 @@ exports.getRevenueHistory = async (req, res) => {
 
       totalAmount += effectiveTot;
       totalReceived += rec;
+      totalServiceRevenue += servRev;
+      totalAdBudgetCollected += adBudColl;
       totalPending += pend;
       totalTds += tds;
 
@@ -3396,12 +3515,16 @@ exports.getRevenueHistory = async (req, res) => {
           proformas_count: 0,
           total_amount: 0,
           total_received: 0,
+          total_service_revenue: 0,
+          total_ad_budget_collected: 0,
           total_pending: 0,
         };
       }
 
       clientMap[cid].total_amount += effectiveTot;
       clientMap[cid].total_received += rec;
+      clientMap[cid].total_service_revenue += servRev;
+      clientMap[cid].total_ad_budget_collected += adBudColl;
       clientMap[cid].total_pending += pend;
       clientMap[cid].invoices_count += invCount;
       clientMap[cid].proformas_count += 1;
@@ -3424,6 +3547,8 @@ exports.getRevenueHistory = async (req, res) => {
       totals: {
         totalInvoiced,
         totalReceived,
+        totalServiceRevenue: Math.round(totalServiceRevenue * 100) / 100,
+        totalAdBudgetCollected: Math.round(totalAdBudgetCollected * 100) / 100,
         totalPending,
         totalTds,
       },
@@ -3544,7 +3669,7 @@ exports.updateProformaSnapshot = async (req, res) => {
         if (fullProf.discount_snapshot) {
           try { discountObj = typeof fullProf.discount_snapshot === "string" ? JSON.parse(fullProf.discount_snapshot) : fullProf.discount_snapshot; } catch (e) {}
         }
-        const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+        const { baseAmount, gstAmount, totalAmount, dmAfterAdjustment, adBudgetAmount: compAdsTotal } = calculateProformaTotals(
           pricing,
           ads,
           discountObj,
@@ -3554,9 +3679,11 @@ exports.updateProformaSnapshot = async (req, res) => {
         );
         const prevBal = Number(fullProf.previous_balance_amount || 0);
         const finalTotal = totalAmount + prevBal;
+        const finalServiceAmount = (dmAfterAdjustment || 0) + prevBal;
+        const finalAdBudgetAmount = compAdsTotal || 0;
         await runQuery(
-          `UPDATE re_proposal_proforma SET ${column} = ?, base_amount = ?, gst_amount = ?, total_amount = ? WHERE id = ?`,
-          [updatedSnapshot, baseAmount, gstAmount, finalTotal, proformaId]
+          `UPDATE re_proposal_proforma SET ${column} = ?, base_amount = ?, gst_amount = ?, total_amount = ?, service_amount = ?, ad_budget_amount = ? WHERE id = ?`,
+          [updatedSnapshot, baseAmount, gstAmount, finalTotal, finalServiceAmount, finalAdBudgetAmount, proformaId]
         );
       } else {
         await runQuery(`UPDATE re_proposal_proforma SET ${column} = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
@@ -3606,7 +3733,7 @@ exports.updateProformaDiscount = async (req, res) => {
     const pricing = JSON.parse(prof.pricing_snapshot || "[]");
     const ads = JSON.parse(prof.ads_snapshot || "[]");
 
-    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+    const { baseAmount, gstAmount, totalAmount, dmAfterAdjustment, adBudgetAmount: compAdsTotal } = calculateProformaTotals(
       pricing,
       ads,
       discountObj,
@@ -3617,12 +3744,14 @@ exports.updateProformaDiscount = async (req, res) => {
 
     const prevBal = Number(prof.previous_balance_amount || 0);
     const finalTotal = totalAmount + prevBal;
+    const finalServiceAmount = (dmAfterAdjustment || 0) + prevBal;
+    const finalAdBudgetAmount = compAdsTotal || 0;
 
     await runQuery(
       `UPDATE re_proposal_proforma 
-       SET discount_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
+       SET discount_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ?, service_amount = ?, ad_budget_amount = ? 
        WHERE id = ?`,
-      [discountObj ? JSON.stringify(discountObj) : null, baseAmount, gstAmount, finalTotal, id]
+      [discountObj ? JSON.stringify(discountObj) : null, baseAmount, gstAmount, finalTotal, finalServiceAmount, finalAdBudgetAmount, id]
     );
 
     res.status(200).json({
@@ -3633,6 +3762,8 @@ exports.updateProformaDiscount = async (req, res) => {
         base_amount: baseAmount,
         gst_amount: gstAmount,
         total_amount: finalTotal,
+        service_amount: finalServiceAmount,
+        ad_budget_amount: finalAdBudgetAmount,
       }
     });
   } catch (error) {
@@ -3668,7 +3799,7 @@ exports.updateProformaAdjustment = async (req, res) => {
       } catch (e) {}
     }
 
-    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+    const { baseAmount, gstAmount, totalAmount, dmAfterAdjustment, adBudgetAmount: compAdsTotal } = calculateProformaTotals(
       pricing,
       ads,
       discountObj,
@@ -3679,12 +3810,14 @@ exports.updateProformaAdjustment = async (req, res) => {
 
     const prevBal = Number(prof.previous_balance_amount || 0);
     const finalTotal = totalAmount + prevBal;
+    const finalServiceAmount = (dmAfterAdjustment || 0) + prevBal;
+    const finalAdBudgetAmount = compAdsTotal || 0;
 
     await runQuery(
       `UPDATE re_proposal_proforma 
-       SET adjustment_amount = ?, adjustment_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
+       SET adjustment_amount = ?, adjustment_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ?, service_amount = ?, ad_budget_amount = ? 
        WHERE id = ?`,
-      [adjAmt, adjustmentObj ? JSON.stringify(adjustmentObj) : null, baseAmount, gstAmount, finalTotal, id]
+      [adjAmt, adjustmentObj ? JSON.stringify(adjustmentObj) : null, baseAmount, gstAmount, finalTotal, finalServiceAmount, finalAdBudgetAmount, id]
     );
 
     res.status(200).json({
@@ -3696,6 +3829,8 @@ exports.updateProformaAdjustment = async (req, res) => {
         base_amount: baseAmount,
         gst_amount: gstAmount,
         total_amount: finalTotal,
+        service_amount: finalServiceAmount,
+        ad_budget_amount: finalAdBudgetAmount,
       }
     });
   } catch (error) {

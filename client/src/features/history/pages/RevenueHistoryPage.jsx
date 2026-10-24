@@ -10,7 +10,7 @@ const RevenueHistoryPage = () => {
   const baseURL = API_BASE_URL;
   const { token } = useSelector((state) => state.user);
   const [data, setData] = useState({
-    totals: { totalPayment: 0, totalReceived: 0, totalPending: 0, totalTds: 0 },
+    totals: { totalPayment: 0, totalReceived: 0, totalServiceRevenue: 0, totalAdBudgetCollected: 0, totalPending: 0, totalTds: 0 },
     clientLedger: [],
     invoices: []
   });
@@ -174,6 +174,15 @@ const RevenueHistoryPage = () => {
         [data-theme="light"] .rev-card-blue p {
           color: #1e3a8a !important;
         }
+        [data-theme="light"] .rev-service-subtext {
+          color: #047857 !important;
+        }
+        [data-theme="light"] .rev-adbudget-subtext {
+          color: #1d4ed8 !important;
+        }
+        [data-theme="light"] .rev-subtext-border {
+          border-color: rgba(0, 0, 0, 0.1) !important;
+        }
         [data-theme="light"] .rev-card-orange {
           border: 1.5px solid rgba(249, 115, 22, 0.35) !important;
           box-shadow: 0 8px 24px rgba(249, 115, 22, 0.08) !important;
@@ -238,6 +247,18 @@ const RevenueHistoryPage = () => {
             </div>
             <div className="mt-4">
               <p className="font-headline text-2xl xl:text-3xl font-bold text-[#dee2f3] break-words">{ formatCurrency(totals.totalReceived) }</p>
+              {(Number(totals.totalServiceRevenue || 0) > 0 || Number(totals.totalAdBudgetCollected || 0) > 0) && (
+                <div className="mt-3 pt-3 border-t border-white/10 rev-subtext-border text-xs space-y-1.5">
+                  <div className="flex justify-between items-center text-[#31e193] rev-service-subtext">
+                    <span className="opacity-90">Service Revenue:</span>
+                    <span className="font-bold">{ formatCurrency(totals.totalServiceRevenue) }</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[#60a5fa] rev-adbudget-subtext">
+                    <span className="opacity-90">Ad Budget Collected:</span>
+                    <span className="font-bold">{ formatCurrency(totals.totalAdBudgetCollected) }</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

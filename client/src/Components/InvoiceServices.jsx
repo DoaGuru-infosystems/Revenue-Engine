@@ -841,6 +841,8 @@ function ProformaServices() {
         base_amount: baseAmt,
         gst_amount: gstAmt,
         total_amount: totalAmt,
+        service_amount: Number((discountedGraphic + previousBalanceAmount).toFixed(2)),
+        ad_budget_amount: Number(adsBudgetTotal.toFixed(2)),
         is_gst: isGSTBill ? 1 : 0,
         gst_rate: gstRate,
         previous_balance_amount: previousBalanceAmount,

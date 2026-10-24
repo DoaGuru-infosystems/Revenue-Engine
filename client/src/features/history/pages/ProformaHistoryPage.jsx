@@ -673,9 +673,16 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                     };
                     const conf = payBadgeMap[payStatus] || payBadgeMap['pending'];
                     return (
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${conf.cls}`}>
-                        {conf.label}
-                      </span>
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${conf.cls}`}>
+                          {conf.label}
+                        </span>
+                        {Number(item.ad_budget_pending || 0) > 0 && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Ad Budget Pending: ₹{Number(item.ad_budget_pending).toLocaleString("en-IN")}
+                          </span>
+                        )}
+                      </div>
                     );
                   })()}
                 </div>
@@ -808,9 +815,16 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
                           };
                           const conf = payBadgeMap[payStatus] || payBadgeMap['pending'];
                           return (
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border whitespace-nowrap ${conf.cls}`}>
-                              {conf.label}
-                            </span>
+                            <div className="flex flex-col gap-1 items-start">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border whitespace-nowrap ${conf.cls}`}>
+                                {conf.label}
+                              </span>
+                              {Number(item.ad_budget_pending || 0) > 0 && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                                  Ad Budget Pending: ₹{Number(item.ad_budget_pending).toLocaleString("en-IN")}
+                                </span>
+                              )}
+                            </div>
                           );
                         })()}
                       </td>

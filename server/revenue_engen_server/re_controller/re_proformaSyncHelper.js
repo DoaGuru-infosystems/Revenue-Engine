@@ -159,6 +159,8 @@ const calculateProformaTotals = (pricing = [], ads = [], discountObj = null, adj
     dmAfterDiscount,
     adjustmentAmount: adjAmt,
     dmAfterAdjustment,
+    serviceAmount: dmAfterAdjustment,
+    adBudgetAmount: adsTotal,
     baseAmount,
     gstAmount,
     totalAmount
@@ -192,7 +194,7 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
     let ads = [];
     try { ads = JSON.parse(prof.ads_snapshot || "[]"); } catch (e) {}
 
-    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+    const { baseAmount, gstAmount, totalAmount, dmAfterAdjustment, adBudgetAmount: compAdsTotal } = calculateProformaTotals(
       services,
       ads,
       discountObj,
@@ -203,6 +205,8 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
 
     const prevBal = Number(prof.previous_balance_amount || 0);
     const finalTotal = totalAmount + prevBal;
+    const finalServiceAmount = (dmAfterAdjustment || 0) + prevBal;
+    const finalAdBudgetAmount = compAdsTotal || 0;
 
     const snapshotVal = (discountObj && Number(discountObj.value || discountObj.discount_amt || 0) > 0)
       ? JSON.stringify(discountObj)
@@ -210,9 +214,9 @@ exports.syncProformaDiscount = async (txn_id, client_id, discountObj) => {
 
     await runQuery(
       `UPDATE re_proposal_proforma 
-       SET discount_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? 
+       SET discount_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ?, service_amount = ?, ad_budget_amount = ? 
        WHERE id = ?`,
-      [snapshotVal, baseAmount, gstAmount, finalTotal, proformaId]
+      [snapshotVal, baseAmount, gstAmount, finalTotal, finalServiceAmount, finalAdBudgetAmount, proformaId]
     );
     console.log(`[Proforma Sync] discount_snapshot synced for proforma_id: ${proformaId} (snapshot: ${snapshotVal}, total: ${finalTotal})`);
   } catch (err) {
@@ -286,7 +290,7 @@ exports.syncProformaAdditionalService = async (txn_id, client_id, action, entryI
       } catch (e) {}
     }
 
-    const { baseAmount, gstAmount, totalAmount } = calculateProformaTotals(
+    const { baseAmount, gstAmount, totalAmount, dmAfterAdjustment, adBudgetAmount: compAdsTotal } = calculateProformaTotals(
       snapshot,
       ads,
       discountObj,
@@ -297,10 +301,12 @@ exports.syncProformaAdditionalService = async (txn_id, client_id, action, entryI
 
     const prevBal = Number(prof.previous_balance_amount || 0);
     const finalTotal = totalAmount + prevBal;
+    const finalServiceAmount = (dmAfterAdjustment || 0) + prevBal;
+    const finalAdBudgetAmount = compAdsTotal || 0;
 
     await runQuery(
-      "UPDATE re_proposal_proforma SET pricing_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ? WHERE id = ?",
-      [JSON.stringify(snapshot), baseAmount, gstAmount, finalTotal, proformaId]
+      "UPDATE re_proposal_proforma SET pricing_snapshot = ?, base_amount = ?, gst_amount = ?, total_amount = ?, service_amount = ?, ad_budget_amount = ? WHERE id = ?",
+      [JSON.stringify(snapshot), baseAmount, gstAmount, finalTotal, finalServiceAmount, finalAdBudgetAmount, proformaId]
     );
     console.log(`[Proforma Sync] pricing_snapshot (Additional Service: ${action}) synced for proforma_id: ${proformaId} (new total: ${finalTotal})`);
   } catch (err) {

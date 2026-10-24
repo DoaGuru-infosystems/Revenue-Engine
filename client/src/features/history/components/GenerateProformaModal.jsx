@@ -63,6 +63,7 @@ const GenerateProformaModal = ({
     pendingProformas: [],
     loading: false,
   });
+  const [adBudgetPending, setAdBudgetPending] = useState(0);
 
   const fetchPreviousBalance = async (clientId) => {
     if (!clientId) return;
@@ -75,8 +76,9 @@ const GenerateProformaModal = ({
         }
       );
       if (res.data.status === "Success" && res.data.data) {
-        const { totalPending, pendingProformas } = res.data.data;
+        const { totalPending, pendingProformas, totalAdBudgetPending } = res.data.data;
         const tot = Number(totalPending || 0);
+        setAdBudgetPending(Number(totalAdBudgetPending || 0));
         setPreviousBalance({
           totalPending: tot,
           include: tot > 0,
@@ -368,6 +370,8 @@ const GenerateProformaModal = ({
           base_amount: finalBaseAmount,
           gst_amount: finalGstAmount,
           total_amount: finalBaseAmount + finalGstAmount + prevBalToApply,
+          service_amount: dmTotalAfterDiscount + prevBalToApply,
+          ad_budget_amount: adsTotalBudget,
           is_gst: isGST ? 1 : 0,
           gst_rate: 18,
           duration_start_date: formData.duration_start_date,
@@ -459,6 +463,8 @@ const GenerateProformaModal = ({
           base_amount: finalBaseAmount,
           gst_amount: finalGstAmount,
           total_amount: finalTotalAmount,
+          service_amount: dmTotalAfterDiscount + prevBalToApply,
+          ad_budget_amount: adsTotalBudget,
           is_gst: isGST ? 1 : 0,
           gst_rate: 18,
           duration_start_date: formData.duration_start_date,
@@ -1323,6 +1329,22 @@ const GenerateProformaModal = ({
                 />
               </div>
             ) }
+
+            {adBudgetPending > 0 && (
+              <div
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "rgba(59, 130, 246, 0.08)",
+                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                  marginBottom: 12,
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#60a5fa" }}>
+                  Client ka ₹{adBudgetPending.toLocaleString("en-IN")} Ad Budget purane proforma(s) se pending hai (is naye proforma me shamil nahi hoga)
+                </span>
+              </div>
+            )}
 
             {/* Previous Balance Section (Only visible if client has outstanding balance > 0) */}
             {previousBalance.totalPending > 0 && (
