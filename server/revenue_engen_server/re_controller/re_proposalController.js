@@ -1303,6 +1303,7 @@ exports.getProformasByClient = async (req, res) => {
     const q = `
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
+             COALESCE((SELECT SUM(realized_service_amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_service_realized,
              CASE
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
                  IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
@@ -1316,6 +1317,10 @@ exports.getProformasByClient = async (req, res) => {
                SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records 
                WHERE proforma_id = p.id AND status = 'approved'
              ), 0)) AS ad_budget_pending,
+             GREATEST(0, IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - IFNULL((
+               SELECT SUM(realized_service_amount) FROM re_proposal_payment_records 
+               WHERE proforma_id = p.id AND status = 'approved'
+             ), 0)) AS service_pending,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       WHERE p.client_id = ?
@@ -1335,6 +1340,7 @@ exports.getAllProformas = async (req, res) => {
     const q = `
       SELECT p.*, c.client_name, c.client_organization, qtn.quotation_number,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
+             COALESCE((SELECT SUM(realized_service_amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_service_realized,
              CASE
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
                  IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
@@ -1348,6 +1354,10 @@ exports.getAllProformas = async (req, res) => {
                SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records 
                WHERE proforma_id = p.id AND status = 'approved'
              ), 0)) AS ad_budget_pending,
+             GREATEST(0, IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - IFNULL((
+               SELECT SUM(realized_service_amount) FROM re_proposal_payment_records 
+               WHERE proforma_id = p.id AND status = 'approved'
+             ), 0)) AS service_pending,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       LEFT JOIN re_revenue_engine_client_details c ON p.client_id = c.id
@@ -1386,6 +1396,7 @@ exports.getProformasByProposal = async (req, res) => {
     const q = `
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
+             COALESCE((SELECT SUM(realized_service_amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_service_realized,
              CASE
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
                  IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
@@ -1399,6 +1410,10 @@ exports.getProformasByProposal = async (req, res) => {
                SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records 
                WHERE proforma_id = p.id AND status = 'approved'
              ), 0)) AS ad_budget_pending,
+             GREATEST(0, IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - IFNULL((
+               SELECT SUM(realized_service_amount) FROM re_proposal_payment_records 
+               WHERE proforma_id = p.id AND status = 'approved'
+             ), 0)) AS service_pending,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
       WHERE p.proposal_id = ?
@@ -1643,31 +1658,69 @@ exports.recordProposalPayment = async (req, res) => {
       });
     }
 
-    // Validate that the payment amount does not exceed the pending amount
-    const existingPayments = await runQuery(
-      `SELECT SUM(amount) as totalReceived FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+    // ── Validate payment amounts separately for Service and Ad Budget ──
+    const existingPaymentSums = await runQuery(
+      `SELECT 
+         SUM(amount) AS totalReceived,
+         SUM(realized_service_amount) AS totalServiceRealized,
+         SUM(realized_ad_budget) AS totalAdBudgetRealized
+       FROM re_proposal_payment_records 
+       WHERE proforma_id = ? AND status = 'approved'`,
       [proforma_id]
     );
-    const totalReceived = Number(existingPayments[0]?.totalReceived) || 0;
-    const pendingAmount = Number(proforma.total_amount) - totalReceived;
-    
-    if (Number(amount) > pendingAmount) {
-      return res.status(400).json({ 
-        status: "Failure", 
-        message: `Payment amount (₹${Number(amount).toLocaleString()}) cannot exceed the pending amount (₹${pendingAmount.toLocaleString()})` 
-      });
+    const totalReceived = Number(existingPaymentSums[0]?.totalReceived) || 0;
+    const totalServiceRealized = Number(existingPaymentSums[0]?.totalServiceRealized) || 0;
+    const totalAdBudgetRealized = Number(existingPaymentSums[0]?.totalAdBudgetRealized) || 0;
+
+    // Calculate ad budget being recorded in this payment
+    const totalAdBudgetThisPayment = (Number(realized_google_budget) || 0) + (Number(realized_meta_budget) || 0);
+    const adBudgetToRecord = totalAdBudgetThisPayment > 0 ? totalAdBudgetThisPayment : (Number(realized_ad_budget) || 0);
+    const realizedServiceAmount = Math.max(0, Number(amount) - adBudgetToRecord);
+
+    // Determine service+gst and ad_budget amounts from proforma (separation-aware)
+    const proformaSvcAmount = Number(proforma.service_amount || 0);
+    const proformaGstAmount = Number(proforma.gst_amount || 0);
+    const proformaAdBudget = Number(proforma.ad_budget_amount || 0);
+    const hasLegacyProforma = proformaSvcAmount === 0 && proformaAdBudget === 0 && Number(proforma.total_amount) > 0;
+
+    if (hasLegacyProforma) {
+      // Legacy proforma: no separation, use combined total_amount validation
+      const pendingAmount = Number(proforma.total_amount) - totalReceived;
+      if (Number(amount) > pendingAmount + 0.05) {
+        return res.status(400).json({
+          status: "Failure",
+          message: `Payment amount (₹${Number(amount).toLocaleString('en-IN')}) cannot exceed the pending amount (₹${pendingAmount.toLocaleString('en-IN')})`
+        });
+      }
+    } else {
+      // Separation-aware validation
+      const servicePending = Math.max(0, (proformaSvcAmount + proformaGstAmount) - totalServiceRealized);
+      const adBudgetPending = Math.max(0, proformaAdBudget - totalAdBudgetRealized);
+
+      // Check 1: Ad budget being recorded must not exceed ad budget pending
+      if (adBudgetToRecord > adBudgetPending + 0.05) {
+        return res.status(400).json({
+          status: "Failure",
+          message: `Ad Budget amount (₹${adBudgetToRecord.toLocaleString('en-IN')}) cannot exceed pending Ad Budget of ₹${adBudgetPending.toLocaleString('en-IN')}.`
+        });
+      }
+
+      // Check 2: Service portion (amount minus ad budget) must not exceed service pending
+      if (realizedServiceAmount > servicePending + 0.05) {
+        return res.status(400).json({
+          status: "Failure",
+          message: `Service amount (₹${realizedServiceAmount.toLocaleString('en-IN')}) cannot exceed pending Service amount of ₹${servicePending.toLocaleString('en-IN')}. If part of this payment is for Ad Budget, please check 'Has Ad Budget' and specify the amount.`
+        });
+      }
     }
 
-    // Validate that total ad budget realized does not exceed the payment amount
-    const totalAdBudget = (Number(realized_google_budget) || 0) + (Number(realized_meta_budget) || 0);
-    const adBudgetToRecord = totalAdBudget > 0 ? totalAdBudget : (Number(realized_ad_budget) || 0);
-    if (adBudgetToRecord > Number(amount)) {
+    // Legacy guard: ad budget cannot exceed total payment amount
+    if (adBudgetToRecord > Number(amount) + 0.05) {
       return res.status(400).json({
         status: "Failure",
-        message: `Total realized ad budget (₹${adBudgetToRecord.toLocaleString()}) cannot exceed the payment amount (₹${Number(amount).toLocaleString()}).`
+        message: `Total realized ad budget (₹${adBudgetToRecord.toLocaleString('en-IN')}) cannot exceed the payment amount (₹${Number(amount).toLocaleString('en-IN')}).`
       });
     }
-    const realizedServiceAmount = Math.max(0, Number(amount) - adBudgetToRecord);
 
     const proposalRows = await runQuery(
       `SELECT * FROM re_proposals WHERE id = ?`,

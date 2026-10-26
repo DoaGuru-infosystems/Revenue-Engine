@@ -12,6 +12,49 @@ import { getBasePath, rolePath } from "../../../utils/rolePaths";
 const getClientDisplayName = (client, fallback) =>
   client?.company_name || client?.client_organization || client?.client_name || fallback?.client_name || fallback?.company_name || fallback?.client_organization || "Client";
 
+// Consolidated helper to compute separation-aware pending amounts & legacy status
+export const getProformaPendingBreakdown = (proforma, allPayments = []) => {
+  if (!proforma) {
+    return {
+      isLegacy: false,
+      servicePending: 0,
+      adBudgetPending: 0,
+      totalReceivedTillDate: 0,
+      proformaSvcAmount: 0,
+      proformaGstAmount: 0,
+      proformaAdBudgetAmt: 0,
+    };
+  }
+
+  const proformaSvcAmount = Number(proforma.service_amount || 0);
+  const proformaGstAmount = Number(proforma.gst_amount || 0);
+  const proformaAdBudgetAmt = Number(proforma.ad_budget_amount || 0);
+  const isLegacy = proformaSvcAmount === 0 && proformaAdBudgetAmt === 0 && Number(proforma.total_amount) > 0;
+
+  const proformaPayments = allPayments.filter(p => p.proforma_id === proforma.id && p.status === 'approved');
+  const totalReceivedTillDate = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const servicePending = Number(proforma.service_pending) >= 0
+    ? Number(proforma.service_pending)
+    : isLegacy
+      ? Math.max(0, Number(proforma.total_amount) - totalReceivedTillDate)
+      : Math.max(0, (proformaSvcAmount + proformaGstAmount) - proformaPayments.reduce((s, p) => s + Number(p.realized_service_amount || 0), 0));
+
+  const adBudgetPending = Number(proforma.ad_budget_pending) >= 0
+    ? Number(proforma.ad_budget_pending)
+    : Math.max(0, proformaAdBudgetAmt - proformaPayments.reduce((s, p) => s + Number(p.realized_ad_budget || 0), 0));
+
+  return {
+    isLegacy,
+    servicePending,
+    adBudgetPending,
+    totalReceivedTillDate,
+    proformaSvcAmount,
+    proformaGstAmount,
+    proformaAdBudgetAmt,
+  };
+};
+
 export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   const { currentUser, token } = useSelector((state) => state.user);
   const baseURL = API_BASE_URL;
@@ -413,26 +456,54 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     e.preventDefault();
     if (!selectedProforma) return;
 
-    const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved');
-    const totalReceived = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const pendingAmount = Number(selectedProforma.total_amount) - totalReceived;
-    
-    if (Number(paymentForm.amount) > pendingAmount) {
-      Swal.fire('Validation Error', `Amount cannot exceed the pending balance of ₹${pendingAmount.toLocaleString()}`, 'warning');
-      return;
-    }
+    // Use consolidated breakdown helper (shared with render)
+    const {
+      isLegacy,
+      servicePending,
+      adBudgetPending,
+      totalReceivedTillDate: totalReceived,
+    } = getProformaPendingBreakdown(selectedProforma, payments);
 
     const activeGoogleBudget = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
     const activeMetaBudget = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
     const totalAdBudgetThisPayment = paymentForm.has_ad_budget
       ? activeGoogleBudget + activeMetaBudget
       : 0;
-    const maxAllowedAdBudget = Number(paymentForm.amount || 0);
+    const servicePortionThisPayment = Number(paymentForm.amount || 0) - totalAdBudgetThisPayment;
 
+    if (isLegacy) {
+      // Legacy proforma: combined validation
+      const pendingAmount = Number(selectedProforma.total_amount) - totalReceived;
+      if (Number(paymentForm.amount) > pendingAmount + 0.05) {
+        Swal.fire('Validation Error', `Amount cannot exceed the pending balance of ₹${pendingAmount.toLocaleString('en-IN')}`, 'warning');
+        return;
+      }
+    } else {
+      // Separation-aware validation
+      if (!paymentForm.has_ad_budget && Number(paymentForm.amount) > servicePending + 0.05) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Validation Error',
+          html: `<p>Amount <strong>₹${Number(paymentForm.amount).toLocaleString('en-IN')}</strong> exceeds the Service Pending amount of <strong>₹${servicePending.toLocaleString('en-IN')}</strong>.</p>
+                 <p style="margin-top:8px;font-size:0.9em;color:#9ca3af;">If part of this payment includes Ad Budget, please check <b>"Has Ad Budget"</b> and specify the split.</p>`
+        });
+        return;
+      }
+      if (paymentForm.has_ad_budget && totalAdBudgetThisPayment > adBudgetPending + 0.05) {
+        Swal.fire('Validation Error', `Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString('en-IN')}) cannot exceed pending Ad Budget of ₹${adBudgetPending.toLocaleString('en-IN')}`, 'warning');
+        return;
+      }
+      if (paymentForm.has_ad_budget && servicePortionThisPayment > servicePending + 0.05) {
+        Swal.fire('Validation Error', `Service portion (₹${servicePortionThisPayment.toLocaleString('en-IN')}) cannot exceed pending Service amount of ₹${servicePending.toLocaleString('en-IN')}`, 'warning');
+        return;
+      }
+    }
+
+    const maxAllowedAdBudget = Number(paymentForm.amount || 0);
     if (paymentForm.has_ad_budget && totalAdBudgetThisPayment > maxAllowedAdBudget) {
       Swal.fire(
         'Validation Error',
-        `Total Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString()}) cannot exceed the payment amount (₹${maxAllowedAdBudget.toLocaleString()}).`,
+        `Total Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString('en-IN')}) cannot exceed the payment amount (₹${maxAllowedAdBudget.toLocaleString('en-IN')}).`,
         'warning'
       );
       return;
@@ -444,12 +515,12 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
     }
 
     if (paymentForm.has_ad_budget && hasGoogleAd && activeGoogleBudget > remainingGoogleAdBudget) {
-      Swal.fire('Validation Error', `Google Ad Budget cannot exceed remaining ₹${remainingGoogleAdBudget.toLocaleString()}`, 'warning');
+      Swal.fire('Validation Error', `Google Ad Budget cannot exceed remaining ₹${remainingGoogleAdBudget.toLocaleString('en-IN')}`, 'warning');
       return;
     }
 
     if (paymentForm.has_ad_budget && hasMetaAd && activeMetaBudget > remainingMetaAdBudget) {
-      Swal.fire('Validation Error', `Meta Ad Budget cannot exceed remaining ₹${remainingMetaAdBudget.toLocaleString()}`, 'warning');
+      Swal.fire('Validation Error', `Meta Ad Budget cannot exceed remaining ₹${remainingMetaAdBudget.toLocaleString('en-IN')}`, 'warning');
       return;
     }
 
@@ -1102,40 +1173,96 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
 
               <div className="p-4 sm:p-5 border-t border-gray-800 bg-gray-900 shrink-0">
                 { (() => {
-                  const proformaPayments = payments.filter(p => p.proforma_id === selectedProforma.id && p.status === 'approved');
-                  const totalReceivedTillDate = proformaPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-                  const currentOutstanding = Number(selectedProforma.total_amount) - totalReceivedTillDate;
-                  const finalSettleAmount = Number(paymentForm.amount) || 0;
-                  const pendingAfterPayment = currentOutstanding - finalSettleAmount;
+                  const {
+                    isLegacy,
+                    servicePending,
+                    adBudgetPending,
+                    totalReceivedTillDate,
+                    proformaAdBudgetAmt,
+                  } = getProformaPendingBreakdown(selectedProforma, payments);
 
+                  const finalSettleAmount = Number(paymentForm.amount) || 0;
+
+                  // Current ad budget in this payment form
                   const activeGoogle = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
                   const activeMeta = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
-                  const currentTotalAd = activeGoogle + activeMeta;
-                  const maxAllowed = Number(paymentForm.amount || 0);
+                  const currentTotalAd = paymentForm.has_ad_budget ? (activeGoogle + activeMeta) : 0;
+                  const servicePortionThisPayment = finalSettleAmount - currentTotalAd;
 
                   const isAdBudgetInvalid = paymentForm.has_ad_budget && (
                     currentTotalAd <= 0 ||
-                    currentTotalAd > maxAllowed ||
+                    currentTotalAd > finalSettleAmount ||
                     (hasGoogleAd && activeGoogle > remainingGoogleAdBudget) ||
                     (hasMetaAd && activeMeta > remainingMetaAdBudget)
                   );
 
+                  // Real-time warning: amount > servicePending without ad budget checkbox
+                  const showServiceOverflowWarning = !isLegacy && !paymentForm.has_ad_budget
+                    && finalSettleAmount > 0
+                    && servicePending !== null
+                    && finalSettleAmount > servicePending + 0.05;
+
                   return (
-                    <div className="flex flex-col gap-4 sm:gap-6">
-                      <div className="flex justify-between items-center px-1 sm:px-2">
-                        <div className="text-center">
-                          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1">Outstanding</p>
-                          <p className="text-sm sm:text-lg font-bold text-gray-300">₹{ currentOutstanding.toLocaleString("en-IN") }</p>
+                    <div className="flex flex-col gap-3 sm:gap-4">
+
+                      {/* Separated Pending Display */}
+                      { isLegacy ? (
+                        // Legacy proforma: single combined outstanding
+                        <div className="flex justify-between items-center px-1 sm:px-2">
+                          <div className="text-center">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1">Outstanding</p>
+                            <p className="text-sm sm:text-lg font-bold text-gray-300">₹{ (Number(selectedProforma.total_amount) - totalReceivedTillDate).toLocaleString("en-IN") }</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[10px] text-yellow-500/70 uppercase tracking-wider mb-0.5 sm:mb-1">Settle Amount</p>
+                            <p className="text-base sm:text-xl font-bold text-yellow-400">₹{ finalSettleAmount.toLocaleString("en-IN") }</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[10px] text-orange-500/70 uppercase tracking-wider mb-0.5 sm:mb-1">Pending Balance</p>
+                            <p className="text-sm sm:text-lg font-bold text-orange-400">₹{ Math.max(0, Number(selectedProforma.total_amount) - totalReceivedTillDate - finalSettleAmount).toLocaleString("en-IN") }</p>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <p className="text-[10px] text-yellow-500/70 uppercase tracking-wider mb-0.5 sm:mb-1">Settle Amount</p>
-                          <p className="text-base sm:text-xl font-bold text-yellow-400">₹{ finalSettleAmount.toLocaleString("en-IN") }</p>
+                      ) : (
+                        // Separation-aware: show service pending and ad budget pending separately
+                        <div className="bg-gray-800/70 rounded-xl border border-gray-700/60 p-3 space-y-2">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Pending Breakdown</p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-400">Service Pending</span>
+                            <span className="text-sm font-bold text-blue-300">₹{ (servicePending ?? 0).toLocaleString("en-IN") }</span>
+                          </div>
+                          { proformaAdBudgetAmt > 0 && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-400">Ad Budget Pending</span>
+                              <span className="text-sm font-bold text-purple-300">₹{ adBudgetPending.toLocaleString("en-IN") }</span>
+                            </div>
+                          ) }
+                          <div className="border-t border-gray-700/60 pt-2 flex justify-between items-center">
+                            <span className="text-xs text-gray-400">Settle Amount</span>
+                            <span className="text-base font-bold text-yellow-400">₹{ finalSettleAmount.toLocaleString("en-IN") }</span>
+                          </div>
+                          { paymentForm.has_ad_budget && currentTotalAd > 0 && (
+                            <div className="flex justify-between items-center text-xs pl-2.5">
+                              <span className="text-gray-400">• Service Amount</span>
+                              <span className="text-blue-400 font-semibold">₹{ Math.max(0, servicePortionThisPayment).toLocaleString("en-IN") }</span>
+                            </div>
+                          ) }
+                          { paymentForm.has_ad_budget && currentTotalAd > 0 && (
+                            <div className="flex justify-between items-center text-xs pl-2.5">
+                              <span className="text-gray-400">• Ad Budget Amount</span>
+                              <span className="text-purple-400 font-semibold">₹{ currentTotalAd.toLocaleString("en-IN") }</span>
+                            </div>
+                          ) }
                         </div>
-                        <div className="text-center">
-                          <p className="text-[10px] text-orange-500/70 uppercase tracking-wider mb-0.5 sm:mb-1">Pending Balance</p>
-                          <p className="text-sm sm:text-lg font-bold text-orange-400">₹{ pendingAfterPayment > 0 ? pendingAfterPayment.toLocaleString("en-IN") : 0 }</p>
+                      ) }
+
+                      {/* Real-time warning: service overflow without ad budget checkbox */}
+                      { showServiceOverflowWarning && (
+                        <div className="bg-amber-900/40 border border-amber-600/50 rounded-xl px-3 py-2.5 text-xs text-amber-300">
+                          <span className="font-bold">⚠ Amount exceeds Service Pending (₹{ (servicePending ?? 0).toLocaleString("en-IN") }).</span>
+                          { " " }Agar isme Ad Budget bhi shamil hai, to{" "}
+                          <span className="font-bold text-yellow-300">"Has Ad Budget"</span> checkbox check karke split karein.
                         </div>
-                      </div>
+                      ) }
 
                       <div className="flex flex-col-reverse sm:flex-row justify-center gap-2.5 sm:gap-4">
                         <button type="button" onClick={ () => setShowPaymentModal(false) } className="w-full sm:w-auto px-6 sm:px-8 py-2 rounded-xl bg-gray-800 text-gray-300 hover:bg-gray-700 font-semibold transition text-sm">Cancel</button>
