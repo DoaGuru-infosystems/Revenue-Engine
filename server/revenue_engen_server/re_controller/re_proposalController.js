@@ -1082,20 +1082,23 @@ exports.createProforma = async (req, res) => {
       ? Number(req.body.ad_budget_amount)
       : adsTotalForBreakdown;
 
+    const sourceTypeForInsert = hasProposal ? 'proposal' : (quotation_id ? 'quotation' : 'manual');
+
     const proformaTxnId = String(Date.now());
     const proformaNumber = await getNextProformaNumber(is_gst);
 
     const q = `
       INSERT INTO re_proposal_proforma 
-      (proposal_id, quotation_id, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
+      (proposal_id, quotation_id, source_type, client_id, txn_id, proforma_number, is_gst, gst_rate, base_amount, gst_amount, total_amount, 
        service_amount, ad_budget_amount,
        pricing_snapshot, ads_snapshot, notes_snapshot, terms_snapshot, remarks_snapshot, client_instructions_snapshot, created_by,
        duration_start_date, duration_end_date, discount_snapshot, previous_balance_amount, assigned_team)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await runQuery(q, [
       hasProposal ? proposal_id : null,
       hasQuotation ? quotation_id : null,
+      sourceTypeForInsert,
       client_id,
       proformaTxnId,
       proformaNumber,
@@ -3636,7 +3639,7 @@ exports.getProformaSnapshot = async (req, res) => {
   } catch (error) {
     console.error("getProformaSnapshot error:", error);
     res.status(500).json({ status: "Failure", message: "Server error" });
-  }
+  } 
 };
 
 exports.updateProformaSnapshot = async (req, res) => {

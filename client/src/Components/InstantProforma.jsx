@@ -86,6 +86,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     pendingProformas: [],
     loading: false,
   });
+  const [adBudgetPending, setAdBudgetPending] = useState(0);
 
   const startRef = useRef(null);
   const endRef = useRef(null);
@@ -100,6 +101,7 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   const fetchPreviousBalance = useCallback(
     async (clientId) => {
       if (!clientId || !token) {
+        setAdBudgetPending(0);
         setPreviousBalance({
           totalPending: 0,
           include: true,
@@ -118,8 +120,9 @@ function InstantProforma({ onBack, handleSessionExpired }) {
           }
         );
         if (res.data?.status === "Success" && res.data?.data) {
-          const { totalPending, pendingProformas } = res.data.data;
+          const { totalPending, pendingProformas, totalAdBudgetPending } = res.data.data;
           const tot = Number(totalPending || 0);
+          setAdBudgetPending(Number(totalAdBudgetPending || 0));
           setPreviousBalance({
             totalPending: tot,
             include: tot > 0,
@@ -128,10 +131,12 @@ function InstantProforma({ onBack, handleSessionExpired }) {
             loading: false,
           });
         } else {
+          setAdBudgetPending(0);
           setPreviousBalance((prev) => ({ ...prev, loading: false }));
         }
       } catch (e) {
         console.error("Error fetching previous balance:", e);
+        setAdBudgetPending(0);
         setPreviousBalance((prev) => ({ ...prev, loading: false }));
       }
     },
@@ -306,11 +311,16 @@ function InstantProforma({ onBack, handleSessionExpired }) {
         proformaDraft: {
           ...proformaForm,
           previous_balance_amount: prevBalToApply,
+          ad_budget_pending: adBudgetPending,
+          adBudgetPending: adBudgetPending,
         },
         selectedClient: {
           ...selectedClient,
           previous_balance_amount: prevBalToApply,
+          ad_budget_pending: adBudgetPending,
+          adBudgetPending: adBudgetPending,
         },
+        adBudgetPending: adBudgetPending,
       },
     });
   };
@@ -720,6 +730,24 @@ function InstantProforma({ onBack, handleSessionExpired }) {
                 </div>
               </div>
             </div>
+
+            {/* Ad Budget Pending Notice */}
+            {adBudgetPending > 0 && (
+              <div
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  background: "rgba(59, 130, 246, 0.08)",
+                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                  marginTop: 16,
+                  marginBottom: 12,
+                }}
+              >
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#60a5fa" }}>
+                  Client ka ₹{adBudgetPending.toLocaleString("en-IN")} Ad Budget purane proforma(s) se pending hai (is naye proforma me shamil nahi hoga)
+                </span>
+              </div>
+            )}
 
             {/* Previous Balance Section (Only visible if client has outstanding balance > 0) */}
             {previousBalance.loading && (

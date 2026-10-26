@@ -57,10 +57,18 @@ function ProformaServices() {
   const dispatch = useDispatch();
   const { token, currentUser } = useSelector((state) => state.user);
 
-  const { proformaDraft, selectedClient } = location.state || {};
+  const { proformaDraft, selectedClient, adBudgetPending: stateAdBudgetPending } = location.state || {};
   const draft = proformaDraft || null;
   const selectedClientFromState = selectedClient || null;
   const isProformaContext = true; // eslint-disable-line no-unused-vars
+  const adBudgetPending = Number(
+    stateAdBudgetPending ??
+    draft?.ad_budget_pending ??
+    draft?.adBudgetPending ??
+    selectedClientFromState?.ad_budget_pending ??
+    selectedClientFromState?.adBudgetPending ??
+    0
+  );
 
   const [graphicServices, setGraphicServices] = useState([]);
   const [adsServices, setAdsServices] = useState([]);
@@ -1399,6 +1407,23 @@ function ProformaServices() {
               </div>
             </div>
           </div>
+
+          {/* Ad Budget Pending Notice */}
+          {adBudgetPending > 0 && (
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: "10px",
+                background: "rgba(59, 130, 246, 0.08)",
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+                marginBottom: 20,
+              }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#60a5fa" }}>
+                Client ka ₹{adBudgetPending.toLocaleString("en-IN")} Ad Budget purane proforma(s) se pending hai (is naye proforma me shamil nahi hoga)
+              </span>
+            </div>
+          )}
 
           {/* ── Pricing Mode Toggle ── */}
           <div className="is-fadein-d2" style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
