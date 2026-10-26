@@ -37,9 +37,10 @@ const ComplimentaryCalculator = ({
   proposalIdOverride,
   onServiceAdded,
   onServiceDeleted,
-  embeddedData,
   isQuotationMode: isQuotationModeProp,
   quotationId: quotationIdProp,
+  editItem,
+  embeddedData,
 }) => {
    const baseURL = API_BASE_URL;
 const dispatch = useDispatch();
@@ -292,13 +293,13 @@ const dispatch = useDispatch();
   const lastProcessedEditIdRef = useRef(null);
 
   useEffect(() => {
-    const item = location.state?.editItem;
+    const item = editItem || location.state?.editItem;
     if (item && data.length > 0 && lastProcessedEditIdRef.current !== item.id) {
       lastProcessedEditIdRef.current = item.id;
       handleEdit(item);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [location.state, data, optionalServices]);
+  }, [location.state, editItem, data, optionalServices]);
 
   const getSelectedService = data.find(
     (s) => s.service_name === selectedService
@@ -568,44 +569,13 @@ const dispatch = useDispatch();
       (async () => {
         try {
           const qId = effectiveQuotationId || effectiveProposalId;
-          const qRes = await axios.get(
-            `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
+          const { saveServiceToQuotationDraft, getActiveDraftItemsByType } = await import(
+            "../utils/quotationDraftPersistence"
           );
-          const existingServices = qRes.data?.data?.services || [];
-
-          // Duplicate check among complimentary services in quotation
-          if (!editId) {
-            const dupRow = existingServices.find((r) => {
-              if (!isComplimentaryRecord(r)) return false;
-              const rClean = String(r.service_name || r.service || "")
-                .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
-                .trim()
-                .toLowerCase();
-              return (
-                rClean === finalServiceName.toLowerCase() &&
-                String(r.category_name || "").trim().toLowerCase() ===
-                  String(selectedCategory || "").trim().toLowerCase() &&
-                String(r.editing_type_name || "").trim().toLowerCase() ===
-                  String(effectiveEditingType.editing_type_name || "").trim().toLowerCase()
-              );
-            });
-            if (dupRow) {
-              Swal.fire({
-                icon: "warning",
-                title: "Already Exists",
-                text: "This complimentary service already exists.",
-                showConfirmButton: false,
-                timer: 1500,
-              });
-              setLoading(false);
-              return;
-            }
-          }
 
           const quotationItem = {
             ...payload,
-            id: editId || Date.now(),
+            id: editId || undefined,
             service_name: finalServiceName,
             category_name: selectedCategory,
             editing_type_name: effectiveEditingType.editing_type_name || null,
@@ -619,54 +589,57 @@ const dispatch = useDispatch();
             include_in_total: false,
           };
 
-          let updatedServices = [];
-          if (editId) {
-            updatedServices = existingServices.map((s) =>
-              String(s.id) === String(editId) ? { ...s, ...quotationItem } : s
-            );
-          } else {
-            updatedServices = [...existingServices, quotationItem];
-          }
-
-          const paidGrandTotal = updatedServices
-            .filter((s) => !isComplimentaryRecord(s))
-            .reduce(
-              (sum, r) => sum + Number(r.total_amount || r.total_price || 0),
-              0
-            );
-
-          const saveRes = await axios.post(
-            `${baseURL}/auth/api/re_calculator/quotation/${qId}/services`,
-            {
-              services: updatedServices,
-              grand_total_excl_gst: paidGrandTotal,
+          const saveRes = await saveServiceToQuotationDraft({
+            quotationId: qId,
+            item: quotationItem,
+            editId,
+            isComplimentary: true,
+            fetchDbSnapshot: async () => {
+              const currentQ = await axios.get(
+                `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              const rawServices = currentQ.data?.data?.services || [];
+              const rawAds = currentQ.data?.data?.ads || [];
+              return {
+                items: [
+                  ...rawServices.map((s) => ({
+                    ...s,
+                    _type: "service",
+                    is_complimentary: isComplimentaryRecord(s),
+                    include_in_total: !isComplimentaryRecord(s),
+                    _status: "saved",
+                  })),
+                  ...rawAds.map((a) => ({
+                    ...a,
+                    _type: "ads",
+                    is_complimentary: false,
+                    include_in_total: true,
+                    _status: "saved",
+                  })),
+                ],
+              };
             },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+          });
 
-          if (saveRes.data?.status === "Success") {
+          if (saveRes?.success) {
+            const activeComp = getActiveDraftItemsByType(saveRes.draft, "service", true);
+            setGetData(activeComp);
             Swal.fire({
               icon: "success",
-              title: editId ? "Updated!" : "Saved!",
+              title: editId ? "Updated!" : "Saved to Draft!",
               text: editId
-                ? "Complimentary updated successfully"
-                : "Complimentary saved successfully",
+                ? "Complimentary service updated in draft. Return to Services Landing and click 'Save' to commit to database."
+                : "Complimentary service saved to draft. Return to Services Landing and click 'Save' to commit to database.",
               showConfirmButton: false,
-              timer: 1000,
+              timer: 1500,
             });
             resetForm();
-            fetchData();
             if (onSaveComplete) onSaveComplete();
-          } else {
-            Swal.fire({
-              icon: "error",
-              title: "Error",
-              text: saveRes.data?.message || "Failed to save complimentary service.",
-            });
           }
         } catch (err) {
           console.error("Quotation complimentary save error:", err);
-          Swal.fire("Error!", "Something went wrong while saving.", "error");
+          Swal.fire("Error!", "Something went wrong while saving to draft.", "error");
         } finally {
           setLoading(false);
         }
@@ -1004,6 +977,15 @@ const dispatch = useDispatch();
     try {
       if (isQuotationMode) {
         const qId = effectiveQuotationId || effectiveProposalId;
+        const { getQuotationDraft, getActiveDraftItemsByType } = await import(
+          "../utils/quotationDraftPersistence"
+        );
+        const existingDraft = getQuotationDraft(qId);
+        if (existingDraft && Array.isArray(existingDraft.draftItems)) {
+          const filtered = getActiveDraftItemsByType(existingDraft, "service", true);
+          setGetData(filtered);
+          return;
+        }
         const { data } = await axios.get(
           `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -1182,39 +1164,26 @@ const dispatch = useDispatch();
     try {
       if (isQuotationMode) {
         const qId = effectiveQuotationId || effectiveProposalId;
-        const qRes = await axios.get(
-          `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        const { deleteItemFromQuotationDraft, getActiveDraftItemsByType } = await import(
+          "../utils/quotationDraftPersistence"
         );
-        const existingServices = qRes.data?.data?.services || [];
-        const updatedServices = existingServices.filter(
-          (s) => String(s.id) !== String(entryId)
-        );
-        const paidGrandTotal = updatedServices
-          .filter((s) => !isComplimentaryRecord(s))
-          .reduce(
-            (sum, r) => sum + Number(r.total_amount || r.total_price || 0),
-            0
-          );
-
-        await axios.post(
-          `${baseURL}/auth/api/re_calculator/quotation/${qId}/services`,
-          {
-            services: updatedServices,
-            grand_total_excl_gst: paidGrandTotal,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setGetData((prev) => prev.filter((item) => String(item.id) !== String(entryId)));
-        Swal.fire({
-          icon: "success",
-          title: "Deleted!",
-          text: "Entry has been deleted.",
-          showConfirmButton: false,
-          timer: 1000,
+        const delRes = deleteItemFromQuotationDraft({
+          quotationId: qId,
+          itemId: entryId,
         });
-        if (onSaveComplete) onSaveComplete();
-        return;
+        if (delRes?.success) {
+          const activeComp = getActiveDraftItemsByType(delRes.draft, "service", true);
+          setGetData(activeComp);
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Complimentary entry removed from draft.",
+            timer: 1000,
+            showConfirmButton: false,
+          });
+          if (onSaveComplete) onSaveComplete();
+          return;
+        }
       }
 
       let res;

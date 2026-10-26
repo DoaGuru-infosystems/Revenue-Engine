@@ -24,14 +24,24 @@ import {
   Star,
   CheckCircle2,
   BadgePercent,
+  AlertTriangle,
+  Save,
 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import Swal from "sweetalert2";
 import { clearUser } from "../../../redux/user/userSlice";
+import { createPortal } from "react-dom";
 import API_BASE_URL from "../../../config/apiBaseUrl";
 import ProposalDiscountModal from "../../proposals/components/ProposalDiscountModal";
+import { GraphicCalculator, AdsCampaignCalculator, ComplimentaryCalculator } from "../components";
+import {
+  saveQuotationDraft,
+  clearQuotationDraft,
+  checkDraftStatus,
+  mergeDraftWithDb,
+} from "../utils/quotationDraftPersistence";
 
 export default function ServicesLandingPage() {
   const location = useLocation();
@@ -68,6 +78,18 @@ export default function ServicesLandingPage() {
   const quotationId = locationState.quotationId || (isQuotationMode ? proposalId : null);
   // When in quotation mode, use quotationId as the "proposalId" for all fetch/navigate calls
   const effectiveProposalId = isQuotationMode ? quotationId : proposalId;
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ─── Quotation In-Memory Draft State (Phase B & D) ───────────────────────
+  const [draftItems, setDraftItems] = useState([]);
+  const [isSavingQuotation, setIsSavingQuotation] = useState(false);
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ─── Quotation LocalStorage Persistence & 48h Merge (Phase C) ───────────
+  const [restoreAvailable, setRestoreAvailable] = useState(false);
+  const [pendingDraftData, setPendingDraftData] = useState(null);
+  const [conflictNotices, setConflictNotices] = useState([]);
+  const baseDbSnapshotRef = useRef([]);
   // ─────────────────────────────────────────────────────────────────────────
 
   const [discountType, setDiscountType] = useState("Amount");
@@ -157,6 +179,21 @@ export default function ServicesLandingPage() {
       navigation: `${basePath}/Adscalculator/${id}/${effectiveProposalId}`,
       navigationState: isQuotationMode ? { mode: "quotation", quotationId } : undefined,
     },
+    {
+      id: "complimentary",
+      title: "Complimentary Services",
+      subtitle: "Free Value-Add",
+      description:
+        "Offer complimentary graphics, videos, or management services without impacting the payable quotation total.",
+      icon: Gift,
+      gradient: "from-yellow-400 to-orange-500",
+      buttonGradient: "from-yellow-500 to-orange-500",
+      features: ["Free Video Services", "Free Graphic Design", "Zero Grand Total Impact", "Included in Quotation"],
+      navigation: `${basePath}/complimentary/${id}/${effectiveProposalId}`,
+      navigationState: isQuotationMode
+        ? { servicetype: "complimentary", mode: "quotation", quotationId }
+        : { servicetype: "complimentary" },
+    },
     // {
     //   id: "notes",
     //   title: "Notes",
@@ -242,12 +279,55 @@ export default function ServicesLandingPage() {
         );
         if (res.data.status === "Success") {
           const services = res.data.data?.services || [];
+          const ads = res.data.data?.ads || [];
           const isComplimentary = (item) =>
-            item.source === "custom_complimentary" ||
-            item.is_complimentary === true ||
-            String(item.service_name || "").toLowerCase() === "complimentary";
+            Boolean(
+              item.is_complimentary ||
+              item.include_in_total === false ||
+              item.source === "custom_complimentary" ||
+              item.source === "complimentary" ||
+              String(item.service_name || item.service || "").toLowerCase().includes("(complimentary)") ||
+              String(item.service_name || item.service || "").toLowerCase() === "complimentary"
+            );
+
+          const initialDraft = [
+            ...services.map((s) => ({
+              ...s,
+              _type: "service",
+              is_complimentary: isComplimentary(s),
+              include_in_total: !isComplimentary(s),
+              _status: "saved",
+            })),
+            ...ads.map((a) => ({
+              ...a,
+              _type: "ads",
+              category: a.category || a.category_name,
+              category_name: a.category || a.category_name,
+              amount: a.amount || a.budget,
+              budget: a.amount || a.budget,
+              total: a.total || a.total_amount || a.budget,
+              is_complimentary: false,
+              include_in_total: true,
+              _status: "saved",
+            })),
+          ];
+          baseDbSnapshotRef.current = initialDraft;
+
+          // Check for valid unsaved localStorage draft (< 48h)
+          const draftStatus = checkDraftStatus({ quotationId });
+          if (draftStatus.restoreAvailable && draftStatus.draft) {
+            setRestoreAvailable(true);
+            setPendingDraftData(draftStatus.draft);
+            setDraftItems(initialDraft);
+          } else {
+            setRestoreAvailable(false);
+            setPendingDraftData(null);
+            setDraftItems(initialDraft);
+          }
+
           setGetData(services.filter((item) => !isComplimentary(item)));
           setGetComplimenatryData(services.filter(isComplimentary));
+          setGetAdsData(ads);
 
           const qtn = res.data.data;
           if (qtn?.discount_json) {
@@ -314,13 +394,66 @@ export default function ServicesLandingPage() {
             if (qRes.data?.status === "Success" && qRes.data?.data?.id) {
               setIsDetectedQuotation(true);
               const services = qRes.data.data?.services || [];
+              const ads = qRes.data.data?.ads || [];
               const isComplimentary = (item) =>
-                item.source === "custom_complimentary" ||
-                item.is_complimentary === true ||
-                String(item.service_name || "").toLowerCase() === "complimentary";
+                Boolean(
+                  item.is_complimentary ||
+                  item.include_in_total === false ||
+                  item.source === "custom_complimentary" ||
+                  item.source === "complimentary" ||
+                  String(item.service_name || item.service || "").toLowerCase().includes("(complimentary)") ||
+                  String(item.service_name || item.service || "").toLowerCase() === "complimentary"
+                );
+
+              const initialDraft = [
+                ...services.map((s) => ({
+                  ...s,
+                  _type: "service",
+                  is_complimentary: isComplimentary(s),
+                  include_in_total: !isComplimentary(s),
+                  _status: "saved",
+                })),
+                ...ads.map((a) => ({
+                  ...a,
+                  _type: "ads",
+                  category: a.category || a.category_name,
+                  category_name: a.category || a.category_name,
+                  amount: a.amount || a.budget,
+                  budget: a.amount || a.budget,
+                  total: a.total || a.total_amount || a.budget,
+                  is_complimentary: false,
+                  include_in_total: true,
+                  _status: "saved",
+                })),
+              ];
+              baseDbSnapshotRef.current = initialDraft;
+
+              // Check for valid unsaved localStorage draft (< 48h)
+              const draftStatus = checkDraftStatus({ quotationId: effectiveProposalId });
+              if (draftStatus.restoreAvailable && draftStatus.draft) {
+                const { mergedItems, conflictNotices: conflicts, discount } = mergeDraftWithDb({
+                  draft: draftStatus.draft,
+                  currentDbItems: initialDraft,
+                });
+                setDraftItems(mergedItems);
+                if (discount) {
+                  if (discount.discountType) setDiscountType(discount.discountType);
+                  if (discount.discountValue !== undefined) setDiscountValue(discount.discountValue);
+                }
+                setRestoreAvailable(false);
+                setPendingDraftData(null);
+                if (conflicts && conflicts.length > 0) {
+                  setConflictNotices(conflicts);
+                }
+              } else {
+                setRestoreAvailable(false);
+                setPendingDraftData(null);
+                setDraftItems(initialDraft);
+              }
+
               setGetData(services.filter((item) => !isComplimentary(item)));
               setGetComplimenatryData(services.filter(isComplimentary));
-              setGetAdsData(qRes.data.data?.ads || []);
+              setGetAdsData(ads);
               const qtn = qRes.data.data;
               if (qtn?.discount_json) {
                 try {
@@ -350,6 +483,7 @@ export default function ServicesLandingPage() {
   };
 
   const fetchAdsData = async () => {
+    if (isQuotationMode) return;
     if (!id || !effectiveProposalId) return;
     try {
       if (isQuotationMode) {
@@ -357,8 +491,27 @@ export default function ServicesLandingPage() {
           `${baseURL}/auth/api/re_calculator/quotation/${quotationId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (res.data.status === "Success") setGetAdsData(res.data.data?.ads || []);
-      } else if (docTypeFromURL === "proforma") {
+        if (res.data.status === "Success") {
+          const ads = res.data.data?.ads || [];
+          setGetAdsData(ads);
+          setDraftItems((prev) => {
+            const nonAds = prev.filter((i) => i._type !== "ads");
+            const newAds = ads.map((a) => ({
+              ...a,
+              _type: "ads",
+              category: a.category || a.category_name,
+              category_name: a.category || a.category_name,
+              amount: a.amount || a.budget,
+              budget: a.amount || a.budget,
+              total: a.total || a.total_amount || a.budget,
+              is_complimentary: false,
+              include_in_total: true,
+              _status: "saved",
+            }));
+            return [...nonAds, ...newAds];
+          });
+        }
+       } else if (docTypeFromURL === "proforma") {
         const res = await axios.get(
           `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -466,41 +619,455 @@ export default function ServicesLandingPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ─── Totals ─────────────────────────────────────────────────────────────────
-  const grandTotal = getData.reduce((acc, order) => {
-    if (order.service_name?.toLowerCase() === "complimentary") return acc;
-    const qty = Number(order.quantity) || 1;
-    let addonsTotal = 0;
-    if (order.additional_services) {
-      try {
-        const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
-        if (Array.isArray(addons)) {
-          addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
-        }
-      } catch {}
-    }
-    const base = Number(order.editing_type_amount || order.price || 0);
-    const baseTotal = base * qty;
-    const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
-    const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
-      ? recordedTotal
-      : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
-    return acc + effectiveTotal;
-  }, 0);
+  // ─── Draft Items & Totals Helpers ───────────────────────────────────────────
+  const isCompItem = (r) =>
+    Boolean(
+      r.is_complimentary ||
+      r.include_in_total === false ||
+      r.source === "custom_complimentary" ||
+      r.source === "complimentary" ||
+      String(r.service_name || r.service || "").toLowerCase().includes("(complimentary)") ||
+      String(r.service_name || r.service || "").toLowerCase() === "complimentary"
+    );
 
-  const grandAdsTotal = getAdsData.reduce((acc, order) => acc + parseFloat(order.total || 0), 0);
-  const grandComplimentryTotal = getComplimenatryData.reduce((acc, order) => acc + parseFloat(order.total_amount || 0), 0);
+  const handleServiceAdded = (row) => {
+    const isComp = isCompItem(row);
+    const isAds = row.source === "custom_ads" || row.service_name === "Ads Campaign";
+
+    setDraftItems((prevItems) => {
+      const targetId = editingCalculatorItem?.id || row.id;
+      const existsIndex = prevItems.findIndex((item) => String(item.id) === String(targetId));
+
+      if (existsIndex !== -1) {
+        // Edit existing item
+        const existing = prevItems[existsIndex];
+        const isOriginallySaved = !String(existing.id).startsWith("draft-");
+        const updated = {
+          ...existing,
+          ...row,
+          id: existing.id,
+          _type: isAds ? "ads" : "service",
+          is_complimentary: isComp,
+          include_in_total: isAds ? true : !isComp,
+          _status: isOriginallySaved ? "pending_edit" : "pending_add",
+        };
+        const newItems = [...prevItems];
+        newItems[existsIndex] = updated;
+        return newItems;
+      }
+
+      // Check duplicates for new item
+      if (!isAds) {
+        const dup = prevItems.find((r) => {
+          if (r._status === "pending_delete") return false;
+          if (r._type !== "service") return false;
+          if (Boolean(r.is_complimentary) !== isComp) return false;
+          return (
+            String(r.service_name || "").trim().toLowerCase() === String(row.service_name || "").trim().toLowerCase() &&
+            String(r.category_name || "").trim().toLowerCase() === String(row.category_name || "").trim().toLowerCase() &&
+            String(r.editing_type_name || "").trim().toLowerCase() === String(row.editing_type_name || "").trim().toLowerCase()
+          );
+        });
+        if (dup) {
+          Swal.fire({
+            icon: "error",
+            title: "Already Exists!",
+            text: `"${row.service_name} → ${row.category_name} (${row.editing_type_name || "-"})" already exists. Please edit the existing entry.`,
+            showConfirmButton: true,
+          });
+          return prevItems;
+        }
+      } else {
+        const dup = prevItems.find((r) => {
+          if (r._status === "pending_delete") return false;
+          if (r._type !== "ads") return false;
+          return (
+            String(r.category || r.category_name || "").trim().toLowerCase() ===
+            String(row.category_name || row.category || "").trim().toLowerCase()
+          );
+        });
+        if (dup) {
+          const dupAmt = Number(dup.amount || dup.budget || 0);
+          const newAmt = Number(row.budget || row.amount || 0);
+          if (dupAmt === newAmt) {
+            Swal.fire({
+              icon: "error",
+              title: "Already Exists!",
+              text: `Ads campaign for "${row.category_name}" with budget ₹${dupAmt.toLocaleString()} already exists.`,
+              showConfirmButton: true,
+            });
+            return prevItems;
+          }
+          const isOriginallySaved = !String(dup.id).startsWith("draft-");
+          const updated = {
+            ...dup,
+            ...row,
+            category: row.category_name,
+            category_name: row.category_name,
+            amount: newAmt,
+            budget: newAmt,
+            total: row.total || row.total_amount,
+            _status: isOriginallySaved ? "pending_edit" : "pending_add",
+          };
+          return prevItems.map((item) => (String(item.id) === String(dup.id) ? updated : item));
+        }
+      }
+
+      // Add as new draft item
+      const draftId = `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const newItem = {
+        ...row,
+        id: draftId,
+        _type: isAds ? "ads" : "service",
+        is_complimentary: isComp,
+        include_in_total: isAds ? true : !isComp,
+        _status: "pending_add",
+      };
+      return [...prevItems, newItem];
+    });
+
+    setActiveCalculator(null);
+    setEditingCalculatorItem(null);
+  };
+
+  const handleDraftDelete = (itemToDelete) => {
+    setDraftItems((prevItems) => {
+      const isNewDraft = String(itemToDelete.id).startsWith("draft-");
+      if (isNewDraft) {
+        return prevItems.filter((i) => String(i.id) !== String(itemToDelete.id));
+      }
+      return prevItems.map((i) =>
+        String(i.id) === String(itemToDelete.id) ? { ...i, _status: "pending_delete" } : i
+      );
+    });
+  };
+
+  const handleDraftUndoDelete = (itemToRestore) => {
+    setDraftItems((prevItems) =>
+      prevItems.map((i) =>
+        String(i.id) === String(itemToRestore.id) ? { ...i, _status: "saved" } : i
+      )
+    );
+  };
+
+  const handleDraftEdit = (item) => {
+    if (item._type === "ads") {
+      navigate(`${basePath}/Adscalculator/${id}/${effectiveProposalId}?mode=quotation`, {
+        state: { mode: "quotation", quotationId, editItem: item },
+      });
+    } else if (isCompItem(item)) {
+      navigate(`${basePath}/complimentary/${id}/${effectiveProposalId}?mode=quotation`, {
+        state: { servicetype: "complimentary", mode: "quotation", quotationId, editItem: item },
+      });
+    } else {
+      navigate(`${basePath}/calculator/${id}/${effectiveProposalId}?mode=quotation`, {
+        state: { servicetype: "paid", mode: "quotation", quotationId, editItem: item },
+      });
+    }
+  };
+
+  // ─── Quotation Draft Restore & Discard Handlers (Phase C) ───────────────────
+  const handleRestoreDraft = () => {
+    if (!pendingDraftData) return;
+    const { mergedItems, conflictNotices: conflicts, discount } = mergeDraftWithDb({
+      draft: pendingDraftData,
+      currentDbItems: baseDbSnapshotRef.current,
+    });
+    setDraftItems(mergedItems);
+    if (discount) {
+      if (discount.discountType) setDiscountType(discount.discountType);
+      if (discount.discountValue !== undefined) setDiscountValue(discount.discountValue);
+    }
+    if (conflicts.length > 0) {
+      setConflictNotices(conflicts);
+      Swal.fire({
+        icon: "info",
+        title: "Server Changes Detected",
+        html: `<div class="text-left text-xs space-y-1">` +
+          `<p class="font-medium mb-2">Some items were modified or deleted on the server by another session. Server data was preserved for those items:</p>` +
+          conflicts.map((c) => `<div class="p-1.5 bg-slate-800 rounded border border-slate-700"><b>${c.itemTitle}</b>: ${c.message}</div>`).join("") +
+          `</div>`,
+        confirmButtonText: "Got it",
+      });
+    } else {
+      Swal.fire({
+        icon: "success",
+        title: "Draft Restored",
+        text: `Restored ${mergedItems.length} items from your previous session.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    }
+    setRestoreAvailable(false);
+    setPendingDraftData(null);
+  };
+
+  const handleDiscardDraft = () => {
+    clearQuotationDraft(effectiveProposalId);
+    setRestoreAvailable(false);
+    setPendingDraftData(null);
+    Swal.fire({
+      icon: "info",
+      title: "Draft Discarded",
+      text: "Local unsaved changes discarded. Showing current server data.",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  };
+
+  // ─── Single Batch Save Handler (Phase D) ──────────────────────────────────
+  const handleSaveQuotation = async () => {
+    if (!isQuotationMode || !effectiveProposalId) return;
+    try {
+      setIsSavingQuotation(true);
+
+      // 1. Exclude pending_delete items
+      const finalServices = draftItems.filter(
+        (i) => i._type === "service" && i._status !== "pending_delete"
+      );
+      const finalAds = draftItems.filter(
+        (i) => i._type === "ads" && i._status !== "pending_delete"
+      );
+
+      // 2. Client-side total calculation matching Phase 1/2 formula
+      const paidServices = finalServices.filter((s) => !isCompItem(s));
+      const rawServiceTotal = paidServices.reduce((sum, item) => {
+        const qty = Number(item.quantity) || 1;
+        let addonsTotal = 0;
+        if (item.additional_services) {
+          try {
+            const addons = typeof item.additional_services === "string"
+              ? JSON.parse(item.additional_services)
+              : item.additional_services;
+            if (Array.isArray(addons)) {
+              addonsTotal = addons.reduce(
+                (aSum, a) => aSum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)),
+                0
+              );
+            }
+          } catch {}
+        }
+        const base = Number(item.editing_type_amount || item.price || item.unit_price || 0);
+        const baseTotal = base * qty;
+        const recordedTotal = parseFloat(item.total_amount || item.total_price || 0);
+        const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+          ? recordedTotal
+          : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+        return sum + effectiveTotal;
+      }, 0);
+
+      const adsTotal = finalAds.reduce((sum, item) => {
+        return sum + Number(item.total || item.total_amount || item.budget || 0);
+      }, 0);
+
+      const discountAmount = discountType === "Percentage"
+        ? (rawServiceTotal * Number(discountValue || 0)) / 100
+        : Number(discountValue || 0);
+
+      const finalGrandTotal = Math.max(0, rawServiceTotal - discountAmount) + adsTotal;
+
+      // 3. Prepare payloads
+      const servicesPayload = finalServices.map((s) => ({
+        service_name: s.service_name || s.service || "",
+        category_name: s.category_name || "",
+        editing_type_name: s.editing_type_name || "",
+        editing_type_amount: Number(s.editing_type_amount || s.unit_price || 0),
+        quantity: Number(s.quantity || 1),
+        additional_services: s.additional_services || null,
+        total_amount: Number(s.total_amount || s.total_price || 0),
+        source: s.source || (isCompItem(s) ? "custom_complimentary" : "graphic"),
+      }));
+
+      const adsPayload = finalAds.map((a) => ({
+        category_name: a.category_name || a.category || a.service_name || "",
+        budget: Number(a.budget || a.amount || 0),
+        percent: Number(a.percent || 0),
+        charge: Number(a.charge || 0),
+        total: Number(a.total || a.total_amount || a.budget || 0),
+      }));
+
+      // 4. Batch Dispatch via Promise.all
+      const promises = [
+        axios.post(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}/services`,
+          { services: servicesPayload, grand_total_excl_gst: finalGrandTotal },
+          { headers: { Authorization: `Bearer ${token}` } }
+        ),
+        axios.post(
+          `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}/ads`,
+          { ads: adsPayload },
+          { headers: { Authorization: `Bearer ${token}` } }
+        ),
+      ];
+
+      if (discountValue > 0 || discountType) {
+        const isPercent = discountType === "Percentage";
+        promises.push(
+          axios.patch(
+            `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}/notes`,
+            {
+              discount_json: {
+                type: isPercent ? "Percentage" : "Amount",
+                value: Number(discountValue || 0),
+                discount_type: isPercent ? "percent" : "amount",
+                discount_amt: isPercent ? 0 : Number(discountValue || 0),
+                discount_per: isPercent ? Number(discountValue || 0) : 0,
+                calculatedAmount: discountAmount,
+              },
+              grand_total_excl_gst: finalGrandTotal,
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        );
+      }
+
+      await Promise.all(promises);
+
+      // 5. On success: clear draft, refetch clean state
+      clearQuotationDraft(effectiveProposalId);
+      await fetchData();
+      await fetchAdsData();
+
+      Swal.fire({
+        icon: "success",
+        title: "Quotation Saved!",
+        text: "All changes have been successfully committed to the database.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Save quotation error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Save Failed",
+        text: error.response?.data?.message || "Failed to save quotation changes. Your local draft is preserved.",
+      });
+    } finally {
+      setIsSavingQuotation(false);
+    }
+  };
+
+  const handleDiscardAll = async () => {
+    if (!isQuotationMode || !effectiveProposalId) return;
+    const result = await Swal.fire({
+      title: "Discard All Changes?",
+      text: "All unsaved draft items, edits, and deletions will be discarded and reset to the database version.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Yes, Discard All",
+    });
+
+    if (result.isConfirmed) {
+      clearQuotationDraft(effectiveProposalId);
+      await fetchData();
+      await fetchAdsData();
+      Swal.fire({
+        icon: "info",
+        title: "Draft Discarded",
+        text: "Reset to saved server version.",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  // Auto-save draft changes to localStorage whenever draftItems or discount change
+  useEffect(() => {
+    if (!isQuotationMode || !effectiveProposalId) return;
+    if (restoreAvailable) return; // Awaiting user decision on banner
+
+    const hasPendingChanges = draftItems.some(
+      (item) => item._status && item._status !== "saved"
+    );
+
+    if (hasPendingChanges) {
+      saveQuotationDraft({
+        quotationId: effectiveProposalId,
+        draftItems,
+        discount: { discountType, discountValue },
+        baseDbSnapshot: baseDbSnapshotRef.current,
+      });
+    } else if (draftItems.length > 0) {
+      clearQuotationDraft(effectiveProposalId);
+    }
+  }, [draftItems, discountType, discountValue, isQuotationMode, effectiveProposalId, restoreAvailable]);
+
+  // ─── Totals ─────────────────────────────────────────────────────────────────
+  const activePaidDraft = draftItems.filter((o) => o._type === "service" && !isCompItem(o) && o._status !== "pending_delete");
+  const activeAdsDraft = draftItems.filter((o) => o._type === "ads" && o._status !== "pending_delete");
+  const activeCompDraft = draftItems.filter((o) => o._type === "service" && isCompItem(o) && o._status !== "pending_delete");
+
+  const grandTotal = isQuotationMode
+    ? activePaidDraft.reduce((acc, order) => {
+        const qty = Number(order.quantity) || 1;
+        let addonsTotal = 0;
+        if (order.additional_services) {
+          try {
+            const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
+            if (Array.isArray(addons)) {
+              addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+            }
+          } catch {}
+        }
+        const base = Number(order.editing_type_amount || order.price || order.unit_price || 0);
+        const baseTotal = base * qty;
+        const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
+        const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+          ? recordedTotal
+          : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+        return acc + effectiveTotal;
+      }, 0)
+    : getData.reduce((acc, order) => {
+        if (order.service_name?.toLowerCase() === "complimentary") return acc;
+        const qty = Number(order.quantity) || 1;
+        let addonsTotal = 0;
+        if (order.additional_services) {
+          try {
+            const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
+            if (Array.isArray(addons)) {
+              addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+            }
+          } catch {}
+        }
+        const base = Number(order.editing_type_amount || order.price || 0);
+        const baseTotal = base * qty;
+        const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
+        const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+          ? recordedTotal
+          : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+        return acc + effectiveTotal;
+      }, 0);
+
+  const grandAdsTotal = isQuotationMode
+    ? activeAdsDraft.reduce((acc, order) => acc + parseFloat(order.total || order.total_amount || 0), 0)
+    : getAdsData.reduce((acc, order) => acc + parseFloat(order.total || 0), 0);
+
+  const grandComplimentryTotal = isQuotationMode
+    ? activeCompDraft.reduce((acc, order) => acc + parseFloat(order.total_amount || order.total_price || 0), 0)
+    : getComplimenatryData.reduce((acc, order) => acc + parseFloat(order.total_amount || 0), 0);
 
   const calculatedDiscount = discountType === "Percentage"
     ? (grandTotal * discountValue) / 100
     : discountValue;
   const dmTotalAfterDiscount = Math.max(0, grandTotal - calculatedDiscount);
 
-  const graphLength = getData.length;
-  const adsCampLength = getAdsData.length;
-  const complimenatryLength = getComplimenatryData.length;
+  const graphLength = isQuotationMode ? activePaidDraft.length : getData.length;
+  const adsCampLength = isQuotationMode ? activeAdsDraft.length : getAdsData.length;
+  const complimenatryLength = isQuotationMode ? activeCompDraft.length : getComplimenatryData.length;
   const finalLength = graphLength + adsCampLength + complimenatryLength;
   const totalAmount = dmTotalAfterDiscount + grandAdsTotal;
+
+  // Unsaved changes count for header badge and floating action bar
+  const unsavedChangesCount = isQuotationMode
+    ? draftItems.filter((i) => i._status && i._status !== "saved").length
+    : 0;
+
+  // Check if there are unsaved plan items in draft
+  const hasUnsavedPlanItems = isQuotationMode && draftItems.some(
+    (item) => item.source === "plan" && item._status === "pending_add"
+  );
 
   const openDiscountModal = () => {
     setFormDataDis({
@@ -548,42 +1115,17 @@ export default function ServicesLandingPage() {
         setLoading(false);
       }
     } else if (isQuotationMode) {
-      try {
-        setLoading(true);
-        const calcRupee = isPercent ? (grandTotal * val) / 100 : val;
-        const newTotal = Math.max(0, grandTotal - calcRupee) + grandAdsTotal;
-        const discountPayload = {
-          type: isPercent ? "Percentage" : "Amount",
-          value: val,
-          discount_type: isPercent ? "percent" : "amount",
-          discount_amt: isPercent ? 0 : val,
-          discount_per: isPercent ? val : 0,
-          calculatedAmount: calcRupee,
-        };
-        await axios.patch(
-          `${baseURL}/auth/api/re_calculator/quotation/${quotationId}/notes`,
-          {
-            discount_json: discountPayload,
-            grand_total_excl_gst: newTotal,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setDiscountType(isPercent ? "Percentage" : "Amount");
-        setDiscountValue(val);
-        setShowDiscountModal(false);
-        Swal.fire({
-          icon: "success",
-          title: "Discount Updated!",
-          text: "Quotation discount saved successfully.",
-          timer: 1200,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        console.error(err);
-        Swal.fire({ icon: "error", title: "Error", text: "Failed to update discount." });
-      } finally {
-        setLoading(false);
-      }
+      // In Quotation mode: in-memory draft update only (persisted when Save Quotation is clicked)
+      setDiscountType(isPercent ? "Percentage" : "Amount");
+      setDiscountValue(val);
+      setShowDiscountModal(false);
+      Swal.fire({
+        icon: "success",
+        title: "Discount Updated",
+        text: "Discount updated in draft. Click 'Save' to persist changes.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } else {
       setDiscountType(isPercent ? "Percentage" : "Amount");
       setDiscountValue(val);
@@ -624,32 +1166,17 @@ export default function ServicesLandingPage() {
         setLoading(false);
       }
     } else if (isQuotationMode) {
-      try {
-        setLoading(true);
-        const newTotal = grandTotal + grandAdsTotal;
-        await axios.patch(
-          `${baseURL}/auth/api/re_calculator/quotation/${quotationId}/notes`,
-          {
-            discount_json: null,
-            grand_total_excl_gst: newTotal,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setDiscountType("Amount");
-        setDiscountValue(0);
-        setShowDiscountModal(false);
-        Swal.fire({
-          icon: "success",
-          title: "Discount Removed!",
-          timer: 1200,
-          showConfirmButton: false,
-        });
-      } catch (err) {
-        console.error(err);
-        Swal.fire({ icon: "error", title: "Error", text: "Failed to remove discount." });
-      } finally {
-        setLoading(false);
-      }
+      // In Quotation mode: in-memory draft update only
+      setDiscountType("Amount");
+      setDiscountValue(0);
+      setShowDiscountModal(false);
+      Swal.fire({
+        icon: "success",
+        title: "Discount Cleared",
+        text: "Discount cleared in draft. Click 'Save' to persist changes.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     } else {
       setDiscountType("Amount");
       setDiscountValue(0);
@@ -723,7 +1250,7 @@ export default function ServicesLandingPage() {
         return;
       }
 
-      if (existingPlanName && existingPlanName !== selectedPlanName) {
+      if (!isQuotationMode && existingPlanName && existingPlanName !== selectedPlanName) {
         await axios.delete(`${baseURL}/auth/api/re_calculator/deleteClientAllPlanData/${proposalId}`);
       }
 
@@ -765,6 +1292,139 @@ export default function ServicesLandingPage() {
 
       const planNotes = filteredNotes.map((item) => ({ note_name: item.note_name, plan: item.plan }));
 
+      // ── QUOTATION MODE: purely in-memory draftItems update (Phase E - 0 DB calls) ──
+      if (isQuotationMode && effectiveProposalId) {
+        let skippedCount = 0;
+        let skippedCompCount = 0;
+        let skippedAdsCount = 0;
+        const newItems = [];
+
+        setDraftItems((prevDraft) => {
+          // 1. Paid Services from plan
+          planItems.forEach((pItem) => {
+            const dup = prevDraft.find(
+              (r) =>
+                r._status !== "pending_delete" &&
+                r._type === "service" &&
+                !isCompItem(r) &&
+                String(r.service_name || "").trim().toLowerCase() === String(pItem.service_name || "").trim().toLowerCase() &&
+                String(r.category_name || "").trim().toLowerCase() === String(pItem.category_name || "").trim().toLowerCase() &&
+                String(r.editing_type_name || "").trim().toLowerCase() === String(pItem.editing_type_name || "").trim().toLowerCase()
+            );
+            if (dup) {
+              skippedCount++;
+              return;
+            }
+            newItems.push({
+              id: `draft-plan-${generateUniqueId()}`,
+              service_name: pItem.service_name,
+              category_name: pItem.category_name,
+              editing_type_id: pItem.editing_type_id,
+              editing_type_name: pItem.editing_type_name,
+              editing_type_amount: Number(pItem.editing_type_amount || 0),
+              quantity: Number(pItem.quantity || 1),
+              unit_price: Number(pItem.editing_type_amount || 0),
+              total_price: Number(pItem.total_amount || 0),
+              total_amount: Number(pItem.total_amount || 0),
+              include_content_posting: pItem.include_content_posting,
+              include_thumbnail_creation: pItem.include_thumbnail_creation,
+              include_in_total: true,
+              is_complimentary: false,
+              source: "plan",
+              _type: "service",
+              _status: "pending_add",
+            });
+          });
+
+          // 2. Complimentary Services from plan
+          complimentaryItems.forEach((cItem) => {
+            const dup = prevDraft.find(
+              (r) =>
+                r._status !== "pending_delete" &&
+                r._type === "service" &&
+                isCompItem(r) &&
+                String(r.service_name || "").trim().toLowerCase() === String(cItem.service_name || "").trim().toLowerCase() &&
+                String(r.category_name || "").trim().toLowerCase() === String(cItem.category_name || "").trim().toLowerCase() &&
+                String(r.editing_type_name || "").trim().toLowerCase() === String(cItem.editing_type_name || "").trim().toLowerCase()
+            );
+            if (dup) {
+              skippedCompCount++;
+              return;
+            }
+            newItems.push({
+              id: `draft-plan-${generateUniqueId()}`,
+              service_name: cItem.service_name,
+              category_name: cItem.category_name,
+              editing_type_id: cItem.editing_type_id,
+              editing_type_name: cItem.editing_type_name,
+              editing_type_amount: Number(cItem.editing_type_amount || 0),
+              quantity: Number(cItem.quantity || 1),
+              unit_price: Number(cItem.editing_type_amount || 0),
+              total_price: Number(cItem.total_amount || 0),
+              total_amount: Number(cItem.total_amount || 0),
+              include_content_posting: cItem.include_content_posting,
+              include_thumbnail_creation: cItem.include_thumbnail_creation,
+              include_in_total: false,
+              is_complimentary: true,
+              source: "plan",
+              _type: "service",
+              _status: "pending_add",
+            });
+          });
+
+          // 3. Ads Campaigns from plan
+          adsItems.forEach((aItem) => {
+            const dup = prevDraft.find(
+              (r) =>
+                r._status !== "pending_delete" &&
+                r._type === "ads" &&
+                String(r.category || r.category_name || "").trim().toLowerCase() === String(aItem.category || "").trim().toLowerCase()
+            );
+            if (dup) {
+              skippedAdsCount++;
+              return;
+            }
+            newItems.push({
+              id: `draft-plan-${generateUniqueId()}`,
+              category: aItem.category,
+              category_name: aItem.category,
+              amount: Number(aItem.amount || 0),
+              budget: Number(aItem.amount || 0),
+              percent: Number(aItem.percent || 0),
+              charge: Number(aItem.charge || 0),
+              total: Number(aItem.total || 0),
+              include_in_total: true,
+              is_complimentary: false,
+              source: "plan",
+              _type: "ads",
+              _status: "pending_add",
+            });
+          });
+
+          return [...prevDraft, ...newItems];
+        });
+
+        const totalSkipped = skippedCount + skippedCompCount + skippedAdsCount;
+        const skipMsg = totalSkipped > 0
+          ? ` (${totalSkipped} already-existing item(s) skipped)`
+          : "";
+
+        Swal.fire({
+          icon: "success",
+          title: "Plan Added to Draft",
+          text: `${newItems.length} plan item(s) added as draft.${skipMsg} Click 'Save' to persist changes.`,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+
+        setPlanName(plan.title);
+        setShowPlanPopup(false);
+        setSelectedPlan(null);
+        setSearchQuery("");
+        return;
+      }
+
+      // ── PROPOSAL / LEGACY MODE (unchanged) ──
       await axios.post(
         `${baseURL}/auth/api/re_calculator/savePlanClientNotes`,
         { txn_id: proposalId, client_id: id, plans: planItems, planNotes },
@@ -802,7 +1462,23 @@ export default function ServicesLandingPage() {
   };
 
   // ─── Delete handlers ──────────────────────────────────────────────────────
+  const handleRemoveQuotationPlan = () => {
+    setDraftItems((prev) => prev.filter((item) => item.source !== "plan"));
+    setPlanName("");
+    Swal.fire({
+      icon: "success",
+      title: "Plan Removed",
+      text: "Unsaved plan items removed from draft.",
+      timer: 1200,
+      showConfirmButton: false,
+    });
+  };
+
   const handleDeleteClientPlanData = async (txn_id) => {
+    if (isQuotationMode) {
+      handleRemoveQuotationPlan();
+      return;
+    }
     const confirm = await Swal.fire({ title: "Are you sure?", text: "Do you want to delete this client plan data permanently?", icon: "warning", showCancelButton: true, confirmButtonText: "Yes, delete it!" });
     if (confirm.isConfirmed) {
       try {
@@ -1049,7 +1725,18 @@ export default function ServicesLandingPage() {
         <div className="flex items-center gap-3 flex-shrink-0">
           {/* Back */}
           <button
-            onClick={() => {
+            onClick={async () => {
+              if (isQuotationMode && effectiveProposalId) {
+                const activeCount = (draftItems || []).filter((i) => i._status !== "pending_delete").length;
+                if (activeCount === 0 && (!getData || getData.length === 0) && (!getAdsData || getAdsData.length === 0)) {
+                  try {
+                    await axios.delete(`${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    clearQuotationDraft(effectiveProposalId);
+                  } catch (e) {}
+                }
+              }
               if (window.history.length > 1) {
                 navigate(-1);
               } else {
@@ -1070,7 +1757,7 @@ export default function ServicesLandingPage() {
           </button>
 
           {/* Stats row */}
-          <div className={`flex-1 flex overflow-x-auto sm:grid ${(docTypeFromURL === "proforma" || isQuotationMode) ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2 pb-1 pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent`}>
+          <div className={`flex-1 flex overflow-x-auto sm:grid ${isQuotationMode ? "sm:grid-cols-6" : (docTypeFromURL === "proforma" ? "sm:grid-cols-5" : "sm:grid-cols-4")} gap-2 pb-1 pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent`}>
             {/* Total Amount */}
             <div className="min-w-[130px] sm:min-w-0 relative overflow-hidden bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-xl p-2.5 border border-white/10 hover:border-yellow-400/30 flex items-center gap-2 transition-all duration-200">
               <div className="absolute top-0 left-0 w-0.5 h-full bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-r" />
@@ -1160,8 +1847,76 @@ export default function ServicesLandingPage() {
                 </div>
               )}
             </div>
+
+            {/* Top Header Save Button (Quotation Mode only) */}
+            {isQuotationMode && (
+              <button
+                type="button"
+                onClick={handleSaveQuotation}
+                disabled={isSavingQuotation || unsavedChangesCount === 0}
+                className={`min-w-[140px] sm:min-w-0 relative overflow-hidden rounded-xl p-2.5 border transition-all duration-200 flex items-center justify-between gap-2 shrink-0 ${
+                  unsavedChangesCount > 0
+                    ? "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white border-emerald-400/40 shadow-lg shadow-emerald-900/30 cursor-pointer active:scale-95"
+                    : "bg-white/[0.04] border-white/10 text-white/40 cursor-not-allowed"
+                }`}
+                title={unsavedChangesCount > 0 ? `Save ${unsavedChangesCount} pending change(s)` : "No pending changes"}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    unsavedChangesCount > 0 ? "bg-white/20 text-white" : "bg-white/5 text-white/30"
+                  }`}>
+                    <Save className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider truncate opacity-70">Quotation</p>
+                    <p className="text-xs font-bold truncate">
+                      {isSavingQuotation ? "Saving..." : "Save"}
+                    </p>
+                  </div>
+                </div>
+                {unsavedChangesCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white text-emerald-800 shrink-0 shadow-sm">
+                    {unsavedChangesCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* ── Phase C: Unsaved Draft Restore Banner (< 48 hours) ─────────── */}
+        {isQuotationMode && restoreAvailable && pendingDraftData && (
+          <div className="flex-shrink-0 bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-amber-500/20 border border-amber-500/40 rounded-2xl p-3 sm:px-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl backdrop-blur-md">
+            <div className="flex items-center gap-3 text-white min-w-0 w-full sm:w-auto">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-amber-300 uppercase tracking-wide">
+                  Unsaved Draft Available
+                </p>
+                <p className="text-[11px] text-white/80 truncate">
+                  Aapka pichla unsaved kaam mila ({pendingDraftData.draftItems?.length || 0} items,{" "}
+                  {Math.max(1, Math.round((Date.now() - Number(pendingDraftData.timestamp || Date.now())) / (60 * 1000)))} min pehle).
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+              <button
+                onClick={handleRestoreDraft}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+              >
+                Restore Draft
+              </button>
+              <button
+                onClick={handleDiscardDraft}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white/90 border border-white/20 transition-all active:scale-95"
+              >
+                Discard
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── ROW 2: Plan Search Bar (prominent, top) ────────────────────── */}
         <div className="flex-shrink-0" ref={searchRef}>
@@ -1283,16 +2038,35 @@ export default function ServicesLandingPage() {
                     <p className={`font-semibold text-[11px] truncate ${isLight ? "text-gray-900" : "text-white"}`}>{planName}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDeleteClientPlanData(proposalId)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all duration-200 shrink-0 ${
-                    isLight
-                      ? "bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 shadow-sm"
-                      : "bg-red-500/15 text-red-300 hover:bg-red-500 hover:text-white border border-red-400/25"
-                  }`}
-                >
-                  Delete
-                </button>
+                {isQuotationMode ? (
+                  hasUnsavedPlanItems ? (
+                    <button
+                      onClick={handleRemoveQuotationPlan}
+                      className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/15 text-red-300 hover:bg-red-500 hover:text-white border border-red-400/25 transition-all shrink-0 cursor-pointer"
+                      title="Remove unsaved plan items from draft"
+                    >
+                      Remove Plan
+                    </button>
+                  ) : (
+                    <span
+                      className="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-500/15 text-gray-400 border border-gray-500/20 shrink-0 cursor-not-allowed"
+                      title="Plan items already saved to quotation. To delete, delete rows individually."
+                    >
+                      Saved
+                    </span>
+                  )
+                ) : (
+                  <button
+                    onClick={() => handleDeleteClientPlanData(proposalId)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all duration-200 shrink-0 ${
+                      isLight
+                        ? "bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 shadow-sm"
+                        : "bg-red-500/15 text-red-300 hover:bg-red-500 hover:text-white border border-red-400/25"
+                    }`}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1356,101 +2130,150 @@ export default function ServicesLandingPage() {
               )}
 
               {/* Graphic & SEO */}
-              {getData.length > 0 && (
+              {((isQuotationMode ? draftItems.some((i) => i._type === "service" && !isCompItem(i)) : getData.length > 0)) && (
                 <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.06] to-white/[0.02] rounded-2xl border border-white/10">
                   <div className="h-[2px] w-full bg-gradient-to-r from-slate-500 to-gray-600" />
                   <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
                     <span className="text-white font-semibold text-sm flex items-center gap-1.5">
                       <Palette className="w-4 h-4 text-slate-400" /> Graphic & SEO
                     </span>
-                    <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">₹{grandTotal.toLocaleString()}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">₹{grandTotal.toLocaleString()}</span>
+                    </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-left text-xs text-white">
                       <thead className="bg-white/5 text-white/60">
                         <tr>
-                          {["#", "Date", "Service", "Category", "Editing Type", "Qty", "Amount", "Action"].map(h => (
+                          {["#", "Date", "Service", "Category", "Editing Type", "Qty", "Amount", ...(isQuotationMode ? ["Status"] : []), "Action"].map(h => (
                             <th key={h} className="px-3 py-2 font-semibold whitespace-nowrap">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {getData.map((order, index) => (
-                          <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                            <td className="px-3 py-2 whitespace-nowrap">{index + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{order.created_at}</td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.service_name}</td>
-                            <td className="px-3 py-2 min-w-[100px]">
-                              <div>{order.category_name || "-"}</div>
-                              {(() => {
-                                let orderAddons = [];
-                                if (order.additional_services) {
-                                  try {
-                                    orderAddons = typeof order.additional_services === "string"
-                                      ? JSON.parse(order.additional_services)
-                                      : order.additional_services;
-                                    if (!Array.isArray(orderAddons)) orderAddons = [];
-                                  } catch {
-                                    orderAddons = [];
-                                  }
-                                }
-                                if (orderAddons.length === 0) return null;
-                                return (
-                                  <div className="mt-1 flex flex-wrap gap-1">
-                                    {orderAddons.map((addon, aIdx) => (
-                                      <span
-                                        key={aIdx}
-                                        className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded px-1.5 py-0.5 font-medium"
-                                      >
-                                        ✨ {addon.name || addon.additional_service_name} (+₹{Number(addon.amount || 0).toLocaleString("en-IN")})
-                                      </span>
-                                    ))}
-                                  </div>
-                                );
-                              })()}
-                            </td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              {(() => {
-                                const qty = Number(order.quantity) || 1;
-                                let addonsTotal = 0;
-                                if (order.additional_services) {
-                                  try {
-                                    const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
-                                    if (Array.isArray(addons)) {
-                                      addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+                        {(isQuotationMode ? draftItems.filter((i) => i._type === "service" && !isCompItem(i)) : getData).map((order, index) => {
+                          const isPendingDelete = isQuotationMode && order._status === "pending_delete";
+                          return (
+                            <tr key={order.id} className={`hover:bg-white/5 transition-colors ${isPendingDelete ? "opacity-50 line-through bg-red-950/20" : ""}`}>
+                              <td className="px-3 py-2 whitespace-nowrap">{index + 1}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{order.created_at || (order._status === "pending_add" ? "Just now" : "-")}</td>
+                              <td className="px-3 py-2 min-w-[100px]">{order.service_name}</td>
+                              <td className="px-3 py-2 min-w-[100px]">
+                                <div>{order.category_name || "-"}</div>
+                                {(() => {
+                                  let orderAddons = [];
+                                  if (order.additional_services) {
+                                    try {
+                                      orderAddons = typeof order.additional_services === "string"
+                                        ? JSON.parse(order.additional_services)
+                                        : order.additional_services;
+                                      if (!Array.isArray(orderAddons)) orderAddons = [];
+                                    } catch {
+                                      orderAddons = [];
                                     }
-                                  } catch {}
-                                }
-                                const base = Number(order.editing_type_amount || order.price || 0);
-                                const baseTotal = base * qty;
-                                const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
-                                const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
-                                  ? recordedTotal
-                                  : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
-                                return `₹${effectiveTotal.toLocaleString("en-IN")}`;
-                              })()}
-                            </td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              <div className="flex items-center gap-1">
-                                <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
-                                  onClick={() => {
-                                    const navUrl = docTypeFromURL === "proforma"
-                                      ? `${basePath}/calculator/${id}/${effectiveProposalId}?doc=proforma`
-                                      : `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
-                                    const navState = {
-                                      servicetype: "paid",
-                                      editItem: order,
-                                      ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
-                                    };
-                                    navigate(navUrl, { state: navState });
-                                  }}>Edit</button>
-                                <button onClick={() => handleDelete(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                                  }
+                                  if (orderAddons.length === 0) return null;
+                                  return (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      {orderAddons.map((addon, aIdx) => (
+                                        <span
+                                          key={aIdx}
+                                          className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded px-1.5 py-0.5 font-medium"
+                                        >
+                                          ✨ {addon.name || addon.additional_service_name} (+₹{Number(addon.amount || 0).toLocaleString("en-IN")})
+                                        </span>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                              </td>
+                              <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name || "-"}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                {(() => {
+                                  const qty = Number(order.quantity) || 1;
+                                  let addonsTotal = 0;
+                                  if (order.additional_services) {
+                                    try {
+                                      const addons = typeof order.additional_services === "string" ? JSON.parse(order.additional_services) : order.additional_services;
+                                      if (Array.isArray(addons)) {
+                                        addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
+                                      }
+                                    } catch {}
+                                  }
+                                  const base = Number(order.editing_type_amount || order.price || order.unit_price || 0);
+                                  const baseTotal = base * qty;
+                                  const recordedTotal = parseFloat(order.total_amount || order.total_price || 0);
+                                  const effectiveTotal = (recordedTotal >= baseTotal + addonsTotal && recordedTotal > 0)
+                                    ? recordedTotal
+                                    : (recordedTotal > 0 ? recordedTotal : baseTotal) + addonsTotal;
+                                  return `₹${effectiveTotal.toLocaleString("en-IN")}`;
+                                })()}
+                              </td>
+                              {isQuotationMode && (
+                                <td className="px-3 py-2 whitespace-nowrap">
+                                  {order._status === "pending_delete" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/20 text-red-300 border border-red-500/30">Pending Delete</span>
+                                  )}
+                                  {order._status === "pending_add" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Unsaved (New)</span>
+                                  )}
+                                  {order._status === "pending_edit" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Unsaved (Edited)</span>
+                                  )}
+                                  {(!order._status || order._status === "saved") && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Saved</span>
+                                  )}
+                                </td>
+                              )}
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                  {isQuotationMode ? (
+                                    isPendingDelete ? (
+                                      <button
+                                        onClick={() => handleDraftUndoDelete(order)}
+                                        className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white border border-amber-500/30 transition-all shadow-sm"
+                                      >
+                                        Undo
+                                      </button>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => handleDraftEdit(order)}
+                                          className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500 hover:text-white border border-blue-500/30 transition-all"}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={() => handleDraftDelete(order)}
+                                          className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
+                                        >
+                                          Delete
+                                        </button>
+                                      </>
+                                    )
+                                  ) : (
+                                    <>
+                                      <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
+                                        onClick={() => {
+                                          const navUrl = docTypeFromURL === "proforma"
+                                            ? `${basePath}/calculator/${id}/${effectiveProposalId}?doc=proforma`
+                                            : `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                                          const navState = {
+                                            servicetype: "paid",
+                                            editItem: order,
+                                            ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                                          };
+                                          navigate(navUrl, { state: navState });
+                                        }}>Edit</button>
+                                      <button onClick={() => handleDelete(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1458,7 +2281,7 @@ export default function ServicesLandingPage() {
               )}
 
               {/* Ads Campaign */}
-              {getAdsData.length > 0 && (
+              {((isQuotationMode ? draftItems.some((i) => i._type === "ads") : getAdsData.length > 0)) && (
                 <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.06] to-white/[0.02] rounded-2xl border border-white/10">
                   <div className="h-[2px] w-full bg-gradient-to-r from-red-500 to-slate-600" />
                   <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
@@ -1467,58 +2290,92 @@ export default function ServicesLandingPage() {
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-yellow-400 font-bold text-xs bg-yellow-400/10 px-2 py-0.5 rounded-md">₹{grandAdsTotal.toLocaleString()}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const navUrl = docTypeFromURL === "proforma"
-                            ? `${basePath}/Adscalculator/${id}/${effectiveProposalId}?doc=proforma`
-                            : `${basePath}/Adscalculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
-                          const navState = isQuotationMode ? { mode: "quotation", quotationId } : undefined;
-                          navigate(navUrl, { state: navState });
-                        }}
-                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-600/80 hover:bg-red-600 text-white flex items-center gap-1 transition-all"
-                      >
-                        + Add Campaign
-                      </button>
                     </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-left text-xs text-white">
                       <thead className="bg-white/5 text-white/60">
                         <tr>
-                          {["#", "Date", "Service", "Amt", "%", "Charge", "Total", "Action"].map(h => (
+                          {["#", "Date", "Service", "Amt", "%", "Charge", "Total", ...(isQuotationMode ? ["Status"] : []), "Action"].map(h => (
                             <th key={h} className="px-3 py-2 font-semibold whitespace-nowrap">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {getAdsData.map((order, index) => (
-                          <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                            <td className="px-3 py-2">{index + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{order.created_at}</td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.category || order.category_name}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">₹{order.amount ?? order.budget}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{order.percent}%</td>
-                            <td className="px-3 py-2 whitespace-nowrap">₹{order.charge}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total ?? order.total_amount}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              <div className="flex items-center gap-1">
-                                <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
-                                  onClick={() => {
-                                    const navUrl = docTypeFromURL === "proforma"
-                                      ? `${basePath}/Adscalculator/${id}/${effectiveProposalId}?doc=proforma`
-                                      : `${basePath}/Adscalculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
-                                    const navState = {
-                                      editItem: order,
-                                      ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
-                                    };
-                                    navigate(navUrl, { state: navState });
-                                  }}>Edit</button>
-                                <button onClick={() => handleDeleteads(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {(isQuotationMode ? draftItems.filter((i) => i._type === "ads") : getAdsData).map((order, index) => {
+                          const isPendingDelete = isQuotationMode && order._status === "pending_delete";
+                          return (
+                            <tr key={order.id} className={`hover:bg-white/5 transition-colors ${isPendingDelete ? "opacity-50 line-through bg-red-950/20" : ""}`}>
+                              <td className="px-3 py-2">{index + 1}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{order.created_at || (order._status === "pending_add" ? "Just now" : "-")}</td>
+                              <td className="px-3 py-2 min-w-[100px]">{order.category || order.category_name}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">₹{order.amount ?? order.budget}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{order.percent}%</td>
+                              <td className="px-3 py-2 whitespace-nowrap">₹{order.charge}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">₹{order.total ?? order.total_amount}</td>
+                              {isQuotationMode && (
+                                <td className="px-3 py-2 whitespace-nowrap">
+                                  {order._status === "pending_delete" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/20 text-red-300 border border-red-500/30">Pending Delete</span>
+                                  )}
+                                  {order._status === "pending_add" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Unsaved (New)</span>
+                                  )}
+                                  {order._status === "pending_edit" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Unsaved (Edited)</span>
+                                  )}
+                                  {(!order._status || order._status === "saved") && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Saved</span>
+                                  )}
+                                </td>
+                              )}
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                  {isQuotationMode ? (
+                                    isPendingDelete ? (
+                                      <button
+                                        onClick={() => handleDraftUndoDelete(order)}
+                                        className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white border border-amber-500/30 transition-all shadow-sm"
+                                      >
+                                        Undo
+                                      </button>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => handleDraftEdit(order)}
+                                          className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500 hover:text-white border border-blue-500/30 transition-all"}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={() => handleDraftDelete(order)}
+                                          className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
+                                        >
+                                          Delete
+                                        </button>
+                                      </>
+                                    )
+                                  ) : (
+                                    <>
+                                      <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
+                                        onClick={() => {
+                                          const navUrl = docTypeFromURL === "proforma"
+                                            ? `${basePath}/Adscalculator/${id}/${effectiveProposalId}?doc=proforma`
+                                            : `${basePath}/Adscalculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                                          const navState = {
+                                            editItem: order,
+                                            ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                                          };
+                                          navigate(navUrl, { state: navState });
+                                        }}>Edit</button>
+                                      <button onClick={() => handleDeleteads(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1526,7 +2383,7 @@ export default function ServicesLandingPage() {
               )}
 
               {/* Complimentary */}
-              {getComplimenatryData.length > 0 && (
+              {((isQuotationMode ? draftItems.some((i) => i._type === "service" && isCompItem(i)) : getComplimenatryData.length > 0)) && (
                 <div className="relative overflow-hidden bg-gradient-to-br from-white/[0.06] to-white/[0.02] rounded-2xl border border-white/10">
                   <div className="h-[2px] w-full bg-gradient-to-r from-yellow-400 to-orange-500" />
                   <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
@@ -1542,40 +2399,87 @@ export default function ServicesLandingPage() {
                     <table className="min-w-full text-left text-xs text-white">
                       <thead className="bg-white/5 text-white/60">
                         <tr>
-                          {["#", "Date", "Service", "Category", "Editing Type", "Qty", "Amount", "Action"].map(h => (
+                          {["#", "Date", "Service", "Category", "Editing Type", "Qty", "Amount", ...(isQuotationMode ? ["Status"] : []), "Action"].map(h => (
                             <th key={h} className="px-3 py-2 font-semibold whitespace-nowrap">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {getComplimenatryData.map((order, index) => (
-                          <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                            <td className="px-3 py-2">{index + 1}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{order.created_at}</td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.service_name}</td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.category_name}</td>
-                            <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">₹{order.total_amount}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">
-                              <div className="flex items-center gap-1">
-                                <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
-                                  onClick={() => {
-                                    const navUrl = docTypeFromURL === "proforma"
-                                      ? `${basePath}/calculator/${id}/${effectiveProposalId}?doc=proforma`
-                                      : `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
-                                    const navState = {
-                                      servicetype: "complimentary",
-                                      editItem: order,
-                                      ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
-                                    };
-                                    navigate(navUrl, { state: navState });
-                                  }}>Edit</button>
-                                <button onClick={() => handleDeleteComplimenatry(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {(isQuotationMode ? draftItems.filter((i) => i._type === "service" && isCompItem(i)) : getComplimenatryData).map((order, index) => {
+                          const isPendingDelete = isQuotationMode && order._status === "pending_delete";
+                          return (
+                            <tr key={order.id} className={`hover:bg-white/5 transition-colors ${isPendingDelete ? "opacity-50 line-through bg-red-950/20" : ""}`}>
+                              <td className="px-3 py-2">{index + 1}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{order.created_at || (order._status === "pending_add" ? "Just now" : "-")}</td>
+                              <td className="px-3 py-2 min-w-[100px]">{order.service_name}</td>
+                              <td className="px-3 py-2 min-w-[100px]">{order.category_name}</td>
+                              <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name || "-"}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
+                              <td className="px-3 py-2 whitespace-nowrap">₹{order.total_amount || order.total_price || 0}</td>
+                              {isQuotationMode && (
+                                <td className="px-3 py-2 whitespace-nowrap">
+                                  {order._status === "pending_delete" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/20 text-red-300 border border-red-500/30">Pending Delete</span>
+                                  )}
+                                  {order._status === "pending_add" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Unsaved (New)</span>
+                                  )}
+                                  {order._status === "pending_edit" && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">Unsaved (Edited)</span>
+                                  )}
+                                  {(!order._status || order._status === "saved") && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Saved</span>
+                                  )}
+                                </td>
+                              )}
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                <div className="flex items-center gap-1">
+                                  {isQuotationMode ? (
+                                    isPendingDelete ? (
+                                      <button
+                                        onClick={() => handleDraftUndoDelete(order)}
+                                        className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-white border border-amber-500/30 transition-all shadow-sm"
+                                      >
+                                        Undo
+                                      </button>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => handleDraftEdit(order)}
+                                          className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-blue-500/20 text-blue-300 hover:bg-blue-500 hover:text-white border border-blue-500/30 transition-all"}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={() => handleDraftDelete(order)}
+                                          className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
+                                        >
+                                          Delete
+                                        </button>
+                                      </>
+                                    )
+                                  ) : (
+                                    <>
+                                      <button className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}
+                                        onClick={() => {
+                                          const navUrl = docTypeFromURL === "proforma"
+                                            ? `${basePath}/calculator/${id}/${effectiveProposalId}?doc=proforma`
+                                            : `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                                          const navState = {
+                                            servicetype: "complimentary",
+                                            editItem: order,
+                                            ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                                          };
+                                          navigate(navUrl, { state: navState });
+                                        }}>Edit</button>
+                                      <button onClick={() => handleDeleteComplimenatry(order.id)} className={isLight ? "px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300 transition-all shadow-sm" : "px-2 py-1 rounded-md text-[10px] font-semibold bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all"}>Delete</button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1583,7 +2487,9 @@ export default function ServicesLandingPage() {
               )}
 
               {/* Empty state (Replaced with Mini Plans Grid) */}
-              {getData.length === 0 && getAdsData.length === 0 && getComplimenatryData.length === 0 && !selectedPlan && (
+              {(isQuotationMode
+                ? draftItems.filter((i) => i._status !== "pending_delete").length === 0
+                : (getData.length === 0 && getAdsData.length === 0 && getComplimenatryData.length === 0)) && !selectedPlan && (
                 <div className="flex-1 flex flex-col py-2 px-1">
                   {/* Mobile/Tablet view unchanged */}
                   <div className="lg:hidden">
@@ -1656,6 +2562,19 @@ export default function ServicesLandingPage() {
                         className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-1.5"
                       >
                         <Megaphone className="w-3 h-3" /> Add Campaign
+                      </button>
+                      <button
+                        onClick={() => {
+                          const navUrl = `${basePath}/complimentary/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                          const navState = {
+                            servicetype: "complimentary",
+                            ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),
+                          };
+                          navigate(navUrl, { state: navState });
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-1.5"
+                      >
+                        <Gift className="w-3 h-3" /> Add Complimentary
                       </button>
                     </div>
                   </div>
@@ -1821,6 +2740,40 @@ export default function ServicesLandingPage() {
         grandTotal={grandTotal}
         discountDataSet={discountSettings[0]}
       />
+
+
+
+      {/* ── Phase D: Bottom Floating Action Bar (visible when unsavedChangesCount > 0) ── */}
+      {isQuotationMode && unsavedChangesCount > 0 && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 rounded-2xl px-5 py-3 shadow-[0_10px_35px_rgba(0,0,0,0.6)] flex items-center gap-4 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="text-xs font-semibold text-white">
+              {unsavedChangesCount} unsaved change{unsavedChangesCount > 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="h-4 w-[1px] bg-white/20" />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDiscardAll}
+              disabled={isSavingQuotation}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white/80 hover:text-white border border-white/15 transition-all active:scale-95 cursor-pointer"
+            >
+              Discard All
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveQuotation}
+              disabled={isSavingQuotation}
+              className="px-4 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Save className="w-3.5 h-3.5" />
+              {isSavingQuotation ? "Saving..." : "Save Quotation"}
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

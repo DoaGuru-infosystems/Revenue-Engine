@@ -9,7 +9,7 @@ import API_BASE_URL from "../../../config/apiBaseUrl";
 import { useTheme } from "../../../context/ThemeContext";
 import { getBasePathFromLocation, servicesLandingPath } from "../../../utils/rolePaths";
 
-const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData }) => {
+const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, onServiceAdded, onServiceDeleted, embeddedData, editItem }) => {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const baseURL = API_BASE_URL;
@@ -39,8 +39,8 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (location.state?.editItem) {
-      const item = location.state.editItem;
+    const item = editItem || location.state?.editItem;
+    if (item) {
       const cat = item.category || item.category_name;
       const amt = item.amount ?? item.budget;
       if (cat && amt !== undefined && amt !== null) {
@@ -60,7 +60,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
         setEnteredAmount(initialAmounts);
       }
     }
-  }, [location.state, getData, docTypeFromURL, isQuotationMode]);
+  }, [location.state, editItem, getData, docTypeFromURL, isQuotationMode]);
 
   // Sync embeddedData
   useEffect(() => {
@@ -305,6 +305,7 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
               total_price: newRecord.total,
               total_amount: newRecord.total,
               include_in_total: true,
+              is_complimentary: false,
               source: 'custom_ads',
               budget: newRecord.amount,
               percent: newRecord.percent,
@@ -379,28 +380,64 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
             );
           }
         } else if (isQuotationMode) {
-          const kept = (getData || []).filter((row) => {
-            const cat = row.category || row.category_name;
-            return !results.some((r) => r.category === cat);
-          });
-          const ads = [...kept, ...results].map((row) => ({
-            category_name: row.category || row.category_name,
-            budget: row.amount || row.budget || 0,
-            percent: row.percent || 0,
-            charge: row.charge || 0,
-            total: row.total || 0,
-          }));
-          response = await fetch(
-            `${API_BASE_URL}/auth/api/re_calculator/quotation/${proposalId}/ads`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ ads }),
-            }
+          const { saveAdsToQuotationDraft, getActiveDraftItemsByType } = await import(
+            "../utils/quotationDraftPersistence"
           );
+          const saveRes = await saveAdsToQuotationDraft({
+            quotationId: proposalId,
+            adsResults: results,
+            fetchDbSnapshot: async () => {
+              const qRes = await axios.get(
+                `${baseURL}/auth/api/re_calculator/quotation/${proposalId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              const rawServices = qRes.data?.data?.services || [];
+              const rawAds = qRes.data?.data?.ads || [];
+              return {
+                items: [
+                  ...rawServices.map((s) => ({
+                    ...s,
+                    _type: "service",
+                    is_complimentary: Boolean(s.is_complimentary),
+                    include_in_total: !Boolean(s.is_complimentary),
+                    _status: "saved",
+                  })),
+                  ...rawAds.map((a) => ({
+                    ...a,
+                    _type: "ads",
+                    is_complimentary: false,
+                    include_in_total: true,
+                    _status: "saved",
+                  })),
+                ],
+              };
+            },
+          });
+
+          if (saveRes?.success) {
+            const activeAds = getActiveDraftItemsByType(saveRes.draft, "ads");
+            setGetData(
+              activeAds.map((item) => ({
+                ...item,
+                category: item.category || item.category_name,
+                amount: item.amount || item.budget,
+                total: item.total || item.total_amount || item.budget,
+              }))
+            );
+            if (onSaveComplete) onSaveComplete();
+            Swal.fire({
+              icon: "success",
+              title: editingId ? "Updated!" : "Saved to Draft!",
+              text: editingId
+                ? "Ads campaign updated in draft. Return to Services Landing and click 'Save' to commit to database."
+                : "Ads campaign saved to draft. Return to Services Landing and click 'Save' to commit to database.",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            resetEditingState();
+            setLoading(false);
+            return;
+          }
         } else {
           response = await fetch(
             `${API_BASE_URL}/auth/api/re_calculator/saveAdsCampaign`,
@@ -450,6 +487,26 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
     if (!id || !proposalId) return;
     try {
       let isQuo = isQuotationMode;
+
+      if (isQuo) {
+        const { getQuotationDraft, getActiveDraftItemsByType } = await import(
+          "../utils/quotationDraftPersistence"
+        );
+        const existingDraft = getQuotationDraft(proposalId);
+        if (existingDraft && Array.isArray(existingDraft.draftItems)) {
+          const activeAds = getActiveDraftItemsByType(existingDraft, "ads");
+          setGetData(
+            activeAds.map((item) => ({
+              ...item,
+              category: item.category || item.category_name,
+              amount: item.amount || item.budget,
+              total: item.total || item.total_amount || item.budget,
+            }))
+          );
+          return;
+        }
+      }
+
       let endpoint = isQuo
         ? `${baseURL}/auth/api/re_calculator/quotation/${proposalId}`
         : docTypeFromURL === "proforma"
@@ -542,45 +599,36 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
 
     try {
       if (isQuotationMode) {
-        const remaining = getData.filter((item) => String(item.id) !== String(entryId));
-        const adsPayload = remaining.map((row) => ({
-          category_name: row.category || row.category_name,
-          budget: row.amount || row.budget || 0,
-          percent: row.percent || 0,
-          charge: row.charge || 0,
-          total: row.total || row.total_amount || 0,
-        }));
-        const response = await axios.post(
-          `${baseURL}/auth/api/re_calculator/quotation/${proposalId}/ads`,
-          { ads: adsPayload },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const { deleteItemFromQuotationDraft, getActiveDraftItemsByType } = await import(
+          "../utils/quotationDraftPersistence"
         );
-        if (response.data.status === "Success") {
-          setGetData(remaining);
+        const delRes = deleteItemFromQuotationDraft({
+          quotationId: proposalId,
+          itemId: entryId,
+        });
+        if (delRes?.success) {
+          const activeAds = getActiveDraftItemsByType(delRes.draft, "ads");
+          setGetData(
+            activeAds.map((item) => ({
+              ...item,
+              category: item.category || item.category_name,
+              amount: item.amount || item.budget,
+              total: item.total || item.total_amount || item.budget,
+            }))
+          );
           if (editingId && String(editingId) === String(entryId)) {
             resetEditingState();
           }
           Swal.fire({
             icon: "success",
             title: "Deleted!",
-            text: "Entry has been deleted.",
+            text: "Ads campaign removed from draft.",
             timer: 1000,
             showConfirmButton: false,
           });
-          fetchData();
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Failed!",
-            text: response.data.message || "Failed to delete entry.",
-          });
+          if (onSaveComplete) onSaveComplete();
+          return;
         }
-        return;
       }
 
       let res;

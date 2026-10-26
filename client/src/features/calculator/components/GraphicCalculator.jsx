@@ -50,6 +50,8 @@ const GraphicCalculator = ({
   onServiceAdded,
   onServiceDeleted,
   embeddedData,
+  editItem,
+  serviceTypeOverride,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -111,6 +113,8 @@ const GraphicCalculator = ({
     locationState: location.state,
     mode: isQuotationMode ? "quotation" : undefined,
     quotationId: isQuotationMode ? quotationId : undefined,
+    editItem,
+    serviceTypeOverride,
   });
 
   const {
@@ -194,11 +198,13 @@ const GraphicCalculator = ({
       navigate(-1);
     } else {
       const base = getBasePathFromLocation(location);
-      const fallbackUrl =
-        docTypeFromURL === "proforma"
-          ? servicesLandingPath(base, id, proposalId, "doc=proforma")
-          : servicesLandingPath(base, id, proposalId);
-      navigate(fallbackUrl);
+      const query = docTypeFromURL === "proforma"
+        ? "doc=proforma"
+        : isQuotationMode
+        ? "mode=quotation"
+        : "";
+      const fallbackUrl = servicesLandingPath(base, id, proposalId, query);
+      navigate(fallbackUrl, { state: isQuotationMode ? { mode: "quotation", quotationId } : undefined });
     }
   };
 

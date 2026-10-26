@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Eye, Pencil, Send, FilePlus, CheckCircle, Trash, FileText } from "lucide-react";
+import { ChevronDown, Eye, Pencil, Send, FilePlus, CheckCircle, Trash, FileText, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -20,6 +20,7 @@ const QuotationActions = ({
   const { token } = useSelector((state) => state.user);
 
   const qStatus = String(quotation.status || "").toLowerCase();
+  const isDraft = qStatus === "draft";
   const hasProforma = Boolean(
     quotation.proforma_id ||
     Number(quotation.proforma_count) > 0 ||
@@ -174,11 +175,11 @@ const QuotationActions = ({
           return;
         }
         const confirm = await Swal.fire({
-          title: "Delete this quotation?",
-          text: "Are you sure you want to delete this quotation?",
+          title: isDraft ? "Discard Draft?" : "Delete this quotation?",
+          text: isDraft ? "Are you sure you want to discard this draft quotation?" : "Are you sure you want to delete this quotation?",
           icon: "warning",
           showCancelButton: true,
-          confirmButtonText: "Yes, delete it",
+          confirmButtonText: isDraft ? "Yes, discard" : "Yes, delete it",
         });
         if (!confirm.isConfirmed) return;
         const res = await axios.delete(
@@ -186,7 +187,7 @@ const QuotationActions = ({
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data.status === "Success") {
-          Swal.fire({ icon: "success", title: "Deleted", timer: 1000, showConfirmButton: false });
+          Swal.fire({ icon: "success", title: isDraft ? "Discarded" : "Deleted", timer: 1000, showConfirmButton: false });
           fetchQuotations?.();
         }
       }
@@ -215,37 +216,120 @@ const QuotationActions = ({
           } bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700/60 rounded-xl shadow-2xl z-[100] py-1.5 max-h-[46vh] sm:max-h-72 overflow-y-auto`}
         >
           <ul className="py-1 text-sm text-gray-700 dark:text-gray-200">
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view")}><Eye size={14} /> View Quotation</button></li>
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("edit_services")}><Pencil size={14} /> Edit Services</button></li>
-            {["draft", "sent", "changes", "rejected"].includes(qStatus) && (
+            {isDraft ? (
               <>
-                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("send_to_client")}><Send size={14} /> Send to client</button></li>
-                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_approved")}><CheckCircle size={14} /> Mark approved</button></li>
+                <li>
+                  <button
+                    type="button"
+                    className="w-full text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center gap-2"
+                    onClick={() => handleAction("edit_services")}
+                  >
+                    <Pencil size={14} /> Continue Editing
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    disabled
+                    title="Quotation draft state me hai. Actions unlock karne ke liye pehle Continue Editing par click karke Save Quotation karein."
+                    className="w-full text-left px-4 py-2 text-gray-400 dark:text-gray-500 opacity-40 cursor-not-allowed flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2"><Eye size={14} /> View Quotation</span>
+                    <Lock size={12} className="text-amber-500" />
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    disabled
+                    title="Quotation draft state me hai. Actions unlock karne ke liye pehle Continue Editing par click karke Save Quotation karein."
+                    className="w-full text-left px-4 py-2 text-gray-400 dark:text-gray-500 opacity-40 cursor-not-allowed flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2"><Send size={14} /> Send to client</span>
+                    <Lock size={12} className="text-amber-500" />
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    disabled
+                    title="Quotation draft state me hai. Actions unlock karne ke liye pehle Continue Editing par click karke Save Quotation karein."
+                    className="w-full text-left px-4 py-2 text-gray-400 dark:text-gray-500 opacity-40 cursor-not-allowed flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2"><CheckCircle size={14} /> Mark approved</span>
+                    <Lock size={12} className="text-amber-500" />
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    disabled
+                    title="Quotation draft state me hai. Actions unlock karne ke liye pehle Continue Editing par click karke Save Quotation karein."
+                    className="w-full text-left px-4 py-2 text-gray-400 dark:text-gray-500 opacity-40 cursor-not-allowed flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2"><FilePlus size={14} /> Generate Proforma</span>
+                    <Lock size={12} className="text-amber-500" />
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    disabled
+                    title="Quotation draft state me hai. Actions unlock karne ke liye pehle Continue Editing par click karke Save Quotation karein."
+                    className="w-full text-left px-4 py-2 text-gray-400 dark:text-gray-500 opacity-40 cursor-not-allowed flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2"><FileText size={14} /> Download PDF</span>
+                    <Lock size={12} className="text-amber-500" />
+                  </button>
+                </li>
+                <li className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                  <button
+                    type="button"
+                    className="w-full text-left px-4 py-2 flex items-center gap-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
+                    onClick={() => handleAction("delete_quotation")}
+                  >
+                    <Trash size={14} /> Discard / Delete Draft
+                  </button>
+                </li>
+              </>
+            ) : (
+              <>
+                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view")}><Eye size={14} /> View Quotation</button></li>
+                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("edit_services")}><Pencil size={14} /> Edit Services</button></li>
+                {["sent", "changes", "rejected"].includes(qStatus) && (
+                  <>
+                    <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("send_to_client")}><Send size={14} /> Send to client</button></li>
+                    <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_approved")}><CheckCircle size={14} /> Mark approved</button></li>
+                  </>
+                )}
+                {qStatus === "approved" && (
+                  <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("send_to_client")}><Send size={14} /> Send to client</button></li>
+                )}
+                {qStatus === "sent" && (
+                  <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_client_response")}><FileText size={14} /> Mark client response</button></li>
+                )}
+                {qStatus !== "rejected" && (
+                  <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("generate_proforma")}><FilePlus size={14} /> Generate Proforma</button></li>
+                )}
+                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view_proformas")}><FileText size={14} /> View Proformas</button></li>
+                <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("download_pdf")}><FileText size={14} /> Download PDF</button></li>
+                <li>
+                  <button
+                    type="button"
+                    disabled={hasProforma}
+                    title={hasProforma ? "Cannot delete while proforma exists. Delete all proformas first." : "Delete quotation"}
+                    className={`w-full text-left px-4 py-2.5 flex items-center gap-2 text-red-600 ${
+                      hasProforma
+                        ? "opacity-40 cursor-not-allowed hover:bg-transparent"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                    }`}
+                    onClick={() => handleAction("delete_quotation")}
+                  >
+                    <Trash size={14} /> Delete
+                  </button>
+                </li>
               </>
             )}
-            {qStatus === "sent" && (
-              <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("mark_client_response")}><FileText size={14} /> Mark client response</button></li>
-            )}
-            {qStatus !== "rejected" && (
-              <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("generate_proforma")}><FilePlus size={14} /> Generate Proforma</button></li>
-            )}
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("view_proformas")}><FileText size={14} /> View Proformas</button></li>
-            <li><button type="button" className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2" onClick={() => handleAction("download_pdf")}><FileText size={14} /> Download PDF</button></li>
-            <li>
-              <button
-                type="button"
-                disabled={hasProforma}
-                title={hasProforma ? "Cannot delete while proforma exists. Delete all proformas first." : "Delete quotation"}
-                className={`w-full text-left px-4 py-2.5 flex items-center gap-2 text-red-600 ${
-                  hasProforma
-                    ? "opacity-40 cursor-not-allowed hover:bg-transparent"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-                }`}
-                onClick={() => handleAction("delete_quotation")}
-              >
-                <Trash size={14} /> Delete
-              </button>
-            </li>
           </ul>
         </div>
       )}

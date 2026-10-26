@@ -38,6 +38,8 @@ export function useGraphicCalculatorData({
   locationState,
   mode,
   quotationId,
+  editItem,
+  serviceTypeOverride,
 }) {
   const [data, setData] = useState([]);
   const [optionalServices, setOptionalServices] = useState([]);
@@ -87,12 +89,14 @@ export function useGraphicCalculatorData({
       .catch((err) => console.error("Error loading optional services:", err));
   }, [token]);
 
-  // Handle incoming service type from router navigation
+  // Handle incoming service type from router navigation or prop
   useEffect(() => {
-    if (locationState?.servicetype) {
+    if (serviceTypeOverride) {
+      setServiceType(serviceTypeOverride);
+    } else if (locationState?.servicetype) {
       setServiceType(locationState.servicetype);
     }
-  }, [locationState]);
+  }, [locationState, serviceTypeOverride]);
 
   // Fetch saved transactions / snapshot
   const fetchData = async () => {
@@ -104,7 +108,17 @@ export function useGraphicCalculatorData({
 
     try {
       if (mode === "quotation" && quotationId) {
-        // Quotation mode: fetch from re_quotation_services via getQuotationById
+        // Quotation mode: check localStorage draft first, fallback to DB if not present
+        const { getQuotationDraft, ensureQuotationDraft, getActiveDraftItemsByType } = await import(
+          "../utils/quotationDraftPersistence"
+        );
+        const existingDraft = getQuotationDraft(quotationId);
+        if (existingDraft && Array.isArray(existingDraft.draftItems)) {
+          const items = getActiveDraftItemsByType(existingDraft, "service", false);
+          setGetData(items);
+          return;
+        }
+
         const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
         const axios = (await import("axios")).default;
         const res = await axios.get(
@@ -112,7 +126,30 @@ export function useGraphicCalculatorData({
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (res.data.status === "Success") {
-          setGetData((res.data.data?.services || []).filter((r) => !isComplimentaryItem(r)));
+          const rawServices = res.data.data?.services || [];
+          const rawAds = res.data.data?.ads || [];
+          const baseItems = [
+            ...rawServices.map((s) => ({
+              ...s,
+              _type: "service",
+              is_complimentary: isComplimentaryItem(s),
+              include_in_total: !isComplimentaryItem(s),
+              _status: "saved",
+            })),
+            ...rawAds.map((a) => ({
+              ...a,
+              _type: "ads",
+              is_complimentary: false,
+              include_in_total: true,
+              _status: "saved",
+            })),
+          ];
+          const newDraft = await ensureQuotationDraft({
+            quotationId,
+            fetchDbSnapshot: async () => ({ items: baseItems }),
+          });
+          const items = getActiveDraftItemsByType(newDraft, "service", false);
+          setGetData(items);
         }
       } else if (docTypeFromURL === "proforma") {
         const res = await getProformaSnapshot(proposalId, token);
@@ -216,15 +253,15 @@ export function useGraphicCalculatorData({
     setSelectedAdditionalServices(initialSelectedAddons);
   };
 
-  // Auto pre-fill from router state
+  // Auto pre-fill from router state or direct editItem prop
   useEffect(() => {
-    const item = locationState?.editItem;
+    const item = editItem || locationState?.editItem;
     if (item && data.length > 0 && lastProcessedEditIdRef.current !== item.id) {
       lastProcessedEditIdRef.current = item.id;
       handleEdit(item);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [locationState, data, optionalServices]);
+  }, [locationState, editItem, data, optionalServices]);
 
   const resetForm = () => {
     setEditId(null);
@@ -469,8 +506,9 @@ export function useGraphicCalculatorData({
         include_thumbnail_creation,
         include_youtube_video_posting,
         additional_services: formattedAdditionalServices,
-        include_in_total: true,
-        source: "custom_graphic",
+        include_in_total: serviceType !== "complimentary",
+        is_complimentary: serviceType === "complimentary",
+        source: serviceType === "complimentary" ? "custom_complimentary" : "custom_graphic",
         service: formattedServiceTitle,
       };
       onServiceAdded(row);
@@ -514,32 +552,59 @@ export function useGraphicCalculatorData({
     try {
       let res;
       if (mode === "quotation" && quotationId) {
-        const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
-        const axios = (await import("axios")).default;
-        let existingComp = [];
-        try {
-          const currentQ = await axios.get(
-            `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          existingComp = (currentQ.data?.data?.services || []).filter(isComplimentaryItem);
-        } catch (e) {}
-        const kept = (getData || []).filter(
-          (row) => editId == null || String(row.id) !== String(editId)
+        const { saveServiceToQuotationDraft, getActiveDraftItemsByType } = await import(
+          "../utils/quotationDraftPersistence"
         );
-        const services = [...kept, payload, ...existingComp];
-        const grandTotal = services
-          .filter((s) => !isComplimentaryItem(s))
-          .reduce(
-            (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
-            0
-          );
-        const qRes = await axios.post(
-          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/services`,
-          { services, grand_total_excl_gst: grandTotal },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        res = qRes.data;
+        const saveRes = await saveServiceToQuotationDraft({
+          quotationId,
+          item: payload,
+          editId,
+          isComplimentary: false,
+          fetchDbSnapshot: async () => {
+            const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
+            const axios = (await import("axios")).default;
+            const currentQ = await axios.get(
+              `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const rawServices = currentQ.data?.data?.services || [];
+            const rawAds = currentQ.data?.data?.ads || [];
+            return {
+              items: [
+                ...rawServices.map((s) => ({
+                  ...s,
+                  _type: "service",
+                  is_complimentary: isComplimentaryItem(s),
+                  include_in_total: !isComplimentaryItem(s),
+                  _status: "saved",
+                })),
+                ...rawAds.map((a) => ({
+                  ...a,
+                  _type: "ads",
+                  is_complimentary: false,
+                  include_in_total: true,
+                  _status: "saved",
+                })),
+              ],
+            };
+          },
+        });
+
+        if (saveRes?.success) {
+          const active = getActiveDraftItemsByType(saveRes.draft, "service", false);
+          setGetData(active);
+          resetForm();
+          Swal.fire({
+            icon: "success",
+            title: editId ? "Draft Updated!" : "Saved to Draft!",
+            text: "Service saved to draft. Go back to Services Landing and click 'Save' to commit to database.",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+          if (onSaveComplete) onSaveComplete();
+          setLoading(false);
+          return;
+        }
       } else if (docTypeFromURL === "proforma") {
         res = await updateProformaSnapshot(
           {
@@ -621,30 +686,26 @@ export function useGraphicCalculatorData({
     try {
       let res;
       if (mode === "quotation" && quotationId) {
-        const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
-        const axios = (await import("axios")).default;
-        let existingComp = [];
-        try {
-          const currentQ = await axios.get(
-            `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          existingComp = (currentQ.data?.data?.services || []).filter(isComplimentaryItem);
-        } catch (e) {}
-        const kept = (getData || []).filter((row) => String(row.id) !== String(entryId));
-        const services = [...kept, ...existingComp];
-        const grandTotal = services
-          .filter((s) => !isComplimentaryItem(s))
-          .reduce(
-            (sum, row) => sum + Number(row.total_amount || row.total_price || 0),
-            0
-          );
-        const qRes = await axios.post(
-          `${API_BASE_URL}/auth/api/re_calculator/quotation/${quotationId}/services`,
-          { services, grand_total_excl_gst: grandTotal },
-          { headers: { Authorization: `Bearer ${token}` } }
+        const { deleteItemFromQuotationDraft, getActiveDraftItemsByType } = await import(
+          "../utils/quotationDraftPersistence"
         );
-        res = qRes.data;
+        const delRes = deleteItemFromQuotationDraft({
+          quotationId,
+          itemId: entryId,
+        });
+        if (delRes?.success) {
+          const active = getActiveDraftItemsByType(delRes.draft, "service", false);
+          setGetData(active);
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Service removed from draft.",
+            timer: 1000,
+            showConfirmButton: false,
+          });
+          if (onSaveComplete) onSaveComplete();
+          return;
+        }
       } else if (docTypeFromURL === "proforma") {
         res = await updateProformaSnapshot(
           {
