@@ -262,6 +262,10 @@ export function useQuotationData({
             previous_balance_amount: Number(proforma.previous_balance_amount || 0),
             is_carried_forward: proforma.is_carried_forward,
             carried_into_proforma_id: proforma.carried_into_proforma_id,
+            realized_google_budget: Number(proforma.realized_google_budget || 0),
+            realized_meta_budget: Number(proforma.realized_meta_budget || 0),
+            realized_service_amount: Number(proforma.total_service_realized || 0),
+            received_amount: Number(proforma.total_paid_amount || 0),
           });
 
           let clientSnap = null;
@@ -582,6 +586,10 @@ export function useQuotationData({
           received_amount: Number(bp.received_amount || 0),
           current_balance: Number(bp.current_balance || 0),
           previous_balance_amount: Number(bp.previous_balance_amount || 0),
+          realized_google_budget: Number(bp.realized_google_budget || 0),
+          realized_meta_budget: Number(bp.realized_meta_budget || 0),
+          realized_ad_budget: Number(bp.realized_ad_budget || 0),
+          realized_service_amount: Number(bp.realized_service_amount || 0),
         });
 
         setShowGoogleAd(Boolean(bp.show_google_ad));
@@ -601,6 +609,11 @@ export function useQuotationData({
           proforma_number:
             bp.balance_proforma_number || `BAL-PROF-${bp.balance_number}`,
           source_proforma_number: bp.source_proforma_number,
+          realized_google_budget: Number(bp.realized_google_budget || 0),
+          realized_meta_budget: Number(bp.realized_meta_budget || 0),
+          realized_ad_budget: Number(bp.realized_ad_budget || 0),
+          realized_service_amount: Number(bp.realized_service_amount || 0),
+          received_amount: Number(bp.received_amount || 0),
         });
 
         try {
@@ -1217,10 +1230,20 @@ export function useQuotationData({
     }
   }
 
-  const removedAdsBudget =
-    (!showGoogleAd ? googleAdAmount : 0) + (!showMetaAd ? metaAdAmount : 0);
-  const baseReceived = Number(proformaMeta?.received_amount || 0);
-  const displayedReceived = Math.max(0, baseReceived - removedAdsBudget);
+  const realizedGoogleReceived = Number(
+    proformaMeta?.realized_google_budget ?? clientData?.realized_google_budget ?? 0
+  );
+  const realizedMetaReceived = Number(
+    proformaMeta?.realized_meta_budget ?? clientData?.realized_meta_budget ?? 0
+  );
+
+  const removedAdsReceived =
+    (!showGoogleAd ? realizedGoogleReceived : 0) +
+    (!showMetaAd ? realizedMetaReceived : 0);
+  const baseReceived = Number(
+    proformaMeta?.received_amount ?? clientData?.received_amount ?? 0
+  );
+  const displayedReceived = Math.max(0, baseReceived - removedAdsReceived);
   const displayedCurrentBalance = Math.max(
     0,
     displayedGrandTotal - displayedReceived

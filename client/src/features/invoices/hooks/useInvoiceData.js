@@ -461,6 +461,10 @@ export const useInvoiceData = ({
           previous_balance_amount: Number(bp.previous_balance_amount || 0),
           created_at: bp.created_at,
           discount_snapshot: bp.discount_snapshot || null,
+          realized_google_budget: Number(bp.realized_google_budget || 0),
+          realized_meta_budget: Number(bp.realized_meta_budget || 0),
+          realized_ad_budget: Number(bp.realized_ad_budget || 0),
+          realized_service_amount: Number(bp.realized_service_amount || 0),
         });
 
         setShowGoogleAd(Boolean(bp.show_google_ad));

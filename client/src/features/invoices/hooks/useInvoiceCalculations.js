@@ -374,12 +374,12 @@ export const useInvoiceCalculations = ({
       }
     }
 
-    const removedAdsBudget =
-      (!showGoogleAd ? googleAdAmount : 0) + (!showMetaAd ? metaAdAmount : 0);
+    const removedAdsReceived =
+      (!showGoogleAd ? realizedGoogleBudget : 0) + (!showMetaAd ? realizedMetaBudget : 0);
     const baseReceived = Number(
       clientData?.received_amt || clientData?.received_amount || 0
     );
-    const displayedReceived = Math.max(0, baseReceived - removedAdsBudget);
+    const displayedReceived = Math.max(0, baseReceived - removedAdsReceived);
     const displayedCurrentBalance = Math.max(
       0,
       displayedGrandTotal - displayedReceived

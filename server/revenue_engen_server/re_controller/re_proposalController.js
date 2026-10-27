@@ -1307,6 +1307,9 @@ exports.getProformasByClient = async (req, res) => {
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              COALESCE((SELECT SUM(realized_service_amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_service_realized,
+             COALESCE((SELECT SUM(realized_google_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS realized_google_budget,
+             COALESCE((SELECT SUM(realized_meta_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS realized_meta_budget,
+             COALESCE((SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_realized_ad_budget,
              CASE
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
                  IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
@@ -1344,6 +1347,9 @@ exports.getAllProformas = async (req, res) => {
       SELECT p.*, c.client_name, c.client_organization, qtn.quotation_number,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              COALESCE((SELECT SUM(realized_service_amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_service_realized,
+             COALESCE((SELECT SUM(realized_google_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS realized_google_budget,
+             COALESCE((SELECT SUM(realized_meta_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS realized_meta_budget,
+             COALESCE((SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_realized_ad_budget,
              CASE
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
                  IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
@@ -1400,6 +1406,9 @@ exports.getProformasByProposal = async (req, res) => {
       SELECT p.*,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              COALESCE((SELECT SUM(realized_service_amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_service_realized,
+             COALESCE((SELECT SUM(realized_google_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS realized_google_budget,
+             COALESCE((SELECT SUM(realized_meta_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS realized_meta_budget,
+             COALESCE((SELECT SUM(realized_ad_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_realized_ad_budget,
              CASE
                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) >= (
                  IF(p.service_amount > 0, p.service_amount + p.gst_amount, p.total_amount) - 0.05
@@ -1717,11 +1726,12 @@ exports.recordProposalPayment = async (req, res) => {
       }
     }
 
-    // Legacy guard: ad budget cannot exceed total payment amount
-    if (adBudgetToRecord > Number(amount) + 0.05) {
+    // Guard: ad budget cannot take up 100% of payment amount, minimum 1 rupee must be reserved for service
+    const maxAllowedAdBudget = Math.max(0, Number(amount) - 1);
+    if (adBudgetToRecord > maxAllowedAdBudget + 0.05) {
       return res.status(400).json({
         status: "Failure",
-        message: `Total realized ad budget (₹${adBudgetToRecord.toLocaleString('en-IN')}) cannot exceed the payment amount (₹${Number(amount).toLocaleString('en-IN')}).`
+        message: `Total realized ad budget (₹${adBudgetToRecord.toLocaleString('en-IN')}) cannot exceed ₹${maxAllowedAdBudget.toLocaleString('en-IN')}. Minimum ₹1 must be reserved for service amount so that an invoice can be created.`
       });
     }
 
@@ -4073,9 +4083,32 @@ exports.getBalanceProformaById = async (req, res) => {
       return res.status(404).json({ status: "Failure", message: "Balance Proforma not found" });
     }
 
+    const bpData = { ...rows[0] };
+    const sourceProformaId = bpData.source_proforma_id;
+    if (sourceProformaId) {
+      const paymentAggRows = await runQuery(
+        `SELECT 
+           IFNULL(SUM(amount), 0) AS total_received,
+           IFNULL(SUM(realized_service_amount), 0) AS total_service_received,
+           IFNULL(SUM(realized_ad_budget), 0) AS total_ad_budget_received,
+           IFNULL(SUM(realized_google_budget), 0) AS realized_google_budget,
+           IFNULL(SUM(realized_meta_budget), 0) AS realized_meta_budget
+         FROM re_proposal_payment_records 
+         WHERE proforma_id = ? AND status = 'approved'`,
+        [sourceProformaId]
+      );
+      if (paymentAggRows && paymentAggRows.length > 0) {
+        bpData.realized_google_budget = Number(paymentAggRows[0].realized_google_budget || 0);
+        bpData.realized_meta_budget = Number(paymentAggRows[0].realized_meta_budget || 0);
+        bpData.realized_ad_budget = Number(paymentAggRows[0].total_ad_budget_received || 0);
+        bpData.realized_service_amount = Number(paymentAggRows[0].total_service_received || 0);
+        bpData.received_amount = Number(paymentAggRows[0].total_received || 0);
+      }
+    }
+
     res.status(200).json({
       status: "Success",
-      data: rows[0]
+      data: bpData
     });
   } catch (error) {
     console.error("getBalanceProformaById error:", error);
@@ -4093,7 +4126,10 @@ exports.getAllBalanceProformas = async (req, res) => {
          c.client_name,
          c.client_organization,
          c.email,
-         c.phone
+         c.phone,
+         IFNULL((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = bp.source_proforma_id AND status = 'approved'), bp.received_amount) AS received_amount,
+         IFNULL((SELECT SUM(realized_google_budget) FROM re_proposal_payment_records WHERE proforma_id = bp.source_proforma_id AND status = 'approved'), 0) AS realized_google_budget,
+         IFNULL((SELECT SUM(realized_meta_budget) FROM re_proposal_payment_records WHERE proforma_id = bp.source_proforma_id AND status = 'approved'), 0) AS realized_meta_budget
        FROM re_balance_proforma bp
        LEFT JOIN re_proposal_proforma pp ON bp.source_proforma_id = pp.id
        LEFT JOIN re_revenue_engine_client_details c ON bp.client_id = c.id
@@ -4117,7 +4153,10 @@ exports.getBalanceProformasBySourceId = async (req, res) => {
       `SELECT 
          bp.*,
          COALESCE(bp.previous_balance_amount, pp.previous_balance_amount, 0) AS previous_balance_amount,
-         pp.proforma_number AS source_proforma_number
+         pp.proforma_number AS source_proforma_number,
+         IFNULL((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = bp.source_proforma_id AND status = 'approved'), bp.received_amount) AS received_amount,
+         IFNULL((SELECT SUM(realized_google_budget) FROM re_proposal_payment_records WHERE proforma_id = bp.source_proforma_id AND status = 'approved'), 0) AS realized_google_budget,
+         IFNULL((SELECT SUM(realized_meta_budget) FROM re_proposal_payment_records WHERE proforma_id = bp.source_proforma_id AND status = 'approved'), 0) AS realized_meta_budget
        FROM re_balance_proforma bp
        LEFT JOIN re_proposal_proforma pp ON bp.source_proforma_id = pp.id
        WHERE bp.source_proforma_id = ?

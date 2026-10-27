@@ -499,11 +499,11 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
       }
     }
 
-    const maxAllowedAdBudget = Number(paymentForm.amount || 0);
+    const maxAllowedAdBudget = Math.max(0, Number(paymentForm.amount || 0) - 1);
     if (paymentForm.has_ad_budget && totalAdBudgetThisPayment > maxAllowedAdBudget) {
       Swal.fire(
         'Validation Error',
-        `Total Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString('en-IN')}) cannot exceed the payment amount (₹${maxAllowedAdBudget.toLocaleString('en-IN')}).`,
+        `Total Ad Budget (₹${totalAdBudgetThisPayment.toLocaleString('en-IN')}) cannot exceed ₹${maxAllowedAdBudget.toLocaleString('en-IN')}. Minimum ₹1 must be reserved for service amount.`,
         'warning'
       );
       return;
@@ -1103,7 +1103,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                         <span className="text-sm font-semibold text-gray-300">Ad Budget (This Payment)?</span>
                         { Number(paymentForm.amount) > 0 && (
                           <p className="text-[11px] text-gray-400 mt-0.5">
-                            Max allowable ad budget: <span className="text-yellow-400 font-semibold">₹{ Number(paymentForm.amount).toLocaleString() }</span>
+                            Max allowable ad budget: <span className="text-yellow-400 font-semibold">₹{ Math.max(0, Number(paymentForm.amount) - 1).toLocaleString() }</span> (Min ₹1 reserved for service)
                           </p>
                         ) }
                       </div>
@@ -1124,7 +1124,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       const activeGoogle = hasGoogleAd ? Number(paymentForm.realized_google_budget || 0) : 0;
                       const activeMeta = hasMetaAd ? Number(paymentForm.realized_meta_budget || 0) : 0;
                       const currentTotalAd = activeGoogle + activeMeta;
-                      const maxAllowed = Number(paymentForm.amount || 0);
+                      const maxAllowed = Math.max(0, Number(paymentForm.amount || 0) - 1);
 
                       return (
                         <div className={ `grid grid-cols-1 ${hasGoogleAd && hasMetaAd ? 'md:grid-cols-2' : ''} gap-3 sm:gap-4 pt-2 border-t border-gray-700 mt-2` }>
@@ -1156,7 +1156,7 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                           ) }
                           { currentTotalAd > maxAllowed && (
                             <div className="col-span-full text-red-400 text-xs font-semibold bg-red-900/30 p-2.5 rounded-lg border border-red-800">
-                              Total Ad Budget (₹{ currentTotalAd.toLocaleString() }) cannot exceed the payment amount of ₹{ maxAllowed.toLocaleString() }.
+                              Total Ad Budget (₹{ currentTotalAd.toLocaleString() }) cannot exceed ₹{ maxAllowed.toLocaleString() }. Minimum ₹1 must be reserved for service amount.
                             </div>
                           ) }
                         </div>
@@ -1189,9 +1189,10 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                   const currentTotalAd = paymentForm.has_ad_budget ? (activeGoogle + activeMeta) : 0;
                   const servicePortionThisPayment = finalSettleAmount - currentTotalAd;
 
+                  const maxAllowedAdBudget = Math.max(0, finalSettleAmount - 1);
                   const isAdBudgetInvalid = paymentForm.has_ad_budget && (
                     currentTotalAd <= 0 ||
-                    currentTotalAd > finalSettleAmount ||
+                    currentTotalAd > maxAllowedAdBudget ||
                     (hasGoogleAd && activeGoogle > remainingGoogleAdBudget) ||
                     (hasMetaAd && activeMeta > remainingMetaAdBudget)
                   );
