@@ -111,8 +111,11 @@ export default function PublicQuotationPage() {
 
   const displayServices = [
     ...paidServices.map((row) => ({
+      ...row,
       service_name: row.service_name || row.editing_type_name || "Service",
       category_name: row.category_name || "—",
+      editing_type_name: row.editing_type_name || "",
+      additional_services: row.additional_services || null,
       quantity: row.quantity || 1,
       amount: Number(
         row.total_amount ||
@@ -173,13 +176,49 @@ export default function PublicQuotationPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayServices.map((row, idx) => (
-                      <tr key={idx} className="border-t border-slate-100">
-                        <td className="py-2 pr-3 font-medium">{row.service_name}</td>
-                        <td className="py-2 pr-3">{row.category_name || "-"}</td>
-                        <td className="py-2 pr-3 text-right">{row.quantity || 1}</td>
-                      </tr>
-                    ))}
+                    {displayServices.map((row, idx) => {
+                      const catName = row.category_name || "-";
+                      const editType = (row.editing_type_name || "").trim();
+                      const showEditType =
+                        editType &&
+                        editType.toLowerCase() !== "n/a" &&
+                        !catName.toLowerCase().includes(editType.toLowerCase());
+                      const categoryDisplay = showEditType ? `${catName} (${editType})` : catName;
+
+                      let addons = [];
+                      if (row.additional_services) {
+                        try {
+                          addons = typeof row.additional_services === "string"
+                            ? JSON.parse(row.additional_services)
+                            : row.additional_services;
+                          if (!Array.isArray(addons)) addons = [];
+                        } catch {
+                          addons = [];
+                        }
+                      }
+
+                      return (
+                        <React.Fragment key={idx}>
+                          <tr className="border-t border-slate-100">
+                            <td className="py-2 pr-3 font-medium">{row.service_name}</td>
+                            <td className="py-2 pr-3">{categoryDisplay}</td>
+                            <td className="py-2 pr-3 text-right">{row.quantity || 1}</td>
+                          </tr>
+                          {addons.map((addon, aIdx) => {
+                            const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                            const parentName = row.service_name || "Service";
+                            const addonQty = Number(addon.quantity) || row.quantity || 1;
+                            return (
+                              <tr key={`addon-${idx}-${aIdx}`} className="border-t border-slate-100 bg-slate-50/40">
+                                <td className="py-2 pr-3 font-medium">{addonName} ({parentName})</td>
+                                <td className="py-2 pr-3 text-slate-400">—</td>
+                                <td className="py-2 pr-3 text-right">{addonQty}</td>
+                              </tr>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -223,13 +262,49 @@ export default function PublicQuotationPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {compServices.map((row, idx) => (
-                      <tr key={idx} className="border-t border-slate-100">
-                        <td className="py-2 pr-3 font-medium">{row.service_name}</td>
-                        <td className="py-2 pr-3">{row.category_name || "-"}</td>
-                        <td className="py-2 pr-3 text-right">{row.quantity || 1}</td>
-                      </tr>
-                    ))}
+                    {compServices.map((row, idx) => {
+                      const catName = row.category_name || "-";
+                      const editType = (row.editing_type_name || "").trim();
+                      const showEditType =
+                        editType &&
+                        editType.toLowerCase() !== "n/a" &&
+                        !catName.toLowerCase().includes(editType.toLowerCase());
+                      const categoryDisplay = showEditType ? `${catName} (${editType})` : catName;
+
+                      let addons = [];
+                      if (row.additional_services) {
+                        try {
+                          addons = typeof row.additional_services === "string"
+                            ? JSON.parse(row.additional_services)
+                            : row.additional_services;
+                          if (!Array.isArray(addons)) addons = [];
+                        } catch {
+                          addons = [];
+                        }
+                      }
+
+                      return (
+                        <React.Fragment key={idx}>
+                          <tr className="border-t border-slate-100">
+                            <td className="py-2 pr-3 font-medium">{row.service_name}</td>
+                            <td className="py-2 pr-3">{categoryDisplay}</td>
+                            <td className="py-2 pr-3 text-right">{row.quantity || 1}</td>
+                          </tr>
+                          {addons.map((addon, aIdx) => {
+                            const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                            const parentName = row.service_name || "Service";
+                            const addonQty = Number(addon.quantity) || row.quantity || 1;
+                            return (
+                              <tr key={`comp-addon-${idx}-${aIdx}`} className="border-t border-slate-100 bg-slate-50/40">
+                                <td className="py-2 pr-3 font-medium">{addonName} ({parentName})</td>
+                                <td className="py-2 pr-3 text-slate-400">—</td>
+                                <td className="py-2 pr-3 text-right">{addonQty}</td>
+                              </tr>
+                            );
+                          })}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

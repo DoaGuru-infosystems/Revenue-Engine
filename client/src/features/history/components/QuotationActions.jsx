@@ -263,7 +263,7 @@ const QuotationActions = ({
                   </button>
                 </li>
 
-                {["sent", "changes", "rejected"].includes(qStatus) && (
+                {["draft", "sent", "changes", "rejected"].includes(qStatus) && (
                   <>
                     <li>
                       <button
@@ -284,18 +284,6 @@ const QuotationActions = ({
                       </button>
                     </li>
                   </>
-                )}
-
-                {qStatus === "draft" && (
-                  <li>
-                    <button
-                      type="button"
-                      className="w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-emerald-600 dark:text-emerald-400 flex items-center gap-2"
-                      onClick={() => handleAction("send_to_client")}
-                    >
-                      <Send size={14} /> Send to client
-                    </button>
-                  </li>
                 )}
 
                 {qStatus === "approved" && (

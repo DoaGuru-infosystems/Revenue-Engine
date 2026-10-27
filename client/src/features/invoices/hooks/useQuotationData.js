@@ -868,8 +868,11 @@ export function useQuotationData({
           const rate = Number(row.editing_type_amount) || 0;
           const stored = Number(row.total_amount);
           return {
+            ...row,
             service_name: row.service_name || "Service",
             category_name: row.category_name || row.editing_type_name || "—",
+            editing_type_name: row.editing_type_name || "",
+            additional_services: row.additional_services || null,
             quantity,
             rate,
             amount: stored > 0 ? stored : rate * quantity,

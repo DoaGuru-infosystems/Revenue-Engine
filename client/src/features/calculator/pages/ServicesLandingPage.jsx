@@ -189,7 +189,7 @@ export default function ServicesLandingPage() {
       gradient: "from-yellow-400 to-orange-500",
       buttonGradient: "from-yellow-500 to-orange-500",
       features: ["Free Video Services", "Free Graphic Design", "Zero Grand Total Impact", "Included in Quotation"],
-      navigation: `${basePath}/complimentary/${id}/${effectiveProposalId}`,
+      navigation: `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`,
       navigationState: isQuotationMode
         ? { servicetype: "complimentary", mode: "quotation", quotationId }
         : { servicetype: "complimentary" },
@@ -673,7 +673,7 @@ export default function ServicesLandingPage() {
         state: { mode: "quotation", quotationId, editItem: item },
       });
     } else if (isCompItem(item)) {
-      navigate(`${basePath}/complimentary/${id}/${effectiveProposalId}?mode=quotation`, {
+      navigate(`${basePath}/calculator/${id}/${effectiveProposalId}?mode=quotation`, {
         state: { servicetype: "complimentary", mode: "quotation", quotationId, editItem: item },
       });
     } else {
@@ -2362,7 +2362,35 @@ export default function ServicesLandingPage() {
                               <td className="px-3 py-2">{index + 1}</td>
                               <td className="px-3 py-2 whitespace-nowrap">{order.created_at || (order._status === "pending_add" ? "Just now" : "-")}</td>
                               <td className="px-3 py-2 min-w-[100px]">{order.service_name}</td>
-                              <td className="px-3 py-2 min-w-[100px]">{order.category_name}</td>
+                              <td className="px-3 py-2 min-w-[100px]">
+                                <div>{order.category_name || "-"}</div>
+                                {(() => {
+                                  let orderAddons = [];
+                                  if (order.additional_services) {
+                                    try {
+                                      orderAddons = typeof order.additional_services === "string"
+                                        ? JSON.parse(order.additional_services)
+                                        : order.additional_services;
+                                      if (!Array.isArray(orderAddons)) orderAddons = [];
+                                    } catch {
+                                      orderAddons = [];
+                                    }
+                                  }
+                                  if (orderAddons.length === 0) return null;
+                                  return (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      {orderAddons.map((addon, aIdx) => (
+                                        <span
+                                          key={aIdx}
+                                          className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded px-1.5 py-0.5 font-medium"
+                                        >
+                                          ✨ {addon.name || addon.additional_service_name} (+₹{Number(addon.amount || 0).toLocaleString("en-IN")})
+                                        </span>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                              </td>
                               <td className="px-3 py-2 min-w-[100px]">{order.editing_type_name || "-"}</td>
                               <td className="px-3 py-2 whitespace-nowrap">{order.quantity}</td>
                               <td className="px-3 py-2 whitespace-nowrap">₹{order.total_amount || order.total_price || 0}</td>
@@ -2515,7 +2543,7 @@ export default function ServicesLandingPage() {
                       </button>
                       <button
                         onClick={() => {
-                          const navUrl = `${basePath}/complimentary/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
+                          const navUrl = `${basePath}/calculator/${id}/${effectiveProposalId}${isQuotationMode ? "?mode=quotation" : ""}`;
                           const navState = {
                             servicetype: "complimentary",
                             ...(isQuotationMode ? { mode: "quotation", quotationId } : {}),

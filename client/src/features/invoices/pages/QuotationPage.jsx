@@ -277,13 +277,49 @@ export default function QuotationPage() {
                                   <td className="border px-2 py-2 text-center" colSpan={3}>No services added</td>
                                 </tr>
                               )}
-                              {quotationLines.map((line, index) => (
-                                <tr key={`${line.service_name}-${index}`} className="bg-white">
-                                  <td className="border px-2 py-1 font-medium">{line.service_name}</td>
-                                  <td className="border px-2 py-1">{line.category_name}</td>
-                                  <td className="border px-2 py-1 text-right">{line.quantity}</td>
-                                </tr>
-                              ))}
+                              {quotationLines.map((line, index) => {
+                                const catName = line.category_name || "—";
+                                const editType = (line.editing_type_name || "").trim();
+                                const showEditType =
+                                  editType &&
+                                  editType.toLowerCase() !== "n/a" &&
+                                  !catName.toLowerCase().includes(editType.toLowerCase());
+                                const categoryDisplay = showEditType ? `${catName} (${editType})` : catName;
+
+                                let addons = [];
+                                if (line.additional_services) {
+                                  try {
+                                    addons = typeof line.additional_services === "string"
+                                      ? JSON.parse(line.additional_services)
+                                      : line.additional_services;
+                                    if (!Array.isArray(addons)) addons = [];
+                                  } catch {
+                                    addons = [];
+                                  }
+                                }
+
+                                return (
+                                  <React.Fragment key={`${line.service_name}-${index}`}>
+                                    <tr className="bg-white">
+                                      <td className="border px-2 py-1 font-medium">{line.service_name}</td>
+                                      <td className="border px-2 py-1">{categoryDisplay}</td>
+                                      <td className="border px-2 py-1 text-right">{line.quantity}</td>
+                                    </tr>
+                                    {addons.map((addon, aIdx) => {
+                                      const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                                      const parentName = line.service_name || "Service";
+                                      const addonQty = Number(addon.quantity) || line.quantity || 1;
+                                      return (
+                                        <tr key={`${line.service_name}-${index}-addon-${aIdx}`} className="bg-white">
+                                          <td className="border px-2 py-1 font-medium">{addonName} ({parentName})</td>
+                                          <td className="border px-2 py-1 text-gray-500">—</td>
+                                          <td className="border px-2 py-1 text-right">{addonQty}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </React.Fragment>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </section>
@@ -330,13 +366,49 @@ export default function QuotationPage() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {complimentaryData.map((comp, index) => (
-                                  <tr key={`comp-${index}`} className="bg-white">
-                                    <td className="border px-2 py-1 font-medium">{comp.service_name}</td>
-                                    <td className="border px-2 py-1">{comp.category_name || "—"}</td>
-                                    <td className="border px-2 py-1 text-right">{comp.quantity || 1}</td>
-                                  </tr>
-                                ))}
+                                {complimentaryData.map((comp, index) => {
+                                  const catName = comp.category_name || "—";
+                                  const editType = (comp.editing_type_name || "").trim();
+                                  const showEditType =
+                                    editType &&
+                                    editType.toLowerCase() !== "n/a" &&
+                                    !catName.toLowerCase().includes(editType.toLowerCase());
+                                  const categoryDisplay = showEditType ? `${catName} (${editType})` : catName;
+
+                                  let addons = [];
+                                  if (comp.additional_services) {
+                                    try {
+                                      addons = typeof comp.additional_services === "string"
+                                        ? JSON.parse(comp.additional_services)
+                                        : comp.additional_services;
+                                      if (!Array.isArray(addons)) addons = [];
+                                    } catch {
+                                      addons = [];
+                                    }
+                                  }
+
+                                  return (
+                                    <React.Fragment key={`comp-${index}`}>
+                                      <tr className="bg-white">
+                                        <td className="border px-2 py-1 font-medium">{comp.service_name}</td>
+                                        <td className="border px-2 py-1">{categoryDisplay}</td>
+                                        <td className="border px-2 py-1 text-right">{comp.quantity || 1}</td>
+                                      </tr>
+                                      {addons.map((addon, aIdx) => {
+                                        const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                                        const parentName = comp.service_name || "Service";
+                                        const addonQty = Number(addon.quantity) || comp.quantity || 1;
+                                        return (
+                                          <tr key={`comp-${index}-addon-${aIdx}`} className="bg-white">
+                                            <td className="border px-2 py-1 font-medium">{addonName} ({parentName})</td>
+                                            <td className="border px-2 py-1 text-gray-500">—</td>
+                                            <td className="border px-2 py-1 text-right">{addonQty}</td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </React.Fragment>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </section>

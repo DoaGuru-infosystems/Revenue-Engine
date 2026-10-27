@@ -594,6 +594,7 @@ const GraphicCalculator = ({
               embeddedData={ embeddedData ? embeddedData.filter(r => r.is_complimentary || r.source === 'custom_complimentary') : undefined }
               isQuotationMode={ isQuotationMode }
               quotationId={ quotationId }
+              editItem={ editItem || location.state?.editItem }
             />
           ) : null }
 
