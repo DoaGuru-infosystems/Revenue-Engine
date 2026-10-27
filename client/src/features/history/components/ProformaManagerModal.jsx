@@ -631,7 +631,9 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
   const handleViewProforma = (proforma) => {
     const isGST = proforma.is_gst && typeof proforma.is_gst === 'object' && proforma.is_gst.data ? proforma.is_gst.data[0] === 1 : Number(proforma.is_gst) === 1;
     const clientId = proforma.client_id || proposal?.client_id || proposal?.clientId;
-    const source = proforma.source_type === 'manual' || !proforma.proposal_id ? 'manual' : 'proposal';
+    const source = (proforma.source_type === 'quotation' || proforma.quotation_id)
+      ? 'quotation'
+      : (proforma.source_type === 'manual' || !proforma.proposal_id ? 'manual' : 'proposal');
     const url = `#${rolePath(basePath, "quotation", clientId, proforma.id, `doc=proforma&source=${source}&gst=${isGST ? 1 : 0}`)}`;
     window.open(url, "_blank");
   };
@@ -775,13 +777,17 @@ export default function ProformaManagerModal({ isOpen, onClose, proposal }) {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
                           <h3 className="font-bold text-base sm:text-lg text-white">{ proforma.proforma_number || `Proforma #${ proforma.id }` }</h3>
-                          { (proforma.source_type === 'manual' || !proforma.proposal_id) ? (
-                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30 flex items-center gap-1">
-                              ⚡ Instant Proforma
+                          { (proforma.source_type === 'quotation' || proforma.quotation_id) ? (
+                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
+                              📄 { proforma.quotation_number ? `Quotation ${proforma.quotation_number}` : (proforma.quotation_id ? `Quotation #${proforma.quotation_id}` : 'Quotation') }
                             </span>
-                          ) : (
+                          ) : proforma.proposal_id ? (
                             <span className="px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600/50">
                               Proposal #{ proforma.proposal_id }
+                            </span>
+                          ) : (
+                            <span className="px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-500/30 flex items-center gap-1">
+                              ⚡ Instant Proforma
                             </span>
                           ) }
                           <span className={`px-2 sm:px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-bold uppercase border flex items-center gap-1.5 ${currentStatusConfig.badge}`}>

@@ -1304,7 +1304,7 @@ exports.getProformasByClient = async (req, res) => {
     const { clientId } = req.params;
     await healOrphanedCarriedForwardProformas(clientId);
     const q = `
-      SELECT p.*,
+      SELECT p.*, qtn.quotation_number,
              COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
              COALESCE((SELECT SUM(realized_service_amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_service_realized,
              COALESCE((SELECT SUM(realized_google_budget) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS realized_google_budget,
@@ -1329,6 +1329,7 @@ exports.getProformasByClient = async (req, res) => {
              ), 0)) AS service_pending,
              (SELECT COUNT(*) FROM re_invoice i WHERE i.proforma_id = p.id) > 0 as has_invoice
       FROM re_proposal_proforma p
+      LEFT JOIN re_quotation qtn ON qtn.id = p.quotation_id
       WHERE p.client_id = ?
       ORDER BY p.created_at DESC
     `;

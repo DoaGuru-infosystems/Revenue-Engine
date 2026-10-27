@@ -343,8 +343,8 @@ export default function CreateBalanceProformaModal({ isOpen, onClose, onSuccess 
                     const isFullyPaid = totalPaid >= totalAmount - 0.05 && totalAmount > 0;
                     const isPartial = totalPaid > 0 && !isFullyPaid;
 
-                    const isInstant =
-                      proforma.source_type === "manual" || !proforma.proposal_id;
+                    const isQuotation = proforma.source_type === "quotation" || Boolean(proforma.quotation_id);
+                    const isInstant = !isQuotation && (proforma.source_type === "manual" || !proforma.proposal_id);
                     const isEligible = !isCarriedForward && !isFullyPaid && pendingBalance > 0.05;
 
                     return (
@@ -358,7 +358,11 @@ export default function CreateBalanceProformaModal({ isOpen, onClose, onSuccess 
                               {proforma.proforma_number || `PROF-${proforma.id}`}
                             </span>
 
-                            {isInstant ? (
+                            {isQuotation ? (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                📄 {proforma.quotation_number ? `Quotation ${proforma.quotation_number}` : (proforma.quotation_id ? `Quotation #${proforma.quotation_id}` : "Quotation")}
+                              </span>
+                            ) : isInstant ? (
                               <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
                                 ⚡ Instant Proforma
                               </span>
