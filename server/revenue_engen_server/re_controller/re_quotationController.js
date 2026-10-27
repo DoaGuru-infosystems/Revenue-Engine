@@ -116,12 +116,6 @@ exports.getQuotationsByClient = async (req, res) => {
               (SELECT is_gst FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst
        FROM re_quotation q
        WHERE q.client_id = ?
-         AND (
-           q.status != 'draft'
-           OR EXISTS (SELECT 1 FROM re_quotation_services qs WHERE qs.quotation_id = q.id)
-           OR EXISTS (SELECT 1 FROM re_quotation_ads qa WHERE qa.quotation_id = q.id)
-           OR q.grand_total_excl_gst > 0
-         )
        ORDER BY q.created_at DESC`,
       [clientId]
     );
@@ -153,16 +147,10 @@ exports.getAllQuotations = async (req, res) => {
                      (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) AS proforma_count,
                      (SELECT is_gst FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst
               FROM re_quotation q
-              LEFT JOIN re_revenue_engine_client_details c ON q.client_id = c.id
-              WHERE (
-                q.status != 'draft'
-                OR EXISTS (SELECT 1 FROM re_quotation_services qs WHERE qs.quotation_id = q.id)
-                OR EXISTS (SELECT 1 FROM re_quotation_ads qa WHERE qa.quotation_id = q.id)
-                OR q.grand_total_excl_gst > 0
-              )`;
+              LEFT JOIN re_revenue_engine_client_details c ON q.client_id = c.id`;
     const params = [];
     if (status) {
-      q += ` AND q.status = ?`;
+      q += ` WHERE q.status = ?`;
       params.push(status);
     }
     q += ` ORDER BY q.created_at DESC`;

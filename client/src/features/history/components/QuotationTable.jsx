@@ -4,6 +4,7 @@ import { Search, Calendar, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PROPOSAL_STATUS_MAP } from "../../../config/proposalStatuses";
 import QuotationActions from "./QuotationActions";
+import { checkDraftStatus } from "../../calculator/utils/quotationDraftPersistence";
 
 const QuotationTable = ({
   quotations,
@@ -23,6 +24,41 @@ const QuotationTable = ({
   const getDisplayStatus = (row) => {
     const key = row.status || "draft";
     return PROPOSAL_STATUS_MAP[key] || PROPOSAL_STATUS_MAP.draft;
+  };
+
+  const getDisplayAmount = (row) => {
+    if (Number(row.grand_total_excl_gst) > 0) {
+      return Number(row.grand_total_excl_gst).toLocaleString();
+    }
+    try {
+      const draftStatus = checkDraftStatus({ quotationId: row.id });
+      if (draftStatus?.restoreAvailable && draftStatus?.draft && Array.isArray(draftStatus.draft.draftItems)) {
+        const active = draftStatus.draft.draftItems.filter((i) => i._status !== "pending_delete");
+        const paidServices = active.filter(
+          (i) => i._type === "service" && !i.is_complimentary && i.include_in_total !== false
+        );
+        const serviceTotal = paidServices.reduce(
+          (sum, it) => sum + Number(it.total_amount || it.total_price || it.total || 0),
+          0
+        );
+        const adsTotal = active
+          .filter((i) => i._type === "ads")
+          .reduce((sum, it) => sum + Number(it.total || it.total_amount || it.budget || 0), 0);
+        let raw = serviceTotal + adsTotal;
+        const discount = draftStatus.draft.discount;
+        if (discount) {
+          if (discount.discount_type === "percentage" || discount.type === "percentage") {
+            const pct = Number(discount.discount_per || discount.value || 0);
+            raw = Math.max(0, raw - (raw * pct) / 100);
+          } else {
+            const amt = Number(discount.discount_amt || discount.value || 0);
+            raw = Math.max(0, raw - amt);
+          }
+        }
+        if (raw > 0) return `${raw.toLocaleString()} (Draft)`;
+      }
+    } catch {}
+    return Number(row.grand_total_excl_gst || 0).toLocaleString();
   };
 
   return (
@@ -58,7 +94,7 @@ const QuotationTable = ({
           <div className="flex flex-col space-y-2.5">
             {filtered.map((row) => {
               const statusInfo = getDisplayStatus(row);
-              const amount = Number(row.grand_total_excl_gst || 0).toLocaleString();
+              const amount = getDisplayAmount(row);
               const isDraft = (row.status || "draft") === "draft";
               return (
                 <div key={row.id} className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl overflow-visible">
@@ -66,7 +102,16 @@ const QuotationTable = ({
                     <div className="flex items-start justify-between gap-3">
                       <button
                         type="button"
-                        onClick={() => navigate(`${basePath}/quotation/${row.client_id}/${row.id}?doc=quotation&source=new_quotation`)}
+                        onClick={() => {
+                          if (isDraft) {
+                            navigate(
+                              `${basePath}/ServicesLanding/${row.client_id}/${row.id}?mode=quotation`,
+                              { state: { mode: "quotation", quotationId: row.id } }
+                            );
+                          } else {
+                            navigate(`${basePath}/quotation/${row.client_id}/${row.id}?doc=quotation&source=new_quotation`);
+                          }
+                        }}
                         className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline text-left cursor-pointer"
                       >
                         {row.quotation_number || `QTN-${row.id}`}
@@ -104,7 +149,16 @@ const QuotationTable = ({
                     <div>
                       <button
                         type="button"
-                        onClick={() => navigate(`${basePath}/quotation/${row.client_id}/${row.id}?doc=quotation&source=new_quotation`)}
+                        onClick={() => {
+                          if (isDraft) {
+                            navigate(
+                              `${basePath}/ServicesLanding/${row.client_id}/${row.id}?mode=quotation`,
+                              { state: { mode: "quotation", quotationId: row.id } }
+                            );
+                          } else {
+                            navigate(`${basePath}/quotation/${row.client_id}/${row.id}?doc=quotation&source=new_quotation`);
+                          }
+                        }}
                         className="font-semibold text-blue-600 dark:text-blue-400 hover:underline text-left cursor-pointer"
                       >
                         {row.quotation_number || `QTN-${row.id}`}
