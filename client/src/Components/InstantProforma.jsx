@@ -95,7 +95,6 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   useEffect(() => {
     if (!currentUser?.name) return;
     setProformaForm((prev) => (prev.dg_employee ? prev : { ...prev, dg_employee: currentUser.name }));
-    setClientForm((prev) => (prev.dg_employee ? prev : { ...prev, dg_employee: currentUser.name }));
   }, [currentUser?.name]);
 
   const fetchPreviousBalance = useCallback(
@@ -227,12 +226,6 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     const { name, value } = e.target;
     if (name === "phone" && !/^\d{0,10}$/.test(value)) return;
     setProformaForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleClientChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "phone" && !/^\d{0,10}$/.test(value)) return;
-    setClientForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const openDatePicker = (ref) => {
