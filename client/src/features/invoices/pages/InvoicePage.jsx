@@ -298,6 +298,7 @@ export default function InvoicePage({
                       additionalServiceData={additionalServiceData}
                       adsData={adsData}
                       complimentaryData={complimentaryData}
+                      servicesTotal={grandTotal}
                       selecteddiscount={selecteddiscount}
                       discountAmount={discountAmount}
                       selectedAdjustment={null}

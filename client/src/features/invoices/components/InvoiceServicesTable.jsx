@@ -98,15 +98,25 @@ export default function InvoiceServicesTable({
                 {/* Category rows for this service */}
                 {visibleEditingTypes.map((edit, eidx) => {
                   const qty = Number(edit.quantity || 1);
-                  const base = Number(edit.price || 0);
+                  const rawBase = Number(
+                    edit.price ||
+                    edit.editing_type_amount ||
+                    edit.unit_price ||
+                    edit.amount ||
+                    0
+                  );
                   const addons = Array.isArray(edit.additional_services) ? edit.additional_services : [];
                   const addonsTotal = addons.reduce((sum, a) => sum + ((Number(a.amount || a.unit_price) || 0) * (Number(a.quantity) || qty)), 0);
-                  const baseTotal = base * qty;
+                  const baseTotal = rawBase * qty;
                   const recordedTotal = Number(edit.total || 0);
                   // For the category row, total is strictly base price * qty (without addons)
                   const categoryRowTotal = (recordedTotal > 0 && recordedTotal >= baseTotal + addonsTotal)
                     ? (recordedTotal - addonsTotal > 0 ? recordedTotal - addonsTotal : baseTotal)
-                    : baseTotal;
+                    : (baseTotal > 0 ? baseTotal : (recordedTotal > 0 ? Math.max(0, recordedTotal - addonsTotal) : 0));
+
+                  const effectiveBase = rawBase > 0
+                    ? rawBase
+                    : (qty > 0 && categoryRowTotal > 0 ? categoryRowTotal / qty : 0);
 
                   return (
                     <tr key={`graphic-${idx}-${eidx}`} className="bg-white text-gray-900">
@@ -164,7 +174,7 @@ export default function InvoiceServicesTable({
                       </td>
                       <td className="border px-2 py-1 text-right">{qty}</td>
                       <td className="border px-2 py-1 text-right">
-                        ₹{formatAmountNoDecimals(base)}
+                        ₹{formatAmountNoDecimals(effectiveBase)}
                       </td>
                       <td className="border px-2 py-1 text-right">
                         ₹{formatAmountNoDecimals(categoryRowTotal)}

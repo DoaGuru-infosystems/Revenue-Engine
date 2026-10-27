@@ -824,20 +824,6 @@ export const useInvoiceData = ({
       }
 
       const quantity = parseAmount(item.quantity) || 1;
-      const price = parseAmount(item.editing_type_amount);
-      const include_content_posting = getOptionalAmountFromItem(item, [
-        "include_content_posting",
-        "include_meta_growth_&_content_management",
-      ]);
-      const include_thumbnail_creation = getOptionalAmountFromItem(item, [
-        "include_thumbnail_creation",
-      ]);
-
-      let include_youtube_video_posting = getOptionalAmountFromItem(item, [
-        "include_youtube_video_posting",
-        "include_youtube_channel_growth_&_optimization",
-      ]);
-
       let additional_services = [];
       if (item.additional_services) {
         try {
@@ -855,15 +841,28 @@ export const useInvoiceData = ({
         0
       );
 
-      if (include_youtube_video_posting <= 0) {
-        const rowTotal = parseAmount(item.total_amount);
-        const knownTotal =
-          quantity * (price + include_content_posting + include_thumbnail_creation) + addonsTotal;
-        const inferredYoutube = rowTotal - knownTotal;
-        if (inferredYoutube > 0) {
-          include_youtube_video_posting = Number((inferredYoutube / quantity).toFixed(2));
-        }
-      }
+      const parsedPrice = parseAmount(
+        item.editing_type_amount || item.unit_price || item.price || item.amount
+      );
+      const rowTotal = parseAmount(item.total_amount);
+      const price = parsedPrice > 0
+        ? parsedPrice
+        : (rowTotal > 0 && quantity > 0
+          ? Math.max(0, (rowTotal - addonsTotal) / quantity)
+          : 0);
+
+      const include_content_posting = getOptionalAmountFromItem(item, [
+        "include_content_posting",
+        "include_meta_growth_&_content_management",
+      ]);
+      const include_thumbnail_creation = getOptionalAmountFromItem(item, [
+        "include_thumbnail_creation",
+      ]);
+
+      const include_youtube_video_posting = getOptionalAmountFromItem(item, [
+        "include_youtube_video_posting",
+        "include_youtube_channel_growth_&_optimization",
+      ]);
 
       const catName = item.category_name || item.service_name || "N/A";
       const typeName =
@@ -883,7 +882,7 @@ export const useInvoiceData = ({
         include_thumbnail_creation,
         include_youtube_video_posting,
         additional_services,
-        total: parseAmount(item.total_amount),
+        total: rowTotal > 0 ? rowTotal : (price * quantity + addonsTotal),
       });
     });
 

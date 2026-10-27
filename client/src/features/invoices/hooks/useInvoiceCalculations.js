@@ -115,7 +115,8 @@ export const useInvoiceCalculations = ({
       return sum + Number(amount || 0);
     }, 0);
 
-    const dmServiceTotal = graphicTotal + thumbTotal + postTotal + ytTotal + addTotal;
+    // dmServiceTotal represents the total of all services in the Services Table (graphicTotal + additionalTotal)
+    const dmServiceTotal = grandTotal;
 
     // 3. Discount Calculations
     const discountAmount = selecteddiscount
