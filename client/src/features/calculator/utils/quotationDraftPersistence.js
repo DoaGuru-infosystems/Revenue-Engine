@@ -85,17 +85,25 @@ export function saveQuotationDraft({
   quotationId,
   draftItems = [],
   discount = null,
+  notes = undefined,
   baseDbSnapshot = [],
   storage = typeof window !== "undefined" ? window.localStorage : null,
   now = Date.now(),
 }) {
   if (!quotationId || !storage) return false;
   try {
+    let effectiveNotes = notes;
+    if (effectiveNotes === undefined) {
+      const existing = getQuotationDraft(quotationId, storage);
+      effectiveNotes = existing?.notes || null;
+    }
+
     const payload = {
       quotationId: String(quotationId),
       timestamp: Number(now),
       draftItems,
       discount,
+      notes: effectiveNotes,
       baseDbSnapshot,
     };
     const serialized = JSON.stringify(payload);
@@ -268,6 +276,7 @@ export function mergeDraftWithDb({
     mergedItems,
     conflictNotices,
     discount: draft.discount || null,
+    notes: draft.notes || null,
     hadConflicts: conflictNotices.length > 0,
   };
 }
@@ -594,5 +603,42 @@ export function deleteItemFromQuotationDraft({
     success: true,
     draftItems,
     draft: { ...draft, draftItems },
+  };
+}
+
+/**
+ * Save quotation notes directly into localStorage draft.
+ * Zero direct DB calls.
+ */
+export async function saveNotesToQuotationDraft({
+  quotationId,
+  notes = [],
+  fetchDbSnapshot = null,
+  storage = typeof window !== "undefined" ? window.localStorage : null,
+  now = Date.now(),
+}) {
+  if (!quotationId || !storage) {
+    return { success: false, error: "Missing quotationId or storage" };
+  }
+
+  const draft = await ensureQuotationDraft({ quotationId, fetchDbSnapshot, storage });
+  const draftItems = Array.isArray(draft?.draftItems) ? [...draft.draftItems] : [];
+  const baseDbSnapshot = Array.isArray(draft?.baseDbSnapshot) ? draft.baseDbSnapshot : [];
+  const discount = draft?.discount || null;
+
+  saveQuotationDraft({
+    quotationId,
+    draftItems,
+    discount,
+    notes,
+    baseDbSnapshot,
+    storage,
+    now,
+  });
+
+  return {
+    success: true,
+    notes,
+    draft: { ...draft, notes },
   };
 }

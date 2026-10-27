@@ -136,11 +136,12 @@ exports.getQuotationsByClient = async (req, res) => {
 // GET /auth/api/re_calculator/quotations
 exports.getAllQuotations = async (req, res) => {
   try {
-    // Auto-clean any 0-service empty ghost drafts so they never show up
+    // Auto-clean truly abandoned 0-service empty ghost drafts (> 48h old) so fresh drafts in-progress remain safe
     await runQuery(
       `DELETE FROM re_quotation
        WHERE status = 'draft'
          AND grand_total_excl_gst = 0
+         AND created_at < (NOW() - INTERVAL 48 HOUR)
          AND NOT EXISTS (SELECT 1 FROM re_quotation_services qs WHERE qs.quotation_id = re_quotation.id)
          AND NOT EXISTS (SELECT 1 FROM re_quotation_ads qa WHERE qa.quotation_id = re_quotation.id)`
     ).catch(() => {});
@@ -266,12 +267,11 @@ exports.saveQuotationServices = async (req, res) => {
       );
     }
 
-    // Update grand total and transition status from draft to approved
+    // Update grand total (preserve quotation status in draft until explicit approval)
     if (grand_total_excl_gst !== undefined) {
       await runQuery(
         `UPDATE re_quotation 
          SET grand_total_excl_gst = ?,
-             status = CASE WHEN status = 'draft' THEN 'approved' ELSE status END,
              updated_at = NOW() 
          WHERE id = ?`,
         [Number(grand_total_excl_gst), id]
@@ -360,7 +360,6 @@ exports.saveQuotationNotes = async (req, res) => {
     if (grand_total_excl_gst !== undefined) {
       updates.push("grand_total_excl_gst = ?");
       params.push(Number(grand_total_excl_gst) || 0);
-      updates.push("status = CASE WHEN status = 'draft' THEN 'approved' ELSE status END");
     }
 
     if (updates.length === 0) {

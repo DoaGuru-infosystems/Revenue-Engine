@@ -823,22 +823,30 @@ export default function ServicesLandingPage() {
         ),
       ];
 
-      if (discountValue > 0 || discountType) {
+      // Check if draft has notes to commit
+      const currentDraftStatus = checkDraftStatus({ quotationId: effectiveProposalId });
+      const draftNotes = currentDraftStatus?.draft?.notes;
+
+      if (discountValue > 0 || discountType || (draftNotes && draftNotes.length > 0)) {
         const isPercent = discountType === "Percentage";
+        const patchPayload = {
+          discount_json: {
+            type: isPercent ? "Percentage" : "Amount",
+            value: Number(discountValue || 0),
+            discount_type: isPercent ? "percent" : "amount",
+            discount_amt: isPercent ? 0 : Number(discountValue || 0),
+            discount_per: isPercent ? Number(discountValue || 0) : 0,
+            calculatedAmount: discountAmount,
+          },
+          grand_total_excl_gst: finalGrandTotal,
+        };
+        if (draftNotes && Array.isArray(draftNotes)) {
+          patchPayload.notes_json = draftNotes;
+        }
         promises.push(
           axios.patch(
             `${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}/notes`,
-            {
-              discount_json: {
-                type: isPercent ? "Percentage" : "Amount",
-                value: Number(discountValue || 0),
-                discount_type: isPercent ? "percent" : "amount",
-                discount_amt: isPercent ? 0 : Number(discountValue || 0),
-                discount_per: isPercent ? Number(discountValue || 0) : 0,
-                calculatedAmount: discountAmount,
-              },
-              grand_total_excl_gst: finalGrandTotal,
-            },
+            patchPayload,
             { headers: { Authorization: `Bearer ${token}` } }
           )
         );
@@ -908,14 +916,18 @@ export default function ServicesLandingPage() {
       (item) => item._status && item._status !== "saved"
     );
 
+    const currentDraftStatus = checkDraftStatus({ quotationId: effectiveProposalId });
+    const hasDraftNotes = Boolean(currentDraftStatus?.draft?.notes && currentDraftStatus.draft.notes.length > 0);
+
     if (hasPendingChanges) {
       saveQuotationDraft({
         quotationId: effectiveProposalId,
         draftItems,
         discount: { discountType, discountValue },
+        notes: currentDraftStatus?.draft?.notes,
         baseDbSnapshot: baseDbSnapshotRef.current,
       });
-    } else if (draftItems.length > 0) {
+    } else if (draftItems.length > 0 && !hasDraftNotes) {
       clearQuotationDraft(effectiveProposalId);
     }
   }, [draftItems, discountType, discountValue, isQuotationMode, effectiveProposalId, restoreAvailable]);
@@ -1654,7 +1666,19 @@ export default function ServicesLandingPage() {
             onClick={async () => {
               if (isQuotationMode && effectiveProposalId) {
                 const activeCount = (draftItems || []).filter((i) => i._status !== "pending_delete").length;
-                if (activeCount === 0 && (!getData || getData.length === 0) && (!getAdsData || getAdsData.length === 0)) {
+                const draftStatus = checkDraftStatus({ quotationId: effectiveProposalId });
+                const hasLocalDraft = Boolean(
+                  draftStatus?.restoreAvailable &&
+                  draftStatus?.draft &&
+                  Array.isArray(draftStatus.draft.draftItems) &&
+                  draftStatus.draft.draftItems.filter((i) => i._status !== "pending_delete").length > 0
+                );
+                if (
+                  activeCount === 0 &&
+                  !hasLocalDraft &&
+                  (!getData || getData.length === 0) &&
+                  (!getAdsData || getAdsData.length === 0)
+                ) {
                   try {
                     await axios.delete(`${baseURL}/auth/api/re_calculator/quotation/${effectiveProposalId}`, {
                       headers: { Authorization: `Bearer ${token}` },

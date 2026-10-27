@@ -868,18 +868,35 @@ const dispatch = useDispatch();
 
       if (isQuotationMode) {
         const qId = effectiveQuotationId || effectiveProposalId;
-        const res = await axios.patch(
-          `${baseURL}/auth/api/re_calculator/quotation/${qId}/notes`,
-          { notes_json: planNotes },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.data?.status === "Success") {
+        const { saveNotesToQuotationDraft } = await import("../utils/quotationDraftPersistence");
+        const saveRes = await saveNotesToQuotationDraft({
+          quotationId: qId,
+          notes: planNotes,
+          fetchDbSnapshot: async () => {
+            const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
+            const axios = (await import("axios")).default;
+            const currentQ = await axios.get(
+              `${API_BASE_URL}/auth/api/re_calculator/quotation/${qId}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const rawServices = currentQ.data?.data?.services || [];
+            const rawAds = currentQ.data?.data?.ads || [];
+            return {
+              items: [
+                ...rawServices.map((s) => ({ ...s, _type: "service", _status: "saved" })),
+                ...rawAds.map((a) => ({ ...a, _type: "ads", _status: "saved" })),
+              ],
+            };
+          },
+        });
+
+        if (saveRes?.success) {
           Swal.fire({
             icon: "success",
-            title: "Notes Saved",
-            text: "Notes saved successfully!",
+            title: "Notes Saved to Draft!",
+            text: "Notes saved to draft. Go back to Services Landing and click 'Save Quotation' to commit to database.",
             showConfirmButton: false,
-            timer: 1000,
+            timer: 1500,
           });
           getAllPlanNotes();
           setManualNote("");
@@ -1062,22 +1079,35 @@ const dispatch = useDispatch();
           `${baseURL}/auth/api/re_calculator/quotation/${qId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        let dbNotes = [];
         if (res.data?.status === "Success" && res.data?.data?.notes_json) {
           try {
             const notes = typeof res.data.data.notes_json === "string"
               ? JSON.parse(res.data.data.notes_json)
               : res.data.data.notes_json;
-            setAllClientNote(
-              Array.isArray(notes)
-                ? notes.map((n, i) => ({ id: i + 1, note_name: typeof n === "string" ? n : n.note_name }))
-                : []
-            );
-            return;
+            if (Array.isArray(notes)) {
+              dbNotes = notes.map((n, i) => ({
+                id: `db-${i + 1}`,
+                note_name: typeof n === "string" ? n : n.note_name,
+                _status: "saved",
+              }));
+            }
           } catch {
-            setAllClientNote([]);
+            dbNotes = [];
           }
+        }
+
+        const { checkDraftStatus } = await import("../utils/quotationDraftPersistence");
+        const draftStatus = checkDraftStatus({ quotationId: qId });
+        if (draftStatus?.restoreAvailable && draftStatus?.draft && Array.isArray(draftStatus.draft.notes)) {
+          const draftNotes = draftStatus.draft.notes.map((n, i) => ({
+            id: `draft-${i + 1}`,
+            note_name: typeof n === "string" ? n : n.note_name,
+            _status: "pending_add",
+          }));
+          setAllClientNote(draftNotes);
         } else {
-          setAllClientNote([]);
+          setAllClientNote(dbNotes);
         }
         return;
       }
@@ -1256,15 +1286,15 @@ const dispatch = useDispatch();
         const qId = effectiveQuotationId || effectiveProposalId;
         const remaining = allClientNote.filter((item) => item.id !== noteId);
         setAllClientNote(remaining);
-        await axios.patch(
-          `${baseURL}/auth/api/re_calculator/quotation/${qId}/notes`,
-          { notes_json: remaining.map((n) => ({ note_name: n.note_name })) },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const { saveNotesToQuotationDraft } = await import("../utils/quotationDraftPersistence");
+        await saveNotesToQuotationDraft({
+          quotationId: qId,
+          notes: remaining.map((n) => ({ note_name: n.note_name })),
+        });
         Swal.fire({
           icon: "success",
-          title: "Deleted!",
-          text: "Note has been deleted.",
+          title: "Removed from Draft!",
+          text: "Note removed from draft. Click 'Save Quotation' on main page to commit.",
           timer: 1000,
           showConfirmButton: false,
         });
@@ -1948,8 +1978,13 @@ const dispatch = useDispatch();
                     key={notes.id}
                     className="flex items-start gap-3 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 hover:border-gray-600 transition"
                   >
-                    <span className="flex-1 text-sm text-gray-300 leading-relaxed">
-                      → {notes.note_name}
+                    <span className="flex-1 text-sm text-gray-300 leading-relaxed flex items-center gap-2">
+                      <span>→ {notes.note_name}</span>
+                      {notes._status === "pending_add" && (
+                        <span className="text-[10px] bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded font-medium">
+                          Draft
+                        </span>
+                      )}
                     </span>
                     <div className="flex gap-2 flex-shrink-0">
                       <button
