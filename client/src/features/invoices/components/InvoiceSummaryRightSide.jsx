@@ -63,7 +63,7 @@ export default function InvoiceSummaryRightSide({
                 className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
               >
                 <span className="text-gray-600">
-                  Less: Taxable Value Billed Earlier
+                  {isGST ? "Less: Taxable Value Billed Earlier" : "Less: Value Billed Earlier"}
                 </span>
                 <span className="text-gray-900 font-medium">
                   -₹{formatAmount(pastActiveTaxableSubtotal)}
@@ -95,7 +95,9 @@ export default function InvoiceSummaryRightSide({
               }}
               className="flex justify-between items-center px-3 py-1 border-b border-gray-200"
             >
-              <span className="text-gray-800">Net Taxable Value</span>
+              <span className="text-gray-800">
+                {isGST ? "Net Taxable Value" : "Net Service Value"}
+              </span>
               <span className="text-gray-900 font-bold">
                 ₹{formatAmount(activeTaxableSubtotal)}
               </span>
@@ -132,23 +134,23 @@ export default function InvoiceSummaryRightSide({
             )}
             {currentPrevBalPaid > 0 && (
               <>
-                <div
-                  style={{
-                    background: "white",
-                    color: "#5f6b7a",
-                    fontWeight: "normal",
-                  }}
-                  className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
-                >
-                  <span className="text-gray-600">Total Tax Amount</span>
-                  <span className="text-gray-900 font-medium">
-                    ₹{formatAmountNoDecimals(
-                      isGST
-                        ? Number((activeTaxableSubtotal + gstAmount).toFixed(2))
-                        : activeTaxableSubtotal
-                    )}
-                  </span>
-                </div>
+                {isGST && (
+                  <div
+                    style={{
+                      background: "white",
+                      color: "#5f6b7a",
+                      fontWeight: "normal",
+                    }}
+                    className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
+                  >
+                    <span className="text-gray-600">Total (Taxable + GST)</span>
+                    <span className="text-gray-900 font-medium">
+                      ₹{formatAmountNoDecimals(
+                        Number((activeTaxableSubtotal + gstAmount).toFixed(2))
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div
                   style={{
                     background: "white",
@@ -187,7 +189,9 @@ export default function InvoiceSummaryRightSide({
               className="flex justify-between items-center px-3 py-1 border-b border-gray-100"
             >
               <span className="text-gray-800">
-                {previousBalanceAmount > 0 ? "Taxable Service Amount" : "Taxable Amount"}
+                {isGST
+                  ? (previousBalanceAmount > 0 ? "Taxable Service Amount" : "Taxable Amount")
+                  : (previousBalanceAmount > 0 ? "Service Amount" : "Total Amount")}
               </span>
               <span className="text-gray-900 font-bold">
                 ₹{formatAmount(invoiceSubtotal)}
