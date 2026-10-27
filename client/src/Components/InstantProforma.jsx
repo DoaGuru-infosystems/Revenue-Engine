@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ArrowLeft,
   Building2,
-  CalendarDays,
   CheckCircle2,
   ChevronDown,
   CreditCard,
@@ -88,8 +87,6 @@ function InstantProforma({ onBack, handleSessionExpired }) {
   });
   const [adBudgetPending, setAdBudgetPending] = useState(0);
 
-  const startRef = useRef(null);
-  const endRef = useRef(null);
   const isGST = proformaForm.bill_type === "GST";
 
   useEffect(() => {
@@ -226,13 +223,6 @@ function InstantProforma({ onBack, handleSessionExpired }) {
     const { name, value } = e.target;
     if (name === "phone" && !/^\d{0,10}$/.test(value)) return;
     setProformaForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const openDatePicker = (ref) => {
-    const input = ref.current;
-    if (!input) return;
-    if (typeof input.showPicker === "function") input.showPicker();
-    else input.focus();
   };
 
   const openAddClientModal = () => {
@@ -646,52 +636,32 @@ function InstantProforma({ onBack, handleSessionExpired }) {
                   <label htmlFor="duration_start_date" className={labelClass}>
                     Duration Start
                   </label>
-                  <div className="relative">
-                    <input
-                      ref={startRef}
-                      id="duration_start_date"
-                      type="date"
-                      name="duration_start_date"
-                      value={proformaForm.duration_start_date}
-                      onChange={handleProformaChange}
-                      className={`${inputClass} pr-11 [color-scheme:light] dark:[color-scheme:dark]`}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => openDatePicker(startRef)}
-                      aria-label="Open start date picker"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 dark:text-gray-500 transition-all duration-200 ease-out hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white"
-                    >
-                      <CalendarDays size={14} />
-                    </button>
-                  </div>
+                  <input
+                    id="duration_start_date"
+                    type="date"
+                    name="duration_start_date"
+                    value={proformaForm.duration_start_date}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    onChange={handleProformaChange}
+                    className={`${inputClass} cursor-pointer [color-scheme:light] dark:[color-scheme:dark]`}
+                    required
+                  />
                 </div>
                 <div>
                   <label htmlFor="duration_end_date" className={labelClass}>
                     Duration End
                   </label>
-                  <div className="relative">
-                    <input
-                      ref={endRef}
-                      id="duration_end_date"
-                      type="date"
-                      name="duration_end_date"
-                      value={proformaForm.duration_end_date}
-                      min={proformaForm.duration_start_date || undefined}
-                      onChange={handleProformaChange}
-                      className={`${inputClass} pr-11 [color-scheme:light] dark:[color-scheme:dark]`}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => openDatePicker(endRef)}
-                      aria-label="Open end date picker"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-gray-400 dark:text-gray-500 transition-all duration-200 ease-out hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white"
-                    >
-                      <CalendarDays size={14} />
-                    </button>
-                  </div>
+                  <input
+                    id="duration_end_date"
+                    type="date"
+                    name="duration_end_date"
+                    value={proformaForm.duration_end_date}
+                    min={proformaForm.duration_start_date || undefined}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                    onChange={handleProformaChange}
+                    className={`${inputClass} cursor-pointer [color-scheme:light] dark:[color-scheme:dark]`}
+                    required
+                  />
                 </div>
                 <div>
                   <label htmlFor="dg_employee" className={labelClass}>
