@@ -977,12 +977,12 @@ const dispatch = useDispatch();
     try {
       if (isQuotationMode) {
         const qId = effectiveQuotationId || effectiveProposalId;
-        const { getQuotationDraft, getActiveDraftItemsByType } = await import(
+        const { checkDraftStatus, getActiveDraftItemsByType } = await import(
           "../utils/quotationDraftPersistence"
         );
-        const existingDraft = getQuotationDraft(qId);
-        if (existingDraft && Array.isArray(existingDraft.draftItems)) {
-          const filtered = getActiveDraftItemsByType(existingDraft, "service", true);
+        const draftStatus = checkDraftStatus({ quotationId: qId });
+        if (draftStatus.restoreAvailable && draftStatus.draft && Array.isArray(draftStatus.draft.draftItems)) {
+          const filtered = getActiveDraftItemsByType(draftStatus.draft, "service", true);
           setGetData(filtered);
           return;
         }

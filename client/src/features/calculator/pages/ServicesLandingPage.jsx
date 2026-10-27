@@ -313,16 +313,42 @@ export default function ServicesLandingPage() {
           ];
           baseDbSnapshotRef.current = initialDraft;
 
+          const sessionKey = `quotation_active_session_${quotationId}`;
+          const isOwnSession = typeof window !== "undefined" && Boolean(sessionStorage.getItem(sessionKey));
+
           // Check for valid unsaved localStorage draft (< 48h)
           const draftStatus = checkDraftStatus({ quotationId });
           if (draftStatus.restoreAvailable && draftStatus.draft) {
-            setRestoreAvailable(true);
-            setPendingDraftData(draftStatus.draft);
-            setDraftItems(initialDraft);
+            if (isOwnSession) {
+              // Own-session draft (user actively edited in this tab): silently merge without banner
+              const { mergedItems, conflictNotices: conflicts, discount } = mergeDraftWithDb({
+                draft: draftStatus.draft,
+                currentDbItems: initialDraft,
+              });
+              setDraftItems(mergedItems);
+              if (discount) {
+                if (discount.discountType) setDiscountType(discount.discountType);
+                if (discount.discountValue !== undefined) setDiscountValue(discount.discountValue);
+              }
+              setRestoreAvailable(false);
+              setPendingDraftData(null);
+              if (conflicts && conflicts.length > 0) {
+                setConflictNotices(conflicts);
+              }
+            } else {
+              // Different tab/session: prompt user with restore/discard banner
+              setRestoreAvailable(true);
+              setPendingDraftData(draftStatus.draft);
+              setDraftItems(initialDraft);
+            }
           } else {
             setRestoreAvailable(false);
             setPendingDraftData(null);
             setDraftItems(initialDraft);
+          }
+
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(sessionKey, "true");
           }
 
           setGetData(services.filter((item) => !isComplimentary(item)));
@@ -428,27 +454,42 @@ export default function ServicesLandingPage() {
               ];
               baseDbSnapshotRef.current = initialDraft;
 
+              const sessionKey = `quotation_active_session_${effectiveProposalId}`;
+              const isOwnSession = typeof window !== "undefined" && Boolean(sessionStorage.getItem(sessionKey));
+
               // Check for valid unsaved localStorage draft (< 48h)
               const draftStatus = checkDraftStatus({ quotationId: effectiveProposalId });
               if (draftStatus.restoreAvailable && draftStatus.draft) {
-                const { mergedItems, conflictNotices: conflicts, discount } = mergeDraftWithDb({
-                  draft: draftStatus.draft,
-                  currentDbItems: initialDraft,
-                });
-                setDraftItems(mergedItems);
-                if (discount) {
-                  if (discount.discountType) setDiscountType(discount.discountType);
-                  if (discount.discountValue !== undefined) setDiscountValue(discount.discountValue);
-                }
-                setRestoreAvailable(false);
-                setPendingDraftData(null);
-                if (conflicts && conflicts.length > 0) {
-                  setConflictNotices(conflicts);
+                if (isOwnSession) {
+                  // Own-session draft: silently merge without banner
+                  const { mergedItems, conflictNotices: conflicts, discount } = mergeDraftWithDb({
+                    draft: draftStatus.draft,
+                    currentDbItems: initialDraft,
+                  });
+                  setDraftItems(mergedItems);
+                  if (discount) {
+                    if (discount.discountType) setDiscountType(discount.discountType);
+                    if (discount.discountValue !== undefined) setDiscountValue(discount.discountValue);
+                  }
+                  setRestoreAvailable(false);
+                  setPendingDraftData(null);
+                  if (conflicts && conflicts.length > 0) {
+                    setConflictNotices(conflicts);
+                  }
+                } else {
+                  // Different tab/session: prompt user with restore/discard banner
+                  setRestoreAvailable(true);
+                  setPendingDraftData(draftStatus.draft);
+                  setDraftItems(initialDraft);
                 }
               } else {
                 setRestoreAvailable(false);
                 setPendingDraftData(null);
                 setDraftItems(initialDraft);
+              }
+
+              if (typeof window !== "undefined") {
+                sessionStorage.setItem(sessionKey, "true");
               }
 
               setGetData(services.filter((item) => !isComplimentary(item)));
@@ -486,32 +527,7 @@ export default function ServicesLandingPage() {
     if (isQuotationMode) return;
     if (!id || !effectiveProposalId) return;
     try {
-      if (isQuotationMode) {
-        const res = await axios.get(
-          `${baseURL}/auth/api/re_calculator/quotation/${quotationId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (res.data.status === "Success") {
-          const ads = res.data.data?.ads || [];
-          setGetAdsData(ads);
-          setDraftItems((prev) => {
-            const nonAds = prev.filter((i) => i._type !== "ads");
-            const newAds = ads.map((a) => ({
-              ...a,
-              _type: "ads",
-              category: a.category || a.category_name,
-              category_name: a.category || a.category_name,
-              amount: a.amount || a.budget,
-              budget: a.amount || a.budget,
-              total: a.total || a.total_amount || a.budget,
-              is_complimentary: false,
-              include_in_total: true,
-              _status: "saved",
-            }));
-            return [...nonAds, ...newAds];
-          });
-        }
-       } else if (docTypeFromURL === "proforma") {
+      if (docTypeFromURL === "proforma") {
         const res = await axios.get(
           `${baseURL}/auth/api/re_calculator/proformas/snapshot/${effectiveProposalId}`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -630,105 +646,6 @@ export default function ServicesLandingPage() {
       String(r.service_name || r.service || "").toLowerCase() === "complimentary"
     );
 
-  const handleServiceAdded = (row) => {
-    const isComp = isCompItem(row);
-    const isAds = row.source === "custom_ads" || row.service_name === "Ads Campaign";
-
-    setDraftItems((prevItems) => {
-      const targetId = editingCalculatorItem?.id || row.id;
-      const existsIndex = prevItems.findIndex((item) => String(item.id) === String(targetId));
-
-      if (existsIndex !== -1) {
-        // Edit existing item
-        const existing = prevItems[existsIndex];
-        const isOriginallySaved = !String(existing.id).startsWith("draft-");
-        const updated = {
-          ...existing,
-          ...row,
-          id: existing.id,
-          _type: isAds ? "ads" : "service",
-          is_complimentary: isComp,
-          include_in_total: isAds ? true : !isComp,
-          _status: isOriginallySaved ? "pending_edit" : "pending_add",
-        };
-        const newItems = [...prevItems];
-        newItems[existsIndex] = updated;
-        return newItems;
-      }
-
-      // Check duplicates for new item
-      if (!isAds) {
-        const dup = prevItems.find((r) => {
-          if (r._status === "pending_delete") return false;
-          if (r._type !== "service") return false;
-          if (Boolean(r.is_complimentary) !== isComp) return false;
-          return (
-            String(r.service_name || "").trim().toLowerCase() === String(row.service_name || "").trim().toLowerCase() &&
-            String(r.category_name || "").trim().toLowerCase() === String(row.category_name || "").trim().toLowerCase() &&
-            String(r.editing_type_name || "").trim().toLowerCase() === String(row.editing_type_name || "").trim().toLowerCase()
-          );
-        });
-        if (dup) {
-          Swal.fire({
-            icon: "error",
-            title: "Already Exists!",
-            text: `"${row.service_name} → ${row.category_name} (${row.editing_type_name || "-"})" already exists. Please edit the existing entry.`,
-            showConfirmButton: true,
-          });
-          return prevItems;
-        }
-      } else {
-        const dup = prevItems.find((r) => {
-          if (r._status === "pending_delete") return false;
-          if (r._type !== "ads") return false;
-          return (
-            String(r.category || r.category_name || "").trim().toLowerCase() ===
-            String(row.category_name || row.category || "").trim().toLowerCase()
-          );
-        });
-        if (dup) {
-          const dupAmt = Number(dup.amount || dup.budget || 0);
-          const newAmt = Number(row.budget || row.amount || 0);
-          if (dupAmt === newAmt) {
-            Swal.fire({
-              icon: "error",
-              title: "Already Exists!",
-              text: `Ads campaign for "${row.category_name}" with budget ₹${dupAmt.toLocaleString()} already exists.`,
-              showConfirmButton: true,
-            });
-            return prevItems;
-          }
-          const isOriginallySaved = !String(dup.id).startsWith("draft-");
-          const updated = {
-            ...dup,
-            ...row,
-            category: row.category_name,
-            category_name: row.category_name,
-            amount: newAmt,
-            budget: newAmt,
-            total: row.total || row.total_amount,
-            _status: isOriginallySaved ? "pending_edit" : "pending_add",
-          };
-          return prevItems.map((item) => (String(item.id) === String(dup.id) ? updated : item));
-        }
-      }
-
-      // Add as new draft item
-      const draftId = `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const newItem = {
-        ...row,
-        id: draftId,
-        _type: isAds ? "ads" : "service",
-        is_complimentary: isComp,
-        include_in_total: isAds ? true : !isComp,
-        _status: "pending_add",
-      };
-      return [...prevItems, newItem];
-    });
-
-    setActiveCalculator(null);
-    setEditingCalculatorItem(null);
-  };
 
   const handleDraftDelete = (itemToDelete) => {
     setDraftItems((prevItems) => {
@@ -778,6 +695,9 @@ export default function ServicesLandingPage() {
       if (discount.discountType) setDiscountType(discount.discountType);
       if (discount.discountValue !== undefined) setDiscountValue(discount.discountValue);
     }
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`quotation_active_session_${effectiveProposalId}`, "true");
+    }
     if (conflicts.length > 0) {
       setConflictNotices(conflicts);
       Swal.fire({
@@ -804,6 +724,9 @@ export default function ServicesLandingPage() {
 
   const handleDiscardDraft = () => {
     clearQuotationDraft(effectiveProposalId);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(`quotation_active_session_${effectiveProposalId}`);
+    }
     setRestoreAvailable(false);
     setPendingDraftData(null);
     Swal.fire({
@@ -961,6 +884,9 @@ export default function ServicesLandingPage() {
 
     if (result.isConfirmed) {
       clearQuotationDraft(effectiveProposalId);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(`quotation_active_session_${effectiveProposalId}`);
+      }
       await fetchData();
       await fetchAdsData();
       Swal.fire({

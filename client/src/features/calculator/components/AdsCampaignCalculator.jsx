@@ -489,12 +489,12 @@ const AdsCampaignCalculator = ({ hideNotes, onSaveComplete, proposalIdOverride, 
       let isQuo = isQuotationMode;
 
       if (isQuo) {
-        const { getQuotationDraft, getActiveDraftItemsByType } = await import(
+        const { checkDraftStatus, getActiveDraftItemsByType } = await import(
           "../utils/quotationDraftPersistence"
         );
-        const existingDraft = getQuotationDraft(proposalId);
-        if (existingDraft && Array.isArray(existingDraft.draftItems)) {
-          const activeAds = getActiveDraftItemsByType(existingDraft, "ads");
+        const draftStatus = checkDraftStatus({ quotationId: proposalId });
+        if (draftStatus.restoreAvailable && draftStatus.draft && Array.isArray(draftStatus.draft.draftItems)) {
+          const activeAds = getActiveDraftItemsByType(draftStatus.draft, "ads");
           setGetData(
             activeAds.map((item) => ({
               ...item,

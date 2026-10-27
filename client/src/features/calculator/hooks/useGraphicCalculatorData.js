@@ -108,13 +108,13 @@ export function useGraphicCalculatorData({
 
     try {
       if (mode === "quotation" && quotationId) {
-        // Quotation mode: check localStorage draft first, fallback to DB if not present
-        const { getQuotationDraft, ensureQuotationDraft, getActiveDraftItemsByType } = await import(
+        // Quotation mode: check localStorage draft with 48h TTL, fallback to DB if absent/expired
+        const { checkDraftStatus, ensureQuotationDraft, getActiveDraftItemsByType } = await import(
           "../utils/quotationDraftPersistence"
         );
-        const existingDraft = getQuotationDraft(quotationId);
-        if (existingDraft && Array.isArray(existingDraft.draftItems)) {
-          const items = getActiveDraftItemsByType(existingDraft, "service", false);
+        const draftStatus = checkDraftStatus({ quotationId });
+        if (draftStatus.restoreAvailable && draftStatus.draft && Array.isArray(draftStatus.draft.draftItems)) {
+          const items = getActiveDraftItemsByType(draftStatus.draft, "service", false);
           setGetData(items);
           return;
         }
