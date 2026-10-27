@@ -3661,8 +3661,8 @@ exports.updateProformaSnapshot = async (req, res) => {
       const isNewComp = isComplimentaryItem(item);
       const normalizeName = (name) => String(name || '').replace(/\s*\((complimentary|complimntory)\)\s*$/i, '').trim().toLowerCase();
 
-      // Duplicate check — only compare against items with the SAME complimentary status (Addition #1 & #2)
-      const isDuplicate = parsed.some(
+      // Duplicate check — if item with same service, category, editing type and comp status exists, update it (upsert)
+      const existingIdx = parsed.findIndex(
         p => {
           const pComp = isComplimentaryItem(p);
           if (pComp !== isNewComp) {
@@ -3675,16 +3675,13 @@ exports.updateProformaSnapshot = async (req, res) => {
           );
         }
       );
-      if (isDuplicate) {
-        return res.status(200).json({
-          status: "Alert",
-          message: isNewComp
-            ? "Yeh complimentary service already exist hai. Please existing entry ko update karein."
-            : "Yeh service already exist hai. Please existing entry ko update karein."
-        });
+      if (existingIdx !== -1) {
+        // Upsert: update existing entry, preserve its id
+        parsed[existingIdx] = { ...parsed[existingIdx], ...item, id: parsed[existingIdx].id };
+      } else {
+        item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+        parsed.push(item);
       }
-      item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
-      parsed.push(item);
     } else if (action === "addBulk") {
       // Upsert by category — same category hai toh update, nahi toh add
       item.forEach(i => {

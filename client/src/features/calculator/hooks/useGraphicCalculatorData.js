@@ -470,29 +470,17 @@ export function useGraphicCalculatorData({
 
     // ── IN-MEMORY MODE (ProposalBuilder) ──────────────────────────────
     if (onServiceAdded) {
-      if (!editId && embeddedData && embeddedData.length > 0) {
-        const paidItems = embeddedData.filter((r) => !isComplimentaryItem(r));
-        const dupRow = paidItems.find(
-          (r) =>
-            r.service_name === selectedService &&
-            r.category_name === selectedCategory &&
-            r.editing_type_name === effectiveEditingType.editing_type_name
-        );
-        if (dupRow) {
-          Swal.fire({
-            icon: "error",
-            title: "Already Exists!",
-            text: `"${selectedService} → ${selectedCategory} (${effectiveEditingType.editing_type_name})" already exists. Please edit/update the existing entry.`,
-            showConfirmButton: true,
-            confirmButtonText: "OK",
-          });
-          setLoading(false);
-          return;
-        }
-      }
+      const paidItems = embeddedData && embeddedData.length > 0 ? embeddedData.filter((r) => !isComplimentaryItem(r)) : [];
+      const dupRow = !editId ? paidItems.find(
+        (r) =>
+          r.service_name === selectedService &&
+          r.category_name === selectedCategory &&
+          r.editing_type_name === effectiveEditingType.editing_type_name
+      ) : null;
+      const effectiveId = editId || dupRow?.id || Date.now();
 
       const row = {
-        id: editId || Date.now(),
+        id: effectiveId,
         service_name: selectedService,
         category_name: selectedCategory,
         editing_type_id: effectiveEditingType.editing_type_id,
@@ -512,10 +500,11 @@ export function useGraphicCalculatorData({
         service: formattedServiceTitle,
       };
       onServiceAdded(row);
+      const isUpdated = Boolean(editId || dupRow);
       Swal.fire({
         icon: "success",
-        title: editId ? "Updated!" : "Added!",
-        text: editId
+        title: isUpdated ? "Updated!" : "Added!",
+        text: isUpdated
           ? "Service updated in proposal. Click Save to save everything."
           : "Service added to proposal. Click Save to save everything.",
         showConfirmButton: false,
@@ -551,6 +540,29 @@ export function useGraphicCalculatorData({
 
     try {
       let res;
+      // If editId is not set, check if matching entry already exists in getData to update it
+      let effectiveEditId = editId;
+      if (!effectiveEditId && Array.isArray(getData)) {
+        const normalizeName = (name) =>
+          String(name || "")
+            .replace(/\s*\((complimentary|complimntory)\)\s*$/i, "")
+            .trim()
+            .toLowerCase();
+        const existingEntry = getData.find((r) => {
+          const rName = normalizeName(r.service_name || r.service);
+          const sName = normalizeName(selectedService);
+          const rCat = String(r.category_name || "").trim().toLowerCase();
+          const sCat = String(selectedCategory || "").trim().toLowerCase();
+          const rEdit = String(r.editing_type_name || "").trim().toLowerCase();
+          const sEdit = String(effectiveEditingType?.editing_type_name || "").trim().toLowerCase();
+          const isComp = Boolean(isComplimentaryItem(r));
+          return rName === sName && rCat === sCat && rEdit === sEdit && isComp === (serviceType === "complimentary");
+        });
+        if (existingEntry) {
+          effectiveEditId = existingEntry.id;
+        }
+      }
+
       if (mode === "quotation" && quotationId) {
         const { saveServiceToQuotationDraft, getActiveDraftItemsByType } = await import(
           "../utils/quotationDraftPersistence"
@@ -558,7 +570,7 @@ export function useGraphicCalculatorData({
         const saveRes = await saveServiceToQuotationDraft({
           quotationId,
           item: payload,
-          editId,
+          editId: effectiveEditId,
           isComplimentary: false,
           fetchDbSnapshot: async () => {
             const API_BASE_URL = (await import("../../../config/apiBaseUrl")).default;
@@ -594,9 +606,10 @@ export function useGraphicCalculatorData({
           const active = getActiveDraftItemsByType(saveRes.draft, "service", false);
           setGetData(active);
           resetForm();
+          const isDraftUpdate = Boolean(editId || effectiveEditId);
           Swal.fire({
             icon: "success",
-            title: editId ? "Draft Updated!" : "Saved to Draft!",
+            title: isDraftUpdate ? "Draft Updated!" : "Saved to Draft!",
             text: "Service saved to draft. Go back to Services Landing and click 'Save' to commit to database.",
             timer: 1500,
             showConfirmButton: false,
@@ -609,24 +622,31 @@ export function useGraphicCalculatorData({
         res = await updateProformaSnapshot(
           {
             proformaId: proposalId,
-            action: editId ? "update" : "add",
-            editId,
+            action: effectiveEditId ? "update" : "add",
+            editId: effectiveEditId,
             item: payload,
             snapshotType: "services",
           },
           token
         );
       } else {
-        res = await saveGraphicService(payload, token, editId);
+        res = await saveGraphicService(payload, token, effectiveEditId);
       }
 
       if (res?.status === "Success") {
+        const isUpdate = Boolean(editId || effectiveEditId);
+        const docLabel =
+          docTypeFromURL === "proforma"
+            ? "Proforma"
+            : isQuotationMode
+            ? "Quotation"
+            : "Service";
         Swal.fire({
           icon: "success",
-          title: editId ? "Updated!" : "Saved!",
-          text: editId
-            ? "Quotation updated successfully"
-            : "Quotation saved successfully",
+          title: isUpdate ? "Updated!" : "Saved!",
+          text: isUpdate
+            ? `${docLabel} updated successfully`
+            : `${docLabel} saved successfully`,
           showConfirmButton: false,
           timer: 1000,
         });

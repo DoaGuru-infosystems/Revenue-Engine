@@ -96,7 +96,7 @@ export default function PublicQuotationPage() {
         category_name: `${category}${percentStr}`,
         quantity: 1,
         rate: charge,
-        amount: charge,
+        amount: charge, 
       });
     }
 

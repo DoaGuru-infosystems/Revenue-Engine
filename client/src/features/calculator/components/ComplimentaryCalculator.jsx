@@ -475,7 +475,8 @@ const dispatch = useDispatch();
 
     // ── IN-MEMORY MODE (embedded inside ProposalBuilder) ──────────────────────
     if (onServiceAdded) {
-      if (!editId && embeddedData && embeddedData.length > 0) {
+      let effectiveEditId = editId;
+      if (!effectiveEditId && embeddedData && embeddedData.length > 0) {
         const isComp = (r) => {
           if (r.is_complimentary !== undefined && r.is_complimentary !== null) {
             return Boolean(r.is_complimentary);
@@ -486,31 +487,21 @@ const dispatch = useDispatch();
           return s.includes('(complimentary)') || s.includes('(complimntory)') || s === 'complimentary';
         };
         const compRows = embeddedData.filter(r => isComp(r));
-        const dupRow = compRows.find(
-          (r) => {
-            const rClean = String(r.service_name || r.service || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
-            return (
-              rClean === cleanBase.toLowerCase() &&
-              String(r.category_name || "").trim().toLowerCase() === String(selectedCategory || "").trim().toLowerCase() &&
-              String(r.editing_type_name || "").trim().toLowerCase() === String(effectiveEditingType.editing_type_name || "").trim().toLowerCase()
-            );
-          }
-        );
+        const dupRow = compRows.find((r) => {
+          const rClean = String(r.service_name || r.service || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
+          return (
+            rClean === cleanBase.toLowerCase() &&
+            String(r.category_name || "").trim().toLowerCase() === String(selectedCategory || "").trim().toLowerCase() &&
+            String(r.editing_type_name || "").trim().toLowerCase() === String(effectiveEditingType.editing_type_name || "").trim().toLowerCase()
+          );
+        });
         if (dupRow) {
-          Swal.fire({
-            icon: "warning",
-            title: "Already Exists",
-            text: "This complimentary service already exists.",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-          setLoading(false);
-          return;
+          effectiveEditId = dupRow.id;
         }
       }
 
       const row = {
-        id: editId || Date.now(),
+        id: effectiveEditId || Date.now(),
         service_name: finalServiceName,
         service: (effectiveEditingType?.editing_type_name && effectiveEditingType?.editing_type_name !== "null" && effectiveEditingType?.editing_type_name !== "N/A")
           ? `${finalServiceName} - ${selectedCategory} (${effectiveEditingType.editing_type_name})`
@@ -531,10 +522,11 @@ const dispatch = useDispatch();
         source: 'custom_complimentary',
       };
       onServiceAdded(row);
+      const isUpdated = Boolean(editId || effectiveEditId);
       Swal.fire({
         icon: "success",
-        title: editId ? "Updated!" : "Added!",
-        text: editId ? "Complimentary service updated." : "Complimentary service added to proposal.",
+        title: isUpdated ? "Updated!" : "Added!",
+        text: isUpdated ? "Complimentary service updated." : "Complimentary service added to proposal.",
         showConfirmButton: false,
         timer: 1200,
       });
@@ -648,22 +640,38 @@ const dispatch = useDispatch();
     }
 
     // ✅ Snapshot (proforma) or Legacy Proposal API
+    let effectiveEditId = editId;
+    if (!effectiveEditId && Array.isArray(getData)) {
+      const cleanBase = finalServiceName.replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
+      const existingEntry = getData.find((r) => {
+        const rClean = String(r.service_name || r.service || "").replace(/\s*\((complimentary|complimntory)\)\s*$/i, "").trim().toLowerCase();
+        return (
+          rClean === cleanBase &&
+          String(r.category_name || "").trim().toLowerCase() === String(selectedCategory || "").trim().toLowerCase() &&
+          String(r.editing_type_name || "").trim().toLowerCase() === String(effectiveEditingType?.editing_type_name || "").trim().toLowerCase()
+        );
+      });
+      if (existingEntry) {
+        effectiveEditId = existingEntry.id;
+      }
+    }
+
     let quotationRequest;
     if (docTypeFromURL === "proforma") {
       quotationRequest = axios.put(
         `${baseURL}/auth/api/re_calculator/proformas/snapshot`,
         {
           proformaId: effectiveProposalId,
-          action: editId ? "update" : "add",
-          editId,
+          action: effectiveEditId ? "update" : "add",
+          editId: effectiveEditId,
           item: { ...payload, source: "custom_complimentary" },
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } else {
-      quotationRequest = editId
+      quotationRequest = effectiveEditId
         ? axios.put(
-            `${baseURL}/auth/api/re_calculator/updateComplimenatryDataById/${editId}`,
+            `${baseURL}/auth/api/re_calculator/updateComplimenatryDataById/${effectiveEditId}`,
             payload,
             { headers: { Authorization: `Bearer ${token}` } }
           )
@@ -677,15 +685,16 @@ const dispatch = useDispatch();
     quotationRequest
       .then((res) => {
         if (res.data.status === "Success") {
+          const isUpdate = Boolean(editId || effectiveEditId);
+          const docLabel = docTypeFromURL === "proforma" ? "Proforma" : isQuotationMode ? "Quotation" : "Complimentary";
           Swal.fire({
             icon: "success",
-            title: editId ? "Updated!" : "Saved!",
-            text: editId
-              ? "Complimentary updated successfully"
-              : "Complimentary saved successfully",
+            title: isUpdate ? "Updated!" : "Saved!",
+            text: isUpdate
+              ? `${docLabel} updated successfully`
+              : `${docLabel} saved successfully`,
             showConfirmButton: false,
             timer: 1000,
-            // timerProgressBar: true,
           });
           resetForm();
           fetchData();
