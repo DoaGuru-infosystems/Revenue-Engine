@@ -27,6 +27,7 @@ const GenerateProformaModal = ({
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const isDark = theme === "dark";
   const { currentUser, token } = useSelector((state) => state.user);
   const userName = currentUser?.name;
   const basePath = getBasePath(currentUser?.role);
@@ -383,7 +384,18 @@ const GenerateProformaModal = ({
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.status === "Success") {
-          Swal.fire({ icon: "success", title: "Saved!", text: "Proforma Generated Successfully", timer: 1500, showConfirmButton: false });
+          Swal.fire({
+            icon: "success",
+            title: "Saved!",
+            text: "Proforma Generated Successfully",
+            timer: 1500,
+            showConfirmButton: false,
+            background: isDark ? "#1e293b" : "#ffffff",
+            color: isDark ? "#ffffff" : "#111827",
+            customClass: {
+              popup: isDark ? "re-swal-dark" : "re-swal-light",
+            },
+          });
           onClose();
           navigate(rolePath(
             basePath,
@@ -394,7 +406,13 @@ const GenerateProformaModal = ({
           ));
         }
       } catch (err) {
-        Swal.fire({ icon: "error", title: "Error", text: err?.response?.data?.message || "Failed to create proforma." });
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: err?.response?.data?.message || "Failed to create proforma.",
+          background: isDark ? "#1e293b" : "#ffffff",
+          color: isDark ? "#ffffff" : "#111827",
+        });
       }
       setLoading(false);
       return;
@@ -477,7 +495,18 @@ const GenerateProformaModal = ({
         });
 
         if (res.data.status === "Success") {
-          Swal.fire({ icon: "success", title: "Saved!", text: "Proforma Generated Successfully", timer: 1500, showConfirmButton: false });
+          Swal.fire({
+            icon: "success",
+            title: "Saved!",
+            text: "Proforma Generated Successfully",
+            timer: 1500,
+            showConfirmButton: false,
+            background: isDark ? "#1e293b" : "#ffffff",
+            color: isDark ? "#ffffff" : "#111827",
+            customClass: {
+              popup: isDark ? "re-swal-dark" : "re-swal-light",
+            },
+          });
           onClose();
           navigate(
             rolePath(
@@ -490,7 +519,13 @@ const GenerateProformaModal = ({
           );
         }
       } catch (err) {
-        Swal.fire({ icon: "error", title: "Error", text: "Failed to create proforma." });
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: err?.response?.data?.message || "Failed to create proforma.",
+          background: isDark ? "#1e293b" : "#ffffff",
+          color: isDark ? "#ffffff" : "#111827",
+        });
       }
       setLoading(false);
       return;
@@ -524,6 +559,11 @@ const GenerateProformaModal = ({
           animation: fadeIn 0.2s ease both;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Keep SweetAlert above modal overlay with solid contrast */
+        .swal2-container {
+          z-index: 100000 !important;
+        }
 
         .ci-modal-card {
           position: relative;

@@ -1761,35 +1761,90 @@ main,
    SWAL / SWEETALERT2 — Dark & Light Theme Integration
    ================================================================ */
 
-[data-theme="light"] .swal2-popup {
-  background: #ffffff !important;
-  color: #1a1a2e !important;
-  border: 1px solid rgba(234, 88, 12, 0.15) !important;
-  box-shadow: 0 20px 60px rgba(234, 88, 12, 0.12) !important;
+/* Ensure SweetAlert sits on top of all modal backdrops (ci-modal-overlay is z-index 9999) */
+div:where(.swal2-container),
+.swal2-container {
+  z-index: 100000 !important;
 }
 
-[data-theme="light"] .swal2-title {
-  color: #1a1a2e !important;
+/* Base SweetAlert defaults (Solid, never translucent) */
+.swal2-popup {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.25) !important;
+}
+
+.swal2-title {
+  color: #111827 !important;
+  font-weight: 700 !important;
+}
+
+.swal2-html-container,
+.swal2-content {
+  color: #4b5563 !important;
+}
+
+/* Success icon animation masks MUST match popup background to prevent ugly tearing / diagonal cuts */
+.swal2-icon.swal2-success [class^="swal2-success-circular-line"],
+.swal2-icon.swal2-success .swal2-success-fix {
+  background: #ffffff !important;
+}
+
+/* Light Theme SweetAlert */
+[data-theme="light"] .swal2-popup,
+.re-swal-light {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="light"] .swal2-title,
+.re-swal-light .swal2-title {
+  color: #111827 !important;
+  font-weight: 700 !important;
 }
 
 [data-theme="light"] .swal2-html-container,
-[data-theme="light"] .swal2-content {
-  color: #374151 !important;
+[data-theme="light"] .swal2-content,
+.re-swal-light .swal2-html-container {
+  color: #4b5563 !important;
 }
 
-[data-theme="dark"] .swal2-popup {
+[data-theme="light"] .swal2-icon.swal2-success [class^="swal2-success-circular-line"],
+[data-theme="light"] .swal2-icon.swal2-success .swal2-success-fix,
+.re-swal-light .swal2-icon.swal2-success [class^="swal2-success-circular-line"],
+.re-swal-light .swal2-icon.swal2-success .swal2-success-fix {
+  background: #ffffff !important;
+}
+
+/* Dark Theme SweetAlert */
+[data-theme="dark"] .swal2-popup,
+.re-swal-dark {
   background: #1e293b !important;
   color: #ffffff !important;
-  border: 1px solid rgba(55, 65, 81, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7) !important;
 }
 
-[data-theme="dark"] .swal2-title {
+[data-theme="dark"] .swal2-title,
+.re-swal-dark .swal2-title {
   color: #ffffff !important;
+  font-weight: 700 !important;
 }
 
 [data-theme="dark"] .swal2-html-container,
-[data-theme="dark"] .swal2-content {
-  color: #d1d5db !important;
+[data-theme="dark"] .swal2-content,
+.re-swal-dark .swal2-html-container {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .swal2-icon.swal2-success [class^="swal2-success-circular-line"],
+[data-theme="dark"] .swal2-icon.swal2-success .swal2-success-fix,
+.re-swal-dark .swal2-icon.swal2-success [class^="swal2-success-circular-line"],
+.re-swal-dark .swal2-icon.swal2-success .swal2-success-fix {
+  background: #1e293b !important;
 }
 
 /* ── SweetAlert input field ────────────────────────────────── */
