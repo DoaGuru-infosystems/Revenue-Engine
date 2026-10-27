@@ -495,45 +495,45 @@ const AdminClientDetailsPage = () => {
             {selectedClient ? (
               <div className="flex flex-col h-full gap-6">
                 <div className="flex flex-col text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full flex items-center justify-center mx-auto border border-gray-700/50">
-                    <User className="w-10 h-10 text-gray-400" />
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-500/20 dark:to-red-500/20 rounded-full flex items-center justify-center mx-auto border border-orange-200 dark:border-gray-700/50">
+                    <User className="w-10 h-10 text-orange-600 dark:text-gray-400" />
                   </div>
                   <div className="mt-3">
                     {selectedClient.client_organization && (
-                      <h4 className="font-bold text-xl text-white">{selectedClient.client_organization}</h4>
+                      <h4 className="font-bold text-xl text-gray-900 dark:text-white">{selectedClient.client_organization}</h4>
                     )}
-                    <p className={`text-base ${selectedClient.client_organization ? "text-gray-400" : "text-white font-bold text-lg"}`}>
+                    <p className={`text-base ${selectedClient.client_organization ? "text-gray-500 dark:text-gray-400 font-medium" : "text-gray-900 dark:text-white font-bold text-lg"}`}>
                       {selectedClient.client_name}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {selectedClient.email && (
-                    <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                      <div className="p-1.5 bg-red-500/10 rounded-lg"><Mail className="w-4 h-4 text-red-400" /></div>
-                      <span className="text-sm text-gray-300 break-all">{selectedClient.email}</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                      <div className="p-1.5 bg-red-100/80 dark:bg-red-500/10 rounded-lg"><Mail className="w-4 h-4 text-red-600 dark:text-red-400" /></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300 break-all">{selectedClient.email}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                    <div className="p-1.5 bg-amber-500/10 rounded-lg"><Phone className="w-4 h-4 text-amber-400" /></div>
-                    <span className="text-sm text-gray-300">{selectedClient.phone}</span>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                    <div className="p-1.5 bg-amber-100/80 dark:bg-amber-500/10 rounded-lg"><Phone className="w-4 h-4 text-amber-600 dark:text-amber-400" /></div>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{selectedClient.phone}</span>
                   </div>
                   {selectedClient.address && (
-                    <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                      <div className="p-1.5 bg-red-500/10 rounded-lg"><MapPin className="w-4 h-4 text-red-400" /></div>
-                      <span className="text-sm text-gray-300 line-clamp-2">{selectedClient.address}</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                      <div className="p-1.5 bg-red-100/80 dark:bg-red-500/10 rounded-lg"><MapPin className="w-4 h-4 text-red-600 dark:text-red-400" /></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{selectedClient.address}</span>
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col gap-2.5 mt-auto pt-4 border-t border-gray-700/50">
-                  <button onClick={handleCreateProposal} className="w-full px-4 py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm">
-                    <Plus className="w-4 h-4" /> Create Proposal
+                <div className="flex flex-col gap-2.5 mt-auto pt-4 border-t border-gray-200 dark:border-gray-700/50">
+                  <button onClick={handleCreateProposal} className="w-full px-4 py-3 bg-white dark:bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm border border-gray-200 dark:border-transparent shadow-sm">
+                    <Plus className="w-4 h-4 text-gray-900" /> Create Proposal
                   </button>
-                  <button onClick={(e) => { e.preventDefault(); handleGeneratePublicLink(); }} disabled={generating} className="w-full px-4 py-2.5 bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20 rounded-xl hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50">
-                    <LinkIcon className="w-4 h-4" /> {generating ? "Generating..." : "Generate Link"}
+                  <button onClick={(e) => { e.preventDefault(); handleGeneratePublicLink(); }} disabled={generating} className="w-full px-4 py-2.5 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 font-semibold border border-orange-200 dark:border-orange-500/20 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50 shadow-sm">
+                    <LinkIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" /> {generating ? "Generating..." : "Generate Link"}
                   </button>
-                  <button onClick={() => navigate(`/admin/client/service/history/${selectedClient.id}`)} className="w-full px-4 py-2.5 bg-gray-800 text-gray-300 font-medium rounded-xl hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4" /> History
+                  <button onClick={() => navigate(`/admin/client/service/history/${selectedClient.id}`)} className="w-full px-4 py-2.5 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl border border-gray-200 dark:border-transparent transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
+                    <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-300" /> History
                   </button>
                 </div>
               </div>
@@ -788,14 +788,14 @@ const AdminClientDetailsPage = () => {
 
             {/* Profile */}
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full flex items-center justify-center border border-gray-700/50 shrink-0">
-                <User className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-500/20 dark:to-red-500/20 rounded-full flex items-center justify-center border border-orange-200 dark:border-gray-700/50 shrink-0">
+                <User className="w-8 h-8 text-orange-600 dark:text-gray-400" />
               </div>
               <div className="min-w-0">
                 {selectedClient.client_organization && (
-                  <h4 className="font-bold text-lg text-white truncate">{selectedClient.client_organization}</h4>
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white truncate">{selectedClient.client_organization}</h4>
                 )}
-                <p className={`text-sm truncate ${selectedClient.client_organization ? "text-gray-400" : "text-white font-bold text-lg"}`}>
+                <p className={`text-sm truncate ${selectedClient.client_organization ? "text-gray-500 dark:text-gray-400 font-medium" : "text-gray-900 dark:text-white font-bold text-lg"}`}>
                   {selectedClient.client_name}
                 </p>
               </div>
@@ -804,19 +804,19 @@ const AdminClientDetailsPage = () => {
             {/* Contact Info */}
             <div className="space-y-2">
               {selectedClient.email && (
-                <div className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-xl border border-gray-700/50">
-                  <div className="p-1.5 bg-red-500/10 rounded-lg shrink-0"><Mail className="w-4 h-4 text-red-400" /></div>
-                  <span className="text-sm text-gray-300 break-all">{selectedClient.email}</span>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                  <div className="p-1.5 bg-red-100/80 dark:bg-red-500/10 rounded-lg shrink-0"><Mail className="w-4 h-4 text-red-600 dark:text-red-400" /></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300 break-all">{selectedClient.email}</span>
                 </div>
               )}
-              <div className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-xl border border-gray-700/50">
-                <div className="p-1.5 bg-amber-500/10 rounded-lg shrink-0"><Phone className="w-4 h-4 text-amber-400" /></div>
-                <span className="text-sm text-gray-300">{selectedClient.phone}</span>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                <div className="p-1.5 bg-amber-100/80 dark:bg-amber-500/10 rounded-lg shrink-0"><Phone className="w-4 h-4 text-amber-600 dark:text-amber-400" /></div>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{selectedClient.phone}</span>
               </div>
               {selectedClient.address && (
-                <div className="flex items-center gap-3 p-3 bg-gray-800/60 rounded-xl border border-gray-700/50">
-                  <div className="p-1.5 bg-red-500/10 rounded-lg shrink-0"><MapPin className="w-4 h-4 text-red-400" /></div>
-                  <span className="text-sm text-gray-300">{selectedClient.address}</span>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700/50">
+                  <div className="p-1.5 bg-red-100/80 dark:bg-red-500/10 rounded-lg shrink-0"><MapPin className="w-4 h-4 text-red-600 dark:text-red-400" /></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{selectedClient.address}</span>
                 </div>
               )}
             </div>
@@ -825,22 +825,22 @@ const AdminClientDetailsPage = () => {
             <div className="space-y-2.5 pt-2">
               <button
                 onClick={() => { setMobileDetailOpen(false); handleCreateProposal(); }}
-                className="w-full py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm"
+                className="w-full py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm border border-gray-200 dark:border-transparent shadow-sm"
               >
-                <Plus className="w-4 h-4" /> Create Proposal
+                <Plus className="w-4 h-4 text-gray-900" /> Create Proposal
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); setMobileDetailOpen(false); handleGeneratePublicLink(); }}
                 disabled={generating}
-                className="w-full py-3 bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20 rounded-xl hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                className="w-full py-3 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 font-semibold border border-orange-200 dark:border-orange-500/20 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2 text-sm disabled:opacity-50 shadow-sm"
               >
-                <LinkIcon className="w-4 h-4" /> {generating ? "Generating..." : "Generate Link"}
+                <LinkIcon className="w-4 h-4 text-orange-600 dark:text-orange-400" /> {generating ? "Generating..." : "Generate Link"}
               </button>
               <button
                 onClick={() => { setMobileDetailOpen(false); navigate(`/admin/client/service/history/${selectedClient.id}`); }}
-                className="w-full py-3 bg-gray-800 text-gray-300 font-medium rounded-xl hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                className="w-full py-3 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl border border-gray-200 dark:border-transparent transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
               >
-                <Calendar className="w-4 h-4" /> History
+                <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-300" /> History
               </button>
               <div className="flex gap-2 pt-1">
                 <button

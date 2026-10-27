@@ -102,10 +102,10 @@ export default function ProposalBuilderPage() {
             <button
               type="button"
               onClick={() => navigate(isAdmin ? "/admin/dashboard" : "/BD/dashboard")}
-              className="min-h-11 min-w-11 flex items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition shadow-sm shrink-0 touch-manipulation"
+              className="min-h-11 min-w-11 flex items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl transition shadow-sm shrink-0 touch-manipulation text-gray-700 dark:text-gray-200"
               title="Go Back"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
             </button>
             <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent truncate">
@@ -272,7 +272,7 @@ export default function ProposalBuilderPage() {
                   onClick={() => toggleSection(sec.key)}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center text-red-500 dark:text-red-400 shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-gray-700/50 flex items-center justify-center text-orange-600 dark:text-red-400 shrink-0 border border-orange-200/70 dark:border-transparent">
                       {sec.key === "pricing_investment" ? (
                         <IndianRupee className="w-4 h-4" />
                       ) : (
@@ -289,7 +289,7 @@ export default function ProposalBuilderPage() {
                   <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                     {isOptional && (
                       <label className="flex items-center gap-1.5 sm:gap-2" onClick={(e) => e.stopPropagation()}>
-                        <span className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium uppercase">Include</span>
+                        <span className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-400 font-semibold uppercase">Include</span>
                         <input
                           type="checkbox"
                           checked={toggles[sec.key]}
@@ -301,9 +301,9 @@ export default function ProposalBuilderPage() {
                       </label>
                     )}
                     {isOpen ? (
-                      <ChevronUp className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                      <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                      <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                     )}
                   </div>
                 </div>

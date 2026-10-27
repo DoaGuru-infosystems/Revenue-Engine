@@ -621,38 +621,8 @@ main,
 [data-theme="light"] button[class*="from-slate"] *,
 [data-theme="light"] button[class*="from-gray"],
 [data-theme="light"] button[class*="from-gray"] *,
-[data-theme="light"] button[class*="gradient"],
-[data-theme="light"] button[class*="gradient"] *,
-[data-theme="light"] div[class*="from-orange"] svg,
-[data-theme="light"] div[class*="from-orange"] > svg,
-[data-theme="light"] div[class*="from-red"] svg,
-[data-theme="light"] div[class*="from-red"] > svg,
-[data-theme="light"] div[class*="from-emerald"] svg,
-[data-theme="light"] div[class*="from-emerald"] > svg,
-[data-theme="light"] div[class*="from-blue"] svg,
-[data-theme="light"] div[class*="from-blue"] > svg,
-[data-theme="light"] div[class*="from-purple"] svg,
-[data-theme="light"] div[class*="from-purple"] > svg,
-[data-theme="light"] div[class*="from-slate"] svg,
-[data-theme="light"] div[class*="from-slate"] > svg,
-[data-theme="light"] div[class*="from-gray"] svg,
-[data-theme="light"] div[class*="from-gray"] > svg,
-[data-theme="light"] div[class*="to-slate"] svg,
-[data-theme="light"] div[class*="to-gray"] svg,
-[data-theme="light"] div[class*="bg-red-"] svg,
-[data-theme="light"] div[class*="bg-red-"] > svg,
-[data-theme="light"] div[class*="bg-orange-"] svg,
-[data-theme="light"] div[class*="bg-orange-"] > svg,
-[data-theme="light"] div[class*="bg-emerald-"] svg,
-[data-theme="light"] div[class*="bg-emerald-"] > svg,
-[data-theme="light"] div[class*="bg-blue-"] svg,
-[data-theme="light"] div[class*="bg-blue-"] > svg,
-[data-theme="light"] div[class*="bg-purple-"] svg,
-[data-theme="light"] div[class*="bg-purple-"] > svg,
-[data-theme="light"] div[class*="bg-slate-"] svg,
-[data-theme="light"] div[class*="bg-slate-"] > svg,
-[data-theme="light"] div[class*="bg-gradient"] svg,
-[data-theme="light"] div[class*="bg-gradient"] > svg,
+[data-theme="light"] button.bg-gradient-to-r:not([class*="bg-white"]):not([class*="bg-slate-50"]):not([class*="bg-gray-100"]),
+[data-theme="light"] button.bg-gradient-to-r:not([class*="bg-white"]):not([class*="bg-slate-50"]):not([class*="bg-gray-100"]) *,
 [data-theme="light"] #admin-create-quotation-btn,
 [data-theme="light"] #admin-create-quotation-btn *,
 [data-theme="light"] #bd-create-quotation-btn,
@@ -665,6 +635,58 @@ main,
 [data-theme="light"] .theme-force-dark * {
   color: #ffffff !important;
   stroke: #ffffff !important;
+}
+
+/* Ensure SVG icons in light mode inherit their currentColor stroke and remain visible */
+[data-theme="light"] svg:not([stroke="none"]):not([class*="keep-white"]):not(.keep-white) {
+  stroke: currentColor;
+}
+
+/* High-contrast icon strokes for muted colors in light mode */
+[data-theme="light"] [class*="text-orange-400"] > svg,
+[data-theme="light"] [class*="text-orange-300"] > svg,
+[data-theme="light"] svg.text-orange-400,
+[data-theme="light"] svg.text-orange-300 {
+  color: #c2410c !important;
+  stroke: #c2410c !important;
+}
+
+[data-theme="light"] [class*="text-red-400"] > svg,
+[data-theme="light"] [class*="text-red-300"] > svg,
+[data-theme="light"] svg.text-red-400,
+[data-theme="light"] svg.text-red-300 {
+  color: #b91c1c !important;
+  stroke: #b91c1c !important;
+}
+
+[data-theme="light"] [class*="text-emerald-400"] > svg,
+[data-theme="light"] [class*="text-green-400"] > svg,
+[data-theme="light"] svg.text-emerald-400,
+[data-theme="light"] svg.text-green-400 {
+  color: #047857 !important;
+  stroke: #047857 !important;
+}
+
+[data-theme="light"] [class*="text-blue-400"] > svg,
+[data-theme="light"] svg.text-blue-400 {
+  color: #1d4ed8 !important;
+  stroke: #1d4ed8 !important;
+}
+
+[data-theme="light"] [class*="text-gray-400"] > svg,
+[data-theme="light"] [class*="text-slate-400"] > svg,
+[data-theme="light"] svg.text-gray-400,
+[data-theme="light"] svg.text-slate-400 {
+  color: #4b5563 !important;
+  stroke: #4b5563 !important;
+}
+
+[data-theme="light"] [class*="text-gray-300"] > svg,
+[data-theme="light"] [class*="text-slate-300"] > svg,
+[data-theme="light"] svg.text-gray-300,
+[data-theme="light"] svg.text-slate-300 {
+  color: #374151 !important;
+  stroke: #374151 !important;
 }
 
 /* Explicit dark text on amber/bright buttons */
