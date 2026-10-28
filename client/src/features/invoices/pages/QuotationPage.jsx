@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import img2 from "../../../assets/Dg 2copy.png";
@@ -151,16 +151,12 @@ export default function QuotationPage() {
 
   const isPlainQuotation = Array.isArray(quotationLines);
 
-  const pricing = useMemo(
-    () =>
-      computeQuotationPricing({
-        paidLines: quotationLines || [],
-        complimentaryLines: complimentaryData || [],
-        adBudgetLines: adBudgetLines || [],
-        discount: quotationDiscount,
-      }),
-    [quotationLines, complimentaryData, adBudgetLines, quotationDiscount]
-  );
+  const pricing = computeQuotationPricing({
+    paidLines: quotationLines || [],
+    complimentaryLines: complimentaryData || [],
+    adBudgetLines: adBudgetLines || [],
+    discount: quotationDiscount,
+  });
 
   const formatInr = (value) =>
     `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
