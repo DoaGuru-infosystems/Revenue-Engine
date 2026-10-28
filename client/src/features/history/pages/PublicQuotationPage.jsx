@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import API_BASE_URL from "../../../config/apiBaseUrl";
+import { computeQuotationPricing } from "../../invoices/utils/quotationPricing";
 
 const money = (value) => {
   const amount = Number(value || 0);
@@ -127,32 +128,12 @@ export default function PublicQuotationPage() {
     ...adChargeLines,
   ];
 
-  const servicesSubtotal = displayServices.reduce(
-    (sum, row) => sum + Number(row.amount || 0),
-    0
-  );
-  const adsBudgetTotal = adBudgetLines.reduce(
-    (sum, row) => sum + Number(row.budget || 0),
-    0
-  );
-
-  let discountAmt = 0;
-  let discountLabel = "";
-  if (data?.discount_json) {
-    try {
-      const d = typeof data.discount_json === "string" ? JSON.parse(data.discount_json) : data.discount_json;
-      if (d && (Number(d.value) > 0 || Number(d.discount_amt) > 0 || Number(d.discount_per) > 0)) {
-        const isPer = d.type === "Percentage" || d.discount_type === "percent";
-        const val = Number(d.value || (isPer ? d.discount_per : d.discount_amt) || 0);
-        discountAmt = isPer ? (servicesSubtotal * val) / 100 : val;
-        discountLabel = isPer ? `(${val}%)` : `(₹${val.toLocaleString("en-IN")})`;
-      }
-    } catch (e) {}
-  }
-  const servicesAfterDiscount = Math.max(0, servicesSubtotal - discountAmt);
-  const finalTotal = data.grand_total_excl_gst
-    ? Number(data.grand_total_excl_gst)
-    : servicesAfterDiscount + adsBudgetTotal;
+  const pricing = computeQuotationPricing({
+    paidLines: displayServices,
+    complimentaryLines: compServices,
+    adBudgetLines: adBudgetLines,
+    discount: data?.discount_json,
+  });
 
   return (
     <main className="min-h-screen bg-indigo-50 text-slate-900 px-4 py-8">
@@ -313,30 +294,72 @@ export default function PublicQuotationPage() {
           <div className="border-t border-slate-200 pt-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Pricing</h2>
             <div className="space-y-1 text-sm text-slate-700">
+              {/* 1. Service Amount */}
               <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>{money(servicesSubtotal)}</span>
+                <span className="text-slate-600">Service Amount</span>
+                <span>{money(pricing.serviceAmount)}</span>
               </div>
-              {discountAmt > 0 && (
-                <div className="flex justify-between text-red-600">
-                  <span>Discount {discountLabel}</span>
-                  <span>- {money(discountAmt)}</span>
-                </div>
-              )}
-              {adBudgetLines.map((ad, idx) => {
-                let catName = ad.category_name || "Ads";
-                catName = catName.replace(/\badd\b/gi, "Ad");
-                return (
-                  <div key={idx} className="flex justify-between text-slate-700">
-                    <span>{catName} Budget</span>
-                    <span>{money(ad.budget || ad.amount)}</span>
+
+              {/* 2. Complimentary Service Amount (only if > 0) */}
+              {pricing.complimentaryAmount > 0 && (
+                <>
+                  <div className="flex justify-between items-center text-slate-600">
+                    <span className="flex items-center gap-1.5">
+                      <span>Complimentary Service Amount</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                        Free
+                      </span>
+                    </span>
+                    <span className="font-medium text-slate-700">
+                      - {money(pricing.complimentaryAmount)}
+                    </span>
                   </div>
-                );
-              })}
+                  <div className="border-t border-slate-200 my-1" />
+                </>
+              )}
+
+              {/* 3. Subtotal */}
+              <div className="flex justify-between font-medium">
+                <span className="text-slate-600">Subtotal</span>
+                <span>{money(pricing.subtotal)}</span>
+              </div>
+
+              {/* 4. Discount & Subtotal (after discount) (only if discountAmt > 0) */}
+              {pricing.discountAmt > 0 && (
+                <>
+                  <div className="flex justify-between text-red-600">
+                    <span>Discount {pricing.discountLabel}</span>
+                    <span>- {money(pricing.discountAmt)}</span>
+                  </div>
+                  <div className="flex justify-between font-medium">
+                    <span className="text-slate-600">Subtotal (after discount)</span>
+                    <span>{money(pricing.subtotalAfterDiscount)}</span>
+                  </div>
+                </>
+              )}
+
+              {/* 5. Ad Budget rows (only if adBudgetGroups have items) */}
+              {pricing.adBudgetGroups.length > 0 && (
+                <>
+                  <div className="border-t border-slate-200 my-1" />
+                  {pricing.adBudgetGroups.map((group, idx) => {
+                    let catName = group.label || group.category_name || "Ads";
+                    catName = catName.replace(/\badd\b/gi, "Ad");
+                    return (
+                      <div key={idx} className="flex justify-between text-slate-700">
+                        <span>{catName} Budget</span>
+                        <span className="font-medium">{money(group.budget)}</span>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
-            <div className="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-slate-300 mt-2">
-              <span>Total (Excl. GST)</span>
-              <span>{money(finalTotal)}</span>
+
+            {/* 6. Total Payable Amount */}
+            <div className="flex justify-between text-base font-bold text-slate-900 pt-2 border-t-2 border-slate-800 mt-2">
+              <span>Total Payable Amount</span>
+              <span>{money(pricing.totalPayable)}</span>
             </div>
           </div>
           <div>

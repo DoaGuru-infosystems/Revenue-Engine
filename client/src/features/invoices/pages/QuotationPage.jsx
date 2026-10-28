@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import img2 from "../../../assets/Dg 2copy.png";
@@ -13,6 +13,7 @@ import ProposalDiscountModal from "../../proposals/components/ProposalDiscountMo
 
 // Layer 2: Hook
 import { useQuotationData } from "../hooks/useQuotationData";
+import { computeQuotationPricing } from "../utils/quotationPricing";
 
 // Layer 3: Presentational Components
 import {
@@ -149,34 +150,18 @@ export default function QuotationPage() {
   }
 
   const isPlainQuotation = Array.isArray(quotationLines);
-  const quotationServicesSubtotal = (quotationLines || []).reduce(
-    (sum, line) => sum + Number(line.amount || 0),
-    0
-  );
-  const quotationAdsBudgetTotal = (adBudgetLines || []).reduce(
-    (sum, ad) => sum + Number(ad.budget || ad.amount || 0),
-    0
+
+  const pricing = useMemo(
+    () =>
+      computeQuotationPricing({
+        paidLines: quotationLines || [],
+        complimentaryLines: complimentaryData || [],
+        adBudgetLines: adBudgetLines || [],
+        discount: quotationDiscount,
+      }),
+    [quotationLines, complimentaryData, adBudgetLines, quotationDiscount]
   );
 
-  let discountAmt = 0;
-  let discountLabel = "";
-  if (quotationDiscount) {
-    const isPercent =
-      quotationDiscount.type === "Percentage" ||
-      quotationDiscount.discount_type === "percent";
-    const val = Number(
-      quotationDiscount.value ||
-      (isPercent ? quotationDiscount.discount_per : quotationDiscount.discount_amt) ||
-      0
-    );
-    if (val > 0) {
-      discountAmt = isPercent ? (quotationServicesSubtotal * val) / 100 : val;
-      discountLabel = isPercent ? `(${val}%)` : `(₹${Number(val).toLocaleString("en-IN")})`;
-    }
-  }
-
-  const servicesAfterDiscount = Math.max(0, quotationServicesSubtotal - discountAmt);
-  const finalQuotationTotal = servicesAfterDiscount + quotationAdsBudgetTotal;
   const formatInr = (value) =>
     `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
   const isQuotationDoc = docTypeFromURL === "quotation" || isPlainQuotation;
@@ -223,8 +208,8 @@ export default function QuotationPage() {
     e.preventDefault();
     const isPercent = proposalDiscountForm.discount_type === "percent";
     const val = Number(isPercent ? proposalDiscountForm.discount_per : proposalDiscountForm.discount_amt) || 0;
-    const calcRupee = isPercent ? (quotationServicesSubtotal * val) / 100 : val;
-    const newTotal = Math.max(0, quotationServicesSubtotal - calcRupee) + quotationAdsBudgetTotal;
+    const calcRupee = isPercent ? (pricing.serviceAmount * val) / 100 : val;
+    const newTotal = Math.max(0, pricing.serviceAmount - calcRupee) + pricing.adBudgetTotal;
     const payload = {
       type: isPercent ? "Percentage" : "Amount",
       value: val,
@@ -238,7 +223,7 @@ export default function QuotationPage() {
   };
 
   const handleProposalDiscountDelete = async () => {
-    const newTotal = quotationServicesSubtotal + quotationAdsBudgetTotal;
+    const newTotal = pricing.serviceAmount + pricing.adBudgetTotal;
     await handleDeleteQuotationDiscount(newTotal);
     setShowProposalDiscountModal(false);
   };
@@ -452,40 +437,79 @@ export default function QuotationPage() {
                                 onClick={openProposalDiscountModal}
                                 className="print:hidden text-[11px] font-semibold px-2.5 py-1 bg-yellow-50 text-yellow-700 border border-yellow-300 rounded hover:bg-yellow-100 transition shadow-sm"
                               >
-                                {discountAmt > 0 ? "Edit Discount" : "+ Apply Discount"}
+                                {pricing.discountAmt > 0 ? "Edit Discount" : "+ Apply Discount"}
                               </button>
                             )}
                           </div>
 
+                          {/* Service Amount */}
                           <div className="flex justify-between gap-3 py-0.5">
-                            <span className="text-gray-600">Subtotal</span>
-                            <span>{formatInr(quotationServicesSubtotal)}</span>
+                            <span className="text-gray-600">Service Amount</span>
+                            <span>{formatInr(pricing.serviceAmount)}</span>
                           </div>
 
-                          {discountAmt > 0 && (
-                            <div className="flex justify-between gap-3 py-0.5 text-red-600">
-                              <span>Discount {discountLabel}</span>
-                              <span>- {formatInr(discountAmt)}</span>
-                            </div>
+                          {/* Complimentary Service Amount (only if > 0) */}
+                          {pricing.complimentaryAmount > 0 && (
+                            <>
+                              <div className="flex justify-between items-center gap-3 py-0.5 text-gray-600">
+                                <span className="flex items-center gap-1.5">
+                                  <span>Complimentary Service Amount</span>
+                                  <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                    Free
+                                  </span>
+                                </span>
+                                <span className="font-medium text-gray-700">
+                                  - {formatInr(pricing.complimentaryAmount)}
+                                </span>
+                              </div>
+                              <div className="border-t border-gray-300 my-1" />
+                            </>
                           )}
 
-                          {/* Ads Budget rows in Pricing */}
-                          {adBudgetLines && adBudgetLines.length > 0 && (
-                            adBudgetLines.map((ad, idx) => {
-                              let catName = ad.category_name || "Ads";
-                              catName = catName.replace(/\badd\b/gi, "Ad");
-                              return (
-                                <div key={`pricing-ad-${idx}`} className="flex justify-between gap-3 py-0.5 text-gray-700">
-                                  <span>{catName} Budget</span>
-                                  <span className="font-medium">{formatInr(ad.budget || ad.amount)}</span>
-                                </div>
-                              );
-                            })
+                          {/* Subtotal */}
+                          <div className="flex justify-between gap-3 py-0.5 font-medium">
+                            <span className="text-gray-600">Subtotal</span>
+                            <span>{formatInr(pricing.subtotal)}</span>
+                          </div>
+
+                          {/* Discount & Subtotal (after discount) (only if discountAmt > 0) */}
+                          {pricing.discountAmt > 0 && (
+                            <>
+                              <div className="flex justify-between gap-3 py-0.5 text-red-600">
+                                <span>Discount {pricing.discountLabel}</span>
+                                <span>- {formatInr(pricing.discountAmt)}</span>
+                              </div>
+                              <div className="flex justify-between gap-3 py-0.5 font-medium">
+                                <span className="text-gray-600">Subtotal (after discount)</span>
+                                <span>{formatInr(pricing.subtotalAfterDiscount)}</span>
+                              </div>
+                            </>
                           )}
 
-                          <div className="flex justify-between gap-3 border-t border-gray-400 mt-1 pt-1 font-bold text-sm">
-                            <span>Total</span>
-                            <span>{formatInr(finalQuotationTotal)}</span>
+                          {/* Ads Budget rows (only if adBudgetGroups have items) */}
+                          {pricing.adBudgetGroups.length > 0 && (
+                            <>
+                              <div className="border-t border-gray-300 my-1" />
+                              {pricing.adBudgetGroups.map((group, idx) => {
+                                let catName = group.label || group.category_name || "Ads";
+                                catName = catName.replace(/\badd\b/gi, "Ad");
+                                return (
+                                  <div
+                                    key={`pricing-ad-${idx}`}
+                                    className="flex justify-between gap-3 py-0.5 text-gray-700"
+                                  >
+                                    <span>{catName} Budget</span>
+                                    <span className="font-medium">{formatInr(group.budget)}</span>
+                                  </div>
+                                );
+                              })}
+                            </>
+                          )}
+
+                          {/* Total Payable Amount */}
+                          <div className="flex justify-between gap-3 border-t-2 border-gray-800 mt-1.5 pt-1.5 font-bold text-sm">
+                            <span>Total Payable Amount</span>
+                            <span>{formatInr(pricing.totalPayable)}</span>
                           </div>
                         </section>
                         {/* Notes Dropdown for Quotation */}
@@ -660,13 +684,13 @@ export default function QuotationPage() {
           show={showProposalDiscountModal}
           onClose={() => setShowProposalDiscountModal(false)}
           onSubmit={handleProposalDiscountSubmit}
-          onDelete={discountAmt > 0 ? handleProposalDiscountDelete : undefined}
+          onDelete={pricing.discountAmt > 0 ? handleProposalDiscountDelete : undefined}
           formDataDis={proposalDiscountForm}
           handleChangeDis={(e) => {
             const { name, value } = e.target;
             setProposalDiscountForm((prev) => ({ ...prev, [name]: value }));
           }}
-          grandTotal={quotationServicesSubtotal}
+          grandTotal={pricing.serviceAmount}
           discountDataSet={discountDataSet}
         />
       </div>
