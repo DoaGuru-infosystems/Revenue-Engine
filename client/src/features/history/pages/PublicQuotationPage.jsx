@@ -205,31 +205,7 @@ export default function PublicQuotationPage() {
               </div>
             )}
           </div>
-          {adBudgetLines.length > 0 && (
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Ads Budget</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-slate-500">
-                    <tr>
-                      <th className="py-2 pr-3">Campaign Platform</th>
-                      <th className="py-2 pr-3">Category</th>
-                      <th className="py-2 pr-3 text-right">Quantity</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {adBudgetLines.map((ad, idx) => (
-                      <tr key={idx} className="border-t border-slate-100">
-                        <td className="py-2 pr-3 font-medium">{ad.service_name || "Ads Campaign"}</td>
-                        <td className="py-2 pr-3">{ad.category_name}</td>
-                        <td className="py-2 pr-3 text-right">{ad.quantity || 1}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+
           {compServices.length > 0 && (
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Complimentary Services</h2>
@@ -294,6 +270,14 @@ export default function PublicQuotationPage() {
           <div className="border-t border-slate-200 pt-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Pricing</h2>
             <div className="space-y-1 text-sm text-slate-700">
+              {/* Full Total (only if complimentaryAmount > 0) */}
+              {pricing.complimentaryAmount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Full Total</span>
+                  <span>{money(pricing.fullTotal)}</span>
+                </div>
+              )}
+
               {/* 1. Service Amount */}
               <div className="flex justify-between">
                 <span className="text-slate-600">Service Amount</span>
@@ -303,14 +287,12 @@ export default function PublicQuotationPage() {
               {/* 2. Complimentary Service Amount (only if > 0) */}
               {pricing.complimentaryAmount > 0 && (
                 <>
-                  <div className="flex justify-between items-center text-slate-600">
-                    <span className="flex items-center gap-1.5">
-                      <span>Complimentary Service Amount</span>
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
-                        Free
-                      </span>
-                    </span>
-                    <span className="font-medium text-slate-700">
+                  <div
+                    style={{ color: "#059669" }}
+                    className="flex justify-between items-center !text-emerald-600 font-medium"
+                  >
+                    <span style={{ color: "#059669" }}>Complimentary Service Amount</span>
+                    <span style={{ color: "#059669" }} className="font-semibold">
                       - {money(pricing.complimentaryAmount)}
                     </span>
                   </div>
@@ -327,9 +309,16 @@ export default function PublicQuotationPage() {
               {/* 4. Discount & Subtotal (after discount) (only if discountAmt > 0) */}
               {pricing.discountAmt > 0 && (
                 <>
-                  <div className="flex justify-between text-red-600">
-                    <span>Discount {pricing.discountLabel}</span>
-                    <span>- {money(pricing.discountAmt)}</span>
+                  <div
+                    style={{ color: "#059669" }}
+                    className="flex justify-between !text-emerald-600 font-medium"
+                  >
+                    <span style={{ color: "#059669" }}>
+                      Discount{pricing.discountLabel ? ` ${pricing.discountLabel}` : ""}
+                    </span>
+                    <span style={{ color: "#059669" }} className="font-semibold">
+                      - {money(pricing.discountAmt)}
+                    </span>
                   </div>
                   <div className="flex justify-between font-medium">
                     <span className="text-slate-600">Subtotal (after discount)</span>

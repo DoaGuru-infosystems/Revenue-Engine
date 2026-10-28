@@ -8,7 +8,7 @@ export const InvoicePrintWrapper = styled.div`
   color: #111827;
 
   .page-wrapper {
-    color: #111827 !important;
+    color: #111827;
   }
 
   table {

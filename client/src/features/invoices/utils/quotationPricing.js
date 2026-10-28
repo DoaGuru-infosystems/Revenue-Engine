@@ -69,9 +69,7 @@ export function computeQuotationPricing({
     );
     if (Number.isFinite(val) && val > 0) {
       discountAmt = isPercent ? (serviceAmount * val) / 100 : val;
-      discountLabel = isPercent
-        ? `(${val}%)`
-        : `(₹${Number(val).toLocaleString("en-IN")})`;
+      discountLabel = isPercent ? `(${val}%)` : "";
     }
   }
 
@@ -107,7 +105,11 @@ export function computeQuotationPricing({
   // 6. Total Payable Amount: subtotalAfterDiscount + adBudgetTotal (Complimentary is NEVER added)
   const totalPayable = subtotalAfterDiscount + adBudgetTotal;
 
+  // 7. Full Total: serviceAmount + complimentaryAmount
+  const fullTotal = (Number(serviceAmount) || 0) + (Number(complimentaryAmount) || 0);
+
   return {
+    fullTotal: Number(fullTotal) || 0,
     serviceAmount: Number(serviceAmount) || 0,
     complimentaryAmount: Number(complimentaryAmount) || 0,
     discountAmt: Number(discountAmt) || 0,

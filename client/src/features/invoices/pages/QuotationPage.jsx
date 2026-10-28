@@ -333,34 +333,7 @@ export default function QuotationPage() {
                           </table>
                         </section>
 
-                        {/* 2. Ads Budget Table (Dedicated table for Ads Campaign Budgets) */}
-                        {adBudgetLines && adBudgetLines.length > 0 && (
-                          <section className="mb-3 text-sm text-gray-900">
-                            <div className="font-semibold text-xs text-gray-700 uppercase tracking-wider mb-1">
-                              Ads Budget
-                            </div>
-                            <table className="w-full border text-xs">
-                              <thead className="bg-gray-100">
-                                <tr>
-                                  <th className="border px-2 py-1 text-left">Campaign Platform</th>
-                                  <th className="border px-2 py-1 text-left">Category</th>
-                                  <th className="border px-2 py-1 text-right">Quantity</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {adBudgetLines.map((ad, index) => (
-                                  <tr key={`ad-budget-${index}`} className="bg-white">
-                                    <td className="border px-2 py-1 font-medium">{ad.service_name || "Ads Campaign"}</td>
-                                    <td className="border px-2 py-1">{ad.category_name}</td>
-                                    <td className="border px-2 py-1 text-right">{ad.quantity || 1}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </section>
-                        )}
-
-                        {/* 3. Complimentary Services Table (if any) */}
+                        {/* 2. Complimentary Services Table (if any) */}
                         {complimentaryData && complimentaryData.length > 0 && (
                           <section className="mb-3 text-sm text-gray-900">
                             <div className="font-semibold text-xs text-gray-700 uppercase tracking-wider mb-1">
@@ -423,7 +396,7 @@ export default function QuotationPage() {
                           </section>
                         )}
 
-                        {/* 4. Pricing Summary */}
+                        {/* 3. Pricing Summary */}
                         <section className="mb-3 border-t border-gray-300 pt-2 text-xs text-gray-900">
                           <div className="flex justify-between items-center mb-1">
                             <p className="font-bold text-sm">Pricing</p>
@@ -438,6 +411,14 @@ export default function QuotationPage() {
                             )}
                           </div>
 
+                          {/* Full Total (only if complimentaryAmount > 0) */}
+                          {pricing.complimentaryAmount > 0 && (
+                            <div className="flex justify-between gap-3 py-0.5">
+                              <span className="text-gray-600">Full Total</span>
+                              <span>{formatInr(pricing.fullTotal)}</span>
+                            </div>
+                          )}
+
                           {/* Service Amount */}
                           <div className="flex justify-between gap-3 py-0.5">
                             <span className="text-gray-600">Service Amount</span>
@@ -447,14 +428,12 @@ export default function QuotationPage() {
                           {/* Complimentary Service Amount (only if > 0) */}
                           {pricing.complimentaryAmount > 0 && (
                             <>
-                              <div className="flex justify-between items-center gap-3 py-0.5 text-gray-600">
-                                <span className="flex items-center gap-1.5">
-                                  <span>Complimentary Service Amount</span>
-                                  <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                    Free
-                                  </span>
-                                </span>
-                                <span className="font-medium text-gray-700">
+                              <div
+                                style={{ color: "#059669" }}
+                                className="flex justify-between items-center gap-3 py-0.5 !text-emerald-600 font-medium"
+                              >
+                                <span style={{ color: "#059669" }}>Complimentary Service Amount</span>
+                                <span style={{ color: "#059669" }} className="font-semibold">
                                   - {formatInr(pricing.complimentaryAmount)}
                                 </span>
                               </div>
@@ -471,9 +450,16 @@ export default function QuotationPage() {
                           {/* Discount & Subtotal (after discount) (only if discountAmt > 0) */}
                           {pricing.discountAmt > 0 && (
                             <>
-                              <div className="flex justify-between gap-3 py-0.5 text-red-600">
-                                <span>Discount {pricing.discountLabel}</span>
-                                <span>- {formatInr(pricing.discountAmt)}</span>
+                              <div
+                                style={{ color: "#059669" }}
+                                className="flex justify-between gap-3 py-0.5 !text-emerald-600 font-medium"
+                              >
+                                <span style={{ color: "#059669" }}>
+                                  Discount{pricing.discountLabel ? ` ${pricing.discountLabel}` : ""}
+                                </span>
+                                <span style={{ color: "#059669" }} className="font-semibold">
+                                  - {formatInr(pricing.discountAmt)}
+                                </span>
                               </div>
                               <div className="flex justify-between gap-3 py-0.5 font-medium">
                                 <span className="text-gray-600">Subtotal (after discount)</span>
