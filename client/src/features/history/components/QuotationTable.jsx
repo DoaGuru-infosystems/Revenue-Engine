@@ -95,7 +95,14 @@ const QuotationTable = ({
             {filtered.map((row) => {
               const statusInfo = getDisplayStatus(row);
               const amount = getDisplayAmount(row);
-              const isDraft = (row.status || "draft") === "draft";
+              const hasProforma = Boolean(
+                row.proforma_id ||
+                Number(row.proforma_count) > 0 ||
+                ["proforma_generated", "proforma_sent", "payment_awaited", "payment_received", "partially_paid", "paid", "invoiced"].includes(
+                  String(row.status || "").toLowerCase()
+                )
+              );
+              const isDraft = (row.status || "draft") === "draft" && !hasProforma;
               return (
                 <div key={row.id} className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl overflow-visible">
                   <div className="lg:hidden p-3.5 space-y-3">

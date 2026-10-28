@@ -89,6 +89,7 @@ export function useQuotationData({
   const [adBudgetLines, setAdBudgetLines] = useState([]);
   const [quotationNumber, setQuotationNumber] = useState("");
   const [quotationDiscount, setQuotationDiscount] = useState(null);
+  const [quotationMeta, setQuotationMeta] = useState(null);
   const isPlainQuotation = Array.isArray(quotationLines);
 
   // Default notes that should appear automatically for regular quotation
@@ -935,6 +936,12 @@ export function useQuotationData({
         discountObj = null;
       }
       setQuotationDiscount(discountObj);
+      setQuotationMeta({
+        id: data.id,
+        status: data.status,
+        proforma_id: data.proforma_id,
+        proforma_count: data.proforma_count,
+      });
 
       setLoading(false);
       return true;
@@ -943,6 +950,7 @@ export function useQuotationData({
       setAdBudgetLines([]);
       setQuotationNumber("");
       setQuotationDiscount(null);
+      setQuotationMeta(null);
       return false;
     }
   };
@@ -2298,6 +2306,7 @@ export function useQuotationData({
     isPlainQuotation,
     quotationNumber,
     quotationDiscount,
+    quotationMeta,
     handleSaveQuotationDiscount,
     handleDeleteQuotationDiscount,
     clientData,

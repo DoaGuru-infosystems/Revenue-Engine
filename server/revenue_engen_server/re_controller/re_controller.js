@@ -1420,6 +1420,22 @@ exports.savePlanClientNotes = (req, res) => {
       insertNotes(() => {
         if (invoiceResult.length > 0) {
           // Step 4: Save re_invoice plans if re_invoice exists
+          const planValues = plans.map((p) => [
+            txn_id,
+            client_id,
+            p.service_name || p.service || "",
+            p.category_name || p.category || "",
+            p.editing_type_name || p.editing_type || "",
+            Number(p.editing_type_amount || p.unit_price || 0),
+            Number(p.quantity || 1),
+            p.include_content_posting ? 1 : 0,
+            p.include_thumbnail_creation ? 1 : 0,
+            Number(p.total_amount || p.total_price || 0),
+            p.employee || null,
+            p.plan_name && p.plan_name.trim() !== "" ? p.plan_name : "Customise",
+            createdAt,
+          ]);
+
           const planInvoiceQuery = `
             INSERT INTO re_invoice_graphic 
             (txn_id, client_id, service_name, category_name, editing_type_name, editing_type_amount, quantity, include_content_posting, include_thumbnail_creation, total_amount, employee, plan_name, created_at) 

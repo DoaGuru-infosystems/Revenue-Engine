@@ -2456,6 +2456,61 @@ exports.approvePayment = async (req, res) => {
         }
       }
 
+      // Synchronize quotation status if proforma was generated from a quotation
+      const targetQuotationId = proforma.quotation_id;
+      if (targetQuotationId) {
+        const qtnProformas = await runQuery(
+          `SELECT id, total_amount, status, payment_status FROM re_proposal_proforma WHERE quotation_id = ?`,
+          [targetQuotationId],
+        );
+
+        let targetQuotationStatus = "proforma_generated";
+        if (qtnProformas.length > 0) {
+          let allFullyPaid = true;
+          let anyPaymentReceived = false;
+
+          for (const pf of qtnProformas) {
+            const pfPayments = await runQuery(
+              `SELECT SUM(amount) as paid FROM re_proposal_payment_records WHERE proforma_id = ? AND status = 'approved'`,
+              [pf.id],
+            );
+            const paid = Number(pfPayments[0]?.paid || 0);
+            const pfTot = Number(pf.total_amount || 0);
+            const isPfPaid =
+              pf.status === "paid" ||
+              pf.payment_status === "fully-paid" ||
+              (paid >= pfTot - 0.05 && pfTot > 0);
+
+            if (
+              paid > 0 ||
+              ["paid", "partially_paid", "payment_received", "invoiced"].includes(
+                pf.status,
+              ) ||
+              pf.payment_status === "partial" ||
+              pf.payment_status === "fully-paid"
+            ) {
+              anyPaymentReceived = true;
+            }
+            if (!isPfPaid) {
+              allFullyPaid = false;
+            }
+          }
+
+          if (allFullyPaid) {
+            targetQuotationStatus = "invoiced";
+          } else if (anyPaymentReceived) {
+            targetQuotationStatus = "partially_paid";
+          } else {
+            targetQuotationStatus = "proforma_generated";
+          }
+        }
+
+        await runQuery(
+          `UPDATE re_quotation SET status = ?, updated_at = NOW() WHERE id = ?`,
+          [targetQuotationStatus, targetQuotationId],
+        );
+      }
+
       // Timeline Remark
       const timelineRemark = `Payment Approved\nAmount : ₹${received_amt}\nOutstanding : ₹${current_amt}\nInvoice Number : ${newBillNumber}`;
       await runQuery(

@@ -253,15 +253,17 @@ const QuotationActions = ({
                     <Eye size={14} className="text-gray-400 shrink-0" /> View Quotation
                   </button>
                 </li>
-                <li>
-                  <button
-                    type="button"
-                    className="w-full text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center gap-2"
-                    onClick={() => handleAction("edit_services")}
-                  >
-                    <Pencil size={14} /> {isDraft ? "Continue Editing" : "Edit Services"}
-                  </button>
-                </li>
+                {!hasProforma && (
+                  <li>
+                    <button
+                      type="button"
+                      className="w-full text-left px-4 py-2.5 font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 flex items-center gap-2"
+                      onClick={() => handleAction("edit_services")}
+                    >
+                      <Pencil size={14} /> {isDraft ? "Continue Editing" : "Edit Services"}
+                    </button>
+                  </li>
+                )}
 
                 {["draft", "sent", "changes", "rejected"].includes(qStatus) && (
                   <>

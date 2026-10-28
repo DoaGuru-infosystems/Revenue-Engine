@@ -76,6 +76,22 @@ exports.getQuotationById = async (req, res) => {
     const { id } = req.params;
     const rows = await runQuery(
       `SELECT q.*,
+              CASE
+                WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) > 0 
+                 AND (SELECT COUNT(*) FROM re_proposal_proforma pf 
+                      WHERE pf.quotation_id = q.id 
+                        AND pf.status NOT IN ('paid', 'invoiced')
+                        AND pf.payment_status != 'fully-paid'
+                        AND COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = pf.id AND status = 'approved'), 0) < (pf.total_amount - 0.05)
+                     ) = 0 
+                THEN 'invoiced'
+                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id IN (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id) AND status = 'approved'), 0) > 0
+                  OR (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id AND (status IN ('paid', 'partially_paid', 'payment_received', 'invoiced') OR payment_status IN ('partial', 'fully-paid'))) > 0
+                THEN 'partially_paid'
+                WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) > 0
+                THEN 'proforma_generated'
+                ELSE q.status
+              END AS status,
               c.client_name, c.client_organization, c.email, c.phone, c.address,
               (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_id,
               (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) AS proforma_count
@@ -111,6 +127,22 @@ exports.getQuotationsByClient = async (req, res) => {
     // Check if a proforma was generated from this quotation
     const rows = await runQuery(
       `SELECT q.*,
+              CASE
+                WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) > 0 
+                 AND (SELECT COUNT(*) FROM re_proposal_proforma pf 
+                      WHERE pf.quotation_id = q.id 
+                        AND pf.status NOT IN ('paid', 'invoiced')
+                        AND pf.payment_status != 'fully-paid'
+                        AND COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = pf.id AND status = 'approved'), 0) < (pf.total_amount - 0.05)
+                     ) = 0 
+                THEN 'invoiced'
+                WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id IN (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id) AND status = 'approved'), 0) > 0
+                  OR (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id AND (status IN ('paid', 'partially_paid', 'payment_received', 'invoiced') OR payment_status IN ('partial', 'fully-paid'))) > 0
+                THEN 'partially_paid'
+                WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) > 0
+                THEN 'proforma_generated'
+                ELSE q.status
+              END AS status,
               (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_id,
               (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) AS proforma_count,
               (SELECT is_gst FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_is_gst
@@ -142,6 +174,22 @@ exports.getAllQuotations = async (req, res) => {
 
     const { status } = req.query;
     let q = `SELECT q.*,
+                     CASE
+                       WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) > 0 
+                        AND (SELECT COUNT(*) FROM re_proposal_proforma pf 
+                             WHERE pf.quotation_id = q.id 
+                               AND pf.status NOT IN ('paid', 'invoiced')
+                               AND pf.payment_status != 'fully-paid'
+                               AND COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = pf.id AND status = 'approved'), 0) < (pf.total_amount - 0.05)
+                            ) = 0 
+                       THEN 'invoiced'
+                       WHEN COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id IN (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id) AND status = 'approved'), 0) > 0
+                         OR (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id AND (status IN ('paid', 'partially_paid', 'payment_received', 'invoiced') OR payment_status IN ('partial', 'fully-paid'))) > 0
+                       THEN 'partially_paid'
+                       WHEN (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) > 0
+                       THEN 'proforma_generated'
+                       ELSE q.status
+                     END AS status,
                      c.client_name, c.client_organization, c.email, c.phone,
                      (SELECT id FROM re_proposal_proforma WHERE quotation_id = q.id ORDER BY id DESC LIMIT 1) AS proforma_id,
                      (SELECT COUNT(*) FROM re_proposal_proforma WHERE quotation_id = q.id) AS proforma_count,
@@ -227,6 +275,18 @@ exports.saveQuotationServices = async (req, res) => {
       return res.status(404).json({ status: "Failure", message: "Quotation not found" });
     }
 
+    // Guard: Quotation is locked if proforma already generated
+    const proformaCheck = await runQuery(
+      `SELECT id FROM re_proposal_proforma WHERE quotation_id = ? LIMIT 1`,
+      [id]
+    );
+    if (proformaCheck.length > 0) {
+      return res.status(400).json({
+        status: "Failure",
+        message: "Quotation is locked because a proforma has already been generated.",
+      });
+    }
+
     // Clear existing services for this quotation
     await runQuery(`DELETE FROM re_quotation_services WHERE quotation_id = ?`, [id]);
 
@@ -290,6 +350,18 @@ exports.saveQuotationAds = async (req, res) => {
       return res.status(404).json({ status: "Failure", message: "Quotation not found" });
     }
 
+    // Guard: Quotation is locked if proforma already generated
+    const proformaCheck = await runQuery(
+      `SELECT id FROM re_proposal_proforma WHERE quotation_id = ? LIMIT 1`,
+      [id]
+    );
+    if (proformaCheck.length > 0) {
+      return res.status(400).json({
+        status: "Failure",
+        message: "Quotation is locked because a proforma has already been generated.",
+      });
+    }
+
     await runQuery(`DELETE FROM re_quotation_ads WHERE quotation_id = ?`, [id]);
 
     if (ads.length > 0) {
@@ -321,6 +393,18 @@ exports.saveQuotationNotes = async (req, res) => {
   try {
     const { id } = req.params;
     const { notes_json, discount_json, grand_total_excl_gst } = req.body;
+
+    // Guard: Quotation is locked if proforma already generated
+    const proformaCheck = await runQuery(
+      `SELECT id FROM re_proposal_proforma WHERE quotation_id = ? LIMIT 1`,
+      [id]
+    );
+    if (proformaCheck.length > 0) {
+      return res.status(400).json({
+        status: "Failure",
+        message: "Quotation is locked because a proforma has already been generated.",
+      });
+    }
 
     const updates = [];
     const params = [];

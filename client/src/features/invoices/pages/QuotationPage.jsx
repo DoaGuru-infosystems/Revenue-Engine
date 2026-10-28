@@ -51,6 +51,7 @@ export default function QuotationPage() {
     adBudgetLines,
     quotationNumber,
     quotationDiscount,
+    quotationMeta,
     handleSaveQuotationDiscount,
     handleDeleteQuotationDiscount,
     clientData,
@@ -178,9 +179,25 @@ export default function QuotationPage() {
   const finalQuotationTotal = servicesAfterDiscount + quotationAdsBudgetTotal;
   const formatInr = (value) =>
     `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  const isQuotationDoc = docTypeFromURL === "quotation" || isPlainQuotation;
+  const isQuotationFrozen =
+    isQuotationDoc &&
+    Boolean(
+      quotationMeta?.proforma_id ||
+        Number(quotationMeta?.proforma_count) > 0 ||
+        [
+          "proforma_generated",
+          "proforma_sent",
+          "payment_awaited",
+          "payment_received",
+          "partially_paid",
+          "paid",
+          "invoiced",
+        ].includes(String(quotationMeta?.status || "").toLowerCase())
+    );
   const isReceived = clientDataReceived?.tag_received_amt === "received";
   const hasInvoice = docTypeFromURL === "proforma" && proformaMeta?.has_invoice;
-  const canEdit = !isReceived && !hasInvoice;
+  const canEdit = !isReceived && !hasInvoice && !isQuotationFrozen;
 
   const openProposalDiscountModal = () => {
     if (quotationDiscount) {
@@ -236,6 +253,17 @@ export default function QuotationPage() {
           onProposalHistory={handleProposalHistory}
           basePath={basePath}
         />
+
+        {isQuotationFrozen && (
+          <div className="mb-3 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 text-xs font-medium flex items-center justify-between print:hidden shadow-sm">
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span>
+                <strong>Quotation Locked:</strong> A proforma has already been created for this quotation. Editing services and discounts is disabled.
+              </span>
+            </span>
+          </div>
+        )}
 
         {/* Table for proper header/footer repetition */}
         <table className="print:table print:border-collapse w-full">
@@ -543,27 +571,29 @@ export default function QuotationPage() {
                     </section>
 
                     {/* Notes Dropdown & Input */}
-                    <QuotationNotesDropdown
-                      docTypeFromURL={docTypeFromURL}
-                      isBalanceProforma={isBalanceProforma}
-                      predefinedNotes={predefinedNotes}
-                      notesData={notesData}
-                      selectedNotes={selectedNotes}
-                      manualNote={manualNote}
-                      setManualNote={setManualNote}
-                      handleSelect={handleSelectPredefinedNote}
-                      handleAddManualNote={handleAddManualNote}
-                      handleRemoveNote={handleRemoveNote}
-                      handleSaveNotes={handleSaveNotes}
-                    />
+                    {canEdit && (
+                      <QuotationNotesDropdown
+                        docTypeFromURL={docTypeFromURL}
+                        isBalanceProforma={isBalanceProforma}
+                        predefinedNotes={predefinedNotes}
+                        notesData={notesData}
+                        selectedNotes={selectedNotes}
+                        manualNote={manualNote}
+                        setManualNote={setManualNote}
+                        handleSelect={handleSelectPredefinedNote}
+                        handleAddManualNote={handleAddManualNote}
+                        handleRemoveNote={handleRemoveNote}
+                        handleSaveNotes={handleSaveNotes}
+                      />
+                    )}
 
                     {/* Displayed Notes List */}
                     <QuotationNotesSection
                       notesData={notesData}
                       isProforma={docTypeFromURL === "proforma"}
                       clientData={clientDataReceived}
-                      onEditNote={handleOpenEditNoteModal}
-                      onDeleteNote={handleDeleteClientNote}
+                      onEditNote={canEdit ? handleOpenEditNoteModal : undefined}
+                      onDeleteNote={canEdit ? handleDeleteClientNote : undefined}
                     />
                     </>
                     )}
