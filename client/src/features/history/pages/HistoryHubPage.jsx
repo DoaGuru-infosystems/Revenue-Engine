@@ -85,13 +85,7 @@ const SUB_TABS = [
     colorDark: "#34d399", // emerald
     colorLight: "#047857",
   },
-  {
-    id: "revenue",
-    label: "Revenue ",
-    icon: TrendingUp,
-    colorDark: "#fbbf24", // amber
-    colorLight: "#b45309",
-  },
+  
 ];
 
 // ─── Main HistoryHub Component ───────────────────────────────────────────────
@@ -210,7 +204,7 @@ const HistoryHubPage = ({ setActiveTab }) => {
           { activeSubTab === "balance_proforma" && <BalanceProformaHistory /> }
           { activeSubTab === "payment_history" && <PaymentHistory openProformaManager={ openProformaManager } /> }
 
-          { activeSubTab === "revenue" && <RevenueHistory /> }
+          {/* { activeSubTab === "revenue" && <RevenueHistory /> } */}
         </Suspense>
       </div>
 
