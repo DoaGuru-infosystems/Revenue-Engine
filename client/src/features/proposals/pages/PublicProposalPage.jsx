@@ -212,7 +212,35 @@ export default function PublicProposalPage() {
       unitAmt += Number(item.include_youtube_video_posting) || 0;
     }
 
-    return unitAmt * qty;
+    let baseTotal = unitAmt * qty;
+
+    let itemAddons = [];
+    if (item.additional_services) {
+      try {
+        itemAddons =
+          typeof item.additional_services === "string"
+            ? JSON.parse(item.additional_services)
+            : item.additional_services;
+        if (!Array.isArray(itemAddons)) itemAddons = [];
+      } catch {
+        itemAddons = [];
+      }
+    }
+
+    let addonsSum = 0;
+    if (itemAddons.length > 0) {
+      addonsSum = itemAddons.reduce(
+        (s, a) =>
+          s +
+          (Number(a.total || a.total_amount) ||
+            (Number(a.amount || a.unit_price || a.price) || 0) * (Number(a.quantity) || qty)),
+        0
+      );
+    } else if (Number(item.additional_services_amount) > 0) {
+      addonsSum = Number(item.additional_services_amount);
+    }
+
+    return baseTotal + addonsSum;
   };
 
   const dmSubtotal = dmPricing.reduce((sum, item) => {

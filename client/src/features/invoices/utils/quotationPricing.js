@@ -32,17 +32,53 @@ export function computeQuotationPricing({
     0
   );
 
-  // 2. Complimentary Amount: sum of (editing_type_amount || unit_price) * quantity for complimentary items
+  // 2. Complimentary Amount: sum of (editing_type_amount || unit_price) * quantity + additional_services + optional features
   // NOTE: Complimentary lines have total_amount: 0 for invoice totals, but for display we compute their theoretical value
   const complimentaryAmount = (
     Array.isArray(complimentaryLines) ? complimentaryLines : []
   ).reduce((sum, line) => {
     if (!line) return sum;
-    const unitRate = Number(
-      line.editing_type_amount || line.unit_price || line.rate || 0
-    );
     const qty = Number(line.quantity || 1);
-    const val = unitRate * qty;
+    const unitRate = Number(
+      line.editing_type_amount || line.unit_price || line.rate || line.price || 0
+    );
+    const baseTotal = unitRate * qty;
+
+    // Additional services (addons)
+    let addons = line.additional_services;
+    if (typeof addons === "string") {
+      try {
+        addons = JSON.parse(addons);
+      } catch {
+        addons = [];
+      }
+    }
+    let addonsSum = 0;
+    if (Array.isArray(addons) && addons.length > 0) {
+      addonsSum = addons.reduce((aSum, a) => {
+        if (!a) return aSum;
+        const aQty = Number(a.quantity) || qty || 1;
+        const aRate = Number(a.amount || a.unit_price || a.price || 0);
+        const aTotalField = Number(a.total ?? a.total_amount);
+        const aTotal =
+          Number.isFinite(aTotalField) && aTotalField > 0
+            ? aTotalField
+            : aRate * aQty;
+        return aSum + (Number.isFinite(aTotal) ? aTotal : 0);
+      }, 0);
+    } else if (Number(line.additional_services_amount) > 0) {
+      addonsSum = Number(line.additional_services_amount);
+    }
+
+    // Optional features (thumbnail, content posting, youtube video posting)
+    const thumb = (Number(line.include_thumbnail_creation) || 0) * qty;
+    const post = (Number(line.include_content_posting) || 0) * qty;
+    const yt = (Number(line.include_youtube_video_posting) || 0) * qty;
+
+    const computed = baseTotal + addonsSum + thumb + post + yt;
+    const fallback = Number(line.total_amount || line.total_price || line.original_total_amount || 0);
+    const val = computed > 0 ? computed : fallback;
+
     return sum + (Number.isFinite(val) ? val : 0);
   }, 0);
 

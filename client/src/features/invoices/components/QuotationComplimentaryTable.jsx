@@ -123,16 +123,17 @@ export default function QuotationComplimentaryTable({
                   <td className="border px-2 py-1 text-right">₹{totalBase.toLocaleString("en-IN")}</td>
                 </tr>
                 {rowAddons.map((addon, aIdx) => {
-                  const addonAmt = Number(addon.amount || addon.unit_price || 0);
+                  const addonAmt = Number(addon.amount || addon.unit_price || addon.price || 0);
                   const addonQty = Number(addon.quantity) || qty;
                   const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                  const addonRowTotal = Number(addon.total || addon.total_amount) || (addonAmt * addonQty);
                   return (
                     <tr key={`compl-${eidx}-addon-${aIdx}`} className="bg-orange-50/40 text-gray-700">
                       <td className="border px-2 py-1 font-medium pl-4">+ {addonName}</td>
                       <td className="border px-2 py-1 text-gray-500 italic">Additional Service ({finalService})</td>
                       <td className="border px-2 py-1 text-right">{addonQty}</td>
                       <td className="border px-2 py-1 text-right">₹{addonAmt.toLocaleString("en-IN")}</td>
-                      <td className="border px-2 py-1 text-right">₹{(addonAmt * addonQty).toLocaleString("en-IN")}</td>
+                      <td className="border px-2 py-1 text-right">₹{addonRowTotal.toLocaleString("en-IN")}</td>
                     </tr>
                   );
                 })}
@@ -264,13 +265,14 @@ export default function QuotationComplimentaryTable({
                   rowAddons = [];
                 }
               }
-              const addonsSum = rowAddons.reduce(
+              const addonsSum = rowAddons.length > 0 ? rowAddons.reduce(
                 (s, a) =>
                   s +
-                  (Number(a.amount || a.unit_price) || 0) *
-                    (Number(a.quantity) || qty),
+                  (Number(a.total || a.total_amount) ||
+                    (Number(a.amount || a.unit_price || a.price) || 0) *
+                    (Number(a.quantity) || qty)),
                 0
-              );
+              ) : (Number(item.additional_services_amount) || 0);
               const thumb =
                 (Number(item.include_thumbnail_creation) || 0) * qty;
               const post = (Number(item.include_content_posting) || 0) * qty;

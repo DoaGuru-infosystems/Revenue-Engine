@@ -924,18 +924,22 @@ exports.createProforma = async (req, res) => {
         `SELECT * FROM re_quotation_services WHERE quotation_id = ? ORDER BY id ASC`,
         [quotation_id]
       );
-      serviceItems = rawServices.map(s => ({
-        source: s.source || "graphic",
-        service_name: s.service_name,
-        category_name: s.category_name,
-        editing_type_name: s.editing_type_name,
-        editing_type_amount: Number(s.editing_type_amount || 0),
-        quantity: Number(s.quantity || 1),
-        additional_services: s.additional_services,
-        total_amount: Number(s.total_amount || 0),
-        total_price: Number(s.total_amount || 0),
-        include_in_total: true,
-      }));
+       serviceItems = rawServices.map(s => {
+        const isComp = isComplimentaryItem(s);
+        return {
+          source: s.source || (isComp ? "custom_complimentary" : "graphic"),
+          service_name: s.service_name,
+          category_name: s.category_name,
+          editing_type_name: s.editing_type_name,
+          editing_type_amount: Number(s.editing_type_amount || 0),
+          quantity: Number(s.quantity || 1),
+          additional_services: s.additional_services,
+          total_amount: isComp ? 0 : Number(s.total_amount || 0),
+          total_price: isComp ? 0 : Number(s.total_amount || 0),
+          is_complimentary: isComp,
+          include_in_total: !isComp,
+        };
+      });
 
       const rawAds = await runQuery(
         `SELECT * FROM re_quotation_ads WHERE quotation_id = ? ORDER BY id ASC`,

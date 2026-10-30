@@ -113,9 +113,10 @@ export default function InvoiceComplimentaryTable({
                   </td>
                 </tr>
                 {rowAddons.map((addon, aIdx) => {
-                  const addonAmt = Number(addon.amount || addon.unit_price || 0);
+                  const addonAmt = Number(addon.amount || addon.unit_price || addon.price || 0);
                   const addonQty = Number(addon.quantity) || qty;
                   const addonName = addon.name || addon.additional_service_name || "Additional Service";
+                  const addonRowTotal = Number(addon.total || addon.total_amount) || (addonAmt * addonQty);
                   return (
                     <tr
                       key={`comp-${idx}-addon-${aIdx}`}
@@ -132,7 +133,7 @@ export default function InvoiceComplimentaryTable({
                         ₹{formatAmount(addonAmt)}
                       </td>
                       <td className="border px-2 py-1 text-right">
-                        ₹{formatAmount(addonAmt * addonQty)}
+                        ₹{formatAmount(addonRowTotal)}
                       </td>
                     </tr>
                   );
@@ -167,13 +168,14 @@ export default function InvoiceComplimentaryTable({
                         rowAddons = [];
                       }
                     }
-                    const addonsSum = rowAddons.reduce(
+                    const addonsSum = rowAddons.length > 0 ? rowAddons.reduce(
                       (s, a) =>
                         s +
-                        (Number(a.amount || a.unit_price) || 0) *
-                          (Number(a.quantity) || Number(svc.quantity || 1)),
+                        (Number(a.total || a.total_amount) ||
+                          (Number(a.amount || a.unit_price || a.price) || 0) *
+                          (Number(a.quantity) || Number(svc.quantity || 1))),
                       0
-                    );
+                    ) : (Number(svc.additional_services_amount) || 0);
                     return sum + basePrice + addonsSum;
                   },
                   0

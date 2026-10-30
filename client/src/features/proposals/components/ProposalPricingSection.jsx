@@ -89,7 +89,35 @@ export default function ProposalPricingSection({
       unitAmt += Number(row.include_youtube_video_posting) || 0;
     }
 
-    return unitAmt * qty;
+    let baseTotal = unitAmt * qty;
+
+    let rowAddons = [];
+    if (row.additional_services) {
+      try {
+        rowAddons =
+          typeof row.additional_services === "string"
+            ? JSON.parse(row.additional_services)
+            : row.additional_services;
+        if (!Array.isArray(rowAddons)) rowAddons = [];
+      } catch {
+        rowAddons = [];
+      }
+    }
+
+    let addonsSum = 0;
+    if (rowAddons.length > 0) {
+      addonsSum = rowAddons.reduce(
+        (s, a) =>
+          s +
+          (Number(a.total || a.total_amount) ||
+            (Number(a.amount || a.unit_price || a.price) || 0) * (Number(a.quantity) || qty)),
+        0
+      );
+    } else if (Number(row.additional_services_amount) > 0) {
+      addonsSum = Number(row.additional_services_amount);
+    }
+
+    return baseTotal + addonsSum;
   };
 
   const renderTable = (title, items, isAds = false) => {

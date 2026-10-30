@@ -270,23 +270,13 @@ export default function PublicQuotationPage() {
           <div className="border-t border-slate-200 pt-4">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-indigo-900 mb-2">Pricing</h2>
             <div className="space-y-1 text-sm text-slate-700">
-              {/* Full Total (only if complimentaryAmount > 0) */}
-              {pricing.complimentaryAmount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Full Total</span>
-                  <span>{money(pricing.fullTotal)}</span>
-                </div>
-              )}
-
-              {/* 1. Service Amount */}
-              <div className="flex justify-between">
-                <span className="text-slate-600">Service Amount</span>
-                <span>{money(pricing.serviceAmount)}</span>
-              </div>
-
-              {/* 2. Complimentary Service Amount (only if > 0) */}
+              {/* Full Total & Complimentary Service Amount (only if complimentaryAmount > 0) */}
               {pricing.complimentaryAmount > 0 && (
                 <>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Full Total</span>
+                    <span>{money(pricing.fullTotal)}</span>
+                  </div>
                   <div
                     style={{ color: "#059669" }}
                     className="flex justify-between items-center !text-emerald-600 font-medium"
@@ -300,13 +290,13 @@ export default function PublicQuotationPage() {
                 </>
               )}
 
-              {/* 3. Subtotal */}
-              <div className="flex justify-between font-medium">
-                <span className="text-slate-600">Subtotal</span>
-                <span>{money(pricing.subtotal)}</span>
+              {/* 1. Service Amount */}
+              <div className="flex justify-between">
+                <span className="text-slate-600">Service Amount</span>
+                <span>{money(pricing.serviceAmount)}</span>
               </div>
 
-              {/* 4. Discount & Subtotal (after discount) (only if discountAmt > 0) */}
+              {/* 4. Discount & Subtotal (only if discountAmt > 0) */}
               {pricing.discountAmt > 0 && (
                 <>
                   <div
@@ -321,7 +311,7 @@ export default function PublicQuotationPage() {
                     </span>
                   </div>
                   <div className="flex justify-between font-medium">
-                    <span className="text-slate-600">Subtotal (after discount)</span>
+                    <span className="text-slate-600">Subtotal</span>
                     <span>{money(pricing.subtotalAfterDiscount)}</span>
                   </div>
                 </>

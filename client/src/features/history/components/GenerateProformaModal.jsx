@@ -1817,7 +1817,17 @@ const GenerateProformaModal = ({
 
                     { complimentaryServices.length > 0 && (() => {
                       const compRawTotal = complimentaryServices.reduce((sum, svc) => {
-                        return sum + (Number(svc.editing_type_amount || svc.amount || 0) * Number(svc.quantity || 1));
+                        const qty = Number(svc.quantity || 1);
+                        const base = Number(svc.editing_type_amount || svc.price || svc.amount || 0) * qty;
+                        let rowAddons = [];
+                        if (svc.additional_services) {
+                          try {
+                            rowAddons = typeof svc.additional_services === "string" ? JSON.parse(svc.additional_services) : svc.additional_services;
+                            if (!Array.isArray(rowAddons)) rowAddons = [];
+                          } catch { rowAddons = []; }
+                        }
+                        const addonsSum = rowAddons.reduce((s, a) => s + (Number(a.total || a.total_amount) || (Number(a.amount || a.unit_price || a.price) || 0) * (Number(a.quantity) || qty)), 0);
+                        return sum + base + addonsSum;
                       }, 0);
                       return (
                         <div>

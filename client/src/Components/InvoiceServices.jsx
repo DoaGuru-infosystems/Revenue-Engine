@@ -1928,7 +1928,9 @@ function ProformaServices() {
                                 ? formatRs(item.additional_services.reduce((s, a) => s + (Number(a.total || a.total_amount) || 0), 0))
                                 : "—")
                             : item.source === "complimentary"
-                              ? "—"
+                              ? (Array.isArray(item.additional_services) && item.additional_services.length > 0
+                                  ? formatRs(item.additional_services.reduce((s, a) => s + ((Number(a.amount || a.unit_price || a.price) || 0) * (Number(item.quantity) || 1)), 0))
+                                  : "—")
                               : formatRs(item.charge) }
                         </td>
                         <td className="right">

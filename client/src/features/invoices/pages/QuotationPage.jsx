@@ -411,23 +411,13 @@ export default function QuotationPage() {
                             )}
                           </div>
 
-                          {/* Full Total (only if complimentaryAmount > 0) */}
-                          {pricing.complimentaryAmount > 0 && (
-                            <div className="flex justify-between gap-3 py-0.5">
-                              <span className="text-gray-600">Full Total</span>
-                              <span>{formatInr(pricing.fullTotal)}</span>
-                            </div>
-                          )}
-
-                          {/* Service Amount */}
-                          <div className="flex justify-between gap-3 py-0.5">
-                            <span className="text-gray-600">Service Amount</span>
-                            <span>{formatInr(pricing.serviceAmount)}</span>
-                          </div>
-
-                          {/* Complimentary Service Amount (only if > 0) */}
+                          {/* Full Total & Complimentary Service Amount (only if complimentaryAmount > 0) */}
                           {pricing.complimentaryAmount > 0 && (
                             <>
+                              <div className="flex justify-between gap-3 py-0.5">
+                                <span className="text-gray-600">Full Total</span>
+                                <span>{formatInr(pricing.fullTotal)}</span>
+                              </div>
                               <div
                                 style={{ color: "#059669" }}
                                 className="flex justify-between items-center gap-3 py-0.5 !text-emerald-600 font-medium"
@@ -437,17 +427,17 @@ export default function QuotationPage() {
                                   - {formatInr(pricing.complimentaryAmount)}
                                 </span>
                               </div>
-                              <div className="border-t border-gray-300 my-1" />
+                             
                             </>
                           )}
 
-                          {/* Subtotal */}
-                          <div className="flex justify-between gap-3 py-0.5 font-medium">
-                            <span className="text-gray-600">Subtotal</span>
-                            <span>{formatInr(pricing.subtotal)}</span>
+                          {/* Service Amount */}
+                          <div className="flex justify-between gap-3 py-0.5">
+                            <span className="text-gray-600">Service Amount</span>
+                            <span>{formatInr(pricing.serviceAmount)}</span>
                           </div>
 
-                          {/* Discount & Subtotal (after discount) (only if discountAmt > 0) */}
+                          {/* Discount & Subtotal (only if discountAmt > 0) */}
                           {pricing.discountAmt > 0 && (
                             <>
                               <div
@@ -462,7 +452,7 @@ export default function QuotationPage() {
                                 </span>
                               </div>
                               <div className="flex justify-between gap-3 py-0.5 font-medium">
-                                <span className="text-gray-600">Subtotal (after discount)</span>
+                                <span className="text-gray-600">Subtotal</span>
                                 <span>{formatInr(pricing.subtotalAfterDiscount)}</span>
                               </div>
                             </>
