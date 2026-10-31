@@ -21,6 +21,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/auth/api/re_calculator", re_apiRouter);
 
 require("./revenue_engen_server/re_controller/re_reminders");
+require("./revenue_engen_server/re_controller/re_syncCron");
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Calculator API");

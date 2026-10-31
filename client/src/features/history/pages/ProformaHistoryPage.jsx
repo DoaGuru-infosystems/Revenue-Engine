@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   Calendar,
   Search,
@@ -15,6 +15,7 @@ import {
   Clock,
   Users,
   X,
+  Send,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -34,6 +35,8 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   const navigate = useNavigate();
   const [fetchServices, setFetchServices] = useState([]);
   const { currentUser, token } = useSelector((state) => state.user);
+  const isOwner = currentUser?.role === "Owner" || currentUser?.employee_role === "Owner";
+  const [calendarData, setCalendarData] = useState([]);
   const dispatch = useDispatch();
   const basePath = getBasePath(currentUser?.role);
 
@@ -100,6 +103,26 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
     fetchProposalsForModal();
   }, [token, baseURL]);
 
+  const fetchCalendarData = async () => {
+    try {
+      const res = await axios.get(`${baseURL}/auth/api/re_calculator/re-sf/calendar`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.data?.status === "Success") {
+        setCalendarData(res.data.data || []);
+      }
+    } catch (err) {
+      console.error("fetchCalendarData error:", err);
+    }
+  };
+
+  const assignedProformaIds = useMemo(() => {
+    return new Set((calendarData || []).map((c) => Number(c.proforma_id)));
+  }, [calendarData]);
+
   const fetchAllProformas = async () => {
     try {
       const res = await axios.get(
@@ -135,6 +158,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
 
   useEffect(() => {
     fetchAllProformas();
+    fetchCalendarData();
   }, []);
 
   const gstCount = fetchServices.filter((row) => parseIsGst(row?.is_gst)).length;
@@ -217,6 +241,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
           });
           Swal.fire("Deleted!", "Proforma has been deleted.", "success");
           fetchAllProformas();
+    fetchCalendarData();
         } catch (error) {
           console.error("Error deleting proforma:", error);
           Swal.fire("Error", "Failed to delete proforma.", "error");
@@ -347,6 +372,85 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
     setRescheduleModalItem(null);
   };
 
+  const handleAssignToSF = async (item) => {
+    if (!isOwner) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Permission Denied",
+        text: "Only Owner accounts can assign projects to SF.",
+        background: "#1e293b",
+        color: "#fff",
+      });
+    }
+
+    if (assignedProformaIds.has(Number(item.id))) {
+      return Swal.fire({
+        icon: "info",
+        title: "Already Assigned",
+        text: "This proforma has already been assigned to SF operations.",
+        background: "#1e293b",
+        color: "#fff",
+      });
+    }
+
+    const confirmRes = await Swal.fire({
+      title: "Assign to SF?",
+      text: `Are you sure you want to hand off Proforma #${item.proforma_number || item.id} to SF operations?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Assign",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#f59e0b",
+      cancelButtonColor: "#64748b",
+      background: "#1e293b",
+      color: "#fff",
+    });
+
+    if (!confirmRes.isConfirmed) return;
+
+    try {
+      const res = await axios.post(
+        `${baseURL}/auth/api/re_calculator/re-sf/assign`,
+        { proforma_id: item.id },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data?.status === "Success") {
+        await Swal.fire({
+          icon: "success",
+          title: "Assigned to SF",
+          text: "Assigned to SF. Initial sync queued.",
+          background: "#1e293b",
+          color: "#fff",
+        });
+        fetchAllProformas();
+        fetchCalendarData();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Assignment Failed",
+          text: res.data?.message || "Failed to assign to SF.",
+          background: "#1e293b",
+          color: "#fff",
+        });
+      }
+    } catch (err) {
+      console.error("Assign to SF error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Assignment Failed",
+        text: err.response?.data?.message || "Error assigning to SF.",
+        background: "#1e293b",
+        color: "#fff",
+      });
+    }
+  };
+
   const handleToggleDropdown = (e, id) => {
     e.stopPropagation();
     if (openDropdownId === id) {
@@ -418,6 +522,24 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
               <FileText size={15} className="text-amber-500 dark:text-amber-400" /> Balance Proforma
             </button>
           ) }
+
+          {/* SF Operations Assignment */}
+          {assignedProformaIds.has(Number(item.id)) ? (
+            <div className="w-full flex items-center gap-2 px-4 py-2.5 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 font-semibold cursor-default select-none">
+              <CheckCircle2 size={15} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
+              <span>Assigned to SF</span>
+            </div>
+          ) : isOwner ? (
+            <button
+              onClick={() => {
+                setOpenDropdownId(null);
+                handleAssignToSF(item);
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-gray-700/50 transition-colors font-medium"
+            >
+              <Send size={15} className="text-amber-500 shrink-0" /> Assign to SF
+            </button>
+          ) : null}
 
           {/* Meeting Reminder Actions */}
           <div className="py-1">

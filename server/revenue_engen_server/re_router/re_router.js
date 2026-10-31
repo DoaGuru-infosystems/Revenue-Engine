@@ -287,6 +287,14 @@ const {
   getProformasByQuotation,
 } = require("../re_controller/re_quotationController");
 
+const requireRole = require("../re_middleware/re_requireRole");
+const {
+  assignToSF,
+  receiveStatusUpdate,
+  getCalendarData,
+  getProjectTasks,
+} = require("../re_controller/re_syncController");
+
 const router = express.Router();
 
 // ---- Public Routes (no auth) ----
@@ -400,10 +408,11 @@ router.post("/saveClientWithPlan", saveClientWithPlan);
 router.post("/addNotebyplan", addNotebyplan);
 router.post("/savePlanClientNotes", savePlanClientNotes);
 router.post("/saveClientIdwiseNotes", saveClientIdwiseNotes);
-router.post("/assignQuotation", assignQuotation);
+// DEPRECATED: legacy quotation-assignment flow, replaced by Proforma→SF handoff (Task 1-7). Table re_assign_quotation preserved for archival.
+// router.post("/assignQuotation", assignQuotation);
 router.post("/createTeam", createTeam);
 router.post("/addMembersToTeam/:id/members", addMembersToTeam);
-router.post("/assignQuotationToTeam", assignQuotationToTeam);
+// router.post("/assignQuotationToTeam", assignQuotationToTeam);
 
 router.post("/saveComplimentaryData", saveComplimentaryData);
 /**
@@ -521,17 +530,18 @@ router.get(
 );
 //NEW work
 router.get("/retrieveUser", authenticateToken, retrieveUser);
-router.get("/getAssignmentByTxn/:txn_id", getAssignmentByTxn);
-router.get("/getAssignedQuotations", authenticateToken, getAssignedQuotations);
-router.get(
-  "/assigned-quotations/by-employee/:employee_name",
-  authenticateToken,
-  getAssignedQuotationsByEmployeeName,
-);
+// DEPRECATED: legacy quotation-assignment flow, replaced by Proforma→SF handoff (Task 1-7). Table re_assign_quotation preserved for archival.
+// router.get("/getAssignmentByTxn/:txn_id", getAssignmentByTxn);
+// router.get("/getAssignedQuotations", authenticateToken, getAssignedQuotations);
+// router.get(
+//   "/assigned-quotations/by-employee/:employee_name",
+//   authenticateToken,
+//   getAssignedQuotationsByEmployeeName,
+// );
 router.get("/progress/by-txn/:txn_id", getProgressByTxn);
 router.get("/retrieveTeam", retrieveTeam);
 router.get("/retrieveTeamById/:id", retrieveTeamById);
-router.get("/getAssignmentsSummary/:txn_id", getAssignmentsSummary);
+// router.get("/getAssignmentsSummary/:txn_id", getAssignmentsSummary);
 router.get("/requirements", authenticateToken, getRequirementsLink);
 router.get("/getRequirementsDetail/:linkId", getRequirementsDetail);
 router.get("/getNoteData", authenticateToken, getNoteData);
@@ -665,7 +675,8 @@ router.put("/updatePlanData/:id", updatePlandata);
 router.put("/updatePlanName/:id", updatePlanNameDetail);
 router.put("/updatePlanNotes/:id", updatePlanNotes);
 router.put("/updateServiceData/:editing_type_id", updateServiceData);
-router.put("/reassignQuotation", reassignQuotation);
+// DEPRECATED: legacy quotation-assignment flow, replaced by Proforma→SF handoff (Task 1-7). Table re_assign_quotation preserved for archival.
+// router.put("/reassignQuotation", reassignQuotation);
 router.put("/updateComplimenatryDataById/:id", updateComplimenatryDataById);
 router.put("/updateNoteDataById/:id", updateNoteDataById);
 router.put("/updateNotesbydefaultById/:id", updateNotesbydefaultById);
@@ -821,5 +832,11 @@ router.patch("/proforma/:id/meeting-status", authenticateToken, updateProformaMe
 
 // router.get("/pagespeedReportpdf", pagespeedReportpdf);
 // router.get("/pagespeedReportpdf", fullSEOReport);
+
+// ---- Revenue Engine to SF Sync Routes ----
+router.post("/re-sf/assign", authenticateToken, requireRole(["Owner"]), assignToSF);
+router.post("/re-sf/webhook/status-updated", receiveStatusUpdate);
+router.get("/re-sf/calendar", authenticateToken, getCalendarData);
+router.get("/re-sf/project/:proforma_id/tasks", authenticateToken, getProjectTasks);
 
 module.exports = router;
