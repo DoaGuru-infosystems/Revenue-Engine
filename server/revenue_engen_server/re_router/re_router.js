@@ -757,7 +757,7 @@ router.get(
 
 // ---- Proforma Routes ----
 router.post("/proforma", authenticateToken, createProforma);
-router.get("/revenue/history", authenticateToken, getRevenueHistory);
+router.get("/revenue/history", getRevenueHistory);
 router.get("/proforma/final-invoices", authenticateToken, getFinalInvoices);
 router.post(
   "/proforma/:proforma_id/generate-invoice",
