@@ -2,3 +2,5 @@ graphify-out/
 graphify/
 Old builds/
 *.zip
+config.bat
+node_modules
