@@ -133,6 +133,7 @@ exports.assignToSF = (req, res) => {
             event_type: "project.assigned",
             idempotency_key,
             proforma_id: Number(proforma.proforma_id),
+            proforma_number: proforma.proforma_number || `PROF-${proforma.proforma_id}`,
             txn_id: proforma.txn_id || null,
             client_name: proforma.client_name || "Valued Client",
             start_date: startDate,
@@ -569,4 +570,3 @@ exports.getProjectTasks = (req, res) => {
     }
   })();
 };
-

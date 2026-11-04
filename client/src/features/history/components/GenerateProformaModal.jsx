@@ -185,7 +185,6 @@ const GenerateProformaModal = ({
   const loadQuotationForProforma = async (quotation) => {
     if (!quotation?.id) return;
     setQuotationPreviewLoading(true);
-    setSelectedProposalForProforma(null);
     try {
       const res = await axios.get(`${baseURL}/auth/api/re_calculator/quotation/${quotation.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -329,6 +328,26 @@ const GenerateProformaModal = ({
     setQuotationServicesPreview(previewData);
   };
 
+  useEffect(() => {
+    if (
+      isOpen &&
+      sourceKind === "proposal" &&
+      !selectedTxn &&
+      !initialSelectedProposalId &&
+      !selectedProposalForProforma &&
+      proposalsList.length > 0
+    ) {
+      handleCreateProformaFromProposal(proposalsList[0]);
+    }
+  }, [
+    isOpen,
+    sourceKind,
+    selectedTxn,
+    initialSelectedProposalId,
+    selectedProposalForProforma,
+    proposalsList,
+  ]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -339,6 +358,12 @@ const GenerateProformaModal = ({
 
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
+    if (
+      (sourceKind === "quotation" && !selectedQuotationForProforma) ||
+      (sourceKind === "proposal" && !selectedProposalForProforma)
+    ) {
+      return;
+    }
     setLoading(true);
 
     if (sourceKind === "quotation" && selectedQuotationForProforma) {
@@ -1164,7 +1189,11 @@ const GenerateProformaModal = ({
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${sourceKind === "proposal" ? "bg-orange-500 text-white border-orange-500" : "border-gray-400 text-gray-600"}`}
                     onClick={() => {
                       setSourceKind("proposal");
-                      setSelectedQuotationForProforma(null);
+                      if (selectedProposalForProforma) {
+                        handleCreateProformaFromProposal(selectedProposalForProforma);
+                      } else if (proposalsList.length > 0) {
+                        handleCreateProformaFromProposal(proposalsList[0]);
+                      }
                     }}
                   >
                     From Proposal
@@ -1174,7 +1203,6 @@ const GenerateProformaModal = ({
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${sourceKind === "quotation" ? "bg-blue-600 text-white border-blue-600" : "border-gray-400 text-gray-600"}`}
                     onClick={() => {
                       setSourceKind("quotation");
-                      setSelectedProposalForProforma(null);
                     }}
                   >
                     From Quotation
@@ -1187,14 +1215,27 @@ const GenerateProformaModal = ({
                     value={ (sourceKind === "quotation" ? selectedQuotationForProforma?.id : selectedProposalForProforma?.id) || "" }
                     onChange={ (e) => {
                       if (sourceKind === "quotation") {
+                        if (!e.target.value) {
+                          setSelectedQuotationForProforma(null);
+                          setQuotationServicesPreview([]);
+                          return;
+                        }
                         const qtn = quotationsList.find(q => String(q.id) === String(e.target.value));
                         if (qtn) loadQuotationForProforma(qtn);
+                        return;
+                      }
+                      if (!e.target.value) {
+                        setSelectedProposalForProforma(null);
+                        setQuotationServicesPreview([]);
                         return;
                       }
                       const prop = proposalsList.find(p => String(p.id) === String(e.target.value));
                       if (prop) handleCreateProformaFromProposal(prop);
                     } }
                   >
+                    <option value="">
+                      {sourceKind === "quotation" ? "-- Select Quotation --" : "-- Select Proposal --"}
+                    </option>
                     { selectedProposalForProforma && !proposalsList.some(p => String(p.id) === String(selectedProposalForProforma.id)) && (
                       <option key={ selectedProposalForProforma.id } value={ selectedProposalForProforma.id }>
                         Proposal #{ selectedProposalForProforma.id } - { selectedProposalForProforma.grand_total_excl_gst } INR ({ selectedProposalForProforma.proposal_type }) - { selectedProposalForProforma.client_name || currentClientName }
@@ -1956,8 +1997,21 @@ const GenerateProformaModal = ({
               <button
                 type="submit"
                 className="ci-btn-primary"
-                disabled={ loading || (!selectedProposalForProforma && !selectedQuotationForProforma) }
-                style={ { opacity: (loading || (!selectedProposalForProforma && !selectedQuotationForProforma)) ? 0.7 : 1 } }
+                disabled={
+                  loading ||
+                  (sourceKind === "proposal"
+                    ? !selectedProposalForProforma
+                    : !selectedQuotationForProforma)
+                }
+                style={{
+                  opacity:
+                    loading ||
+                    (sourceKind === "proposal"
+                      ? !selectedProposalForProforma
+                      : !selectedQuotationForProforma)
+                      ? 0.7
+                      : 1,
+                }}
               >
                 { loading ? (
                   <Loader2 size={ 14 } style={ { animation: "spin 1s linear infinite" } } />

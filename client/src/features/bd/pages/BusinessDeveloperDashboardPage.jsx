@@ -128,7 +128,7 @@ export default function BusinessDeveloperDashboardPage() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col overflow-hidden select-none"
+      className="fixed inset-0 flex flex-col overflow-hidden"
       style={{
         background: `linear-gradient(to bottom right, var(--gradient-from), var(--gradient-via), var(--gradient-to))`,
         overscrollBehavior: "none",

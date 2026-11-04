@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import {
   Calendar,
   Search,
@@ -30,6 +30,15 @@ import { getBasePath, rolePath } from "../../../utils/rolePaths";
 
 const parseIsGst = (val) => Boolean(val && (typeof val === 'object' && val.data ? val.data[0] === 1 : Number(val) === 1));
 
+const APPROVED_QUOTATION_STATUSES = [
+  "approved",
+  "client_approved",
+  "proforma_generated",
+  "proforma_sent",
+  "payment_awaited",
+  "partially_paid",
+];
+
 const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   const baseURL = API_BASE_URL;
   const navigate = useNavigate();
@@ -54,6 +63,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
   const [createDropdownOpen, setCreateDropdownOpen] = useState(false);
   const [showProformaModal, setShowProformaModal] = useState(false);
   const [proposalsList, setProposalsList] = useState([]);
+  const [quotationsList, setQuotationsList] = useState([]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -99,9 +109,44 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
     }
   };
 
+  const fetchQuotationsForModal = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        `${baseURL}/auth/api/re_calculator/quotations/all`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data.status === "Success") {
+        const uniqueQuotations = [];
+        const seenQuotationIds = new Set();
+        for (const quotation of res.data.data || []) {
+          if (
+            quotation.id &&
+            !seenQuotationIds.has(quotation.id) &&
+            APPROVED_QUOTATION_STATUSES.includes(
+              String(quotation.status || "").toLowerCase()
+            )
+          ) {
+            seenQuotationIds.add(quotation.id);
+            uniqueQuotations.push(quotation);
+          }
+        }
+        setQuotationsList(uniqueQuotations);
+      }
+    } catch (error) {
+      console.error("Failed to fetch approved quotations for proforma", error);
+    }
+  }, [baseURL, token]);
+
   useEffect(() => {
     fetchProposalsForModal();
-  }, [token, baseURL]);
+    fetchQuotationsForModal();
+  }, [token, baseURL, fetchQuotationsForModal]);
 
   const fetchCalendarData = async () => {
     try {
@@ -996,6 +1041,7 @@ const ProformaHistoryPage = ({ openProformaManager, setActiveTab }) => {
         isOpen={showProformaModal}
         onClose={() => setShowProformaModal(false)}
         proposalsList={proposalsList}
+        quotationsList={quotationsList}
       />
       {/* Reschedule Meeting Modal */}
       {rescheduleModalItem && (
