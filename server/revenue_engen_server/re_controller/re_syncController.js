@@ -288,6 +288,14 @@ exports.receiveStatusUpdate = (req, res) => {
             isActiveVal = is_active === true || is_active === 1 || is_active === "1" || is_active === "true" ? 1 : 0;
           }
 
+          // Check previous current_status to detect transitions to 'blocked'
+          db.query(
+            "SELECT current_status FROM re_project_sync WHERE proforma_id = ? LIMIT 1",
+            [proforma_id],
+            (prevErr, prevRows) => {
+              const previousStatus = prevRows && prevRows.length > 0 ? prevRows[0].current_status : null;
+              const isTransitionToBlocked = current_status === "blocked" && previousStatus !== "blocked";
+
           const updateSyncSQL = `
             UPDATE re_project_sync
             SET 
@@ -313,6 +321,20 @@ exports.receiveStatusUpdate = (req, res) => {
               if (updateErr) {
                 console.error("[re_syncController.receiveStatusUpdate] Sync update error:", updateErr);
                 return res.status(500).json({ status: "Failure", message: "Database Error" });
+              }
+
+              // Trigger Blocker notification if newly transitioned to 'blocked'
+              if (isTransitionToBlocked) {
+                try {
+                  const { notifyProjectBlocked } = require("../re_services/notificationService");
+                  notifyProjectBlocked({
+                    proformaId: proforma_id,
+                    clientName: req.body.client_name,
+                    proformaNumber: req.body.proforma_number,
+                  }).catch((e) => console.error("[re_syncController] notifyProjectBlocked async error:", e.message));
+                } catch (notifErr) {
+                  console.error("[re_syncController] notifyProjectBlocked load error:", notifErr.message);
+                }
               }
 
               // Fetch project_sync row to obtain project_sync_id for tasks upsert
@@ -392,6 +414,8 @@ exports.receiveStatusUpdate = (req, res) => {
               );
             }
           );
+            }
+          ); // closes prevSync check query
         });
       });
     } catch (error) {

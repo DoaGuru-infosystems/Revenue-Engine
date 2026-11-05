@@ -608,6 +608,48 @@ async function sendQuotationEmail({ to, clientName, quotationNumber, quotationLi
   }
 }
 
+async function sendProjectBlockedAlertEmail({ to, ownerName, clientName, proformaNumber }) {
+  if (!isEmail(to)) {
+    console.warn("[MAIL] Skipping Project Blocked alert: invalid recipient email", to);
+    return { ok: false, error: "invalid_email" };
+  }
+  const subject = `⚠️ [${clientName || 'Client'}] ka project Blocked ho gaya hai — Operations Alert`;
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f8f9fa;margin:0;padding:20px;">
+  <div style="max-width:600px;margin:auto;background:#fff;border-radius:8px;padding:24px;border:1px solid #e9ecef;">
+    <h3 style="color:#e74c3c;margin-top:0;">⚠️ Project Blocked Alert</h3>
+    <p>Hello <strong>${ownerName || "Account Owner"}</strong>,</p>
+    <p style="font-size:15px;line-height:1.6;color:#333;">
+      Client <strong>${clientName || "Client"}</strong> (Proforma: <strong>${proformaNumber || "N/A"}</strong>) ka project Smart Factory operations side pe <strong>Blocked</strong> ho gaya hai.
+    </p>
+    <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:12px 16px;margin:16px 0;border-radius:4px;">
+      <p style="margin:0;color:#856404;font-weight:bold;">
+        ⚠️ Kripya jald se jald operations team aur client ke saath follow-up karein taaki blocker resolve ho sake.
+      </p>
+    </div>
+    <p style="color:#6c757d;font-size:13px;margin-top:24px;">Yeh ek automated Revenue Engine alert hai.</p>
+  </div>
+</body>
+</html>`;
+
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.EMAILSENDER || "noreply@revenueengine.com",
+      to,
+      subject,
+      html,
+    });
+    console.log(`[MAIL] Project Blocked alert sent to ${to}: ${info.messageId}`);
+    return { ok: true, messageId: info.messageId, response: info.response };
+  } catch (err) {
+    console.error(`[MAIL ERROR] Project Blocked alert to ${to}:`, err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
 module.exports = {
   sendFinalInvoiceEmail,
   sendProposalEmail,
@@ -619,5 +661,6 @@ module.exports = {
   sendRegistrationOtpEmail,
   sendPasswordResetOtpEmail,
   sendMeetingReminderEmail,
+  sendProjectBlockedAlertEmail,
   TZ,
 };
