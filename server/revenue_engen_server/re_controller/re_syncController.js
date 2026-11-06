@@ -2,6 +2,7 @@ const { db } = require("../../connect");
 const moment = require("moment-timezone");
 const dotenv = require("dotenv");
 dotenv.config();
+const { buildServiceItems } = require("../re_services/re_serviceItemBuilder");
 
 const TZ = process.env.TZ || "Asia/Kolkata";
 
@@ -90,30 +91,7 @@ exports.assignToSF = (req, res) => {
             adsItems = [];
           }
 
-          const service_items = [];
-          if (Array.isArray(pricingItems)) {
-            pricingItems.forEach((item) => {
-              if (!item) return;
-              service_items.push({
-                name: item.service_name || item.name || "Service",
-                category: item.category_name || item.category || "",
-                description: item.editing_type_name || item.description || "",
-                quantity: item.quantity != null ? Number(item.quantity) : null,
-              });
-            });
-          }
-
-          if (Array.isArray(adsItems)) {
-            adsItems.forEach((ad) => {
-              if (!ad) return;
-              service_items.push({
-                name: ad.service_name || "Ads Campaign",
-                category: ad.category_name || "Ads",
-                description: ad.editing_type_name || `Budget: ₹${ad.budget || ad.amount || 0}`,
-                quantity: null,
-              });
-            });
-          }
+          const service_items = buildServiceItems(pricingItems, adsItems);
 
           const now = moment().tz(TZ).format("YYYY-MM-DD HH:mm:ss");
           const idempotency_key = `${proforma.proforma_id}-assigned-${Date.now()}`;
