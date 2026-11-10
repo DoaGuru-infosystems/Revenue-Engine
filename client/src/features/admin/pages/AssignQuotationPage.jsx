@@ -1305,6 +1305,65 @@ export default function AssignQuotationPage() {
         {/* Per-Project Tasks Calendar Drill-down Modal */}
         {showProjectModal && selectedProjectDetail && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-2 sm:p-4">
+            {/*
+              This calendar is opened from the Projects tab, where the global
+              calendar stylesheet is not mounted. Keep its theme rules local so
+              react-big-calendar's default light cells never leak into the
+              dark project drill-down.
+            */}
+            <style>{`
+              .project-task-calendar.calendar-dark-theme .rbc-calendar { color: #e2e8f0; }
+              .project-task-calendar.calendar-dark-theme .rbc-month-view {
+                border: 1px solid #334155;
+                border-radius: 12px;
+                overflow: hidden;
+                background: #0f172a;
+              }
+              .project-task-calendar.calendar-dark-theme .rbc-header {
+                padding: 10px 0;
+                color: #cbd5e1;
+                background: #1e293b;
+                border-color: #334155;
+                font-size: 13px;
+                font-weight: 600;
+              }
+              .project-task-calendar.calendar-dark-theme .rbc-day-bg + .rbc-day-bg,
+              .project-task-calendar.calendar-dark-theme .rbc-month-row + .rbc-month-row { border-color: #334155; }
+              .project-task-calendar.calendar-dark-theme .rbc-date-cell {
+                padding: 5px 7px;
+                color: #e2e8f0;
+                font-weight: 600;
+              }
+              .project-task-calendar.calendar-dark-theme .rbc-off-range-bg { background: #111827 !important; }
+              .project-task-calendar.calendar-dark-theme .rbc-off-range .rbc-date-cell { color: #64748b; }
+              .project-task-calendar.calendar-dark-theme .rbc-today { background: rgba(245, 158, 11, 0.13) !important; }
+              .project-task-calendar.calendar-dark-theme .rbc-selected-cell { background: rgba(245, 158, 11, 0.20) !important; }
+              .project-task-calendar.calendar-dark-theme .rbc-toolbar { margin-bottom: 14px; }
+              .project-task-calendar.calendar-dark-theme .rbc-toolbar-label { color: #f8fafc; font-size: 16px; font-weight: 700; }
+              .project-task-calendar.calendar-dark-theme .rbc-toolbar button {
+                padding: 6px 14px;
+                color: #cbd5e1;
+                background: #1e293b;
+                border: 1px solid #475569;
+                border-radius: 7px;
+                font-size: 13px;
+                transition: background-color .2s, color .2s, border-color .2s;
+              }
+              .project-task-calendar.calendar-dark-theme .rbc-toolbar button:hover,
+              .project-task-calendar.calendar-dark-theme .rbc-toolbar button:focus { color: #fff; background: #334155; border-color: #64748b; }
+              .project-task-calendar.calendar-dark-theme .rbc-toolbar button.rbc-active,
+              .project-task-calendar.calendar-dark-theme .rbc-toolbar button:active { color: #111827; background: #f59e0b; border-color: #f59e0b; box-shadow: none; }
+              .project-task-calendar.calendar-dark-theme .rbc-show-more { color: #fbbf24; background: rgba(30, 41, 59, .9); }
+              .project-task-calendar.calendar-dark-theme .rbc-overlay { color: #e2e8f0; background: #1e293b; border-color: #475569; }
+              .project-task-calendar.calendar-dark-theme .rbc-agenda-view table.rbc-agenda-table { color: #e2e8f0; background: #0f172a; border-color: #334155; }
+              .project-task-calendar.calendar-dark-theme .rbc-agenda-view table.rbc-agenda-table th { color: #cbd5e1; background: #1e293b; border-color: #334155; }
+              .project-task-calendar.calendar-dark-theme .rbc-agenda-view table.rbc-agenda-table td { color: #cbd5e1; border-color: #334155; }
+              @media (max-width: 640px) {
+                .project-task-calendar .rbc-toolbar { flex-direction: column; gap: 10px; align-items: stretch; }
+                .project-task-calendar .rbc-toolbar .rbc-btn-group { display: flex; justify-content: center; }
+                .project-task-calendar .rbc-toolbar button { flex: 1; padding: 6px 8px; }
+              }
+            `}</style>
             <div className={`relative w-full sm:w-[96%] max-w-6xl rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border transition-all ${
               isLight 
                 ? "bg-white border-slate-200 text-slate-800" 
@@ -1407,7 +1466,7 @@ export default function AssignQuotationPage() {
               </div>
 
               {/* Body */}
-              <div className={`flex-1 overflow-y-auto p-3 sm:p-6 transition-all ${
+              <div className={`project-task-calendar flex-1 overflow-y-auto p-3 sm:p-6 transition-all ${
                 isLight ? "bg-white calendar-light-theme" : "bg-gray-900 calendar-dark-theme"
               }`}>
                 {projectTasksLoading && projectTasks.length === 0 ? (
