@@ -437,7 +437,77 @@ exports.updateServiceData = async (req, res) => {
   const { editing_type_name, amount, category_id, category_name, service_id } =
     req.body;
 
+  const numericAmount = Number(amount);
+  if (
+    amount === undefined ||
+    amount === null ||
+    amount === "" ||
+    !Number.isFinite(numericAmount) ||
+    numericAmount <= 0
+  ) {
+    return res.status(400).json({
+      status: "Failure",
+      message: "Valid service amount greater than zero is required",
+    });
+  }
+
+  const trimmedName =
+    editing_type_name && String(editing_type_name).trim()
+      ? String(editing_type_name).trim()
+      : null;
+  const nameKey = trimmedName ? trimmedName.toLowerCase() : "";
+
   try {
+    const resolveScope = () =>
+      new Promise((resolve, reject) => {
+        if (service_id && category_id) {
+          return resolve({ service_id, category_id });
+        }
+        db.query(
+          "SELECT service_id, category_id FROM re_editing_types WHERE editing_type_id = ?",
+          [editing_type_id],
+          (err, rows) => {
+            if (err) return reject(err);
+            if (!rows?.length) {
+              return reject(new Error("NOT_FOUND"));
+            }
+            resolve({
+              service_id: rows[0].service_id,
+              category_id: rows[0].category_id,
+            });
+          }
+        );
+      });
+
+    const scope = await resolveScope();
+
+    const duplicateSql = `
+      SELECT editing_type_id FROM re_editing_types
+      WHERE service_id = ? AND category_id = ? AND amount = ?
+        AND LOWER(TRIM(COALESCE(editing_type_name, ''))) = ?
+        AND editing_type_id <> ?
+    `;
+
+    await new Promise((resolve, reject) => {
+      db.query(
+        duplicateSql,
+        [
+          scope.service_id,
+          scope.category_id,
+          numericAmount,
+          nameKey,
+          editing_type_id,
+        ],
+        (checkErr, checkResult) => {
+          if (checkErr) return reject(checkErr);
+          if (checkResult?.length > 0) {
+            return reject(new Error("DUPLICATE"));
+          }
+          resolve();
+        }
+      );
+    });
+
     if (category_id) {
       await new Promise((resolve, reject) => {
         db.query(
@@ -446,23 +516,37 @@ exports.updateServiceData = async (req, res) => {
           (err, result) => {
             if (err) reject(err);
             else resolve(result);
-          },
+          }
         );
       });
     }
 
     db.query(
       "UPDATE re_editing_types SET editing_type_name = ?, amount = ? WHERE editing_type_id = ?",
-      [editing_type_name, amount, editing_type_id],
-      (err, result) => {
-        if (err)
+      [trimmedName, numericAmount, editing_type_id],
+      (err) => {
+        if (err) {
           return res
             .status(500)
             .json({ status: "Failure", message: "Database error" });
+        }
         res.json({ status: "Success", message: "Edit updated successfully" });
-      },
+      }
     );
   } catch (error) {
+    if (error?.message === "DUPLICATE") {
+      return res.status(400).json({
+        status: "Failure",
+        message:
+          "This service, category, editing type, and amount already exists",
+      });
+    }
+    if (error?.message === "NOT_FOUND") {
+      return res.status(404).json({
+        status: "Failure",
+        message: "Editing type not found",
+      });
+    }
     res.status(500).json({ status: "Failure", message: "Database error" });
   }
 };

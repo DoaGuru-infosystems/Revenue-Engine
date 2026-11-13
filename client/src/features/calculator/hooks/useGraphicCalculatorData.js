@@ -9,6 +9,10 @@ import {
   saveGraphicService,
   deleteGraphicEntryById,
 } from "../services/calculatorService";
+import {
+  matchEditingTypeFromCatalog,
+  shouldShowEditingTypePricePicker,
+} from "../utils/editingTypeVariants";
 
 export const isComplimentaryItem = (item) => {
   if (!item) return false;
@@ -191,28 +195,9 @@ export function useGraphicCalculatorData({
     const resolvedCategoryName = categoryObj ? categoryObj.category_name : entry.category_name;
     setSelectedCategory(resolvedCategoryName);
 
-    let matchedEt = null;
-    if (categoryObj?.editing_types?.length > 0) {
-      if (entry.editing_type_id) {
-        matchedEt = categoryObj.editing_types.find(
-          (et) => et.editing_type_id === Number(entry.editing_type_id)
-        );
-      }
-      if (!matchedEt && entry.editing_type_name) {
-        matchedEt = categoryObj.editing_types.find(
-          (et) =>
-            et.editing_type_name &&
-            et.editing_type_name.trim().toLowerCase() === entry.editing_type_name.trim().toLowerCase()
-        );
-      }
-      if (!matchedEt && (entry.editing_type_amount || entry.unit_price)) {
-        const targetAmt = Number(entry.editing_type_amount || entry.unit_price);
-        matchedEt = categoryObj.editing_types.find((et) => Number(et.amount) === targetAmt);
-      }
-      if (!matchedEt && categoryObj.editing_types.length === 1) {
-        matchedEt = categoryObj.editing_types[0];
-      }
-    }
+    const matchedEt = categoryObj?.editing_types?.length
+      ? matchEditingTypeFromCatalog(categoryObj.editing_types, entry)
+      : null;
 
     if (matchedEt) {
       setSelectedEditingType({
@@ -337,14 +322,9 @@ export function useGraphicCalculatorData({
       return;
     }
 
-    const hasEditingTypesToSelect =
-      getSelectedCategory?.editing_types?.some(
-        (et) =>
-          et.editing_type_name &&
-          et.editing_type_name.trim() !== "" &&
-          et.editing_type_name !== "null" &&
-          et.editing_type_name !== "N/A"
-      ) || getSelectedCategory?.editing_types?.length > 1;
+    const hasEditingTypesToSelect = shouldShowEditingTypePricePicker(
+      getSelectedCategory
+    );
 
     let effectiveEditingType = selectedEditingType;
     if (
@@ -442,12 +422,21 @@ export function useGraphicCalculatorData({
     );
     const finalAmount = baseAmount + optionalTotal + additionalServicesTotal;
 
+    const getUUID = () =>
+      typeof window !== "undefined" && window.crypto?.randomUUID
+        ? window.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
     const formattedAdditionalServices = selectedAdditionalServices.map((addon) => {
       const addonName = addon.name || addon.additional_service_name;
       const unitAmt = Number(addon.amount || addon.unit_price) || 0;
+      const catalogId = addon.catalog_id || addon.id;
+      const instanceId = addon.instance_id || getUUID();
       return {
         ...addon,
-        id: addon.id,
+        catalog_id: catalogId,
+        instance_id: instanceId,
+        id: catalogId,
         name: addonName,
         additional_service_name: addonName,
         amount: unitAmt,
@@ -477,10 +466,11 @@ export function useGraphicCalculatorData({
           r.category_name === selectedCategory &&
           r.editing_type_name === effectiveEditingType.editing_type_name
       ) : null;
-      const effectiveId = editId || dupRow?.id || Date.now();
+      const effectiveId = editId || dupRow?.re_item_id || dupRow?.id || getUUID();
 
       const row = {
         id: effectiveId,
+        re_item_id: effectiveId,
         service_name: selectedService,
         category_name: selectedCategory,
         editing_type_id: effectiveEditingType.editing_type_id,
@@ -516,7 +506,10 @@ export function useGraphicCalculatorData({
     }
 
     // ── DB / SNAPSHOT MODE ──────────────────────────────────────────
+    const assignedItemId = editId || getUUID();
     const payload = {
+      id: assignedItemId,
+      re_item_id: assignedItemId,
       txn_id: proposalId,
       client_id: id,
       service_name: selectedService,
@@ -638,7 +631,7 @@ export function useGraphicCalculatorData({
         const docLabel =
           docTypeFromURL === "proforma"
             ? "Proforma"
-            : isQuotationMode
+            : mode === "quotation"
             ? "Quotation"
             : "Service";
         Swal.fire({

@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 function parseAdditionalServices(value) {
   if (typeof value === "string") {
     try {
@@ -24,7 +26,9 @@ function buildServiceItems(pricingItems, adsItems) {
       if (!item) return;
 
       const parentName = item.service_name || item.name || "Service";
+      const parentReItemId = item.re_item_id || item.id || crypto.randomUUID();
       serviceItems.push({
+        re_item_id: parentReItemId,
         name: parentName,
         category: item.category_name || item.category || "",
         description: item.editing_type_name || item.description || "",
@@ -45,7 +49,16 @@ function buildServiceItems(pricingItems, adsItems) {
           additionalService.total_amount ?? additionalService.total
         ) ?? (unitPrice !== null && quantity !== null ? unitPrice * quantity : null);
 
+        const instanceId =
+          additionalService.instance_id ||
+          additionalService.re_item_id ||
+          (typeof additionalService.id === "string" && additionalService.id.includes("-")
+            ? additionalService.id
+            : crypto.randomUUID());
+
         serviceItems.push({
+          re_item_id: instanceId,
+          parent_re_item_id: parentReItemId,
           name,
           category: additionalService.category_name || additionalService.category ||
             item.category_name || item.category || "",
@@ -64,6 +77,7 @@ function buildServiceItems(pricingItems, adsItems) {
     adsItems.forEach((ad) => {
       if (!ad) return;
       serviceItems.push({
+        re_item_id: ad.re_item_id || ad.id || crypto.randomUUID(),
         name: ad.service_name || "Ads Campaign",
         category: ad.category_name || "Ads",
         description: ad.editing_type_name || `Budget: ₹${ad.budget || ad.amount || 0}`,

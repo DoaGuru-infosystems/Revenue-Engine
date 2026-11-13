@@ -38,6 +38,28 @@ const {
 const { generatePublicAccessToken } = require("./re_publicController");
 const notificationService = require("../re_services/notificationService");
 const { calculateProformaTotals } = require("./re_proformaSyncHelper");
+const crypto = require("crypto");
+const moment = require("moment-timezone");
+const TZ = process.env.TZ || "Asia/Kolkata";
+
+function normalizeAddons(additional_services) {
+  let parsed = [];
+  try {
+    parsed = typeof additional_services === "string" ? JSON.parse(additional_services || "[]") : (additional_services || []);
+  } catch (_) { parsed = []; }
+  if (!Array.isArray(parsed)) return [];
+  return parsed.map((addon) => {
+    if (!addon) return addon;
+    const catalogId = addon.catalog_id || addon.id || null;
+    const instanceId = addon.instance_id || crypto.randomUUID();
+    return {
+      ...addon,
+      catalog_id: catalogId,
+      instance_id: instanceId,
+      id: catalogId, // preserve for client backwards compatibility
+    };
+  });
+}
 
 function parsePricingTable(value) {
   if (Array.isArray(value)) return value;
@@ -857,8 +879,27 @@ exports.createProforma = async (req, res) => {
 
       let allPricingItems = [];
       try { allPricingItems = JSON.parse(proposal.pricing_table_json || "[]"); } catch(e) { allPricingItems = []; }
-      serviceItems = allPricingItems.filter(i => i.source !== 'custom_ads' && i.service_name !== 'Ads Campaign');
-      adsItems = allPricingItems.filter(i => i.source === 'custom_ads' || i.service_name === 'Ads Campaign');
+      serviceItems = allPricingItems
+        .filter(i => i.source !== 'custom_ads' && i.service_name !== 'Ads Campaign')
+        .map(i => {
+          const itemId = i.re_item_id || (typeof i.id === 'string' && i.id.includes('-') ? i.id : crypto.randomUUID());
+          return {
+            ...i,
+            id: itemId,
+            re_item_id: itemId,
+            additional_services: normalizeAddons(i.additional_services),
+          };
+        });
+      adsItems = allPricingItems
+        .filter(i => i.source === 'custom_ads' || i.service_name === 'Ads Campaign')
+        .map(ad => {
+          const adId = ad.re_item_id || (typeof ad.id === 'string' && ad.id.includes('-') ? ad.id : crypto.randomUUID());
+          return {
+            ...ad,
+            id: adId,
+            re_item_id: adId,
+          };
+        });
 
       adsItems.forEach(ad => {
         const charge = Number(ad.charge || ad.ad_charge || 0);
@@ -867,7 +908,10 @@ exports.createProforma = async (req, res) => {
           let campName = catName;
           if (!campName.toLowerCase().includes("campaign")) campName = campName + " Campaign";
           const percent = ad.percent !== undefined && ad.percent !== null ? ad.percent : (ad.charge_percentage || ad.ad_percent || "N/A");
+          const scId = crypto.randomUUID();
           serviceItems.push({
+            id: scId,
+            re_item_id: scId,
             source: "custom_service_charge",
             service_type: "Graphic Service",
             service_name: "Service Charge",
@@ -879,6 +923,7 @@ exports.createProforma = async (req, res) => {
             total_price: charge,
             total_amount: charge,
             include_in_total: true,
+            additional_services: [],
           });
         }
       });
@@ -924,16 +969,19 @@ exports.createProforma = async (req, res) => {
         `SELECT * FROM re_quotation_services WHERE quotation_id = ? ORDER BY id ASC`,
         [quotation_id]
       );
-       serviceItems = rawServices.map(s => {
+      serviceItems = rawServices.map(s => {
         const isComp = isComplimentaryItem(s);
+        const itemId = crypto.randomUUID();
         return {
+          id: itemId,
+          re_item_id: itemId,
           source: s.source || (isComp ? "custom_complimentary" : "graphic"),
           service_name: s.service_name,
           category_name: s.category_name,
           editing_type_name: s.editing_type_name,
           editing_type_amount: Number(s.editing_type_amount || 0),
           quantity: Number(s.quantity || 1),
-          additional_services: s.additional_services,
+          additional_services: normalizeAddons(s.additional_services),
           total_amount: isComp ? 0 : Number(s.total_amount || 0),
           total_price: isComp ? 0 : Number(s.total_amount || 0),
           is_complimentary: isComp,
@@ -945,16 +993,21 @@ exports.createProforma = async (req, res) => {
         `SELECT * FROM re_quotation_ads WHERE quotation_id = ? ORDER BY id ASC`,
         [quotation_id]
       );
-      adsItems = rawAds.map(a => ({
-        source: "custom_ads",
-        service_name: "Ads Campaign",
-        category_name: a.category_name,
-        budget: Number(a.budget || 0),
-        amount: Number(a.budget || 0),
-        percent: Number(a.percent || 0),
-        charge: Number(a.charge || 0),
-        total: Number(a.total || 0),
-      }));
+      adsItems = rawAds.map(a => {
+        const adId = crypto.randomUUID();
+        return {
+          id: adId,
+          re_item_id: adId,
+          source: "custom_ads",
+          service_name: "Ads Campaign",
+          category_name: a.category_name,
+          budget: Number(a.budget || 0),
+          amount: Number(a.budget || 0),
+          percent: Number(a.percent || 0),
+          charge: Number(a.charge || 0),
+          total: Number(a.total || 0),
+        };
+      });
 
       adsItems.forEach(ad => {
         const charge = Number(ad.charge || 0);
@@ -963,7 +1016,10 @@ exports.createProforma = async (req, res) => {
           let campName = catName;
           if (!campName.toLowerCase().includes("campaign")) campName = campName + " Campaign";
           const percent = ad.percent !== undefined && ad.percent !== null ? ad.percent : "N/A";
+          const scId = crypto.randomUUID();
           serviceItems.push({
+            id: scId,
+            re_item_id: scId,
             source: "custom_service_charge",
             service_type: "Graphic Service",
             service_name: "Service Charge",
@@ -975,6 +1031,7 @@ exports.createProforma = async (req, res) => {
             total_price: charge,
             total_amount: charge,
             include_in_total: true,
+            additional_services: [],
           });
         }
       });
@@ -3718,6 +3775,38 @@ exports.updateProformaSnapshot = async (req, res) => {
     // snapshotType: 'ads' => ads_snapshot, 'notes' => notes_snapshot, default => pricing_snapshot
     const column = snapshotType === 'ads' ? 'ads_snapshot' : snapshotType === 'notes' ? 'notes_snapshot' : 'pricing_snapshot';
 
+    // 1. Payment-Lock & Invoice-Lock check
+    const lockCheckSQL = `
+      SELECT 
+        p.id,
+        p.status,
+        p.payment_status,
+        COALESCE((SELECT SUM(amount) FROM re_proposal_payment_records WHERE proforma_id = p.id AND status = 'approved'), 0) AS total_paid_amount,
+        (SELECT COUNT(*) FROM re_invoice WHERE proforma_id = p.id) AS invoice_count,
+        (SELECT COUNT(*) FROM re_invoice WHERE proforma_id = p.id AND tag_received_amt = 'received') AS received_invoice_count
+      FROM re_proposal_proforma p
+      WHERE p.id = ?
+      LIMIT 1
+    `;
+    const lockRows = await runQuery(lockCheckSQL, [proformaId]);
+    if (lockRows.length === 0) {
+      return res.status(404).json({ status: "Failure", message: "Proforma not found" });
+    }
+    const profLock = lockRows[0];
+    const isPaidOrReceived = 
+      Number(profLock.total_paid_amount) > 0 ||
+      Number(profLock.received_invoice_count) > 0 ||
+      Number(profLock.invoice_count) > 0 ||
+      ['paid', 'partially_paid', 'payment_received', 'invoiced'].includes(String(profLock.status || '').toLowerCase()) ||
+      ['partial', 'fully-paid'].includes(String(profLock.payment_status || '').toLowerCase());
+
+    if (isPaidOrReceived) {
+      return res.status(403).json({
+        status: "Failure",
+        message: "Proforma is locked. Edits are not allowed after payment has been received or an invoice has been generated.",
+      });
+    }
+
     const results = await runQuery(`SELECT ${column} FROM re_proposal_proforma WHERE id = ?`, [proformaId]);
     if (results.length === 0) {
       return res.status(404).json({ status: "Failure", message: "Proforma not found" });
@@ -3725,8 +3814,30 @@ exports.updateProformaSnapshot = async (req, res) => {
 
     let parsed = JSON.parse(results[0][column] || "[]");
 
+    // Ensure all existing items in parsed have stable re_item_id and normalized addons
+    if (column === 'pricing_snapshot' || column === 'ads_snapshot') {
+      parsed = parsed.map(p => {
+        if (!p) return p;
+        const stableId = p.re_item_id || (typeof p.id === 'string' && p.id.includes('-') ? p.id : crypto.randomUUID());
+        return {
+          ...p,
+          id: stableId,
+          re_item_id: stableId,
+          ...(column === 'pricing_snapshot' ? { additional_services: normalizeAddons(p.additional_services) } : {}),
+        };
+      });
+    }
+
     if (action === "set") {
-      parsed = Array.isArray(item) ? item : [];
+      parsed = Array.isArray(item) ? item.map(i => {
+        const stableId = i.re_item_id || (typeof i.id === 'string' && i.id.includes('-') ? i.id : crypto.randomUUID());
+        return {
+          ...i,
+          id: stableId,
+          re_item_id: stableId,
+          additional_services: normalizeAddons(i.additional_services),
+        };
+      }) : [];
     } else if (action === "add") {
       const isNewComp = isComplimentaryItem(item);
       const normalizeName = (name) => String(name || '').replace(/\s*\((complimentary|complimntory)\)\s*$/i, '').trim().toLowerCase();
@@ -3746,10 +3857,20 @@ exports.updateProformaSnapshot = async (req, res) => {
         }
       );
       if (existingIdx !== -1) {
-        // Upsert: update existing entry, preserve its id
-        parsed[existingIdx] = { ...parsed[existingIdx], ...item, id: parsed[existingIdx].id };
+        // Upsert: update existing entry, preserve its stable re_item_id
+        const existingItemId = parsed[existingIdx].re_item_id || parsed[existingIdx].id || crypto.randomUUID();
+        parsed[existingIdx] = {
+          ...parsed[existingIdx],
+          ...item,
+          id: existingItemId,
+          re_item_id: existingItemId,
+          additional_services: normalizeAddons(item.additional_services || parsed[existingIdx].additional_services),
+        };
       } else {
-        item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+        const newItemId = item.re_item_id || (typeof item.id === "string" && item.id.includes("-") ? item.id : crypto.randomUUID());
+        item.id = newItemId;
+        item.re_item_id = newItemId;
+        item.additional_services = normalizeAddons(item.additional_services);
         parsed.push(item);
       }
     } else if (action === "addBulk") {
@@ -3759,17 +3880,39 @@ exports.updateProformaSnapshot = async (req, res) => {
           p => (p.category || p.category_name) === (i.category || i.category_name)
         );
         if (existingIdx !== -1) {
-          // Existing entry update karo, ID preserve karo
-          parsed[existingIdx] = { ...parsed[existingIdx], ...i, id: parsed[existingIdx].id };
+          // Existing entry update karo, stable ID preserve karo
+          const existingItemId = parsed[existingIdx].re_item_id || parsed[existingIdx].id || crypto.randomUUID();
+          parsed[existingIdx] = {
+            ...parsed[existingIdx],
+            ...i,
+            id: existingItemId,
+            re_item_id: existingItemId,
+            additional_services: normalizeAddons(i.additional_services || parsed[existingIdx].additional_services),
+          };
         } else {
-          i.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+          const newItemId = i.re_item_id || crypto.randomUUID();
+          i.id = newItemId;
+          i.re_item_id = newItemId;
+          i.additional_services = normalizeAddons(i.additional_services);
           parsed.push(i);
         }
       });
     } else if (action === "update") {
-      parsed = parsed.map(p => String(p.id) === String(editId) ? { ...p, ...item, id: editId } : p);
+      parsed = parsed.map(p => {
+        if (String(p.id) === String(editId) || String(p.re_item_id) === String(editId)) {
+          const preservedId = p.re_item_id || p.id || editId;
+          return {
+            ...p,
+            ...item,
+            id: preservedId,
+            re_item_id: preservedId,
+            additional_services: normalizeAddons(item.additional_services || p.additional_services),
+          };
+        }
+        return p;
+      });
     } else if (action === "delete") {
-      parsed = parsed.filter(p => String(p.id) !== String(entryId));
+      parsed = parsed.filter(p => String(p.id) !== String(entryId) && String(p.re_item_id) !== String(entryId));
     }
 
     const updatedSnapshot = JSON.stringify(parsed);
@@ -3813,6 +3956,59 @@ exports.updateProformaSnapshot = async (req, res) => {
       }
     } else {
       await runQuery(`UPDATE re_proposal_proforma SET ${column} = ? WHERE id = ?`, [updatedSnapshot, proformaId]);
+    }
+
+    // ── TRIGGER "project.updated" EVENT IF ASSIGNED TO SF ──────────────────
+    if (column === 'pricing_snapshot' || column === 'ads_snapshot') {
+      try {
+        const syncRows = await runQuery(
+          `SELECT id, sf_project_id FROM re_project_sync WHERE proforma_id = ? LIMIT 1`,
+          [proformaId]
+        );
+        if (syncRows.length > 0) {
+          const freshProfRows = await runQuery(
+            `SELECT proforma_number, pricing_snapshot, ads_snapshot FROM re_proposal_proforma WHERE id = ?`,
+            [proformaId]
+          );
+          if (freshProfRows.length > 0) {
+            const pRow = freshProfRows[0];
+            let freshPricing = [];
+            let freshAds = [];
+            try { freshPricing = JSON.parse(pRow.pricing_snapshot || "[]"); } catch (_) {}
+            try { freshAds = JSON.parse(pRow.ads_snapshot || "[]"); } catch (_) {}
+
+            const { buildServiceItems } = require("../re_services/re_serviceItemBuilder");
+            const updatedServiceItems = buildServiceItems(freshPricing, freshAds);
+
+            const ts = Date.now();
+            const idempotency_key = `proforma-${proformaId}-updated-${ts}`;
+            const now = moment().tz(TZ).format("YYYY-MM-DD HH:mm:ss");
+
+            const eventPayload = {
+              event_type: "project.updated",
+              idempotency_key,
+              sequence: ts,
+              proforma_id: Number(proformaId),
+              proforma_number: pRow.proforma_number || `PROF-${proformaId}`,
+              sf_project_id: syncRows[0].sf_project_id || null,
+              updated_by: {
+                employee_id: req.user?.id || null,
+                name: req.user?.employee_name || "System",
+                role: req.user?.employee_role || "User",
+              },
+              service_items: updatedServiceItems,
+            };
+
+            await runQuery(
+              `INSERT INTO re_webhook_outbox (event_type, payload, status, attempts, idempotency_key, created_at)
+               VALUES ('project.updated', ?, 'pending', 0, ?, ?)`,
+              [JSON.stringify(eventPayload), idempotency_key, now]
+            );
+          }
+        }
+      } catch (syncErr) {
+        console.error("[updateProformaSnapshot] Error queuing project.updated event:", syncErr);
+      }
     }
     
     res.status(200).json({ status: "Success", message: "Proforma updated" });

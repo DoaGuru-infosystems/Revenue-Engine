@@ -42,6 +42,10 @@ import {
   isComplimentaryItem,
 } from "../hooks";
 import { getBasePathFromLocation, servicesLandingPath } from "../../../utils/rolePaths";
+import {
+  shouldShowEditingTypePricePicker,
+  sortEditingTypesByAmount,
+} from "../utils/editingTypeVariants";
 
 const GraphicCalculator = ({
   hideNotes,
@@ -116,6 +120,14 @@ const GraphicCalculator = ({
     editItem,
     serviceTypeOverride,
   });
+
+  const categoryEditingTypes = useMemo(
+    () => sortEditingTypesByAmount(getSelectedCategory?.editing_types),
+    [getSelectedCategory]
+  );
+  const showEditingTypePricePicker = shouldShowEditingTypePricePicker(
+    getSelectedCategory
+  );
 
   const {
     selecteddiscount,
@@ -270,10 +282,10 @@ const GraphicCalculator = ({
                         setSelectedCategory(catName);
                         setSelectedAdditionalServices([]);
                         const category = getSelectedService?.categories.find(c => c.category_name === catName);
-                        const hasRealEditingTypes = category?.editing_types?.some(
-                          et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A"
-                        );
-                        if (category && category.editing_types && category.editing_types.length === 1 && !hasRealEditingTypes) {
+                        if (
+                          category?.editing_types?.length === 1 &&
+                          !shouldShowEditingTypePricePicker(category)
+                        ) {
                           setSelectedEditingType(category.editing_types[0]);
                         } else {
                           setSelectedEditingType(null);
@@ -287,9 +299,9 @@ const GraphicCalculator = ({
 
                 {/* Row 2: Editing Type + Quantity */ }
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  { (getSelectedCategory?.editing_types?.some(et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A") || (getSelectedCategory?.editing_types?.length > 1)) && (
+                  { showEditingTypePricePicker && (
                     <div>
-                      <label className={ labelCls }>Editing Type <span className="text-red-500 font-bold">*</span></label>
+                      <label className={ labelCls }>Price option <span className="text-red-500 font-bold">*</span></label>
                       <select
                         value={ (() => {
                           if (selectedEditingType?.editing_type_id) return selectedEditingType.editing_type_id;
@@ -305,8 +317,12 @@ const GraphicCalculator = ({
                         className={ selectCls }
                         onChange={ (e) => { const ed = getSelectedCategory?.editing_types.find((et) => et.editing_type_id === parseInt(e.target.value)); setSelectedEditingType(ed || null); } }
                       >
-                        <option value="">-- Choose Editing Type (Required) --</option>
-                        { getSelectedCategory?.editing_types.map((ed) => <option key={ ed.editing_type_id } value={ ed.editing_type_id }>{ ed.editing_type_name || "Standard" } — ₹{ ed.amount }</option>) }
+                        <option value="">-- Choose price (required) --</option>
+                        { categoryEditingTypes.map((ed) => (
+                          <option key={ ed.editing_type_id } value={ ed.editing_type_id }>
+                            { ed.editing_type_name || getSelectedCategory?.category_name || "Standard" } — ₹{ ed.amount }
+                          </option>
+                        )) }
                       </select>
                     </div>
                   ) }
