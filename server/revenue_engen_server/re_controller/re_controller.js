@@ -851,77 +851,76 @@ exports.addEditingTypes = async (req, res) => {
 
   const createdAt = moment().tz("Asia/Kolkata").format("YYYY-MM-DD HH:mm:ss");
 
-  if (
-    !service_id ||
-    !category_id ||
-    amount === undefined ||
-    amount === null ||
-    amount === ""
-  ) {
+  if (!service_id || !category_id) {
     return res.status(400).json({
       status: "Failure",
-      message: "All fields are required",
+      message: "Service ID and category ID are required",
     });
   }
 
+  const numericAmount = Number(amount);
+  if (
+    amount === undefined ||
+    amount === null ||
+    amount === "" ||
+    !Number.isFinite(numericAmount) ||
+    numericAmount <= 0
+  ) {
+    return res.status(400).json({
+      status: "Failure",
+      message: "Valid service amount greater than zero is required",
+    });
+  }
+
+  const trimmedName =
+    editing_type_name && String(editing_type_name).trim()
+      ? String(editing_type_name).trim()
+      : null;
+  const nameKey = trimmedName ? trimmedName.toLowerCase() : "";
+
   try {
-    const trimmedName = editing_type_name && String(editing_type_name).trim();
-    if (trimmedName) {
-      db.query(
-        "SELECT editing_type_id FROM re_editing_types WHERE category_id = ? AND LOWER(TRIM(editing_type_name)) = LOWER(?)",
-        [category_id, trimmedName],
-        (checkErr, checkResult) => {
-          if (checkErr) {
-            return res.status(500).json({
-              status: "Failure",
-              message: "Database error during duplicate check",
-            });
-          }
-
-          if (checkResult && checkResult.length > 0) {
-            return res.status(400).json({
-              status: "Failure",
-              message:
-                "Editing type with this name already exists for the selected category",
-            });
-          }
-
-          db.query(
-            "INSERT INTO re_editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
-            [service_id, category_id, trimmedName, amount, createdAt],
-            (err, result) => {
-              if (err) {
-                return res
-                  .status(500)
-                  .json({ status: "Failure", message: "Database error" });
-              }
-
-              res.status(201).json({
-                status: "Success",
-                message: "Editing type added successfully",
-              });
-            },
-          );
-        },
-      );
-    } else {
-      db.query(
-        "INSERT INTO re_editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
-        [service_id, category_id, null, amount, createdAt],
-        (err, result) => {
-          if (err) {
-            return res
-              .status(500)
-              .json({ status: "Failure", message: "Database error" });
-          }
-
-          res.status(201).json({
-            status: "Success",
-            message: "Editing type added successfully",
+    const duplicateSql = `
+      SELECT editing_type_id FROM re_editing_types
+      WHERE service_id = ? AND category_id = ? AND amount = ?
+        AND LOWER(TRIM(COALESCE(editing_type_name, ''))) = ?
+    `;
+    db.query(
+      duplicateSql,
+      [service_id, category_id, numericAmount, nameKey],
+      (checkErr, checkResult) => {
+        if (checkErr) {
+          return res.status(500).json({
+            status: "Failure",
+            message: "Database error during duplicate check",
           });
-        },
-      );
-    }
+        }
+
+        if (checkResult && checkResult.length > 0) {
+          return res.status(400).json({
+            status: "Failure",
+            message:
+              "This service, category, editing type, and amount already exists",
+          });
+        }
+
+        db.query(
+          "INSERT INTO re_editing_types (service_id, category_id, editing_type_name, amount, created_at) VALUES (?, ?, ?, ?, ?)",
+          [service_id, category_id, trimmedName, numericAmount, createdAt],
+          (err) => {
+            if (err) {
+              return res
+                .status(500)
+                .json({ status: "Failure", message: "Database error" });
+            }
+
+            res.status(201).json({
+              status: "Success",
+              message: "Editing type added successfully",
+            });
+          }
+        );
+      }
+    );
   } catch (error) {
     res.status(500).json({ status: "Failure", message: "Server error", error });
   }

@@ -16,6 +16,7 @@ import {
   FolderPlus,
 } from "lucide-react";
 import API_BASE_URL from "../../../config/apiBaseUrl";
+import { normalizeEditingTypeName } from "../utils/editingTypeVariants";
 
 const inputClassName =
   "w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-slate-900/60 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all";
@@ -325,6 +326,33 @@ export default function AdminAddServicesPage() {
     );
   }, [categories, categoryName]);
 
+  const fetchEditingTypesForCategory = async (serviceId, categoryId) => {
+    try {
+      const res = await axios.get(
+        `${baseURL}/auth/api/re_calculator/getAddEditingTypes/${serviceId}/${categoryId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return res.data?.data || [];
+    } catch (error) {
+      if (error.response?.status === 404) return [];
+      throw error;
+    }
+  };
+
+  const editingTypePriceDuplicate = (rows, editingTypeName, amountValue) => {
+    const nameKey = normalizeEditingTypeName(editingTypeName);
+    const amt = Number(amountValue);
+    return rows.some((row) => {
+      const rowName = normalizeEditingTypeName(row.editing_type_name);
+      return rowName === nameKey && Number(row.amount) === amt;
+    });
+  };
+
   // Unified Save Handler for Card 1 (Service & Category)
   const handleSaveServiceAndCategory = async () => {
     // ── Mode: Create New Service ──
@@ -470,33 +498,65 @@ export default function AdminAddServicesPage() {
         });
         return;
       }
+      const parsedExistingModeAmount = parseFloat(editingTypeAmount);
+      if (!Number.isFinite(parsedExistingModeAmount) || parsedExistingModeAmount <= 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Invalid Amount",
+          text: "Please enter a valid service amount greater than zero.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        return;
+      }
 
       const trimmedCatName = categoryName.trim();
       const existingCat = categories.find(
         (c) => c.category_name.trim().toLowerCase() === trimmedCatName.toLowerCase()
       );
 
-      // If existing category, editing type is required
       if (existingCat) {
-        if (!editingTypeName.trim()) {
+        const finalAmount = parseFloat(editingTypeAmount);
+        if (!Number.isFinite(finalAmount) || finalAmount <= 0) {
           Swal.fire({
             icon: "warning",
-            title: "Editing Type Required",
-            text: "Existing category ke liye editing type enter karna zaroori hai.",
-            showConfirmButton: true,
+            title: "Invalid Amount",
+            text: "Please enter a valid service amount greater than zero.",
+            timer: 2000,
+            showConfirmButton: false,
           });
           return;
         }
 
         setIsSavingServiceCategory(true);
         try {
-          const finalAmount = parseFloat(editingTypeAmount) || 0;
+          const existingRows = await fetchEditingTypesForCategory(
+            selectedServiceId,
+            existingCat.category_id
+          );
+          if (
+            editingTypePriceDuplicate(
+              existingRows,
+              editingTypeName,
+              finalAmount
+            )
+          ) {
+            Swal.fire({
+              icon: "warning",
+              title: "Duplicate Entry",
+              text: "Isi service, category, editing type aur amount ki entry pehle se maujood hai.",
+              showConfirmButton: true,
+            });
+            return;
+          }
+
+          const trimmedEditingType = editingTypeName.trim() || null;
           await axios.post(
             `${baseURL}/auth/api/re_calculator/addEditingTypes`,
             {
               service_id: selectedServiceId,
               category_id: existingCat.category_id,
-              editing_type_name: editingTypeName.trim(),
+              editing_type_name: trimmedEditingType,
               amount: finalAmount,
             },
             { headers: { Authorization: `Bearer ${token}` } }
@@ -505,7 +565,7 @@ export default function AdminAddServicesPage() {
           Swal.fire({
             icon: "success",
             title: "Added",
-            text: "Editing type added to existing category successfully!",
+            text: "Price variant added to existing category successfully!",
             showConfirmButton: false,
             timer: 1500,
           });
@@ -833,27 +893,19 @@ export default function AdminAddServicesPage() {
                 <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                   <span>Editing Type</span>
                   <span className="text-[10px] font-normal text-gray-500 dark:text-slate-400">
-                    {isExistingCategory ? "(Required for existing category)" : "(Optional)"}
+                    Optional — a different amount creates a new price for this category
                   </span>
                 </label>
                 <input
                   type="text"
                   value={editingTypeName}
                   onChange={(e) => setEditingTypeName(e.target.value)}
-                  placeholder={
-                    isExistingCategory
-                      ? "Enter editing type (Required for existing category)"
-                      : "Enter editing type (Optional for new category)"
-                  }
-                  className={`${inputClassName} ${
-                    isExistingCategory && !editingTypeName.trim()
-                      ? "border-amber-500/50 ring-1 ring-amber-500/30"
-                      : ""
-                  }`}
+                  placeholder="Enter editing type (optional)"
+                  className={inputClassName}
                 />
                 {isExistingCategory && (
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                    * Note: Editing type is required when adding a new entry to an existing category.
+                  <p className="mt-1 text-xs text-gray-500 dark:text-slate-400 font-medium">
+                    Same service and category ke liye naya amount alag price variant banata hai.
                   </p>
                 )}
               </div>

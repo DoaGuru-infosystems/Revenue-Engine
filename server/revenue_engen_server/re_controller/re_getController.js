@@ -269,6 +269,14 @@ exports.getAllServiceDatas = (req, res) => {
         }
       });
 
+      groupedData.forEach((service) => {
+        service.categories.forEach((category) => {
+          category.editing_types.sort(
+            (a, b) => (parseFloat(a.amount) || 0) - (parseFloat(b.amount) || 0)
+          );
+        });
+      });
+
       res.json({
         status: "Success",
         data: groupedData,

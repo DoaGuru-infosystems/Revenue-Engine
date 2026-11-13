@@ -30,6 +30,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "../../../redux/user/userSlice";
 import { useNavigate, useLocation } from "react-router-dom";
 import API_BASE_URL from "../../../config/apiBaseUrl";
+import {
+  matchEditingTypeFromCatalog,
+  shouldShowEditingTypePricePicker,
+  sortEditingTypesByAmount,
+} from "../utils/editingTypeVariants";
 
 const ComplimentaryCalculator = ({
   hideNotes = false,
@@ -224,31 +229,9 @@ const dispatch = useDispatch();
       (c) => c.category_name === entry.category_name
     );
 
-    let matchedEt = null;
-    if (categoryObj?.editing_types?.length > 0) {
-      if (entry.editing_type_id) {
-        matchedEt = categoryObj.editing_types.find(
-          (et) => et.editing_type_id === Number(entry.editing_type_id)
-        );
-      }
-      if (!matchedEt && entry.editing_type_name) {
-        matchedEt = categoryObj.editing_types.find(
-          (et) =>
-            et.editing_type_name &&
-            et.editing_type_name.trim().toLowerCase() ===
-              entry.editing_type_name.trim().toLowerCase()
-        );
-      }
-      if (!matchedEt && (entry.editing_type_amount || entry.unit_price)) {
-        const targetAmt = Number(entry.editing_type_amount || entry.unit_price);
-        matchedEt = categoryObj.editing_types.find(
-          (et) => Number(et.amount) === targetAmt
-        );
-      }
-      if (!matchedEt && categoryObj.editing_types.length === 1) {
-        matchedEt = categoryObj.editing_types[0];
-      }
-    }
+    const matchedEt = categoryObj?.editing_types?.length
+      ? matchEditingTypeFromCatalog(categoryObj.editing_types, entry)
+      : null;
 
     if (matchedEt) {
       setSelectedEditingType({
@@ -341,18 +324,15 @@ const dispatch = useDispatch();
     return [];
   }, [getSelectedCategory, getSelectedService]);
 
-  const hasEditingTypesToSelect = useMemo(() => {
-    if (!getSelectedCategory) return false;
-    return (
-      getSelectedCategory.editing_types?.some(
-        (et) =>
-          et.editing_type_name &&
-          et.editing_type_name.trim() !== "" &&
-          et.editing_type_name !== "null" &&
-          et.editing_type_name !== "N/A"
-      ) || (getSelectedCategory.editing_types?.length > 1)
-    );
-  }, [getSelectedCategory]);
+  const hasEditingTypesToSelect = useMemo(
+    () => shouldShowEditingTypePricePicker(getSelectedCategory),
+    [getSelectedCategory]
+  );
+
+  const categoryEditingTypes = useMemo(
+    () => sortEditingTypesByAmount(getSelectedCategory?.editing_types),
+    [getSelectedCategory]
+  );
 
   const handleServiceChange = (svcName) => {
     setSelectedService(svcName);
@@ -364,15 +344,21 @@ const dispatch = useDispatch();
   const handleCategoryChange = (catName) => {
     setSelectedCategory(catName);
     setSelectedAdditionalServices([]);
-    const category = getSelectedService?.categories?.find(c => c.category_name === catName);
-    const hasRealEditingTypes = category?.editing_types?.some(
-      et => et.editing_type_name && et.editing_type_name.trim() !== "" && et.editing_type_name !== "null" && et.editing_type_name !== "N/A"
-    ) || (category?.editing_types?.length > 1);
+    const category = getSelectedService?.categories?.find(
+      (c) => c.category_name === catName
+    );
 
-    if (category && category.editing_types && category.editing_types.length === 1 && !hasRealEditingTypes) {
+    if (
+      category?.editing_types?.length === 1 &&
+      !shouldShowEditingTypePricePicker(category)
+    ) {
       setSelectedEditingType(category.editing_types[0]);
-    } else if (category && (!category.editing_types || category.editing_types.length === 0)) {
-      setSelectedEditingType({ editing_type_id: null, editing_type_name: "", amount: 0 });
+    } else if (!category?.editing_types?.length) {
+      setSelectedEditingType({
+        editing_type_id: null,
+        editing_type_name: "",
+        amount: 0,
+      });
     } else {
       setSelectedEditingType(null);
     }
@@ -1554,12 +1540,15 @@ const dispatch = useDispatch();
                   disabled={!getSelectedCategory}
                 >
                   <option value="">-- Choose Editing Type (Required) --</option>
-                  {getSelectedCategory?.editing_types?.map((edit) => (
+                  {categoryEditingTypes.map((edit) => (
                     <option
                       key={edit.editing_type_id}
                       value={edit.editing_type_id}
                     >
-                      {edit.editing_type_name || "Standard"} — ₹{edit.amount}
+                      {edit.editing_type_name ||
+                        getSelectedCategory?.category_name ||
+                        "Standard"}{" "}
+                      — ₹{edit.amount}
                     </option>
                   ))}
                 </select>

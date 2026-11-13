@@ -206,8 +206,18 @@ export const normalizeRow = (row) => {
         ? `${parsedServiceName} - ${parsedCategoryName}`
         : parsedServiceName || parsedCategoryName || "Service");
 
+  const stableId =
+    row.re_item_id ||
+    (typeof row.id === "string" && row.id.includes("-")
+      ? row.id
+      : typeof window !== "undefined" && window.crypto?.randomUUID
+      ? window.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
+
   return {
     ...row,
+    id: stableId,
+    re_item_id: stableId,
     service: serviceTitle,
     service_name: parsedServiceName || row.service_name,
     category_name: parsedCategoryName || row.category_name,
